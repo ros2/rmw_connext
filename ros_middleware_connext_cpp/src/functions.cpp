@@ -5,7 +5,7 @@
 
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include "ros_middleware_interface/handles.h"
-#include "ros_dds_connext_static/MessageTypeSupport.h"
+#include "ros_middleware_connext_cpp/MessageTypeSupport.h"
 
 namespace ros_middleware_interface
 {
@@ -45,7 +45,7 @@ ros_middleware_interface::NodeHandle create_node()
 
 struct CustomPublisherInfo {
   DDSDataWriter * topic_writer_;
-  ros_dds_connext_static::MessageTypeSupportCallbacks * callbacks_;
+  ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
 };
 
 ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_interface::NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
@@ -64,7 +64,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
-    ros_dds_connext_static::MessageTypeSupportCallbacks * callbacks = (ros_dds_connext_static::MessageTypeSupportCallbacks*)type_support_handle._data;
+    ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = (ros_middleware_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
     std::string type_name = std::string(callbacks->_package_name) + "/" + callbacks->_message_name;
 
 
@@ -145,7 +145,7 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
     //std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
     CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher_handle._data;
     DDSDataWriter * topic_writer = custom_publisher_info->topic_writer_;
-    const ros_dds_connext_static::MessageTypeSupportCallbacks * callbacks = custom_publisher_info->callbacks_;
+    const ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_publisher_info->callbacks_;
 
 
     //std::cout << "  publish() invoke publish callback" << std::endl;

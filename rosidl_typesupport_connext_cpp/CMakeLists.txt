@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 
-project(rosidl_generator_dds_connext_cpp)
+project(rosidl_typesupport_connext_cpp)
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_environment_hooks REQUIRED)
@@ -16,12 +16,12 @@ ament_environment_hooks(env_hook/connext.sh.in)
 ament_python_install_package(${PROJECT_NAME})
 
 ament_package(
-  CONFIG_EXTRAS "rosidl_generator_dds_connext_cpp-extras.cmake"
+  CONFIG_EXTRAS "rosidl_typesupport_connext_cpp-extras.cmake"
 )
 
 install(
-  PROGRAMS bin/rosidl_generator_dds_connext_cpp
-  DESTINATION lib/rosidl_generator_dds_connext_cpp
+  PROGRAMS bin/rosidl_typesupport_connext_cpp
+  DESTINATION lib/rosidl_typesupport_connext_cpp
 )
 install(
   DIRECTORY cmake resource

@@ -20,7 +20,7 @@
 #include "@(spec.base_type.pkg_name)/@(spec.base_type.type)_Struct.h"
 #include "@(spec.base_type.pkg_name)/dds_idl/@(spec.base_type.type)_Support.h"
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
-#include "ros_dds_connext_static/MessageTypeSupport.h"
+#include "ros_middleware_connext_cpp/MessageTypeSupport.h"
 
 @[for field in spec.fields]@
 @[if not field.type.is_primitive_type()]@
@@ -105,7 +105,7 @@ void publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * 
 }
 
 
-static ros_dds_connext_static::MessageTypeSupportCallbacks callbacks = {
+static ros_middleware_connext_cpp::MessageTypeSupportCallbacks callbacks = {
     "@(spec.base_type.pkg_name)",
     "@(spec.base_type.type)",
     &register_type__@(spec.base_type.type),

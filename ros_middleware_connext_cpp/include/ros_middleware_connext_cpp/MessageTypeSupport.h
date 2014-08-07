@@ -1,6 +1,6 @@
 
-#ifndef __ros_dds_connext_static__MessageTypeSupport__h__
-#define __ros_dds_connext_static__MessageTypeSupport__h__
+#ifndef __ros_middleware_connext_cpp__MessageTypeSupport__h__
+#define __ros_middleware_connext_cpp__MessageTypeSupport__h__
 
 class DDSDomainParticipant;
 class DDSDataWriter;
@@ -12,7 +12,7 @@ extern const char * _rti_connext_identifier;
 
 }
 
-namespace ros_dds_connext_static
+namespace ros_middleware_connext_cpp
 {
 
 typedef struct MessageTypeSupportCallbacks {
@@ -22,6 +22,6 @@ typedef struct MessageTypeSupportCallbacks {
   void (*_publish)(DDSDataWriter * topic_writer, const void * ros_message);
 } MessageTypeSupportCallbacks;
 
-}  // namespace ros_dds_connext_static
+}  // namespace ros_middleware_connext_cpp
 
-#endif  // __ros_dds_connext_static__MessageTypeSupport__h__
+#endif  // __ros_middleware_connext_cpp__MessageTypeSupport__h__

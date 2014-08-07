@@ -21,9 +21,9 @@ set(CONNEXT_LIBRARIES
 set(CONNEXT_DEFINITIONS ${ndds_cpp_DEFINITIONS})
 
 
-find_package(ros_dds_cpp_dynamic_typesupport REQUIRED)
-ament_export_dependencies(ros_dds_cpp_dynamic_typesupport)
-include_directories(${ros_dds_cpp_dynamic_typesupport_INCLUDE_DIRS})
+find_package(rosidl_typesupport_introspection_cpp REQUIRED)
+ament_export_dependencies(rosidl_typesupport_introspection_cpp)
+include_directories(${rosidl_typesupport_introspection_cpp_INCLUDE_DIRS})
 
 
 ament_export_dependencies(ros_middleware_interface rosidl_generator_cpp)

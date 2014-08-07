@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rosidl_generator_dds_connext_cpp</name>
+  <name>rosidl_typesupport_connext_cpp</name>
   <version>0.0.0</version>
   <description>Generate the C++ interfaces for RTI Connext.</description>
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
