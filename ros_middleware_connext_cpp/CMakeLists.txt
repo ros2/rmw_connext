@@ -17,6 +17,8 @@ ament_export_dependencies(ros_middleware_interface rosidl_generator_cpp rosidl_t
 ament_export_include_directories(include include/${PROJECT_NAME}/impl ${CONNEXT_INCLUDE_DIRS})
 ament_export_libraries(ros_middleware_connext_cpp dl pthread)
 
+register_ros_middleware_implementation()
+
 ament_package()
 
 include_directories(include ${ros_middleware_interface_INCLUDE_DIRS} ${rosidl_generator_cpp_INCLUDE_DIRS} ${rosidl_typesupport_connext_cpp_INCLUDE_DIRS} ${CONNEXT_INCLUDE_DIRS})
