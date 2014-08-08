@@ -2,6 +2,8 @@
 #ifndef __ros_middleware_connext_cpp__MessageTypeSupport__h__
 #define __ros_middleware_connext_cpp__MessageTypeSupport__h__
 
+#include "rosidl_generator_cpp/MessageTypeSupport.h"
+
 class DDSDomainParticipant;
 class DDSDataWriter;
 
@@ -10,7 +12,7 @@ namespace ros_middleware_interface
 
 extern const char * _rti_connext_identifier;
 
-}
+}  // namespace ros_middleware_interface
 
 namespace ros_middleware_connext_cpp
 {
@@ -21,6 +23,9 @@ typedef struct MessageTypeSupportCallbacks {
   void (*_register_type)(DDSDomainParticipant * participant, const char * type_name);
   void (*_publish)(DDSDataWriter * topic_writer, const void * ros_message);
 } MessageTypeSupportCallbacks;
+
+template<typename T>
+const rosidl_generator_cpp::MessageTypeSupportHandle& get_type_support_handle();
 
 }  // namespace ros_middleware_connext_cpp
 

@@ -18,16 +18,16 @@
 #include <iostream>
 
 #include "@(spec.base_type.pkg_name)/@(spec.base_type.type)_Struct.h"
-#include "@(spec.base_type.pkg_name)/dds_idl/@(spec.base_type.type)_Support.h"
+#include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_Support.h"
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include "ros_middleware_connext_cpp/MessageTypeSupport.h"
 
 @[for field in spec.fields]@
 @[if not field.type.is_primitive_type()]@
-struct @(field.type.pkg_name)::dds_idl::@(field.type.type)_;
+struct @(field.type.pkg_name)::dds_connext::@(field.type.type)_;
 namespace @(field.type.pkg_name) {
 namespace type_support {
-void convert_ros_message_to_dds__@(field.type.type)(const @(field.type.pkg_name)::@(field.type.type)&, @(field.type.pkg_name)::dds_idl::@(field.type.type)_&);
+void convert_ros_message_to_dds__@(field.type.type)(const @(field.type.pkg_name)::@(field.type.type)&, @(field.type.pkg_name)::dds_connext::@(field.type.type)_&);
 }  // namespace type_support
 }  // namespace @(field.type.pkg_name)
 @[end if]@
@@ -42,10 +42,10 @@ namespace type_support
 void register_type__@(spec.base_type.type)(DDSDomainParticipant * participant, const char * type_name)
 {
     std::cout << "  @(spec.base_type.pkg_name)::type_support::register_type__@(spec.base_type.type)()" << std::endl;
-    @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
+    @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
 }
 
-void convert_ros_message_to_dds__@(spec.base_type.type)(const void * untyped_ros_message, @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_& dds_message)
+void convert_ros_message_to_dds__@(spec.base_type.type)(const void * untyped_ros_message, @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_& dds_message)
 {
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_ros_message_to_dds__@(spec.base_type.type)()" << std::endl;
     const @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(const @(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
@@ -89,11 +89,11 @@ void publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * 
 {
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
 
-    //@(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_ dds_message;
-    @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_TypeSupport::create_data();
+    //@(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_ dds_message;
+    @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::create_data();
     convert_ros_message_to_dds__@(spec.base_type.type)(ros_message, *dds_message);
 
-    @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_DataWriter * data_writer = @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
+    @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_DataWriter * data_writer = @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)() write dds message" << std::endl;
     DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
     if (status != DDS_RETCODE_OK) {
@@ -101,7 +101,7 @@ void publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * 
         throw std::runtime_error("write failed");
     };
 
-    @(spec.base_type.pkg_name)::dds_idl::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
+    @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
 }
 
 
@@ -122,23 +122,15 @@ static rosidl_generator_cpp::MessageTypeSupportHandle handle = {
 }  // namespace @(spec.base_type.pkg_name)
 
 
-namespace rosidl_generator_cpp
+namespace ros_middleware_connext_cpp
 {
 
 template<>
-struct MessageTypeSupport<@(spec.base_type.pkg_name)::@(spec.base_type.type)>
+const rosidl_generator_cpp::MessageTypeSupportHandle& get_type_support_handle<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
 {
-    static const rosidl_generator_cpp::MessageTypeSupportHandle& get_type_support_handle()
-    {
-        return @(spec.base_type.pkg_name)::type_support::handle;
-    }
-};
-
-void ___dummy()
-{
-    MessageTypeSupport<@(spec.base_type.pkg_name)::@(spec.base_type.type)>::get_type_support_handle();
+    return @(spec.base_type.pkg_name)::type_support::handle;
 }
 
-}  // namespace rosidl_generator_cpp
+}  // namespace ros_middleware_connext_cpp
 
 #endif  // __@(spec.base_type.pkg_name)__@(spec.base_type.type)_TypeSupport__h__

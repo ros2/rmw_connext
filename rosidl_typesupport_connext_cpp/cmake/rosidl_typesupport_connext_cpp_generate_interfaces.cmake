@@ -3,14 +3,21 @@ message("   - target: ${rosidl_generate_interfaces_TARGET}")
 message("   - interface files: ${rosidl_generate_interfaces_IDL_FILES}")
 message("   - dependency package names: ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES}")
 
+rosidl_generate_dds_interfaces(
+  ${rosidl_generate_interfaces_TARGET}__dds_connext_idl
+  IDL_FILES ${rosidl_generate_interfaces_IDL_FILES}
+  DEPENDENCY_PACKAGE_NAMES ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES}
+  NAMESPACES "dds_connext"
+)
+
 set(_dds_idl_files "")
-set(_dds_idl_path "${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_dds_idl/${PROJECT_NAME}")
+set(_dds_idl_path "${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_dds_idl/${PROJECT_NAME}/dds_connext")
 foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   get_filename_component(name "${_idl_file}" NAME_WE)
   list(APPEND _dds_idl_files "${_dds_idl_path}/${name}_.idl")
 endforeach()
 
-set(_output_path "${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp/${PROJECT_NAME}/dds_idl")
+set(_output_path "${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp/${PROJECT_NAME}/dds_connext")
 set(_generated_files "")
 foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   get_filename_component(name "${_idl_file}" NAME_WE)
@@ -28,7 +35,7 @@ set(_dependencies "")
 foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   foreach(_idl_file ${${_pkg_name}_INTERFACE_FILES})
     get_filename_component(name "${_idl_file}" NAME_WE)
-    set(_abs_idl_file "${${_pkg_name}_DIR}/../dds_idl/${name}_.idl")
+    set(_abs_idl_file "${${_pkg_name}_DIR}/../dds_connext/${name}_.idl")
     list(APPEND _dependency_files "${_abs_idl_file}")
     list(APPEND _dependencies "${_pkg_name}:${_abs_idl_file}")
   endforeach()
@@ -53,7 +60,7 @@ add_custom_command(
   ${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg_TypeSupport.cpp.template
   ${_dds_idl_files}
   ${_dependency_files}
-  COMMENT "Generating C++ interfaces for RTI Connext"
+  COMMENT "Generating C++ type support for RTI Connext"
   VERBATIM
 )
 
@@ -75,7 +82,7 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PUBLIC
     ${${_pkg_name}_INCLUDE_DIRS}
-    ${${_pkg_name}_DIR}/../../../include/${_pkg_name}/dds_idl
+    ${${_pkg_name}_DIR}/../../../include/${_pkg_name}/dds_connext
   )
   target_link_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     ${${_pkg_name}_LIBRARIES})
@@ -88,16 +95,16 @@ add_dependencies(
 )
 add_dependencies(
   ${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  ${rosidl_generate_interfaces_TARGET}_cpp
+  ${rosidl_generate_interfaces_TARGET}__cpp
 )
 add_dependencies(
-  ${rosidl_generate_interfaces_TARGET}_dds_idl
+  ${rosidl_generate_interfaces_TARGET}__dds_connext_idl
   ${rosidl_generate_interfaces_TARGET}${_target_suffix}
 )
 
 install(
   FILES ${_generated_files}
-  DESTINATION "include/${PROJECT_NAME}/dds_idl"
+  DESTINATION "include/${PROJECT_NAME}/dds_connext"
 )
 install(
   TARGETS ${rosidl_generate_interfaces_TARGET}${_target_suffix}

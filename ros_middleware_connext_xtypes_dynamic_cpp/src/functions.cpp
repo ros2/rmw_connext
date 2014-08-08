@@ -5,7 +5,7 @@
 
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include "ros_middleware_interface/handles.h"
-#include "rosidl_typesupport_introspection_cpp/MessageTypeSupport.h"
+#include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
 
 namespace ros_middleware_interface
 {
@@ -47,7 +47,7 @@ struct CustomPublisherInfo {
   DDSDynamicDataTypeSupport * dynamic_data_type_support_;
   DDSDynamicDataWriter * dynamic_writer_;
   DDS_TypeCode * type_code_;
-  rosidl_typesupport_introspection_cpp::MessageTypeSupportMembers * members_;
+  rosidl_typesupport_introspection_cpp::MessageMembers * members_;
   DDS_DynamicData * dynamic_data;
 };
 
@@ -67,15 +67,15 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
-    if (type_support_handle._implementation_identifier != rosidl_typesupport_introspection_cpp::_dynamic_identifier)
+    if (type_support_handle._typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
     {
         printf("type support not from this implementation\n");
-        printf("but from: %s\n", type_support_handle._implementation_identifier);
+        printf("but from: %s\n", type_support_handle._typesupport_identifier);
         throw std::runtime_error("type support not from this implementation");
     }
 
-    rosidl_typesupport_introspection_cpp::MessageTypeSupportMembers * members = (rosidl_typesupport_introspection_cpp::MessageTypeSupportMembers*)type_support_handle._data;
-    std::string type_name = std::string(members->_package_name) + "/" + members->_message_name;
+    rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support_handle._data;
+    std::string type_name = std::string(members->package_name_) + "/" + members->message_name_;
 
     std::cout << "  create_publisher() create type code for " << type_name.c_str() << std::endl;
     DDS_TypeCode * type_code;
@@ -90,21 +90,21 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
         };
 
         type_code = factory->create_struct_tc(type_name.c_str(), struct_members, ex);
-        for(unsigned long i = 0; i < members->_size; ++i)
+        for(unsigned long i = 0; i < members->member_count_; ++i)
         {
-            const rosidl_typesupport_introspection_cpp::MessageTypeSupportMember * member = members->_members + i * sizeof(rosidl_typesupport_introspection_cpp::MessageTypeSupportMember);
-            std::cout << "  create_publisher() create type code - add member " << i << ": " << member->_name << "" << std::endl;
+            const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i * sizeof(rosidl_typesupport_introspection_cpp::MessageMember);
+            std::cout << "  create_publisher() create type code - add member " << i << ": " << member->name_ << "" << std::endl;
             const DDS_TypeCode * member_type_code;
-            if (strcmp(member->_type, "int32") == 0)
+            if (strcmp(member->type_, "int32") == 0)
             {
                 member_type_code = factory->get_primitive_tc(DDS_TK_LONG);
             }
             else
             {
-                printf("unknown type %s\n", member->_type);
+                printf("unknown type %s\n", member->type_);
                 throw std::runtime_error("unknown type");
             }
-            type_code->add_member(member->_name, DDS_TYPECODE_MEMBER_ID_INVALID, member_type_code,
+            type_code->add_member(member->name_, DDS_TYPECODE_MEMBER_ID_INVALID, member_type_code,
                         DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
         }
         DDS_StructMemberSeq_finalize(&struct_members);
@@ -207,22 +207,22 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
     DDSDynamicDataTypeSupport* ddts = custom_publisher_info->dynamic_data_type_support_;
     DDSDynamicDataWriter * dynamic_writer = custom_publisher_info->dynamic_writer_;
     DDS_TypeCode * type_code = custom_publisher_info->type_code_;
-    const rosidl_typesupport_introspection_cpp::MessageTypeSupportMembers * members = custom_publisher_info->members_;
+    const rosidl_typesupport_introspection_cpp::MessageMembers * members = custom_publisher_info->members_;
     DDS_DynamicData * dynamic_data = custom_publisher_info->dynamic_data;
 
-    //std::cout << "  publish() create " << members->_package_name << "/" << members->_message_name << " and populate dynamic data" << std::endl;
+    //std::cout << "  publish() create " << members->package_name_ << "/" << members->message_name_ << " and populate dynamic data" << std::endl;
     //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
     //DDS_DynamicData * dynamic_data = ddts->create_data();
-    for(unsigned long i = 0; i < members->_size; ++i)
+    for(unsigned long i = 0; i < members->member_count_; ++i)
     {
-        const rosidl_typesupport_introspection_cpp::MessageTypeSupportMember * member = members->_members + i * sizeof(rosidl_typesupport_introspection_cpp::MessageTypeSupportMember);
+        const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i * sizeof(rosidl_typesupport_introspection_cpp::MessageMember);
         //std::cout << "  publish() set member " << i << ": " << member->_name << "" << std::endl;
         DDS_TypeCode * member_type_code;
-        if (strcmp(member->_type, "int32") == 0)
+        if (strcmp(member->type_, "int32") == 0)
         {
-            long value = *((int*)((char*)ros_message + member->_offset));
-            //std::cout << "  publish() set member " << i << ": " << member->_name << " = " << value << std::endl;
-            DDS_ReturnCode_t status = dynamic_data->set_long(member->_name, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, value);
+            long value = *((int*)((char*)ros_message + member->offset_));
+            //std::cout << "  publish() set member " << i << ": " << member->name_ << " = " << value << std::endl;
+            DDS_ReturnCode_t status = dynamic_data->set_long(member->name_, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, value);
             if (status != DDS_RETCODE_OK) {
                 printf("set_long() failed. Status = %d\n", status);
                 throw std::runtime_error("set member failed");
@@ -230,7 +230,7 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
         }
         else
         {
-            printf("unknown type %s\n", member->_type);
+            printf("unknown type %s\n", member->type_);
             throw std::runtime_error("unknown type");
         }
     }
