@@ -104,12 +104,83 @@ void publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * 
     @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
 }
 
+// ToDo Review
+void convert_dds_message_to_ros__@(spec.base_type.type)(const @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_& dds_message, void * untyped_ros_message)
+{
+    //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_dds_message_to_ros__@(spec.base_type.type)()" << std::endl;
+    @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(@(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
+@[for field in spec.fields]@
+    // field.name @(field.name)
+    // field.type @(field.type)
+    // field.type.is_array @(field.type.is_array)
+@[if field.type.array_size]@
+    // field.type.array_size @(field.type.array_size)
+@[else]@
+    // field.type.array_size dynamic
+@[end if]@
+@[if field.type.is_array]@
+    {
+@[if field.type.array_size]@
+        size_t size = @(field.type.array_size);
+@[else]@
+        size_t size = dds_message.@(field.name)_.size();
+        ros_message.@(field.name).length(size);
+@[end if]@
+        for (size_t i = 0; i < size; i++) {
+@[if field.type.is_primitive_type()]@
+            ros_message.@(field.name)[i] = dds_message.@(field.name)_[i];
+@[else]@
+            //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name)[i], dds_message.@(field.name)_[i]);
+            @(field.type.pkg_name)::type_support::convert_dds_message_to_ros__@(field.type.type)(dds_message.@(field.name)_[i], ros_message.@(field.name)[i]);
+@[end if]@
+        }
+    }
+@[elif field.type.is_primitive_type()]@
+      ros_message.@(field.name) = dds_message.@(field.name)_;
+@[else]@
+      //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name), dds_message.@(field.name)_);
+      @(field.type.pkg_name)::type_support::convert_dds_message_to_ros__@(field.type.type)(dds_message.@(field.name)_, ros_message.@(field.name));
+@[end if]@
+
+@[end for]@
+}
+
+// ToDo review
+bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * ros_message)
+{
+    //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
+
+    //@(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_ dds_message;
+    @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::create_data();
+
+    @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_DataReader * data_reader = @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_DataReader::narrow(topic_reader);
+    //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)() write dds message" << std::endl;
+    DDS_SampleInfo sample_info;
+    DDS_ReturnCode_t status = data_reader->take_next_sample(*dds_message, sample_info);
+    if (status == DDS_RETCODE_NO_DATA) {
+        return false;
+    }
+    if (status != DDS_RETCODE_OK) {
+        printf("take() failed. Status = %d\n", status);
+        throw std::runtime_error("write failed");
+    };
+
+    if (ros_message == 0) {
+        printf("take() invoked without a valid ROS message pointer\n");
+        throw std::runtime_error("invalid ROS message pointer");
+    };
+
+    convert_dds_message_to_ros__@(spec.base_type.type)(*dds_message, ros_message);
+    @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
+    return true;
+}
 
 static ros_middleware_connext_cpp::MessageTypeSupportCallbacks callbacks = {
     "@(spec.base_type.pkg_name)",
     "@(spec.base_type.type)",
     &register_type__@(spec.base_type.type),
-    &publish__@(spec.base_type.type)
+    &publish__@(spec.base_type.type),
+    &take__@(spec.base_type.type)
 };
 
 static rosidl_generator_cpp::MessageTypeSupportHandle handle = {

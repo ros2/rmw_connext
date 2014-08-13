@@ -6,6 +6,7 @@
 
 class DDSDomainParticipant;
 class DDSDataWriter;
+class DDSDataReader;
 
 namespace ros_middleware_interface
 {
@@ -22,6 +23,7 @@ typedef struct MessageTypeSupportCallbacks {
   const char * _message_name;
   void (*_register_type)(DDSDomainParticipant * participant, const char * type_name);
   void (*_publish)(DDSDataWriter * topic_writer, const void * ros_message);
+  bool (*_take)(DDSDataReader * topic_reader, void * ros_message);
 } MessageTypeSupportCallbacks;
 
 template<typename T>
