@@ -392,7 +392,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
     return subscriber_handle;
 }
 
-bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, const void * ros_message)
+bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, void * ros_message)
 {
     //std::cout << "take()" << std::endl;
 
