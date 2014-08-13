@@ -422,6 +422,11 @@ bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, c
         throw std::runtime_error("take next sample failed");
     };
 
+    if (ros_message == 0) {
+        printf("take() invoked without a valid ROS message pointer\n");
+        throw std::runtime_error("invalid ROS message pointer");
+    };
+
     //std::cout << "  take() create " << members->package_name_ << "/" << members->message_name_ << " and populate dynamic data" << std::endl;
     //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
     //DDS_DynamicData * dynamic_data = ddts->create_data();
