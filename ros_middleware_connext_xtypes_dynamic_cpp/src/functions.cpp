@@ -484,6 +484,8 @@ void trigger_guard_condition(const ros_middleware_interface::GuardConditionHandl
 
 void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_middleware_interface::GuardConditionHandles& guard_condition_handles)
 {
+    //std::cout << "wait()" << std::endl;
+
     DDSWaitSet waitset;
 
     // add a condition for each subscriber
@@ -492,7 +494,9 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         void * data = subscriber_handles.subscribers_[i];
         CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
         DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
-        waitset.attach_condition(dynamic_reader->get_statuscondition());
+        DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
+        condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
+        waitset.attach_condition(condition);
     }
 
     // add a condition for each guard condition
@@ -511,6 +515,7 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
     {
         status = waitset.wait(active_conditions, timeout);
         if (DDS_RETCODE_TIMEOUT == status) {
+            //std::cout << "wait() no data - rinse and repeat" << std::endl;
             continue;
         };
         if (status != DDS_RETCODE_OK) {
@@ -523,19 +528,47 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
     for (unsigned long i = 0; i < subscriber_handles.subscriber_count_; ++i)
     {
         void * data = subscriber_handles.subscribers_[i];
-        if (!active_conditions[i]->get_trigger_value())
+        CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
+        DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
+        DDSCondition * condition = dynamic_reader->get_statuscondition();
+
+        // search for subscriber condition in active set
+        unsigned long j = 0;
+        for (; j < active_conditions.length(); ++j)
         {
-            data = 0;
+            if (active_conditions[j] == condition)
+            {
+                break;
+            }
+        }
+        // if subscriber condition is not found in the active set
+        // reset the subscriber handle
+        if (!j < active_conditions.length())
+        {
+            subscriber_handles.subscribers_[i] = 0;
         }
     }
 
     // set subscriber handles to zero for all not triggered conditions
     for (unsigned long i = 0; i < guard_condition_handles.guard_condition_count_; ++i)
     {
-        void * data = guard_condition_handles.guard_conditions_[subscriber_handles.subscriber_count_ + i];
-        if (!active_conditions[i]->get_trigger_value())
+        void * data = guard_condition_handles.guard_conditions_[i];
+        DDSCondition * condition = (DDSCondition*)data;
+
+        // search for guard condition in active set
+        unsigned long j = 0;
+        for (; j < active_conditions.length(); ++j)
         {
-            data = 0;
+            if (active_conditions[j] == condition)
+            {
+                break;
+            }
+        }
+        // if guard condition is not found in the active set
+        // reset the guard handle
+        if (!j < active_conditions.length())
+        {
+            guard_condition_handles.guard_conditions_[i] = 0;
         }
     }
 }
