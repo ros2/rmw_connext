@@ -28,6 +28,7 @@ struct @(field.type.pkg_name)::dds_connext::@(field.type.type)_;
 namespace @(field.type.pkg_name) {
 namespace type_support {
 void convert_ros_message_to_dds__@(field.type.type)(const @(field.type.pkg_name)::@(field.type.type)&, @(field.type.pkg_name)::dds_connext::@(field.type.type)_&);
+void convert_dds_message_to_ros__@(field.type.type)(const @(field.type.pkg_name)::dds_connext::@(field.type.type)_&, @(field.type.pkg_name)::@(field.type.type)&);
 }  // namespace type_support
 }  // namespace @(field.type.pkg_name)
 @[end if]@
