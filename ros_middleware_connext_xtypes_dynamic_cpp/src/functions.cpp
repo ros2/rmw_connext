@@ -392,7 +392,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
     return subscriber_handle;
 }
 
-void take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, const void * ros_message)
+bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, const void * ros_message)
 {
     //std::cout << "take()" << std::endl;
 
@@ -414,6 +414,9 @@ void take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, c
 
     DDS_SampleInfo sample_info;
     DDS_ReturnCode_t status = dynamic_reader->take_next_sample(*dynamic_data, sample_info);
+    if (status == DDS_RETCODE_NO_DATA) {
+        return false;
+    }
     if (status != DDS_RETCODE_OK) {
         printf("take_next_sample() failed. Status = %d\n", status);
         throw std::runtime_error("take next sample failed");
@@ -447,6 +450,8 @@ void take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, c
     }
 
     //ddts->delete_data(dynamic_data);
+
+    return true;
 }
 
 ros_middleware_interface::GuardConditionHandle create_guard_condition()
