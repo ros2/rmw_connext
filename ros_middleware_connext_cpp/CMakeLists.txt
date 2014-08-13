@@ -24,7 +24,7 @@ ament_package()
 include_directories(include ${ros_middleware_interface_INCLUDE_DIRS} ${rosidl_generator_cpp_INCLUDE_DIRS} ${rosidl_typesupport_connext_cpp_INCLUDE_DIRS} ${CONNEXT_INCLUDE_DIRS})
 add_definitions(${CONNEXT_DEFINITIONS})
 add_library(ros_middleware_connext_cpp SHARED src/functions.cpp)
-target_link_libraries(ros_middleware_connext_cpp ${std_msgs_LIBRARIES} ${rosidl_typesupport_connext_cpp_LIBRARIES} ${CONNEXT_LIBRARIES})
+target_link_libraries(ros_middleware_connext_cpp ${rosidl_typesupport_connext_cpp_LIBRARIES} ${CONNEXT_LIBRARIES})
 
 install(
   DIRECTORY include/
