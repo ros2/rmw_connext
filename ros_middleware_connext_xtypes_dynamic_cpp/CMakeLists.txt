@@ -28,7 +28,7 @@ ament_package()
 include_directories(${ros_middleware_interface_INCLUDE_DIRS} ${rosidl_generator_cpp_INCLUDE_DIRS} ${CONNEXT_INCLUDE_DIRS})
 add_definitions(${CONNEXT_DEFINITIONS})
 add_library(ros_middleware_connext_xtypes_dynamic_cpp SHARED src/functions.cpp)
-target_link_libraries(ros_middleware_connext_xtypes_dynamic_cpp ${CONNEXT_LIBRARIES})
+target_link_libraries(ros_middleware_connext_xtypes_dynamic_cpp ${rosidl_typesupport_introspection_cpp_LIBRARIES} ${CONNEXT_LIBRARIES})
 
 install(
   TARGETS ros_middleware_connext_xtypes_dynamic_cpp
