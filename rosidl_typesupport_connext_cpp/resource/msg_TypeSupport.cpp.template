@@ -68,7 +68,10 @@ void convert_ros_message_to_dds__@(spec.base_type.type)(const void * untyped_ros
         dds_message.@(field.name)_.length(size);
 @[end if]@
         for (size_t i = 0; i < size; i++) {
-@[if field.type.is_primitive_type()]@
+@[if field.type.type == 'string']@
+            DDS_String_free(dds_message.@(field.name)_[i]);
+            dds_message.@(field.name)_[i] = DDS_String_dup(ros_message.@(field.name)[i].c_str());
+@[elif field.type.is_primitive_type()]@
             dds_message.@(field.name)_[i] = ros_message.@(field.name)[i];
 @[else]@
             //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name)[i], dds_message.@(field.name)_[i]);
@@ -76,6 +79,9 @@ void convert_ros_message_to_dds__@(spec.base_type.type)(const void * untyped_ros
 @[end if]@
         }
     }
+@[elif field.type.type == 'string']@
+      DDS_String_free(dds_message.@(field.name)_);
+      dds_message.@(field.name)_ = DDS_String_dup(ros_message.@(field.name).c_str());
 @[elif field.type.is_primitive_type()]@
       dds_message.@(field.name)_ = ros_message.@(field.name);
 @[else]@
