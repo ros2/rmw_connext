@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 
+set(CMAKE_CXX_FLAGS "-std=c++0x")
+
 project(ros_middleware_connext_xtypes_dynamic_cpp)
 
 find_package(ament_cmake REQUIRED)
@@ -15,7 +17,6 @@ set(CONNEXT_DEFINITIONS ${ndds_cpp_DEFINITIONS})
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 include_directories(${rosidl_typesupport_introspection_cpp_INCLUDE_DIRS})
-
 
 ament_export_dependencies(ros_middleware_interface rosidl_generator_cpp)
 

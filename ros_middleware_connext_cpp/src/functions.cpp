@@ -23,9 +23,9 @@ ros_middleware_interface::NodeHandle create_node()
         throw std::runtime_error("could not get participant factory");
     };
 
-    DDS_DomainId_t domain = 23;
+    DDS_DomainId_t domain = 0;
 
-    std::cout << "  create_node() create_participant" << std::endl;
+    std::cout << "  create_node() create_participant in domain " << domain << std::endl;
     DDSDomainParticipant* participant = dpf_->create_participant(
         domain, DDS_PARTICIPANT_QOS_DEFAULT, NULL,
         DDS_STATUS_MASK_NONE);
