@@ -130,8 +130,8 @@ void convert_dds_message_to_ros__@(spec.base_type.type)(const @(spec.base_type.p
 @[if field.type.array_size]@
         size_t size = @(field.type.array_size);
 @[else]@
-        size_t size = dds_message.@(field.name)_.size();
-        ros_message.@(field.name).length(size);
+        size_t size = dds_message.@(field.name)_.length();
+        ros_message.@(field.name).resize(size);
 @[end if]@
         for (size_t i = 0; i < size; i++) {
 @[if field.type.is_primitive_type()]@
