@@ -24,8 +24,10 @@
 
 @[for field in spec.fields]@
 @[if not field.type.is_primitive_type()]@
-struct @(field.type.pkg_name)::dds_connext::@(field.type.type)_;
 namespace @(field.type.pkg_name) {
+namespace dds_connext {
+struct @(field.type.type)_;
+}  // namespace dds_connext
 namespace type_support {
 void convert_ros_message_to_dds__@(field.type.type)(const @(field.type.pkg_name)::@(field.type.type)&, @(field.type.pkg_name)::dds_connext::@(field.type.type)_&);
 void convert_dds_message_to_ros__@(field.type.type)(const @(field.type.pkg_name)::dds_connext::@(field.type.type)_&, @(field.type.pkg_name)::@(field.type.type)&);
@@ -44,6 +46,7 @@ void register_type__@(spec.base_type.type)(DDSDomainParticipant * participant, c
 {
     std::cout << "  @(spec.base_type.pkg_name)::type_support::register_type__@(spec.base_type.type)()" << std::endl;
     @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
+    std::cout << "  type name: " << @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::get_type_name() << std::endl;
 }
 
 void convert_ros_message_to_dds__@(spec.base_type.type)(const void * untyped_ros_message, @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_& dds_message)
@@ -163,6 +166,7 @@ bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * ros_messa
     @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_DataReader * data_reader = @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_DataReader::narrow(topic_reader);
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)() write dds message" << std::endl;
     DDS_SampleInfo sample_info;
+    // TODO use take / return_loan instead
     DDS_ReturnCode_t status = data_reader->take_next_sample(*dds_message, sample_info);
     if (status == DDS_RETCODE_NO_DATA) {
         return false;

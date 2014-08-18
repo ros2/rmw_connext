@@ -120,6 +120,7 @@ DDS_TypeCode * create_type_code(std::string type_name, rosidl_typesupport_intros
         type_code->add_member(member->name_, DDS_TYPECODE_MEMBER_ID_INVALID, member_type_code,
                     DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
     }
+    std::cout << "  type name: " << type_code->name(ex) << std::endl;
     DDS_StructMemberSeq_finalize(&struct_members);
     return type_code;
 }
@@ -528,6 +529,7 @@ bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, v
     DDS_DynamicData * dynamic_data = custom_subscriber_info->dynamic_data;
 
     DDS_SampleInfo sample_info;
+    // TODO use take / return_loan instead
     DDS_ReturnCode_t status = dynamic_reader->take_next_sample(*dynamic_data, sample_info);
     if (status == DDS_RETCODE_NO_DATA) {
         return false;
@@ -699,7 +701,7 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         }
         // if subscriber condition is not found in the active set
         // reset the subscriber handle
-        if (!j < active_conditions.length())
+        if (!(j < active_conditions.length()))
         {
             subscriber_handles.subscribers_[i] = 0;
         }
@@ -722,7 +724,7 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         }
         // if guard condition is not found in the active set
         // reset the guard handle
-        if (!j < active_conditions.length())
+        if (!(j < active_conditions.length()))
         {
             guard_condition_handles.guard_conditions_[i] = 0;
         }

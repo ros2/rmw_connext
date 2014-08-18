@@ -66,7 +66,7 @@ add_custom_command(
 
 set(_target_suffix "__dds_connext_cpp")
 
-set(CMAKE_CXX_FLAGS "-std=c++0x")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED ${_generated_files})
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}

@@ -341,7 +341,7 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
         }
         // if subscriber condition is not found in the active set
         // reset the subscriber handle
-        if (!j < active_conditions.length())
+        if (!(j < active_conditions.length()))
         {
             subscriber_handles.subscribers_[i] = 0;
         }
@@ -364,7 +364,7 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
         }
         // if guard condition is not found in the active set
         // reset the guard handle
-        if (!j < active_conditions.length())
+        if (!(j < active_conditions.length()))
         {
             guard_condition_handles.guard_conditions_[i] = 0;
         }

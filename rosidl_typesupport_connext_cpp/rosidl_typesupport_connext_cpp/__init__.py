@@ -36,6 +36,8 @@ def generate_dds_connext_cpp(
             '-language', 'C++',
             '-namespace',
             '-replace',
+            # TODO allow defining max sequence size in message definition, otherwise allow unlimited
+            '-sequenceSize', '200',
             idl_file
         ]
         subprocess.check_call(cmd)
