@@ -19,9 +19,13 @@ def main(argv=sys.argv[1:]):
         nargs='*',
         help='The ROS interface files')
     parser.add_argument(
-        '--interface-files',
+        '--dds-interface-files',
         nargs='*',
         help='The DDS interface files')
+    parser.add_argument(
+        '--dds-interface-base-path',
+        required=True,
+        help='The base location of the DDS interface files')
     parser.add_argument(
         '--deps',
         nargs='*',
@@ -42,7 +46,8 @@ def main(argv=sys.argv[1:]):
 
     rc = generate_dds_connext_cpp(
         args.pkg_name,
-        args.interface_files,
+        args.dds_interface_files,
+        args.dds_interface_base_path,
         args.deps,
         args.output_dir,
         args.idl_pp,

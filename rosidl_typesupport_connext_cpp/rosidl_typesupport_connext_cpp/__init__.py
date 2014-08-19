@@ -6,13 +6,13 @@ from rosidl_parser import parse_message_file
 
 
 def generate_dds_connext_cpp(
-        pkg_name, interface_files, deps, output_dir, idl_pp):
+        pkg_name, dds_interface_files, dds_interface_base_path, deps, output_dir, idl_pp):
     try:
         os.makedirs(output_dir)
     except FileExistsError:
         pass
 
-    include_dirs = []
+    include_dirs = [dds_interface_base_path]
     for dep in deps:
         dep_parts = dep.split(':')
         assert(len(dep_parts) == 2)
@@ -22,7 +22,7 @@ def generate_dds_connext_cpp(
         if idl_base_path not in include_dirs:
             include_dirs.append(idl_base_path)
 
-    for idl_file in interface_files:
+    for idl_file in dds_interface_files:
         generated_file = os.path.join(
             output_dir,
             os.path.splitext(os.path.basename(idl_file))[0] + '.h/cpp')
@@ -45,7 +45,7 @@ def generate_dds_connext_cpp(
     return 0
 
 
-def generate_cpp(pkg_name, interface_files, deps, output_dir, template_dir):
+def generate_cpp(pkg_name, ros_interface_files, deps, output_dir, template_dir):
     mapping = {
         os.path.join(template_dir, 'msg_TypeSupport.cpp.template'): '%s_TypeSupport.cpp',
     }
@@ -57,7 +57,7 @@ def generate_cpp(pkg_name, interface_files, deps, output_dir, template_dir):
     except FileExistsError:
         pass
 
-    for idl_file in interface_files:
+    for idl_file in ros_interface_files:
         print(pkg_name, idl_file)
         spec = parse_message_file(pkg_name, idl_file)
         for template_file, generated_filename in mapping.items():
