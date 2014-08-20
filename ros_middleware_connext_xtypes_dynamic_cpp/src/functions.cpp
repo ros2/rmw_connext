@@ -24,11 +24,30 @@ ros_middleware_interface::NodeHandle create_node()
         throw std::runtime_error("could not get participant factory");
     };
 
+    // use loopback interface to enable cross vendor communication
+    DDS_DomainParticipantQos participant_qos;
+    DDS_ReturnCode_t status = dpf_->get_default_participant_qos(participant_qos);
+    if (status != DDS_RETCODE_OK)
+    {
+        printf("  create_node() could not get participant qos\n");
+        throw std::runtime_error("could not get participant qos");
+    }
+    status = DDSPropertyQosPolicyHelper::add_property(participant_qos.property,
+        "dds.transport.UDPv4.builtin.ignore_loopback_interface", "0",
+        DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK)
+    {
+        printf("  create_node() could not add qos propert\n");
+        throw std::runtime_error("could not add qos property");
+    }
+    std::cout << "  create_node() disable shared memory, enable loopback interface" << std::endl;
+
     DDS_DomainId_t domain = 0;
 
     std::cout << "  create_node() create_participant in domain " << domain << std::endl;
     DDSDomainParticipant* participant = dpf_->create_participant(
-        domain, DDS_PARTICIPANT_QOS_DEFAULT, NULL,
+        //domain, DDS_PARTICIPANT_QOS_DEFAULT, NULL,
+        domain, participant_qos, NULL,
         DDS_STATUS_MASK_NONE);
     if (!participant) {
         printf("  create_node() could not create participant\n");
@@ -118,7 +137,7 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
                 {
                     const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
                     std::cout << "  create_type_code() create type code - add sub member of type " << sub_members->package_name_ << "/" << sub_members->message_name_ << std::endl;
-                    std::string field_type_name = std::string(sub_members->package_name_) + "/" + sub_members->message_name_;
+                    std::string field_type_name = std::string(sub_members->package_name_) + "::dds_::" + sub_members->message_name_ + "_";
                     member_type_code = create_type_code(field_type_name, sub_members, participant_qos);
                     std::cout << "  create_type_code() create type code - added sub member of type " << sub_members->package_name_ << "/" << sub_members->message_name_ << std::endl;
                 }
@@ -169,7 +188,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     }
 
     const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support_handle._data;
-    std::string type_name = std::string(members->package_name_) + "/" + members->message_name_;
+    std::string type_name = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
 
     DDS_DomainParticipantQos participant_qos;
     DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -417,7 +436,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
     }
 
     const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support_handle._data;
-    std::string type_name = std::string(members->package_name_) + "/" + members->message_name_;
+    std::string type_name = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
 
     DDS_DomainParticipantQos participant_qos;
     DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -513,7 +532,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
 #define GET_VALUE(TYPE, METHOD_NAME) \
     { \
         TYPE value; \
-        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(value, (std::string((std::string(member->name_) + "_").c_str()) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(value, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
         if (status != DDS_RETCODE_OK) { \
             printf(#METHOD_NAME "() failed. Status = %d\n", status); \
             throw std::runtime_error("get member failed"); \
@@ -525,7 +544,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
 #define GET_VALUE_WITH_DIFFERENT_TYPES(TYPE, DDS_TYPE, METHOD_NAME) \
     { \
         DDS_TYPE value; \
-        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(value, (std::string((std::string(member->name_) + "_").c_str()) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(value, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
         if (status != DDS_RETCODE_OK) { \
             printf(#METHOD_NAME "() failed. Status = %d\n", status); \
             throw std::runtime_error("get member failed"); \

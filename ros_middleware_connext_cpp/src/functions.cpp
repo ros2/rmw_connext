@@ -23,11 +23,30 @@ ros_middleware_interface::NodeHandle create_node()
         throw std::runtime_error("could not get participant factory");
     };
 
+    // use loopback interface to enable cross vendor communication
+    DDS_DomainParticipantQos participant_qos;
+    DDS_ReturnCode_t status = dpf_->get_default_participant_qos(participant_qos);
+    if (status != DDS_RETCODE_OK)
+    {
+        printf("  create_node() could not get participant qos\n");
+        throw std::runtime_error("could not get participant qos");
+    }
+    status = DDSPropertyQosPolicyHelper::add_property(participant_qos.property,
+        "dds.transport.UDPv4.builtin.ignore_loopback_interface", "0",
+        DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK)
+    {
+        printf("  create_node() could not add qos propert\n");
+        throw std::runtime_error("could not add qos property");
+    }
+    std::cout << "  create_node() disable shared memory, enable loopback interface" << std::endl;
+
     DDS_DomainId_t domain = 0;
 
     std::cout << "  create_node() create_participant in domain " << domain << std::endl;
     DDSDomainParticipant* participant = dpf_->create_participant(
-        domain, DDS_PARTICIPANT_QOS_DEFAULT, NULL,
+        //domain, DDS_PARTICIPANT_QOS_DEFAULT, NULL,
+        domain, participant_qos, NULL,
         DDS_STATUS_MASK_NONE);
     if (!participant) {
         printf("  create_node() could not create participant\n");
@@ -65,7 +84,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
     ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = (ros_middleware_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
-    std::string type_name = std::string(callbacks->_package_name) + "/" + callbacks->_message_name;
+    std::string type_name = std::string(callbacks->_package_name) + "::dds_::" + callbacks->_message_name + "_";
 
 
     std::cout << "  create_publisher() invoke register callback" << std::endl;
@@ -173,7 +192,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const NodeHandle& n
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
     ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = (ros_middleware_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
-    std::string type_name = std::string(callbacks->_package_name) + "/" + callbacks->_message_name;
+    std::string type_name = std::string(callbacks->_package_name) + "::dds_::" + callbacks->_message_name + "_";
 
     std::cout << "  create_subscriber() invoke register callback" << std::endl;
     callbacks->_register_type(participant, type_name.c_str());
