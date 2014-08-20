@@ -47,6 +47,9 @@ void register_type__@(spec.base_type.type)(DDSDomainParticipant * participant, c
     std::cout << "  @(spec.base_type.pkg_name)::type_support::register_type__@(spec.base_type.type)()" << std::endl;
     @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
     std::cout << "  type name: " << @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_TypeSupport::get_type_name() << std::endl;
+    DDS_TypeCode * type_code = @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)__get_typecode();
+    DDS_ExceptionCode_t ex;
+    type_code->print_IDL(1, ex);
 }
 
 void convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message, @(spec.base_type.pkg_name)::dds_connext::@(spec.base_type.type)_& dds_message)

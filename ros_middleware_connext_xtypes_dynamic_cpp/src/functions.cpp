@@ -69,6 +69,7 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
         const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
         std::cout << "  create_type_code() create type code - add member " << i << ": " << member->name_ << std::endl;
         const DDS_TypeCode * member_type_code;
+        // TODO support arrays: create_array_tc / create_sequence_tc
         switch (member->type_id_)
         {
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
@@ -126,10 +127,11 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
                 printf("unknown type id %u\n", member->type_id_);
                 throw std::runtime_error("unknown type");
         }
-        type_code->add_member(member->name_, DDS_TYPECODE_MEMBER_ID_INVALID, member_type_code,
+        type_code->add_member((std::string(member->name_) + "_").c_str(), DDS_TYPECODE_MEMBER_ID_INVALID, member_type_code,
                     DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
     }
     std::cout << "  type name: " << type_code->name(ex) << std::endl;
+    type_code->print_IDL(1, ex);
     DDS_StructMemberSeq_finalize(&struct_members);
     return type_code;
 }
@@ -263,7 +265,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 #define SET_VALUE(TYPE, METHOD_NAME) \
     { \
         TYPE value = *((TYPE*)((char*)ros_message + member->offset_)); \
-        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(member->name_, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, value); \
+        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME((std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, value); \
         if (status != DDS_RETCODE_OK) { \
             printf(#METHOD_NAME "() failed. Status = %d\n", status); \
             throw std::runtime_error("set member failed"); \
@@ -273,7 +275,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 #define SET_VALUE_WITH_SUFFIX(TYPE, METHOD_NAME, SUFFIX) \
     { \
         TYPE value = *((TYPE*)((char*)ros_message + member->offset_)); \
-        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(member->name_, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, value SUFFIX); \
+        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME((std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, value SUFFIX); \
         if (status != DDS_RETCODE_OK) { \
             printf(#METHOD_NAME "() failed. Status = %d\n", status); \
             throw std::runtime_error("set member failed"); \
@@ -337,7 +339,7 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message, const ro
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                 {
                     DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-                    dynamic_data->bind_complex_member(sub_dynamic_data, member->name_, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
+                    dynamic_data->bind_complex_member(sub_dynamic_data, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
                     void * sub_ros_message = (void*)((char*)ros_message + member->offset_);
                     const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
                     _publish(&sub_dynamic_data, sub_ros_message, sub_members);
@@ -511,7 +513,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
 #define GET_VALUE(TYPE, METHOD_NAME) \
     { \
         TYPE value; \
-        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(value, member->name_, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(value, (std::string((std::string(member->name_) + "_").c_str()) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
         if (status != DDS_RETCODE_OK) { \
             printf(#METHOD_NAME "() failed. Status = %d\n", status); \
             throw std::runtime_error("get member failed"); \
@@ -523,7 +525,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
 #define GET_VALUE_WITH_DIFFERENT_TYPES(TYPE, DDS_TYPE, METHOD_NAME) \
     { \
         DDS_TYPE value; \
-        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(value, member->name_, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        DDS_ReturnCode_t status = dynamic_data->METHOD_NAME(value, (std::string((std::string(member->name_) + "_").c_str()) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
         if (status != DDS_RETCODE_OK) { \
             printf(#METHOD_NAME "() failed. Status = %d\n", status); \
             throw std::runtime_error("get member failed"); \
@@ -586,7 +588,7 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message, const rosidl_type
                 {
                     char * value = 0;
                     DDS_UnsignedLong size;
-                    DDS_ReturnCode_t status = dynamic_data->get_string(value, &size, member->name_, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
+                    DDS_ReturnCode_t status = dynamic_data->get_string(value, &size, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
                     if (status != DDS_RETCODE_OK) {
                         printf("get_string() failed. Status = %d\n", status);
                         throw std::runtime_error("get member failed");
@@ -599,7 +601,7 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message, const rosidl_type
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                 {
                     DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-                    dynamic_data->bind_complex_member(sub_dynamic_data, member->name_, DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
+                    dynamic_data->bind_complex_member(sub_dynamic_data, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
                     void * sub_ros_message = (void*)((char*)ros_message + member->offset_);
                     const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
                     _take(&sub_dynamic_data, sub_ros_message, sub_members);
