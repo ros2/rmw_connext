@@ -238,8 +238,6 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const NodeHandle& n
 
 bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, void * ros_message)
 {
-   std::cout << "take()" << std::endl;
-
     if (subscriber_handle.implementation_identifier_ != _rti_connext_identifier)
     {
         printf("subscriber handle not from this implementation\n");
@@ -247,12 +245,10 @@ bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, v
         throw std::runtime_error("subscriber handle not from this implementation");
     }
 
-    std::cout << "  take() extract data reader and type code from opaque subscriber handle" << std::endl;
     CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscriber_handle.data_;
     DDSDataReader* topic_reader = custom_subscriber_info->topic_reader_;
     const ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_subscriber_info->callbacks_;
 
-    std::cout << "  take() invoke take callback" << std::endl;
     return callbacks->_take(topic_reader, ros_message);
 }
 
