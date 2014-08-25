@@ -295,7 +295,7 @@ void trigger_guard_condition(const GuardConditionHandle& guard_condition_handle)
     guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
 }
 
-void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_condition_handles)
+void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_condition_handles, bool non_blocking)
 {
     //std::cout << "wait()" << std::endl;
 
@@ -322,12 +322,16 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
 
     // invoke wait until one of the conditions triggers
     DDSConditionSeq active_conditions;
-    DDS_Duration_t timeout = DDS_Duration_t::from_seconds(1);
+    DDS_Duration_t timeout = DDS_Duration_t::from_seconds(non_blocking ? 0 : 1);
     DDS_ReturnCode_t status = DDS_RETCODE_TIMEOUT;
     while (DDS_RETCODE_TIMEOUT == status)
     {
         status = waitset.wait(active_conditions, timeout);
         if (DDS_RETCODE_TIMEOUT == status) {
+            if (non_blocking)
+            {
+               break;
+            }
             //std::cout << "wait() no data - rinse and repeat" << std::endl;
             continue;
         };
