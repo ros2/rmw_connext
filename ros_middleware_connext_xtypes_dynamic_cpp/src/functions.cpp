@@ -652,16 +652,21 @@ bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, v
     DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
     DDS_TypeCode * type_code = custom_subscriber_info->type_code_;
     const rosidl_typesupport_introspection_cpp::MessageMembers * members = custom_subscriber_info->members_;
-    DDS_DynamicData * dynamic_data = custom_subscriber_info->dynamic_data;
 
-    DDS_SampleInfo sample_info;
-    // TODO use take / return_loan instead
-    DDS_ReturnCode_t status = dynamic_reader->take_next_sample(*dynamic_data, sample_info);
+    DDS_DynamicDataSeq dynamic_data_sequence;
+    DDS_SampleInfoSeq sample_infos;
+    DDS_ReturnCode_t status = dynamic_reader->take(
+        dynamic_data_sequence,
+        sample_infos,
+        1,
+        DDS_NOT_READ_SAMPLE_STATE,
+        DDS_ANY_VIEW_STATE,
+        DDS_ANY_INSTANCE_STATE);
     if (status == DDS_RETCODE_NO_DATA) {
         return false;
     }
     if (status != DDS_RETCODE_OK) {
-        printf("take_next_sample() failed. Status = %d\n", status);
+        printf("take() failed. Status = %d\n", status);
         throw std::runtime_error("take next sample failed");
     };
 
@@ -670,9 +675,9 @@ bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, v
         throw std::runtime_error("invalid ROS message pointer");
     };
 
-    _take(dynamic_data, ros_message, members);
+    _take(&dynamic_data_sequence[0], ros_message, members);
 
-    //ddts->delete_data(dynamic_data);
+    dynamic_reader->return_loan(dynamic_data_sequence, sample_infos);
 
     return true;
 }

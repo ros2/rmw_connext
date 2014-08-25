@@ -162,14 +162,18 @@ bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_r
 {
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
 
-    //@(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_ dds_message;
-    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
-
     @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataReader * data_reader = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
-    //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)() write dds message" << std::endl;
-    DDS_SampleInfo sample_info;
-    // TODO use take / return_loan instead
-    DDS_ReturnCode_t status = data_reader->take_next_sample(*dds_message, sample_info);
+    //std::cout << "  @(spec.base_type.pkg_name)::type_support::take__@(spec.base_type.type)() take dds message" << std::endl;
+
+    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_Seq dds_messages;
+    DDS_SampleInfoSeq sample_infos;
+    DDS_ReturnCode_t status = data_reader->take(
+        dds_messages,
+        sample_infos,
+        1,
+        DDS_NOT_READ_SAMPLE_STATE,
+        DDS_ANY_VIEW_STATE,
+        DDS_ANY_INSTANCE_STATE);
     if (status == DDS_RETCODE_NO_DATA) {
         return false;
     }
@@ -184,8 +188,10 @@ bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_r
     };
 
     @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(@(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
-    convert_dds_message_to_ros(*dds_message, ros_message);
-    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
+    convert_dds_message_to_ros(dds_messages[0], ros_message);
+
+    data_reader->return_loan(dds_messages, sample_infos);
+
     return true;
 }
 
