@@ -25,11 +25,14 @@ register_ros_middleware_implementation()
 
 ament_package()
 
-include_directories(include ${ros_middleware_interface_INCLUDE_DIRS} ${rosidl_generator_cpp_INCLUDE_DIRS} ${rosidl_typesupport_connext_cpp_INCLUDE_DIRS} ${Connext_INCLUDE_DIRS})
+include_directories(include)
 link_directories(${Connext_LIBRARY_DIRS})
-add_definitions(${Connext_DEFINITIONS})
 add_library(ros_middleware_connext_cpp SHARED src/functions.cpp)
-target_link_libraries(ros_middleware_connext_cpp ${rosidl_typesupport_connext_cpp_LIBRARIES} ${Connext_LIBRARIES})
+ament_target_dependencies(ros_middleware_connext_cpp
+  "ros_middleware_interface"
+  "rosidl_generator_cpp"
+  "rosidl_typesupport_connext_cpp"
+  "Connext")
 
 install(
   DIRECTORY include/
