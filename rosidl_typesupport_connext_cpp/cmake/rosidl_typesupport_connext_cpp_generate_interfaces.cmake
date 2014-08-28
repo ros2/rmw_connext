@@ -54,7 +54,7 @@ add_custom_command(
   --dds-interface-base-path ${_dds_idl_base_path}
   --deps ${_dependencies}
   --output-dir "${_output_path}"
-  --idl-pp "${CONNEXT_DDSGEN2}"
+  --idl-pp "${Connext_DDSGEN2}"
   --template-dir ${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}
   DEPENDS
   ${rosidl_typesupport_connext_cpp_BIN}
@@ -70,16 +70,17 @@ set(_target_suffix "__dds_connext_cpp")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-tautological-compare")
 
+link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED ${_generated_files})
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
-  ${CONNEXT_INCLUDE_DIRS}
+  ${Connext_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp
   ${rosidl_generator_cpp_INCLUDE_DIRS}
 )
 target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  PUBLIC ${CONNEXT_DEFINITIONS})
+  PUBLIC ${Connext_DEFINITIONS})
 foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PUBLIC
@@ -89,7 +90,7 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   target_link_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     ${${_pkg_name}_LIBRARIES})
 endforeach()
-target_link_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${CONNEXT_LIBRARIES})
+target_link_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${Connext_LIBRARIES})
 
 add_dependencies(
   ${rosidl_generate_interfaces_TARGET}
@@ -114,4 +115,4 @@ install(
 )
 
 ament_export_include_directories(include)
-ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${CONNEXT_LIBRARIES})
+ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${Connext_LIBRARIES})
