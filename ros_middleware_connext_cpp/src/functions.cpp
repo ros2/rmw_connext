@@ -380,6 +380,8 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
         {
             if (active_conditions[j] == condition)
             {
+                DDSGuardCondition *guard = (DDSGuardCondition*)condition;
+                guard->set_trigger_value(DDS_BOOLEAN_FALSE);
                 break;
             }
         }

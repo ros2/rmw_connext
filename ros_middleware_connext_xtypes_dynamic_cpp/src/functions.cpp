@@ -790,6 +790,8 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         {
             if (active_conditions[j] == condition)
             {
+                DDSGuardCondition *guard = (DDSGuardCondition*)condition;
+                guard->set_trigger_value(DDS_BOOLEAN_FALSE);
                 break;
             }
         }
