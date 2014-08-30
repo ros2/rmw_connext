@@ -37,6 +37,7 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   foreach(_idl_file ${${_pkg_name}_INTERFACE_FILES})
     get_filename_component(name "${_idl_file}" NAME_WE)
     set(_abs_idl_file "${${_pkg_name}_DIR}/../dds_connext/${name}_.idl")
+    normalize_path(_abs_idl_file "${_abs_idl_file}")
     list(APPEND _dependency_files "${_abs_idl_file}")
     list(APPEND _dependencies "${_pkg_name}:${_abs_idl_file}")
   endforeach()
@@ -78,9 +79,14 @@ target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp
 )
 foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
+  set(_include_dir "${${_pkg_name}_DIR}")
+  get_filename_component(_include_dir "${_include_dir}" DIRECTORY)
+  get_filename_component(_include_dir "${_include_dir}" DIRECTORY)
+  get_filename_component(_include_dir "${_include_dir}" DIRECTORY)
+  set(_include_dir "${_include_dir}/include/${_pkg_name}/dds_connext")
   target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PUBLIC
-    ${${_pkg_name}_DIR}/../../../include/${_pkg_name}/dds_connext
+    "${_include_dir}"
   )
   ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     ${_pkg_name})

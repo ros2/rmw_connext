@@ -11,4 +11,6 @@ if(NOT Connext_FOUND)
 endif()
 
 set(rosidl_typesupport_connext_cpp_BIN "${rosidl_typesupport_connext_cpp_DIR}/../../../lib/rosidl_typesupport_connext_cpp/rosidl_typesupport_connext_cpp")
+normalize_path(rosidl_typesupport_connext_cpp_BIN "${rosidl_typesupport_connext_cpp_BIN}")
 set(rosidl_typesupport_connext_cpp_TEMPLATE_DIR "${rosidl_typesupport_connext_cpp_DIR}/../resource")
+normalize_path(rosidl_typesupport_connext_cpp_TEMPLATE_DIR "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}")
