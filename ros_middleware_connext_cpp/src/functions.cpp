@@ -16,6 +16,8 @@ ros_middleware_interface::NodeHandle create_node()
 {
     std::cout << "create_node()" << std::endl;
 
+    std::cout << "  create_node() " << _rti_connext_identifier << std::endl;
+
     std::cout << "  create_node() get_instance" << std::endl;
     DDSDomainParticipantFactory* dpf_ = DDSDomainParticipantFactory::get_instance();
     if (!dpf_) {
