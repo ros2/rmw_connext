@@ -17,6 +17,8 @@ ros_middleware_interface::NodeHandle create_node()
 {
     std::cout << "create_node()" << std::endl;
 
+    std::cout << "  create_node() " << _rti_connext_dynamic_identifier << std::endl;
+
     std::cout << "  create_node() get_instance" << std::endl;
     DDSDomainParticipantFactory* dpf_ = DDSDomainParticipantFactory::get_instance();
     if (!dpf_) {
@@ -788,6 +790,8 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         {
             if (active_conditions[j] == condition)
             {
+                DDSGuardCondition *guard = (DDSGuardCondition*)condition;
+                guard->set_trigger_value(DDS_BOOLEAN_FALSE);
                 break;
             }
         }

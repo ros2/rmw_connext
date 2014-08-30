@@ -175,6 +175,7 @@ bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_r
         DDS_ANY_VIEW_STATE,
         DDS_ANY_INSTANCE_STATE);
     if (status == DDS_RETCODE_NO_DATA) {
+        printf("take() failed due to DDS_RETCODE_NO_DATA. Status = %d\n", status);
         return false;
     }
     if (status != DDS_RETCODE_OK) {
