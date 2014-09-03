@@ -34,44 +34,63 @@ if(NOT "$ENV{NDDSHOME}" STREQUAL "")
 
   # find library nddscpp
   set(Connext_LIBRARIES "")
-  file(GLOB_RECURSE _lib
+  set(_lib_path "$ENV{NDDSHOME}/lib")
+  file(GLOB_RECURSE _libs
+    RELATIVE "${_lib_path}"
     "$ENV{NDDSHOME}/lib/*/libnddscpp.so")
-  if("${_lib}" STREQUAL "")
-    message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME} but could not find 'libnddscpp.so'")
+
+  # remove libraries from non-matching platforms
+  set(_i 0)
+  while(TRUE)
+    list(LENGTH _libs _length)
+    if(NOT ${_i} LESS ${_length})
+      break()
+    endif()
+    list(GET _libs ${_i} _lib)
+    set(_match TRUE)
+    # ignore libraries in folders with 'jdk' suffix
+    string(FIND "${_lib}" "jdk/" _found)
+    if(NOT ${_found} EQUAL -1)
+      set(_match FALSE)
+    endif()
+    # ignore libraries in folders containing 'Linux2'
+    string(FIND "${_lib}" "Linux2" _found)
+    if(NOT ${_found} EQUAL -1)
+      set(_match FALSE)
+    endif()
+    if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+      # on 64 bit platforms ignore libraries in folders containing 'i86'
+      string(FIND "${_lib}" "i86" _found)
+      if(NOT ${_found} EQUAL -1)
+        set(_match FALSE)
+      endif()
+    else()
+      # on 32 bit platforms ignore libraries in folders containing 'x64'
+      string(FIND "${_lib}" "x64" _found)
+      if(NOT ${_found} EQUAL -1)
+        set(_match FALSE)
+      endif()
+    endif()
+    # keep libraries matching this platform
+    if(_match)
+      math(EXPR _i "${_i} + 1")
+    else()
+      list(REMOVE_AT _libs ${_i})
+    endif()
+  endwhile()
+
+  if("${_libs} " STREQUAL " ")
+    message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME}' but could not find 'libnddscpp.so' under '${_lib_path}'")
   endif()
-  list(LENGTH _lib _length)
   if(_length GREATER 1)
-    message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME} but found multiple files named 'libnddscpp.so': ${_lib}")
+    message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME}' but found multiple files named 'libnddscpp.so' under '${_lib_path}': ${_libs}")
   endif()
-  list(APPEND Connext_LIBRARIES ${_lib})
 
-  # find library nddsc relative to the first one
-  # get_filename_component(_lib_path "${_lib}" DIRECTORY)
-  # file(GLOB_RECURSE _lib
-  #   "${_lib_path}/libnddsc.so")
-  # if("${_lib}" STREQUAL "")
-  #   message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME} but could not find 'libnddsc.so'")
-  # endif()
-  # list(LENGTH _lib _length)
-  # if(_length GREATER 1)
-  #   message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME} but found multiple files named 'libnddsc.so': ${_lib}")
-  # endif()
-  # list(APPEND Connext_LIBRARIES ${_lib})
+  list(GET _libs 0 _lib)
+  list(APPEND Connext_LIBRARIES "${_lib_path}/${_lib}")
 
-  get_filename_component(_lib_path "${_lib}" DIRECTORY)
+  get_filename_component(_lib_path "${Connext_LIBRARIES}" DIRECTORY)
   set(Connext_LIBRARY_DIRS "${_lib_path}")
-
-  # find library nddscore relative to the first one
-  # file(GLOB_RECURSE _lib
-  #   "${_lib_path}/libnddscore.so")
-  # if("${_lib}" STREQUAL "")
-  #   message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME} but could not find 'libnddscore.so'")
-  # endif()
-  # list(LENGTH _lib _length)
-  # if(_length GREATER 1)
-  #   message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME} but found multiple files named 'libnddscore.so': ${_lib}")
-  # endif()
-  # list(APPEND Connext_LIBRARIES ${_lib})
 
   set(Connext_DEFINITIONS "-DRTI_LINUX" "-DRTI_UNIX")
   set(Connext_DDSGEN2 "$ENV{NDDSHOME}/scripts/rtiddsgen2")
