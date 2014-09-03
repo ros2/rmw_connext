@@ -34,11 +34,12 @@ ros_middleware_interface::NodeHandle create_node()
         throw std::runtime_error("could not get participant qos");
     }
     status = DDSPropertyQosPolicyHelper::add_property(participant_qos.property,
-        "dds.transport.UDPv4.builtin.ignore_loopback_interface", "0",
+        "dds.transport.UDPv4.builtin.ignore_loopback_interface",
+        "0",
         DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK)
     {
-        printf("  create_node() could not add qos propert\n");
+        printf("  create_node() could not add qos property\n");
         throw std::runtime_error("could not add qos property");
     }
     std::cout << "  create_node() disable shared memory, enable loopback interface" << std::endl;
@@ -127,16 +128,27 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     };
 
 
-    DDS_DataWriterQos default_datawriter_qos;
-    status = participant->get_default_datawriter_qos(default_datawriter_qos);
+    DDS_DataWriterQos datawriter_qos;
+    status = participant->get_default_datawriter_qos(datawriter_qos);
     if (status != DDS_RETCODE_OK) {
         printf("get_default_datawriter_qos() failed. Status = %d\n", status);
         throw std::runtime_error("get default datawriter qos failed");
     };
 
+    status = DDSPropertyQosPolicyHelper::add_property(datawriter_qos.property,
+        "dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size",
+        "4096",
+        DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK)
+    {
+        printf("  add_property() could not add qos property\n");
+        throw std::runtime_error("could not add qos property");
+    }
+    std::cout << "  create_publisher() limit preallocated sample size" << std::endl;
+
     std::cout << "  create_publisher() create data writer" << std::endl;
     DDSDataWriter* topic_writer = dds_publisher->create_datawriter(
-        topic, default_datawriter_qos,
+        topic, datawriter_qos,
         NULL, DDS_STATUS_MASK_NONE);
 
 

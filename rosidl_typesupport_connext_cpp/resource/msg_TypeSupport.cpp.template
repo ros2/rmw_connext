@@ -70,7 +70,16 @@ void convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_ty
         size_t size = @(field.type.array_size);
 @[else]@
         size_t size = ros_message.@(field.name).size();
-        dds_message.@(field.name)_.length(size);
+@[if not field.type.is_upper_bound]@
+        if (!dds_message.@(field.name)_.maximum(size)) {
+            printf("maximum() set maximum of sequence failed\n");
+            throw std::runtime_error("failed to set maximum of sequence");
+        }
+@[end if]@
+        if (!dds_message.@(field.name)_.length(size)) {
+            printf("length() set length of sequence failed\n");
+            throw std::runtime_error("failed to set length of sequence");
+        }
 @[end if]@
         for (size_t i = 0; i < size; i++) {
 @[if field.type.type == 'string']@

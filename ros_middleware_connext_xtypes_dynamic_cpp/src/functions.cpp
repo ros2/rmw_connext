@@ -35,11 +35,12 @@ ros_middleware_interface::NodeHandle create_node()
         throw std::runtime_error("could not get participant qos");
     }
     status = DDSPropertyQosPolicyHelper::add_property(participant_qos.property,
-        "dds.transport.UDPv4.builtin.ignore_loopback_interface", "0",
+        "dds.transport.UDPv4.builtin.ignore_loopback_interface",
+        "0",
         DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK)
     {
-        printf("  create_node() could not add qos propert\n");
+        printf("  create_node() could not add qos property\n");
         throw std::runtime_error("could not add qos property");
     }
     std::cout << "  create_node() disable shared memory, enable loopback interface" << std::endl;
@@ -73,14 +74,6 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
         printf("  create_type_code() could not get typecode factory\n");
         throw std::runtime_error("could not get typecode factory");
     };
-
-    // TODO check how to remove the default value
-    DDS_UnsignedLong max_string_size = 1024;
-    DDS_Property_t * property = DDSPropertyQosPolicyHelper::lookup_property(participant_qos.property, "dds.builtin_type.string.max_size");
-    if (property) {
-        std::cout << "  lookup_property() " << property->name << " = " << property->value << std::endl;
-        max_string_size = atoll(property->value);
-    }
 
     DDS_StructMemberSeq struct_members;
     DDS_ExceptionCode_t ex = DDS_NO_EXCEPTION_CODE;
@@ -133,7 +126,18 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
                 member_type_code = factory->get_primitive_tc(DDS_TK_ULONGLONG);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-                member_type_code = factory->create_string_tc(max_string_size, ex);
+                {
+                    DDS_UnsignedLong max_string_size;
+                    if (member->string_upper_bound_)
+                    {
+                        max_string_size = member->string_upper_bound_;
+                    }
+                    else
+                    {
+                        max_string_size = std::string().max_size();
+                    }
+                    member_type_code = factory->create_string_tc(max_string_size, ex);
+                }
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                 {
