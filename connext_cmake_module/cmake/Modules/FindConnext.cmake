@@ -27,7 +27,7 @@
 
 set(Connext_FOUND FALSE)
 
-if(NOT "$ENV{NDDSHOME}" STREQUAL "")
+if(NOT "$ENV{NDDSHOME} " STREQUAL " ")
   # look inside of NDDSHOME if defined
   message(STATUS "Found RTI Connext: $ENV{NDDSHOME}")
   set(Connext_INCLUDE_DIRS "$ENV{NDDSHOME}/include/ndds")
