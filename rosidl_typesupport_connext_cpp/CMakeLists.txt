@@ -21,7 +21,7 @@ ament_export_dependencies(rosidl_generator_dds_idl)
 ament_python_install_package(${PROJECT_NAME})
 
 ament_package(
-  CONFIG_EXTRAS "rosidl_typesupport_connext_cpp-extras.cmake"
+  CONFIG_EXTRAS "rosidl_typesupport_connext_cpp-extras.cmake.in"
 )
 
 install(

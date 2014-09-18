@@ -59,7 +59,7 @@ add_custom_command(
   --template-dir ${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}
   DEPENDS
   ${rosidl_typesupport_connext_cpp_BIN}
-  ${rosidl_typesupport_connext_cpp_DIR}/../../../${PYTHON_INSTALL_DIR}/rosidl_typesupport_connext_cpp/__init__.py
+  ${rosidl_typesupport_connext_cpp_GENERATOR_FILES}
   ${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg_TypeSupport.cpp.template
   ${_dds_idl_files}
   ${_dependency_files}
