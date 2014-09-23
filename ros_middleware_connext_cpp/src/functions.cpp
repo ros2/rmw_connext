@@ -5,7 +5,7 @@
 
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include "ros_middleware_interface/handles.h"
-#include "ros_middleware_connext_cpp/MessageTypeSupport.h"
+#include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 
 namespace ros_middleware_interface
 {

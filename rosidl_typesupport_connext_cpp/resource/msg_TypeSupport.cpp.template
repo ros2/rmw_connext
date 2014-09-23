@@ -20,7 +20,7 @@
 #include "@(spec.base_type.pkg_name)/@(spec.base_type.type)_Struct.h"
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_Support.h"
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
-#include "ros_middleware_connext_cpp/MessageTypeSupport.h"
+#include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 
 @[for field in spec.fields]@
 @[if not field.type.is_primitive_type()]@

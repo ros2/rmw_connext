@@ -2,7 +2,7 @@
 #ifndef __ros_middleware_interface__get_type_support_handle__h__
 #define __ros_middleware_interface__get_type_support_handle__h__
 
-#include "ros_middleware_connext_cpp/MessageTypeSupport.h"
+#include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 
 namespace ros_middleware_interface
 {
