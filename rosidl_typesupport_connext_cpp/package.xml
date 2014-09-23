@@ -7,8 +7,6 @@
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>ament_cmake_environment_hooks</buildtool_depend>
-  <buildtool_depend>ament_cmake_python</buildtool_depend>
   <buildtool_depend>connext_cmake_module</buildtool_depend>
   <buildtool_depend>libndds51-dev</buildtool_depend>
   <buildtool_depend>ndds-tools</buildtool_depend>
