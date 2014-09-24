@@ -12,7 +12,6 @@ if(NOT Connext_FOUND)
   return()
 endif()
 
-find_package(ament_cmake_environment_hooks REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 
 ament_export_dependencies(rosidl_cmake)
