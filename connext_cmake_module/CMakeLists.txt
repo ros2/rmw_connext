@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 
-project(connext_cmake_module)
+project(connext_cmake_module NONE)
 
 find_package(ament_cmake REQUIRED)
 
