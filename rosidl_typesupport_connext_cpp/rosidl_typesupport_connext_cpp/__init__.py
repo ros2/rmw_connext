@@ -4,21 +4,27 @@ import re
 import subprocess
 
 from rosidl_generator_dds_idl import MSG_TYPE_TO_IDL
-from rosidl_parser import parse_message_file
+from rosidl_parser import parse_message_file, parse_service_file
 
 
 def parse_ros_interface_files(pkg_name, ros_interface_files):
-    specs = []
+    message_specs = []
+    service_specs = []
     for idl_file in ros_interface_files:
         print(pkg_name, idl_file)
-        spec = parse_message_file(pkg_name, idl_file)
-        specs.append(spec)
-    return specs
+        filename, extension = os.path.splitext(idl_file)
+        if extension == '.msg':
+            message_spec = parse_message_file(pkg_name, idl_file)
+            message_specs.append(message_spec)
+        elif extension == '.srv':
+            service_spec = parse_service_file(pkg_name, idl_file)
+            service_specs.append(service_spec)
+    return (message_specs, service_specs)
 
 
 def generate_dds_connext_cpp(
         pkg_name, dds_interface_files, dds_interface_base_path, deps,
-        output_dir, idl_pp, message_specs):
+        output_dir, idl_pp, message_specs, service_specs):
     try:
         os.makedirs(output_dir)
     except FileExistsError:
@@ -228,11 +234,20 @@ def _get_dds_type(fields, field_name):
     return IDL_TYPE_TO_DDS[idl_type]
 
 
-def generate_cpp(pkg_name, message_specs, output_dir, template_dir):
-    mapping = {
+def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_dir):
+    mapping_msgs = {
+        os.path.join(template_dir, 'msg_TypeSupport.h.template'): '%s_TypeSupport.h',
         os.path.join(template_dir, 'msg_TypeSupport.cpp.template'): '%s_TypeSupport.cpp',
     }
-    for template_file in mapping.keys():
+
+    mapping_srvs = {
+        os.path.join(template_dir, 'srv_ServiceTypeSupport.cpp.template'): '%s_ServiceTypeSupport.cpp',
+    }
+
+    for template_file in mapping_msgs.keys():
+        assert(os.path.exists(template_file))
+
+    for template_file in mapping_srvs.keys():
         assert(os.path.exists(template_file))
 
     try:
@@ -241,9 +256,32 @@ def generate_cpp(pkg_name, message_specs, output_dir, template_dir):
         pass
 
     for spec in message_specs:
-        for template_file, generated_filename in mapping.items():
+        for template_file, generated_filename in mapping_msgs.items():
             generated_file = os.path.join(output_dir, generated_filename % spec.base_type.type)
-            print('Generating: %s' % generated_file)
+            print('Generating MESSAGE: %s' % generated_file)
+
+            try:
+                # TODO only touch generated file if its content actually changes
+                ofile = open(generated_file, 'w')
+                # TODO reuse interpreter
+                interpreter = em.Interpreter(
+                    output=ofile,
+                    options={
+                        em.RAW_OPT: True,
+                        em.BUFFERED_OPT: True,
+                    },
+                    globals={'spec': spec},
+                )
+                interpreter.file(open(template_file))
+                interpreter.shutdown()
+            except Exception:
+                os.remove(generated_file)
+                raise
+
+    for spec in service_specs:
+        for template_file, generated_filename in mapping_srvs.items():
+            generated_file = os.path.join(output_dir, generated_filename % spec.srv_name)
+            print('Generating SERVICE: %s' % generated_file)
 
             try:
                 # TODO only touch generated file if its content actually changes

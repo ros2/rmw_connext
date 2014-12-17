@@ -1,0 +1,166 @@
+@###############################################
+@#
+@# ROS message type support code generation for C++
+@#
+@# EmPy template for generating <msg>_ServiceTypeSupport.cpp files
+@#
+@###############################################
+@# Start of Template
+@#
+@# Context:
+@#  - spec (rosidl_parser.ServiceSpecification)
+@#    Parsed specification of the .srv file
+@###############################################
+
+#include <iostream>
+
+#include "@(spec.pkg_name)/@(spec.srv_name)_Service.h"
+#include "rosidl_generator_cpp/ServiceTypeSupport.h"
+#include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Request_Support.h"
+#include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Request_TypeSupport.h"
+#include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Response_Support.h"
+#include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Response_TypeSupport.h"
+#include "rosidl_generator_cpp/MessageTypeSupport.h"
+#include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
+#include "rosidl_typesupport_connext_cpp/ServiceTypeSupport.h"
+#include "ndds/connext_cpp/connext_cpp_requester_details.h"
+#include "ndds/ndds_cpp.h"
+#include "ndds/ndds_requestreply_cpp.h"
+
+namespace @(spec.pkg_name)
+{
+
+namespace service_type_support
+{
+
+void * create_requester__@(spec.srv_name)(DDSDomainParticipant * participant, const char * service_name)
+{
+    connext::RequesterParams requester_params(participant);
+    requester_params.service_name(service_name);
+
+    connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester(new connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_>(requester_params));
+
+    return requester;
+}
+
+void send_request__@(spec.srv_name)(void * untyped_requester, const void * untyped_ros_request)
+{
+    connext::WriteSample<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_> request;
+    const @(spec.pkg_name)::@(spec.srv_name)Request & ros_request = *(reinterpret_cast<const @(spec.pkg_name)::@(spec.srv_name)Request *>(untyped_ros_request));
+    @(spec.pkg_name)::type_support::convert_ros_message_to_dds(ros_request, request.data());
+
+    connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_requester);
+
+    requester->send_request(request);
+}
+
+void * create_replier__@(spec.srv_name)(DDSDomainParticipant * participant, const char * service_name, DDSDataReader **reader)
+{
+    connext::ReplierParams<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> replier_params(participant);
+    replier_params.service_name(service_name);
+
+    connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * replier(new connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_>(replier_params));
+
+    *reader = replier->get_request_datareader();
+    return replier;
+}
+
+bool receive_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ros_response)
+{
+    @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(@(spec.pkg_name)::@(spec.srv_name)Response *)untyped_ros_response;
+    connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_requester);
+
+    const DDS::Duration_t MAX_WAIT = {1, 0};
+    connext::Sample<@(spec.pkg_name)::dds_::@(spec.srv_name)Response_> response;
+    bool received = requester->receive_reply(response, MAX_WAIT);
+    if(received)
+    {
+        if(response.info().valid_data) {
+            @(spec.pkg_name)::type_support::convert_dds_message_to_ros(response.data(), ros_response);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_request)
+{
+    @(spec.pkg_name)::@(spec.srv_name)Request & ros_request = *(@(spec.pkg_name)::@(spec.srv_name)Request *)untyped_ros_request;
+    connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_replier);
+
+    connext::Sample<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_> request;
+    bool taken = replier->take_request(request);
+    if(taken)
+    {
+        if(request.info().valid_data) {
+            @(spec.pkg_name)::type_support::convert_dds_message_to_ros(request.data(), ros_request);
+
+            size_t SAMPLE_IDENTITY_SIZE = 16;
+            ros_request.req_id.writer_guid.resize(SAMPLE_IDENTITY_SIZE);
+            memcpy(&ros_request.req_id.writer_guid[0],
+                   request.identity().writer_guid.value,
+                   SAMPLE_IDENTITY_SIZE);
+
+            ros_request.req_id.high = request.identity().sequence_number.high;
+            ros_request.req_id.low = request.identity().sequence_number.low;
+            return true;
+        }
+    }
+    return false;
+}
+
+void send_response__@(spec.srv_name)(
+    void * untyped_replier, const void * untyped_ros_request,
+    const void * untyped_ros_response)
+{
+    connext::WriteSample<@(spec.pkg_name)::dds_::@(spec.srv_name)Response_> response;
+    const @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(reinterpret_cast<const @(spec.pkg_name)::@(spec.srv_name)Response *>(untyped_ros_response));
+    @(spec.pkg_name)::type_support::convert_ros_message_to_dds(ros_response, response.data());
+
+    const @(spec.pkg_name)::@(spec.srv_name)Request & ros_request = *(reinterpret_cast<const @(spec.pkg_name)::@(spec.srv_name)Request *>(untyped_ros_request));
+    DDS_SampleIdentity_t request_identity;
+
+    std::copy(
+        ros_request.req_id.writer_guid.begin(),
+        ros_request.req_id.writer_guid.end(),
+        &(request_identity.writer_guid.value)[0]);
+
+    request_identity.sequence_number.high = ros_request.req_id.high;
+    request_identity.sequence_number.low = ros_request.req_id.low;
+
+    connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_replier);
+
+    replier->send_reply(response, request_identity);
+}
+
+static ros_middleware_connext_cpp::ServiceTypeSupportCallbacks callbacks = {
+    "@(spec.pkg_name)",
+    "@(spec.srv_name)",
+    &create_requester__@(spec.srv_name),
+    &create_replier__@(spec.srv_name),
+    &send_request__@(spec.srv_name),
+    &receive_response__@(spec.srv_name),
+    &take_request__@(spec.srv_name),
+    &send_response__@(spec.srv_name),
+};
+
+static rosidl_generator_cpp::ServiceTypeSupportHandle handle = {
+    "connext_static",
+    &callbacks
+};
+
+}  // namespace service_type_support
+
+}  // namespace @(spec.pkg_name)
+
+
+namespace ros_middleware_connext_cpp
+{
+
+template<>
+const rosidl_generator_cpp::ServiceTypeSupportHandle& get_service_type_support_handle<@(spec.pkg_name)::@(spec.srv_name)>()
+{
+    return @(spec.pkg_name)::service_type_support::handle;
+}
+
+}  // namespace ros_middleware_connext_cpp
