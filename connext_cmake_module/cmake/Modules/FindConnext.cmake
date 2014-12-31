@@ -82,10 +82,10 @@ if(NOT "$ENV{NDDSHOME} " STREQUAL " ")
   endwhile()
 
   if("${_libs} " STREQUAL " ")
-    message(FATAL_ERROR "NDDSHOME set to '$ENV{NDDSHOME}' but could not find 'libnddscpp.so' under '${_lib_path}'")
+    message(FATAL_ERROR "NDDSHOME set to '$ENV{NDDSHOME}' but could not find 'libnddscpp.so' and 'librticonnextmsgcpp.so' under '${_lib_path}'")
   endif()
   if(_length GREATER 2)
-    message(FATAL_ERROR "NDDSHOME set to '$ENV{NDDSHOME}' but found multiple files named 'libnddscpp.so' under '${_lib_path}': ${_libs}")
+    message(FATAL_ERROR "NDDSHOME set to '$ENV{NDDSHOME}' but found multiple files named 'libnddscpp.so' or 'librticonnextmsgcpp.so' under '${_lib_path}': ${_libs}")
   endif()
 
   list(GET _libs 0 _libndds)
