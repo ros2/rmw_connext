@@ -567,7 +567,7 @@ ros_middleware_interface::ServiceHandle create_service(
 }
 
 bool receive_response(
-  const ClientHandle& client_handle, void * ros_response)
+  const ClientHandle& client_handle, void * ros_response, long timeout)
 {
     if (client_handle.implementation_identifier_ != _rti_connext_identifier)
     {
@@ -580,7 +580,7 @@ bool receive_response(
     void * requester = custom_client_info->requester_;
     const ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
 
-    return callbacks->_receive_response(requester, ros_response);
+    return callbacks->_receive_response(requester, ros_response, timeout);
 }
 
 bool take_request(
