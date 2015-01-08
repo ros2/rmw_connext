@@ -29,6 +29,8 @@
 #include "ndds/ndds_cpp.h"
 #include "ndds/ndds_requestreply_cpp.h"
 
+#include <userland_msgs/RequestId.h>
+
 namespace @(spec.pkg_name)
 {
 
@@ -86,9 +88,11 @@ bool receive_response__@(spec.srv_name)(void * untyped_requester, void * untyped
     return false;
 }
 
-bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_request_with_header)
+bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_request, void * untyped_ros_request_header)
 {
-    @(spec.pkg_name)::@(spec.srv_name)RequestWithHeader & ros_request_with_header = *(@(spec.pkg_name)::@(spec.srv_name)RequestWithHeader *)untyped_ros_request_with_header;
+    @(spec.pkg_name)::@(spec.srv_name)Request & ros_request = *(@(spec.pkg_name)::@(spec.srv_name)Request *)untyped_ros_request;
+    userland_msgs::RequestId & req_id = *(userland_msgs::RequestId *)untyped_ros_request_header;
+
     connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_replier);
 
     connext::Sample<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_> request;
@@ -96,16 +100,16 @@ bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_r
     if(taken)
     {
         if(request.info().valid_data) {
-            @(spec.pkg_name)::type_support::convert_dds_message_to_ros(request.data(), ros_request_with_header.request);
+            @(spec.pkg_name)::type_support::convert_dds_message_to_ros(request.data(), ros_request);
 
             size_t SAMPLE_IDENTITY_SIZE = 16;
-            ros_request_with_header.req_id.writer_guid.resize(SAMPLE_IDENTITY_SIZE);
-            memcpy(&ros_request_with_header.req_id.writer_guid[0],
+            req_id.writer_guid.resize(SAMPLE_IDENTITY_SIZE);
+            memcpy(&req_id.writer_guid[0],
                    request.identity().writer_guid.value,
                    SAMPLE_IDENTITY_SIZE);
 
-            ros_request_with_header.req_id.high = request.identity().sequence_number.high;
-            ros_request_with_header.req_id.low = request.identity().sequence_number.low;
+            req_id.high = request.identity().sequence_number.high;
+            req_id.low = request.identity().sequence_number.low;
             return true;
         }
     }
@@ -113,23 +117,24 @@ bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_r
 }
 
 void send_response__@(spec.srv_name)(
-    void * untyped_replier, const void * untyped_ros_request_with_header,
+    void * untyped_replier, const void * untyped_ros_request_header,
     const void * untyped_ros_response)
 {
     connext::WriteSample<@(spec.pkg_name)::dds_::@(spec.srv_name)Response_> response;
     const @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(reinterpret_cast<const @(spec.pkg_name)::@(spec.srv_name)Response *>(untyped_ros_response));
     @(spec.pkg_name)::type_support::convert_ros_message_to_dds(ros_response, response.data());
 
-    const @(spec.pkg_name)::@(spec.srv_name)RequestWithHeader & ros_request_with_header = *(reinterpret_cast<const @(spec.pkg_name)::@(spec.srv_name)RequestWithHeader *>(untyped_ros_request_with_header));
+    const userland_msgs::RequestId & req_id = *(reinterpret_cast<const userland_msgs::RequestId *>(untyped_ros_request_header));
+
     DDS_SampleIdentity_t request_identity;
 
     std::copy(
-        ros_request_with_header.req_id.writer_guid.begin(),
-        ros_request_with_header.req_id.writer_guid.end(),
+        req_id.writer_guid.begin(),
+        req_id.writer_guid.end(),
         &(request_identity.writer_guid.value)[0]);
 
-    request_identity.sequence_number.high = ros_request_with_header.req_id.high;
-    request_identity.sequence_number.low = ros_request_with_header.req_id.low;
+    request_identity.sequence_number.high = req_id.high;
+    request_identity.sequence_number.low = req_id.low;
 
     connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_replier);
 

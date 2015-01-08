@@ -584,7 +584,7 @@ bool receive_response(
 }
 
 bool take_request(
-  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request)
+  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request, void * ros_request_header)
 {
     if (service_handle.implementation_identifier_ != _rti_connext_identifier)
     {
@@ -599,7 +599,7 @@ bool take_request(
 
     const ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
 
-    return callbacks->_take_request(replier, ros_request);
+    return callbacks->_take_request(replier, ros_request, ros_request_header);
 }
 
 void send_response(

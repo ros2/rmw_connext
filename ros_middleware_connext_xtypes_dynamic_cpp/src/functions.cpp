@@ -841,7 +841,8 @@ bool receive_response(
 }
 
 bool take_request(
-  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request)
+  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request,
+  void * ros_request_header)
 {
     return false;
 }
