@@ -68,12 +68,13 @@ void * create_replier__@(spec.srv_name)(DDSDomainParticipant * participant, cons
     return replier;
 }
 
-bool receive_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ros_response, long timeout)
+bool receive_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ros_response)
 {
     @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(@(spec.pkg_name)::@(spec.srv_name)Response *)untyped_ros_response;
     connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_requester);
 
-    const DDS::Duration_t MAX_WAIT = {timeout, 0};
+    // TODO(esteve): add a sane default timeout.
+    const DDS::Duration_t MAX_WAIT = {1, 0};
     connext::Sample<@(spec.pkg_name)::dds_::@(spec.srv_name)Response_> response;
     bool received = requester->receive_reply(response, MAX_WAIT);
     if(received)

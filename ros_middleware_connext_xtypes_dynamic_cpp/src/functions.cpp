@@ -835,7 +835,7 @@ void send_request(
 }
 
 bool receive_response(
-  const ClientHandle& client_handle, void * ros_response, long timeout)
+  const ClientHandle& client_handle, void * ros_response)
 {
     return false;
 }
