@@ -6,6 +6,7 @@
 
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include "ros_middleware_interface/handles.h"
+#include "ros_middleware_interface/functions.h"
 #include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 
 #include "rosidl_generator_cpp/ServiceTypeSupport.h"
@@ -566,7 +567,7 @@ ros_middleware_interface::ServiceHandle create_service(
     return service_handle;
 }
 
-bool receive_response(
+ros_middleware_interface::ROS2_RETCODE_t receive_response(
   const ClientHandle& client_handle, void * ros_response)
 {
     if (client_handle.implementation_identifier_ != _rti_connext_identifier)
@@ -580,7 +581,8 @@ bool receive_response(
     void * requester = custom_client_info->requester_;
     const ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
 
-    return callbacks->_receive_response(requester, ros_response);
+    ROS2_RETCODE_t status = callbacks->_receive_response(requester, ros_response);
+    return status;
 }
 
 bool take_request(

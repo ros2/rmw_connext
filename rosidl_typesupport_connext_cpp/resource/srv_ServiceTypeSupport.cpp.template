@@ -14,6 +14,7 @@
 
 #include <iostream>
 
+#include "ros_middleware_interface/functions.h"
 #include "@(spec.pkg_name)/@(spec.srv_name)_Service.h"
 #include "rosidl_generator_cpp/ServiceTypeSupport.h"
 #include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Request_Support.h"
@@ -68,7 +69,7 @@ void * create_replier__@(spec.srv_name)(DDSDomainParticipant * participant, cons
     return replier;
 }
 
-bool receive_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ros_response)
+ros_middleware_interface::ROS2_RETCODE_t receive_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ros_response)
 {
     @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(@(spec.pkg_name)::@(spec.srv_name)Response *)untyped_ros_response;
     connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_requester);
@@ -77,14 +78,15 @@ bool receive_response__@(spec.srv_name)(void * untyped_requester, void * untyped
     const DDS::Duration_t MAX_WAIT = {1, 0};
     connext::Sample<@(spec.pkg_name)::dds_::@(spec.srv_name)Response_> response;
     bool received = requester->receive_reply(response, MAX_WAIT);
+    std::cout << "RECEIVE_RESPONSE" << response.data().sum_ << std::endl;
     if(received)
     {
         if(response.info().valid_data) {
             @(spec.pkg_name)::type_support::convert_dds_message_to_ros(response.data(), ros_response);
-            return true;
+            return ros_middleware_interface::ROS2_RETCODE_OK;
         }
     }
-    return false;
+    return ros_middleware_interface::ROS2_RETCODE_ERROR;
 }
 
 bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_request, void * untyped_ros_request_header)

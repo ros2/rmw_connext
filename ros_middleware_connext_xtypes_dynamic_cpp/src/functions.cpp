@@ -4,6 +4,7 @@
 #include "ndds/ndds_cpp.h"
 
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
+#include "ros_middleware_interface/functions.h"
 #include "ros_middleware_interface/handles.h"
 #include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
 #include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
@@ -834,10 +835,10 @@ void send_request(
 {
 }
 
-bool receive_response(
+ros_middleware_interface::ROS2_RETCODE_t receive_response(
   const ClientHandle& client_handle, void * ros_response)
 {
-    return false;
+    return ROS2_RETCODE_ERROR;
 }
 
 bool take_request(
