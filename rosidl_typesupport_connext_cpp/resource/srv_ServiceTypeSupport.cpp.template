@@ -129,10 +129,9 @@ void send_response__@(spec.srv_name)(
     DDS_SampleIdentity_t request_identity;
 
     size_t SAMPLE_IDENTITY_SIZE = 16;
-    std::copy(
-        &req_id.writer_guid[0],
-        &req_id.writer_guid[SAMPLE_IDENTITY_SIZE],
-        &(request_identity.writer_guid.value)[0]);
+    memcpy(request_identity.writer_guid.value,
+           &req_id.writer_guid[0],
+           SAMPLE_IDENTITY_SIZE);
 
     request_identity.sequence_number.high = req_id.high;
     request_identity.sequence_number.low = req_id.low;
