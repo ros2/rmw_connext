@@ -37,7 +37,9 @@ if(NOT "$ENV{NDDSHOME} " STREQUAL " ")
   set(_lib_path "$ENV{NDDSHOME}/lib")
   file(GLOB_RECURSE _libs
     RELATIVE "${_lib_path}"
-    "$ENV{NDDSHOME}/lib/*/libnddscpp.so")
+    "$ENV{NDDSHOME}/lib/*/libnddscpp.so"
+    "$ENV{NDDSHOME}/lib/*/librticonnextmsgcpp.so"
+)
 
   # remove libraries from non-matching platforms
   set(_i 0)
@@ -80,20 +82,22 @@ if(NOT "$ENV{NDDSHOME} " STREQUAL " ")
   endwhile()
 
   if("${_libs} " STREQUAL " ")
-    message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME}' but could not find 'libnddscpp.so' under '${_lib_path}'")
+    message(FATAL_ERROR "NDDSHOME set to '$ENV{NDDSHOME}' but could not find 'libnddscpp.so' and 'librticonnextmsgcpp.so' under '${_lib_path}'")
   endif()
-  if(_length GREATER 1)
-    message(FATAL_ERROR "NNDSHOME set to '$ENV{NDDSHOME}' but found multiple files named 'libnddscpp.so' under '${_lib_path}': ${_libs}")
+  if(_length GREATER 2)
+    message(FATAL_ERROR "NDDSHOME set to '$ENV{NDDSHOME}' but found multiple files named 'libnddscpp.so' or 'librticonnextmsgcpp.so' under '${_lib_path}': ${_libs}")
   endif()
 
-  list(GET _libs 0 _lib)
-  list(APPEND Connext_LIBRARIES "${_lib_path}/${_lib}")
+  list(GET _libs 0 _libndds)
+  list(GET _libs 1 _libmessaging)
+  list(APPEND Connext_LIBRARIES "${_lib_path}/${_libndds}")
+  list(APPEND Connext_LIBRARIES "${_lib_path}/${_libmessaging}")
 
   get_filename_component(_lib_path "${Connext_LIBRARIES}" DIRECTORY)
   set(Connext_LIBRARY_DIRS "${_lib_path}")
 
   set(Connext_DEFINITIONS "-DRTI_LINUX" "-DRTI_UNIX")
-  set(Connext_DDSGEN2 "$ENV{NDDSHOME}/scripts/rtiddsgen2")
+  set(Connext_DDSGEN2 "$ENV{NDDSHOME}/bin/rtiddsgen2")
   set(Connext_FOUND TRUE)
 else()
   # try to find_package() it

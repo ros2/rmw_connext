@@ -4,9 +4,12 @@
 #include "ndds/ndds_cpp.h"
 
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
+#include "ros_middleware_interface/functions.h"
 #include "ros_middleware_interface/handles.h"
 #include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
 #include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
+
+#include "rosidl_generator_cpp/ServiceTypeSupport.h"
 
 namespace ros_middleware_interface
 {
@@ -722,7 +725,7 @@ void trigger_guard_condition(const ros_middleware_interface::GuardConditionHandl
     guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
 }
 
-void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_middleware_interface::GuardConditionHandles& guard_condition_handles, bool non_blocking)
+void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_middleware_interface::GuardConditionHandles& guard_condition_handles, ros_middleware_interface::ServiceHandles& service_handles, ros_middleware_interface::ClientHandles& client_handles, bool non_blocking)
 {
     //std::cout << "wait()" << std::endl;
 
@@ -817,6 +820,55 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
             guard_condition_handles.guard_conditions_[i] = 0;
         }
     }
+}
+
+ros_middleware_interface::ClientHandle create_client(
+  const ros_middleware_interface::NodeHandle& node_handle,
+  const rosidl_generator_cpp::ServiceTypeSupportHandle & type_support_handle,
+  const char * service_name)
+{
+}
+
+int64_t send_request(
+  const ros_middleware_interface::ClientHandle& client_handle,
+  const void * ros_client)
+{
+  return -1;
+}
+
+ros_middleware_interface::ROS2_RETCODE_t receive_response(
+  const ClientHandle& client_handle, void * ros_response)
+{
+    return ROS2_RETCODE_ERROR;
+}
+
+bool take_request(
+  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request,
+  void * ros_request_header)
+{
+    return false;
+}
+
+bool take_response(
+  const ros_middleware_interface::ClientHandle& client_handle, void * ros_response,
+  void * ros_request_header)
+{
+    return false;
+}
+
+void send_response(
+  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request,
+  void * ros_response)
+{
+}
+
+ros_middleware_interface::ServiceHandle create_service(
+  const ros_middleware_interface::NodeHandle& node_handle,
+  const rosidl_generator_cpp::ServiceTypeSupportHandle & type_support_handle,
+  const char * service_name)
+{
+    ros_middleware_interface::ServiceHandle service_handle;
+    return service_handle;
 }
 
 }

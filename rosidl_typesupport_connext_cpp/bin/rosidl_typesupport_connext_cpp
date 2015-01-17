@@ -46,7 +46,7 @@ def main(argv=sys.argv[1:]):
         help='The location of the template files')
     args = parser.parse_args(argv)
 
-    message_specs = parse_ros_interface_files(
+    message_specs, service_specs = parse_ros_interface_files(
         args.pkg_name,
         args.ros_interface_files)
 
@@ -57,13 +57,15 @@ def main(argv=sys.argv[1:]):
         args.deps,
         args.output_dir,
         args.idl_pp,
-        message_specs
+        message_specs,
+        service_specs,
     )
     if rc:
         return rc
     return generate_cpp(
         args.pkg_name,
         message_specs,
+        service_specs,
         args.output_dir,
         args.template_dir,
     )
