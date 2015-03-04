@@ -4,9 +4,8 @@
 #include "ndds/ndds_cpp.h"
 #include "ndds/ndds_requestreply_cpp.h"
 
+#include <rmw/rmw.h>
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
-#include "ros_middleware_interface/handles.h"
-#include "ros_middleware_interface/functions.h"
 #include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 
 #include "rosidl_generator_cpp/ServiceTypeSupport.h"
@@ -21,13 +20,13 @@ const char * _rti_connext_identifier = "connext_static";
 struct CustomServiceInfo {
   void * replier_;
   DDSDataReader * request_datareader_;
-  ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks_;
+  rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks_;
 };
 
 struct CustomClientInfo {
   void * requester_;
   DDSDataReader * response_datareader_;
-  ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks_;
+  rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks_;
 };
 
 void init()
@@ -96,7 +95,7 @@ ros_middleware_interface::NodeHandle create_node()
 
 struct CustomPublisherInfo {
   DDSDataWriter * topic_writer_;
-  ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
+  rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
 };
 
 ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_interface::NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
@@ -115,7 +114,7 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
-    ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = (ros_middleware_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
+    rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = (rmw_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
     std::string type_name = std::string(callbacks->_package_name) + "::dds_::" + callbacks->_message_name + "_";
 
 
@@ -207,7 +206,7 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
     //std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
     CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher_handle._data;
     DDSDataWriter * topic_writer = custom_publisher_info->topic_writer_;
-    const ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_publisher_info->callbacks_;
+    const rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_publisher_info->callbacks_;
 
 
     //std::cout << "  publish() invoke publish callback" << std::endl;
@@ -216,7 +215,7 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
 
 struct CustomSubscriberInfo {
   DDSDataReader * topic_reader_;
-  ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
+  rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
 };
 
 ros_middleware_interface::SubscriberHandle create_subscriber(const NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
@@ -234,7 +233,7 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const NodeHandle& n
     std::cout << "  create_subscriber() extract participant from opaque node handle" << std::endl;
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
-    ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = (ros_middleware_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
+    rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = (rmw_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
     std::string type_name = std::string(callbacks->_package_name) + "::dds_::" + callbacks->_message_name + "_";
 
     std::cout << "  create_subscriber() invoke register callback" << std::endl;
@@ -309,7 +308,7 @@ bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, v
 
     CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscriber_handle.data_;
     DDSDataReader* topic_reader = custom_subscriber_info->topic_reader_;
-    const ros_middleware_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_subscriber_info->callbacks_;
+    const rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_subscriber_info->callbacks_;
 
     return callbacks->_take(topic_reader, ros_message);
 }
@@ -530,7 +529,7 @@ ros_middleware_interface::ClientHandle create_client(
 
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
-    ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (ros_middleware_connext_cpp::ServiceTypeSupportCallbacks*)type_support_handle._data;
+    rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (rmw_connext_cpp::ServiceTypeSupportCallbacks*)type_support_handle._data;
 
     DDSDataReader * response_datareader;
 
@@ -563,7 +562,7 @@ int64_t send_request(
 
     CustomClientInfo * custom_client_info = (CustomClientInfo*)client_handle.data_;
     void * requester = custom_client_info->requester_;
-    const ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
+    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
 
     return callbacks->_send_request(requester, ros_request);
 }
@@ -589,7 +588,7 @@ ros_middleware_interface::ServiceHandle create_service(
 
     DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
 
-    ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (ros_middleware_connext_cpp::ServiceTypeSupportCallbacks*)type_support_handle._data;
+    rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (rmw_connext_cpp::ServiceTypeSupportCallbacks*)type_support_handle._data;
 
     DDSDataReader * request_datareader;
 
@@ -620,14 +619,14 @@ ros_middleware_interface::ROS2_RETCODE_t receive_response(
 
     CustomClientInfo * custom_client_info = (CustomClientInfo*)client_handle.data_;
     void * requester = custom_client_info->requester_;
-    const ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
+    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
 
     ROS2_RETCODE_t status = callbacks->_receive_response(requester, ros_response);
     return status;
 }
 
 bool take_request(
-  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request, void * ros_request_header)
+  const rmw_interface::ServiceHandle& service_handle, void * ros_request, void * ros_request_header)
 {
     if (service_handle.implementation_identifier_ != _rti_connext_identifier)
     {
@@ -640,7 +639,7 @@ bool take_request(
 
     void * replier = custom_service_info->replier_;
 
-    const ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
+    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
 
     return callbacks->_take_request(replier, ros_request, ros_request_header);
 }
@@ -659,7 +658,7 @@ bool take_response(
 
     void * requester = custom_client_info->requester_;
 
-    const ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
+    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
 
     return callbacks->_take_response(requester, ros_response, ros_request_header);
 }
@@ -679,7 +678,7 @@ void send_response(
 
     void * replier = custom_service_info->replier_;
 
-    const ros_middleware_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
+    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
 
     callbacks->_send_response(replier, ros_request, ros_response);
 }

@@ -3,9 +3,8 @@
 
 #include "ndds/ndds_cpp.h"
 
+#include <rmw/rmw.h>
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
-#include "ros_middleware_interface/functions.h"
-#include "ros_middleware_interface/handles.h"
 #include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
 #include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
 

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ros_middleware_connext_xtypes_dynamic_cpp</name>
+  <name>rmw_connext_xtypes_dynamic_cpp</name>
   <version>0.0.0</version>
   <description>Implement the ROS middleware interface using RTI Connext DynammicData interface in C++.</description>
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
@@ -10,7 +10,7 @@
 
   <build_depend>connext_cmake_module</build_depend>
   <build_depend>libndds51-dev</build_depend>
-  <build_depend>ros_middleware_interface</build_depend>
+  <build_depend>rmw</build_depend>
   <build_depend>rosidl_generator_cpp</build_depend>
   <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
 

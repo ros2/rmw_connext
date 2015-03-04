@@ -203,7 +203,7 @@ bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_r
     return true;
 }
 
-static ros_middleware_connext_cpp::MessageTypeSupportCallbacks callbacks = {
+static rmw_connext_cpp::MessageTypeSupportCallbacks callbacks = {
     "@(spec.base_type.pkg_name)",
     "@(spec.base_type.type)",
     &register_type__@(spec.base_type.type),
@@ -221,7 +221,7 @@ static rosidl_generator_cpp::MessageTypeSupportHandle handle = {
 }  // namespace @(spec.base_type.pkg_name)
 
 
-namespace ros_middleware_connext_cpp
+namespace rmw_connext_cpp
 {
 
 template<>
@@ -230,4 +230,4 @@ const rosidl_generator_cpp::MessageTypeSupportHandle& get_type_support_handle<@(
     return @(spec.base_type.pkg_name)::type_support::handle;
 }
 
-}  // namespace ros_middleware_connext_cpp
+}  // namespace rmw_connext_cpp

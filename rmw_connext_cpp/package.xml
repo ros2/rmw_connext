@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>ros_middleware_connext_cpp</name>
+  <name>rmw_connext_cpp</name>
   <version>0.0.0</version>
   <description>Implement the ROS middleware interface using RTI Connext static code generation in C++.</description>
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
@@ -14,7 +14,7 @@
 
   <build_depend>connext_cmake_module</build_depend>
   <build_depend>libndds51-dev</build_depend>
-  <build_depend>ros_middleware_interface</build_depend>
+  <build_depend>rmw</build_depend>
   <build_depend>rosidl_generator_cpp</build_depend>
   <build_depend>rosidl_typesupport_connext_cpp</build_depend>
   <build_depend>rosidl_generator_dds_idl</build_depend>

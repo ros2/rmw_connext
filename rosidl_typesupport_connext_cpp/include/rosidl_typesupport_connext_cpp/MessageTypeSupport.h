@@ -1,6 +1,6 @@
 
-#ifndef __ros_middleware_connext_cpp__MessageTypeSupport__h__
-#define __ros_middleware_connext_cpp__MessageTypeSupport__h__
+#ifndef __rmw_connext_cpp__MessageTypeSupport__h__
+#define __rmw_connext_cpp__MessageTypeSupport__h__
 
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 
@@ -8,14 +8,14 @@ class DDSDomainParticipant;
 class DDSDataWriter;
 class DDSDataReader;
 
-namespace ros_middleware_interface
+namespace rmw
 {
 
 extern const char * _rti_connext_identifier;
 
-}  // namespace ros_middleware_interface
+}  // namespace rmw
 
-namespace ros_middleware_connext_cpp
+namespace rmw_connext_cpp
 {
 
 typedef struct MessageTypeSupportCallbacks {
@@ -30,6 +30,6 @@ typedef struct MessageTypeSupportCallbacks {
 template<typename T>
 const rosidl_generator_cpp::MessageTypeSupportHandle& get_type_support_handle();
 
-}  // namespace ros_middleware_connext_cpp
+}  // namespace rmw_connext_cpp
 
-#endif  // __ros_middleware_connext_cpp__MessageTypeSupport__h__
+#endif  // __rmw_connext_cpp__MessageTypeSupport__h__

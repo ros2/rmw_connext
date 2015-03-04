@@ -14,7 +14,7 @@
 
 #include <iostream>
 
-#include "ros_middleware_interface/functions.h"
+#include <rmw/rmw.h>
 #include "@(spec.pkg_name)/@(spec.srv_name)_Service.h"
 #include "rosidl_generator_cpp/ServiceTypeSupport.h"
 #include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Request_Support.h"
@@ -27,7 +27,6 @@
 #include "ndds/connext_cpp/connext_cpp_requester_details.h"
 #include "ndds/ndds_cpp.h"
 #include "ndds/ndds_requestreply_cpp.h"
-#include "ros_middleware_interface/rpc.h"
 
 
 namespace @(spec.pkg_name)
@@ -164,7 +163,7 @@ void send_response__@(spec.srv_name)(
     replier->send_reply(response, request_identity);
 }
 
-static ros_middleware_connext_cpp::ServiceTypeSupportCallbacks callbacks = {
+static rmw_connext_cpp::ServiceTypeSupportCallbacks callbacks = {
     "@(spec.pkg_name)",
     "@(spec.srv_name)",
     &create_requester__@(spec.srv_name),
@@ -186,7 +185,7 @@ static rosidl_generator_cpp::ServiceTypeSupportHandle handle = {
 }  // namespace @(spec.pkg_name)
 
 
-namespace ros_middleware_connext_cpp
+namespace rmw_connext_cpp
 {
 
 template<>
@@ -195,4 +194,4 @@ const rosidl_generator_cpp::ServiceTypeSupportHandle& get_service_type_support_h
     return @(spec.pkg_name)::service_type_support::handle;
 }
 
-}  // namespace ros_middleware_connext_cpp
+}  // namespace rmw_connext_cpp
