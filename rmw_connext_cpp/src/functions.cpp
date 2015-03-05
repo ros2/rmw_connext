@@ -31,18 +31,21 @@ struct CustomClientInfo {
   rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks_;
 };
 
-void init()
+rmw_ret_t
+rmw_init()
 {
     std::cout << "init()" << std::endl;
     std::cout << "  init() get_instance" << std::endl;
     DDSDomainParticipantFactory* dpf_ = DDSDomainParticipantFactory::get_instance();
     if (!dpf_) {
         printf("  init() could not get participant factory\n");
-        throw std::runtime_error("could not get participant factory");
+        return RMW_RET_ERROR;
     };
+    return RMW_RET_OK;
 }
 
-rmw_node_t * create_node(const char * name)
+rmw_node_t *
+rmw_create_node(const char * name)
 {
     std::cout << "create_node()" << std::endl;
 
@@ -195,7 +198,8 @@ rmw_publisher_t * create_publisher(
     return publisher;
 }
 
-void publish(const rmw_publisher_t * publisher, const void * ros_message)
+rmw_ret_t
+rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
     //std::cout << "publish()" << std::endl;
 
@@ -203,7 +207,7 @@ void publish(const rmw_publisher_t * publisher, const void * ros_message)
     {
         printf("publisher handle not from this implementation\n");
         printf("but from: %s\n", publisher->implementation_identifier);
-        throw std::runtime_error("publisher handle not from this implementation");
+        return RMW_RET_ERROR;
     }
 
     //std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
@@ -214,6 +218,7 @@ void publish(const rmw_publisher_t * publisher, const void * ros_message)
 
     //std::cout << "  publish() invoke publish callback" << std::endl;
     callbacks->_publish(topic_writer, ros_message);
+    return RMW_RET_OK;
 }
 
 struct CustomSubscriberInfo {
@@ -300,7 +305,8 @@ rmw_subscription_t * create_subscription(
     return subscription;
 }
 
-rmw_ret_t take(const rmw_subscription_t * subscription, void * ros_message)
+rmw_ret_t
+take(const rmw_subscription_t * subscription, void * ros_message)
 {
     if (subscription->implementation_identifier != _rti_connext_identifier)
     {
@@ -325,7 +331,8 @@ rmw_guard_condition_t * create_guard_condition()
 
 }
 
-void trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
+rmw_ret_t
+rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
 {
     //std::cout << "trigger_guard_condition()" << std::endl;
 
@@ -340,7 +347,7 @@ void trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handl
     guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
 }
 
-void
+rmw_ret_t
 rmw_wait(rmw_subscriptions_t * subscriptions,
          rmw_guard_conditions_t * guard_conditions,
          rmw_services_t * services,
@@ -514,7 +521,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
             clients->clients[i] = 0;
         }
     }
-
+    return RMW_RET_OK;
 }
 
 rmw_client_t * create_client(
