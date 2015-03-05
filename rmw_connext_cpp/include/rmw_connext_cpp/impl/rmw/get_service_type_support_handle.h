@@ -1,4 +1,3 @@
-
 #ifndef __rmw__get_service_type_support_handle__h__
 #define __rmw__get_service_type_support_handle__h__
 
@@ -7,7 +6,7 @@
 namespace rmw
 {
 template<typename T>
-const rosidl_generator_cpp::ServiceTypeSupportHandle& get_service_type_support_handle()
+const rosidl_service_type_support_t * get_service_type_support_handle()
 {
   return rmw_connext_cpp::get_service_type_support_handle<T>();
 }

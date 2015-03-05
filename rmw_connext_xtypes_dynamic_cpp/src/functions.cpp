@@ -5,6 +5,7 @@
 
 #include <rmw/rmw.h>
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
+#include <rmw/types.h>
 #include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
 #include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
 
@@ -26,7 +27,7 @@ void init()
     };
 }
 
-ros_middleware_interface::NodeHandle create_node()
+rmw_node_t * create_node(const char * name)
 {
     std::cout << "create_node()" << std::endl;
 
@@ -72,11 +73,10 @@ ros_middleware_interface::NodeHandle create_node()
 
     std::cout << "  create_node() pass opaque node handle" << std::endl;
 
-    ros_middleware_interface::NodeHandle node_handle = {
-        _rti_connext_dynamic_identifier,
-        participant
-    };
-    return node_handle;
+    rmw_node_t * node = new rmw_node_t;
+    node->implementation_identifier = _rti_connext_dynamic_identifier;
+    node->data = participant;
+    return node;
 }
 
 DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_introspection_cpp::MessageMembers * members, DDS_DomainParticipantQos& participant_qos)
@@ -154,7 +154,7 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                 {
-                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
+                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->data;
                     std::cout << "  create_type_code() create type code - add sub member of type " << sub_members->package_name_ << "/" << sub_members->message_name_ << std::endl;
                     std::string field_type_name = std::string(sub_members->package_name_) + "::dds_::" + sub_members->message_name_ + "_";
                     member_type_code = create_type_code(field_type_name, sub_members, participant_qos);
@@ -183,30 +183,32 @@ struct CustomPublisherInfo {
   DDS_DynamicData * dynamic_data;
 };
 
-ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_interface::NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
+rmw_publisher_t * create_publisher(
+  const rmw_node_t * node, const rosidl_message_type_support_t * type_support,
+  const char * topic_name, size_t queue_size)
 {
     std::cout << "create_publisher()" << std::endl;
 
-    if (node_handle._implementation_identifier != _rti_connext_dynamic_identifier)
+    if (node->implementation_identifier != _rti_connext_dynamic_identifier)
     {
         printf("node handle not from this implementation\n");
-        printf("but from: %s\n", node_handle._implementation_identifier);
+        printf("but from: %s\n", node->implementation_identifier);
         throw std::runtime_error("node handle not from this implementation");
     }
 
-    std::cout << "create_publisher() " << node_handle._implementation_identifier << std::endl;
+    std::cout << "create_publisher() " << node->implementation_identifier << std::endl;
 
     std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
+    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
 
-    if (type_support_handle._typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+    if (type_support->typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
     {
         printf("type support not from this implementation\n");
-        printf("but from: %s\n", type_support_handle._typesupport_identifier);
+        printf("but from: %s\n", type_support->typesupport_identifier);
         throw std::runtime_error("type support not from this implementation");
     }
 
-    const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support_handle._data;
+    const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support->data;
     std::string type_name = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
 
     DDS_DomainParticipantQos participant_qos;
@@ -292,11 +294,10 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     custom_publisher_info->members_ = members;
     custom_publisher_info->dynamic_data = dynamic_data;
 
-    ros_middleware_interface::PublisherHandle publisher_handle = {
-        _rti_connext_dynamic_identifier,
-        custom_publisher_info
-    };
-    return publisher_handle;
+    rmw_publisher_t * publisher = new rmw_publisher_t;
+    publisher->implementation_identifier = _rti_connext_dynamic_identifier;
+    publisher->data = custom_publisher_info;
+    return publisher;
 }
 
 //std::cout << "  publish() set member " << i << ": " << member->name_ << " = " << value << std::endl;
@@ -379,7 +380,7 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message, const ro
                     DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
                     dynamic_data->bind_complex_member(sub_dynamic_data, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
                     void * sub_ros_message = (void*)((char*)ros_message + member->offset_);
-                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
+                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->data;
                     _publish(&sub_dynamic_data, sub_ros_message, sub_members);
                     dynamic_data->unbind_complex_member(sub_dynamic_data);
                 }
@@ -391,20 +392,20 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message, const ro
     }
 }
 
-void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, const void * ros_message)
+void publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
     //std::cout << "publish()" << std::endl;
 
 
-    if (publisher_handle._implementation_identifier != _rti_connext_dynamic_identifier)
+    if (publisher->implementation_identifier != _rti_connext_dynamic_identifier)
     {
         printf("publisher handle not from this implementation\n");
-        printf("but from: %s\n", publisher_handle._implementation_identifier);
+        printf("but from: %s\n", publisher->implementation_identifier);
         throw std::runtime_error("publisher handle not from this implementation");
     }
 
     //std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
-    CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher_handle._data;
+    CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher->data;
     DDSDynamicDataTypeSupport* ddts = custom_publisher_info->dynamic_data_type_support_;
     DDSDynamicDataWriter * dynamic_writer = custom_publisher_info->dynamic_writer_;
     DDS_TypeCode * type_code = custom_publisher_info->type_code_;
@@ -431,30 +432,32 @@ struct CustomSubscriberInfo {
   DDS_DynamicData * dynamic_data;
 };
 
-ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middleware_interface::NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
+rmw_subscription_t * create_subscription(
+  const rmw_node_t * node, const rosidl_message_type_support_t * type_support,
+  const char * topic_name)
 {
     std::cout << "create_subscriber()" << std::endl;
 
-    if (node_handle._implementation_identifier != _rti_connext_dynamic_identifier)
+    if (node->implementation_identifier != _rti_connext_dynamic_identifier)
     {
         printf("node handle not from this implementation\n");
-        printf("but from: %s\n", node_handle._implementation_identifier);
+        printf("but from: %s\n", node->implementation_identifier);
         throw std::runtime_error("node handle not from this implementation");
     }
 
-    std::cout << "create_subscriber() " << node_handle._implementation_identifier << std::endl;
+    std::cout << "create_subscriber() " << node->implementation_identifier << std::endl;
 
     std::cout << "  create_subscriber() extract participant from opaque node handle" << std::endl;
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
+    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
 
-    if (type_support_handle._typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+    if (type_support->typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
     {
         printf("type support not from this implementation\n");
-        printf("but from: %s\n", type_support_handle._typesupport_identifier);
+        printf("but from: %s\n", type_support->typesupport_identifier);
         throw std::runtime_error("type support not from this implementation");
     }
 
-    const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support_handle._data;
+    const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support->data;
     std::string type_name = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
 
     DDS_DomainParticipantQos participant_qos;
@@ -540,11 +543,10 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
     custom_subscriber_info->members_ = members;
     custom_subscriber_info->dynamic_data = dynamic_data;
 
-    ros_middleware_interface::SubscriberHandle subscriber_handle = {
-        _rti_connext_dynamic_identifier,
-        custom_subscriber_info
-    };
-    return subscriber_handle;
+    rmw_subscription_t * subscription = new rmw_subscription_t;
+    subscription->implementation_identifier = _rti_connext_dynamic_identifier;
+    subscription->data = custom_subscriber_info;
+    return subscription;
 }
 
 //std::cout << "  take() get member " << i << ": " << member->name_ << " = " << value << std::endl;
@@ -641,7 +643,7 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message, const rosidl_type
                     DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
                     dynamic_data->bind_complex_member(sub_dynamic_data, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
                     void * sub_ros_message = (void*)((char*)ros_message + member->offset_);
-                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
+                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->data;
                     _take(&sub_dynamic_data, sub_ros_message, sub_members);
                     dynamic_data->unbind_complex_member(sub_dynamic_data);
                 }
@@ -653,20 +655,21 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message, const rosidl_type
     }
 }
 
-bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, void * ros_message)
+rmw_ret_t
+rmw_take(const rmw_subscription_t * subscription, void * ros_message)
 {
     //std::cout << "take()" << std::endl;
 
 
-    if (subscriber_handle.implementation_identifier_ != _rti_connext_dynamic_identifier)
+    if (subscription->implementation_identifier != _rti_connext_dynamic_identifier)
     {
         printf("subscriber handle not from this implementation\n");
-        printf("but from: %s\n", subscriber_handle.implementation_identifier_);
+        printf("but from: %s\n", subscription->implementation_identifier);
         throw std::runtime_error("subscriber handle not from this implementation");
     }
 
     //std::cout << "  take() extract data writer and type code from opaque subscriber handle" << std::endl;
-    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscriber_handle.data_;
+    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscription->data;
     DDSDynamicDataTypeSupport* ddts = custom_subscriber_info->dynamic_data_type_support_;
     DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
     DDS_TypeCode * type_code = custom_subscriber_info->type_code_;
@@ -698,42 +701,50 @@ bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, v
 
     dynamic_reader->return_loan(dynamic_data_sequence, sample_infos);
 
-    return true;
+    return RMW_RET_OK;
 }
 
-ros_middleware_interface::GuardConditionHandle create_guard_condition()
+rmw_guard_condition_t *
+rmw_create_guard_condition()
 {
-    ros_middleware_interface::GuardConditionHandle guard_condition_handle;
-    guard_condition_handle.implementation_identifier_ = _rti_connext_dynamic_identifier;
-    guard_condition_handle.data_ = new DDSGuardCondition();
+    rmw_guard_condition_t * guard_condition_handle = new rmw_guard_condition_t;
+    guard_condition_handle->implementation_identifier = _rti_connext_dynamic_identifier;
+    guard_condition_handle->data = new DDSGuardCondition();
     return guard_condition_handle;
 }
 
-void trigger_guard_condition(const ros_middleware_interface::GuardConditionHandle& guard_condition_handle)
+rmw_ret_t
+rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
 {
     //std::cout << "trigger_guard_condition()" << std::endl;
 
-    if (guard_condition_handle.implementation_identifier_ != _rti_connext_dynamic_identifier)
+    if (guard_condition_handle->implementation_identifier != _rti_connext_dynamic_identifier)
     {
         printf("guard condition handle not from this implementation\n");
-        printf("but from: %s\n", guard_condition_handle.implementation_identifier_);
+        printf("but from: %s\n", guard_condition_handle->implementation_identifier);
         throw std::runtime_error("guard condition handle not from this implementation");
     }
 
-    DDSGuardCondition * guard_condition = (DDSGuardCondition*)guard_condition_handle.data_;
+    DDSGuardCondition * guard_condition = (DDSGuardCondition*)guard_condition_handle->data;
     guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
+    return RMW_RET_OK;
 }
 
-void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_middleware_interface::GuardConditionHandles& guard_condition_handles, ros_middleware_interface::ServiceHandles& service_handles, ros_middleware_interface::ClientHandles& client_handles, bool non_blocking)
+rmw_ret_t
+rmw_wait(rmw_subscriptions_t * subscriptions,
+         rmw_guard_conditions_t * guard_conditions,
+         rmw_services_t * services,
+         rmw_clients_t * clients,
+         bool non_blocking)
 {
     //std::cout << "wait()" << std::endl;
 
     DDSWaitSet waitset;
 
     // add a condition for each subscriber
-    for (unsigned long i = 0; i < subscriber_handles.subscriber_count_; ++i)
+    for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
     {
-        void * data = subscriber_handles.subscribers_[i];
+        void * data = subscriptions->subscribers[i];
         CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
         DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
         DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
@@ -742,9 +753,9 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
     }
 
     // add a condition for each guard condition
-    for (unsigned long i = 0; i < guard_condition_handles.guard_condition_count_; ++i)
+    for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
     {
-        void * data = guard_condition_handles.guard_conditions_[i];
+        void * data = guard_conditions->guard_conditions[i];
         DDSGuardCondition * guard_condition = (DDSGuardCondition*)data;
         waitset.attach_condition(guard_condition);
     }
@@ -771,9 +782,9 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
     }
 
     // set subscriber handles to zero for all not triggered conditions
-    for (unsigned long i = 0; i < subscriber_handles.subscriber_count_; ++i)
+    for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
     {
-        void * data = subscriber_handles.subscribers_[i];
+        void * data = subscriptions->subscribers[i];
         CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
         DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
         DDSCondition * condition = dynamic_reader->get_statuscondition();
@@ -791,14 +802,14 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         // reset the subscriber handle
         if (!(j < active_conditions.length()))
         {
-            subscriber_handles.subscribers_[i] = 0;
+            subscriptions->subscribers[i] = 0;
         }
     }
 
     // set subscriber handles to zero for all not triggered conditions
-    for (unsigned long i = 0; i < guard_condition_handles.guard_condition_count_; ++i)
+    for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
     {
-        void * data = guard_condition_handles.guard_conditions_[i];
+        void * data = guard_conditions->guard_conditions[i];
         DDSCondition * condition = (DDSCondition*)data;
 
         // search for guard condition in active set
@@ -816,58 +827,53 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         // reset the guard handle
         if (!(j < active_conditions.length()))
         {
-            guard_condition_handles.guard_conditions_[i] = 0;
+            guard_conditions->guard_conditions[i] = 0;
         }
     }
 }
 
-ros_middleware_interface::ClientHandle create_client(
-  const ros_middleware_interface::NodeHandle& node_handle,
-  const rosidl_generator_cpp::ServiceTypeSupportHandle & type_support_handle,
-  const char * service_name)
+rmw_client_t *
+rmw_create_client(const rmw_node_t * node,
+                  const rosidl_service_type_support_t * type_support,
+                  const char * service_name)
 {
 }
 
-int64_t send_request(
-  const ros_middleware_interface::ClientHandle& client_handle,
-  const void * ros_client)
+rmw_ret_t
+rmw_send_request(const rmw_client_t * client, const void * ros_request,
+                 int64_t * sequence_id)
 {
-  return -1;
+  return RMW_RET_ERROR;
 }
 
-ros_middleware_interface::ROS2_RETCODE_t receive_response(
-  const ClientHandle& client_handle, void * ros_response)
+rmw_ret_t
+rmw_take_request(const rmw_service_t * service,
+                 void * ros_request_header, void * ros_request)
 {
-    return ROS2_RETCODE_ERROR;
+  ros_request = NULL;
+  return RMW_RET_ERROR;
 }
 
-bool take_request(
-  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request,
-  void * ros_request_header)
+rmw_ret_t
+rmw_take_response(const rmw_client_t * client,
+                  void * ros_request_header, void * ros_response)
 {
-    return false;
+  return RMW_RET_ERROR;
 }
 
-bool take_response(
-  const ros_middleware_interface::ClientHandle& client_handle, void * ros_response,
-  void * ros_request_header)
+rmw_ret_t
+rmw_send_response(const rmw_service_t * service,
+                  void * ros_request, void * ros_response)
 {
-    return false;
+  return RMW_RET_ERROR;
 }
 
-void send_response(
-  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request,
-  void * ros_response)
+rmw_service_t *
+rmw_create_service(const rmw_node_t * node,
+                   const rosidl_service_type_support_t * type_support,
+                   const char * service_name)
 {
-}
-
-ros_middleware_interface::ServiceHandle create_service(
-  const ros_middleware_interface::NodeHandle& node_handle,
-  const rosidl_generator_cpp::ServiceTypeSupportHandle & type_support_handle,
-  const char * service_name)
-{
-    ros_middleware_interface::ServiceHandle service_handle;
-    return service_handle;
+    return NULL;
 }
 
 }

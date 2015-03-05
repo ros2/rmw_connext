@@ -1,3 +1,5 @@
+#include <rmw/types.h>
+
 #include <iostream>
 #include <stdexcept>
 
@@ -40,7 +42,7 @@ void init()
     };
 }
 
-ros_middleware_interface::NodeHandle create_node()
+rmw_node_t * create_node(const char * name)
 {
     std::cout << "create_node()" << std::endl;
 
@@ -86,10 +88,10 @@ ros_middleware_interface::NodeHandle create_node()
 
     std::cout << "  create_node() pass opaque node handle" << std::endl;
 
-    ros_middleware_interface::NodeHandle node_handle = {
-        _rti_connext_identifier,
-        participant
-    };
+    rmw_node_t * node_handle = new rmw_node_t;
+    node_handle->implementation_identifier = _rti_connext_identifier;
+    node_handle->data = participant;
+
     return node_handle;
 }
 
@@ -98,23 +100,25 @@ struct CustomPublisherInfo {
   rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
 };
 
-ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_interface::NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
+rmw_publisher_t * create_publisher(
+  const rmw_node_t * node, const rosidl_message_type_support_t * type_support,
+  const char * topic_name, size_t queue_size)
 {
     std::cout << "create_publisher()" << std::endl;
 
-    if (node_handle._implementation_identifier != _rti_connext_identifier)
+    if (node->implementation_identifier != _rti_connext_identifier)
     {
         printf("node handle not from this implementation\n");
-        printf("but from: %s\n", node_handle._implementation_identifier);
+        printf("but from: %s\n", node->implementation_identifier);
         throw std::runtime_error("node handle not from this implementation");
     }
 
-    std::cout << "create_publisher() " << node_handle._implementation_identifier << std::endl;
+    std::cout << "create_publisher() " << node->implementation_identifier << std::endl;
 
     std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
+    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
 
-    rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = (rmw_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
+    rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = (rmw_connext_cpp::MessageTypeSupportCallbacks*)type_support->data;
     std::string type_name = std::string(callbacks->_package_name) + "::dds_::" + callbacks->_message_name + "_";
 
 
@@ -185,26 +189,25 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     custom_publisher_info->topic_writer_ = topic_writer;
     custom_publisher_info->callbacks_ = callbacks;
 
-    ros_middleware_interface::PublisherHandle publisher_handle = {
-        _rti_connext_identifier,
-        custom_publisher_info
-    };
-    return publisher_handle;
+    rmw_publisher_t * publisher = new rmw_publisher_t;
+    publisher->implementation_identifier = _rti_connext_identifier;
+    publisher->data = custom_publisher_info;
+    return publisher;
 }
 
-void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, const void * ros_message)
+void publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
     //std::cout << "publish()" << std::endl;
 
-    if (publisher_handle._implementation_identifier != _rti_connext_identifier)
+    if (publisher->implementation_identifier != _rti_connext_identifier)
     {
         printf("publisher handle not from this implementation\n");
-        printf("but from: %s\n", publisher_handle._implementation_identifier);
+        printf("but from: %s\n", publisher->implementation_identifier);
         throw std::runtime_error("publisher handle not from this implementation");
     }
 
     //std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
-    CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher_handle._data;
+    CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher->data;
     DDSDataWriter * topic_writer = custom_publisher_info->topic_writer_;
     const rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_publisher_info->callbacks_;
 
@@ -218,22 +221,24 @@ struct CustomSubscriberInfo {
   rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
 };
 
-ros_middleware_interface::SubscriberHandle create_subscriber(const NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
+rmw_subscription_t * create_subscription(
+  const rmw_node_t * node, const rosidl_message_type_support_t * type_support,
+  const char * topic_name)
 {
     std::cout << "create_subscriber()" << std::endl;
 
-    if (node_handle._implementation_identifier != _rti_connext_identifier)
+    if (node->implementation_identifier != _rti_connext_identifier)
     {
         printf("node handle not from this implementation\n");
-        printf("but from: %s\n", node_handle._implementation_identifier);
+        printf("but from: %s\n", node->implementation_identifier);
         throw std::runtime_error("node handle not from this implementation");
     }
-    std::cout << "create_subscriber() " << node_handle._implementation_identifier << std::endl;
+    std::cout << "create_subscriber() " << node->implementation_identifier << std::endl;
 
     std::cout << "  create_subscriber() extract participant from opaque node handle" << std::endl;
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
+    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
 
-    rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = (rmw_connext_cpp::MessageTypeSupportCallbacks*)type_support_handle._data;
+    rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = (rmw_connext_cpp::MessageTypeSupportCallbacks*)type_support->data;
     std::string type_name = std::string(callbacks->_package_name) + "::dds_::" + callbacks->_message_name + "_";
 
     std::cout << "  create_subscriber() invoke register callback" << std::endl;
@@ -289,64 +294,67 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const NodeHandle& n
     custom_subscriber_info->topic_reader_ = topic_reader;
     custom_subscriber_info->callbacks_ = callbacks;
 
-
-    ros_middleware_interface::SubscriberHandle subscriber_handle = {
-        _rti_connext_identifier,
-        custom_subscriber_info
-    };
-    return subscriber_handle;
+    rmw_subscription_t * subscription = new rmw_subscription_t;
+    subscription->implementation_identifier = _rti_connext_identifier;
+    subscription->data = custom_subscriber_info;
+    return subscription;
 }
 
-bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, void * ros_message)
+rmw_ret_t take(const rmw_subscription_t * subscription, void * ros_message)
 {
-    if (subscriber_handle.implementation_identifier_ != _rti_connext_identifier)
+    if (subscription->implementation_identifier != _rti_connext_identifier)
     {
         printf("subscriber handle not from this implementation\n");
-        printf("but from: %s\n", subscriber_handle.implementation_identifier_);
+        printf("but from: %s\n", subscription->implementation_identifier);
         throw std::runtime_error("subscriber handle not from this implementation");
     }
 
-    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscriber_handle.data_;
+    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscription->data;
     DDSDataReader* topic_reader = custom_subscriber_info->topic_reader_;
     const rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_subscriber_info->callbacks_;
 
     return callbacks->_take(topic_reader, ros_message);
 }
 
-ros_middleware_interface::GuardConditionHandle create_guard_condition()
+rmw_guard_condition_t * create_guard_condition()
 {
-    ros_middleware_interface::GuardConditionHandle guard_condition_handle;
-    guard_condition_handle.implementation_identifier_ = _rti_connext_identifier;
-    guard_condition_handle.data_ = new DDSGuardCondition();
-    return guard_condition_handle;
+    rmw_guard_condition_t * guard_condition = new rmw_guard_condition_t;
+    guard_condition->implementation_identifier = _rti_connext_identifier;
+    guard_condition->data = new DDSGuardCondition();
+    return guard_condition;
 
 }
 
-void trigger_guard_condition(const GuardConditionHandle& guard_condition_handle)
+void trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
 {
     //std::cout << "trigger_guard_condition()" << std::endl;
 
-    if (guard_condition_handle.implementation_identifier_ != _rti_connext_identifier)
+    if (guard_condition_handle->implementation_identifier != _rti_connext_identifier)
     {
         printf("guard condition handle not from this implementation\n");
-        printf("but from: %s\n", guard_condition_handle.implementation_identifier_);
+        printf("but from: %s\n", guard_condition_handle->implementation_identifier);
         throw std::runtime_error("guard condition handle not from this implementation");
     }
 
-    DDSGuardCondition * guard_condition = (DDSGuardCondition*)guard_condition_handle.data_;
+    DDSGuardCondition * guard_condition = (DDSGuardCondition*)guard_condition_handle->data;
     guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
 }
 
-void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_condition_handles, ServiceHandles& service_handles, ClientHandles& client_handles, bool non_blocking)
+void
+rmw_wait(rmw_subscriptions_t * subscriptions,
+         rmw_guard_conditions_t * guard_conditions,
+         rmw_services_t * services,
+         rmw_clients_t * clients,
+         bool non_blocking)
 {
     //std::cout << "wait()" << std::endl;
 
     DDSWaitSet waitset;
 
     // add a condition for each subscriber
-    for (unsigned long i = 0; i < subscriber_handles.subscriber_count_; ++i)
+    for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
     {
-        void * data = subscriber_handles.subscribers_[i];
+        void * data = subscriptions->subscribers[i];
         CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
         DDSDataReader* topic_reader = custom_subscriber_info->topic_reader_;
         DDSStatusCondition * condition = topic_reader->get_statuscondition();
@@ -355,17 +363,17 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
     }
 
     // add a condition for each guard condition
-    for (unsigned long i = 0; i < guard_condition_handles.guard_condition_count_; ++i)
+    for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
     {
-        void * data = guard_condition_handles.guard_conditions_[i];
+        void * data = guard_conditions->guard_conditions[i];
         DDSGuardCondition * guard_condition = (DDSGuardCondition*)data;
         waitset.attach_condition(guard_condition);
     }
 
     // add a condition for each service
-    for (unsigned long i = 0; i < service_handles.service_count_; ++i)
+    for (unsigned long i = 0; i < services->service_count; ++i)
     {
-        void * data = service_handles.services_[i];
+        void * data = services->services[i];
         CustomServiceInfo * custom_service_info = (CustomServiceInfo*)data;
         DDSDataReader* request_datareader = custom_service_info->request_datareader_;
         DDSStatusCondition * condition = request_datareader->get_statuscondition();
@@ -375,9 +383,9 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
     }
 
     // add a condition for each client
-    for (unsigned long i = 0; i < client_handles.client_count_; ++i)
+    for (unsigned long i = 0; i < clients->client_count; ++i)
     {
-        void * data = client_handles.clients_[i];
+        void * data = clients->clients[i];
         CustomClientInfo * custom_client_info = (CustomClientInfo*)data;
         DDSDataReader* response_datareader = custom_client_info->response_datareader_;
         DDSStatusCondition * condition = response_datareader->get_statuscondition();
@@ -408,9 +416,9 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
     }
 
     // set subscriber handles to zero for all not triggered conditions
-    for (unsigned long i = 0; i < subscriber_handles.subscriber_count_; ++i)
+    for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
     {
-        void * data = subscriber_handles.subscribers_[i];
+        void * data = subscriptions->subscribers[i];
         CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
         DDSDataReader* topic_reader = custom_subscriber_info->topic_reader_;
         DDSStatusCondition * condition = topic_reader->get_statuscondition();
@@ -428,14 +436,14 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
         // reset the subscriber handle
         if (!(j < active_conditions.length()))
         {
-            subscriber_handles.subscribers_[i] = 0;
+            subscriptions->subscribers[i] = 0;
         }
     }
 
     // set subscriber handles to zero for all not triggered conditions
-    for (unsigned long i = 0; i < guard_condition_handles.guard_condition_count_; ++i)
+    for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
     {
-        void * data = guard_condition_handles.guard_conditions_[i];
+        void * data = guard_conditions->guard_conditions[i];
         DDSCondition * condition = (DDSCondition*)data;
 
         // search for guard condition in active set
@@ -453,14 +461,14 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
         // reset the guard handle
         if (!(j < active_conditions.length()))
         {
-            guard_condition_handles.guard_conditions_[i] = 0;
+            guard_conditions->guard_conditions[i] = 0;
         }
     }
 
     // set service handles to zero for all not triggered conditions
-    for (unsigned long i = 0; i < service_handles.service_count_; ++i)
+    for (unsigned long i = 0; i < services->service_count; ++i)
     {
-        void * data = service_handles.services_[i];
+        void * data = services->services[i];
         CustomServiceInfo * custom_service_info = (CustomServiceInfo*)data;
         DDSDataReader* request_datareader = custom_service_info->request_datareader_;
         DDSStatusCondition * condition = request_datareader->get_statuscondition();
@@ -478,14 +486,14 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
         // reset the subscriber handle
         if (!(j < active_conditions.length()))
         {
-            service_handles.services_[i] = 0;
+            services->services[i] = 0;
         }
     }
 
     // set client handles to zero for all not triggered conditions
-    for (unsigned long i = 0; i < client_handles.client_count_; ++i)
+    for (unsigned long i = 0; i < clients->client_count; ++i)
     {
-        void * data = client_handles.clients_[i];
+        void * data = clients->clients[i];
         CustomClientInfo * custom_client_info = (CustomClientInfo*)data;
         DDSDataReader* response_datareader = custom_client_info->response_datareader_;
         DDSStatusCondition * condition = response_datareader->get_statuscondition();
@@ -503,33 +511,33 @@ void wait(SubscriberHandles& subscriber_handles, GuardConditionHandles& guard_co
         // reset the subscriber handle
         if (!(j < active_conditions.length()))
         {
-            client_handles.clients_[i] = 0;
+            clients->clients[i] = 0;
         }
     }
 
 }
 
-ros_middleware_interface::ClientHandle create_client(
-  const ros_middleware_interface::NodeHandle& node_handle,
-  const rosidl_generator_cpp::ServiceTypeSupportHandle & type_support_handle,
+rmw_client_t * create_client(
+  const rmw_node_t * node,
+  const rosidl_service_type_support_t * type_support,
   const char * service_name)
 {
     std::cout << "create_client()" << std::endl;
 
-    if (node_handle._implementation_identifier != _rti_connext_identifier)
+    if (node->implementation_identifier != _rti_connext_identifier)
     {
         printf("node handle not from this implementation\n");
-        printf("but from: %s\n", node_handle._implementation_identifier);
+        printf("but from: %s\n", node->implementation_identifier);
         throw std::runtime_error("node handle not from this implementation");
     }
 
-    std::cout << "create_client() " << node_handle._implementation_identifier << std::endl;
+    std::cout << "create_client() " << node->implementation_identifier << std::endl;
 
     std::cout << "  create_client() extract participant from opaque node handle" << std::endl;
 
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
+    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
 
-    rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (rmw_connext_cpp::ServiceTypeSupportCallbacks*)type_support_handle._data;
+    rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (rmw_connext_cpp::ServiceTypeSupportCallbacks*)type_support->data;
 
     DDSDataReader * response_datareader;
 
@@ -541,54 +549,52 @@ ros_middleware_interface::ClientHandle create_client(
     custom_client_info->callbacks_ = callbacks;
     custom_client_info->response_datareader_ = response_datareader;
 
-    ros_middleware_interface::ClientHandle client_handle = {
-        _rti_connext_identifier,
-        custom_client_info
-    };
-    return client_handle;
+    rmw_client_t * client = new rmw_client_t;
+    client->implementation_identifier =_rti_connext_identifier;
+    client->data = custom_client_info;
+    return client;
 }
 
-
-int64_t send_request(
-  const ros_middleware_interface::ClientHandle& client_handle,
-  const void * ros_request)
+rmw_ret_t
+rmw_send_request(const rmw_client_t * client, const void * ros_request,
+                 int64_t * sequence_id)
 {
-    if (client_handle.implementation_identifier_ != _rti_connext_identifier)
+    if (client->implementation_identifier != _rti_connext_identifier)
     {
         printf("client handle not from this implementation\n");
-        printf("but from: %s\n", client_handle.implementation_identifier_);
+        printf("but from: %s\n", client->implementation_identifier);
         throw std::runtime_error("client handle not from this implementation");
     }
 
-    CustomClientInfo * custom_client_info = (CustomClientInfo*)client_handle.data_;
+    CustomClientInfo * custom_client_info = (CustomClientInfo*)client->data;
     void * requester = custom_client_info->requester_;
     const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
 
-    return callbacks->_send_request(requester, ros_request);
+    *sequence_id = callbacks->_send_request(requester, ros_request);
+    return RMW_RET_OK;
 }
 
-
-ros_middleware_interface::ServiceHandle create_service(
-  const ros_middleware_interface::NodeHandle& node_handle,
-  const rosidl_generator_cpp::ServiceTypeSupportHandle & type_support_handle,
-  const char * service_name)
+rmw_service_t *
+rmw_create_service(const rmw_node_t * node,
+                   const rosidl_service_type_support_t * type_support,
+                   const char * service_name)
 {
     std::cout << "create_service()" << std::endl;
 
-    if (node_handle._implementation_identifier != _rti_connext_identifier)
+    if (node->implementation_identifier != _rti_connext_identifier)
     {
         printf("node handle not from this implementation\n");
-        printf("but from: %s\n", node_handle._implementation_identifier);
+        printf("but from: %s\n", node->implementation_identifier);
         throw std::runtime_error("node handle not from this implementation");
     }
 
-    std::cout << "create_service() " << node_handle._implementation_identifier << std::endl;
+    std::cout << "create_service() " << node->implementation_identifier << std::endl;
 
     std::cout << "  create_service() extract participant from opaque node handle" << std::endl;
 
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
+    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
 
-    rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (rmw_connext_cpp::ServiceTypeSupportCallbacks*)type_support_handle._data;
+    rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (rmw_connext_cpp::ServiceTypeSupportCallbacks*)type_support->data;
 
     DDSDataReader * request_datareader;
 
@@ -600,87 +606,81 @@ ros_middleware_interface::ServiceHandle create_service(
     custom_service_info->callbacks_ = callbacks;
     custom_service_info->request_datareader_ = request_datareader;
 
-    ros_middleware_interface::ServiceHandle service_handle = {
-        _rti_connext_identifier,
-        custom_service_info
-    };
-    return service_handle;
+    rmw_service_t * service = new rmw_service_t;
+    service->implementation_identifier =_rti_connext_identifier;
+    service->data = custom_service_info;
+    return service;
 }
 
-ros_middleware_interface::ROS2_RETCODE_t receive_response(
-  const ClientHandle& client_handle, void * ros_response)
+rmw_ret_t
+rmw_take_request(const rmw_service_t * service,
+                 void * ros_request_header, void * ros_request)
 {
-    if (client_handle.implementation_identifier_ != _rti_connext_identifier)
-    {
-        printf("client handle not from this implementation\n");
-        printf("but from: %s\n", client_handle.implementation_identifier_);
-        throw std::runtime_error("client handle not from this implementation");
-    }
-
-    CustomClientInfo * custom_client_info = (CustomClientInfo*)client_handle.data_;
-    void * requester = custom_client_info->requester_;
-    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
-
-    ROS2_RETCODE_t status = callbacks->_receive_response(requester, ros_response);
-    return status;
-}
-
-bool take_request(
-  const rmw_interface::ServiceHandle& service_handle, void * ros_request, void * ros_request_header)
-{
-    if (service_handle.implementation_identifier_ != _rti_connext_identifier)
+    if (service->implementation_identifier != _rti_connext_identifier)
     {
         printf("service handle not from this implementation\n");
-        printf("but from: %s\n", service_handle.implementation_identifier_);
+        printf("but from: %s\n", service->implementation_identifier);
         throw std::runtime_error("service handle not from this implementation");
     }
 
-    CustomServiceInfo * custom_service_info = (CustomServiceInfo*)service_handle.data_;
+    CustomServiceInfo * custom_service_info = (CustomServiceInfo*)service->data;
 
     void * replier = custom_service_info->replier_;
 
     const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
 
-    return callbacks->_take_request(replier, ros_request, ros_request_header);
+    if(!(callbacks->_take_request(replier, ros_request, ros_request_header))) {
+      ros_request_header = NULL;
+      ros_request = NULL;
+    }
+
+    return RMW_RET_OK;
 }
 
-bool take_response(
-  const ros_middleware_interface::ClientHandle& client_handle, void * ros_response, void * ros_request_header)
+rmw_ret_t
+rmw_take_response(const rmw_client_t * client,
+                  void * ros_request_header, void * ros_response)
 {
-    if (client_handle.implementation_identifier_ != _rti_connext_identifier)
+    if (client->implementation_identifier != _rti_connext_identifier)
     {
         printf("client handle not from this implementation\n");
-        printf("but from: %s\n", client_handle.implementation_identifier_);
+        printf("but from: %s\n", client->implementation_identifier);
         throw std::runtime_error("client handle not from this implementation");
     }
 
-    CustomClientInfo * custom_client_info = (CustomClientInfo*)client_handle.data_;
+    CustomClientInfo * custom_client_info = (CustomClientInfo*)client->data;
 
     void * requester = custom_client_info->requester_;
 
     const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
 
-    return callbacks->_take_response(requester, ros_response, ros_request_header);
+    if(!(callbacks->_take_response(requester, ros_response, ros_request_header))) {
+      ros_request_header = NULL;
+      ros_response = NULL;
+    }
+
+    return RMW_RET_OK;
 }
 
-void send_response(
-  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request,
-  void * ros_response)
+rmw_ret_t
+rmw_send_response(const rmw_service_t * service,
+                  void * ros_request, void * ros_response)
 {
-    if (service_handle.implementation_identifier_ != _rti_connext_identifier)
+    if (service->implementation_identifier != _rti_connext_identifier)
     {
         printf("service handle not from this implementation\n");
-        printf("but from: %s\n", service_handle.implementation_identifier_);
+        printf("but from: %s\n", service->implementation_identifier);
         throw std::runtime_error("service handle not from this implementation");
     }
 
-    CustomServiceInfo * custom_service_info = (CustomServiceInfo*)service_handle.data_;
+    CustomServiceInfo * custom_service_info = (CustomServiceInfo*)service->data;
 
     void * replier = custom_service_info->replier_;
 
     const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
 
     callbacks->_send_response(replier, ros_request, ros_response);
+    return RMW_RET_OK;
 }
 
 }

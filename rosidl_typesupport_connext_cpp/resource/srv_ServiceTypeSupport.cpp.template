@@ -71,25 +71,6 @@ void * create_replier__@(spec.srv_name)(DDSDomainParticipant * participant, cons
     return replier;
 }
 
-ros_middleware_interface::ROS2_RETCODE_t receive_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ros_response)
-{
-    @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(@(spec.pkg_name)::@(spec.srv_name)Response *)untyped_ros_response;
-    connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_requester);
-
-    // TODO(esteve): add a sane default timeout.
-    const DDS::Duration_t MAX_WAIT = {1, 0};
-    connext::Sample<@(spec.pkg_name)::dds_::@(spec.srv_name)Response_> response;
-    bool received = requester->receive_reply(response, MAX_WAIT);
-    if(received)
-    {
-        if(response.info().valid_data) {
-            @(spec.pkg_name)::type_support::convert_dds_message_to_ros(response.data(), ros_response);
-            return ros_middleware_interface::ROS2_RETCODE_OK;
-        }
-    }
-    return ros_middleware_interface::ROS2_RETCODE_ERROR;
-}
-
 bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_request, void * untyped_ros_request_header)
 {
     @(spec.pkg_name)::@(spec.srv_name)Request & ros_request = *(@(spec.pkg_name)::@(spec.srv_name)Request *)untyped_ros_request;
@@ -169,13 +150,12 @@ static rmw_connext_cpp::ServiceTypeSupportCallbacks callbacks = {
     &create_requester__@(spec.srv_name),
     &create_replier__@(spec.srv_name),
     &send_request__@(spec.srv_name),
-    &receive_response__@(spec.srv_name),
     &take_request__@(spec.srv_name),
     &send_response__@(spec.srv_name),
     &take_response__@(spec.srv_name),
 };
 
-static rosidl_generator_cpp::ServiceTypeSupportHandle handle = {
+static rosidl_generator_cpp::rosidl_service_type_support_t handle = {
     "connext_static",
     &callbacks
 };
@@ -189,9 +169,9 @@ namespace rmw_connext_cpp
 {
 
 template<>
-const rosidl_generator_cpp::ServiceTypeSupportHandle& get_service_type_support_handle<@(spec.pkg_name)::@(spec.srv_name)>()
+const rosidl_generator_cpp::rosidl_service_type_support_t * get_service_type_support_handle<@(spec.pkg_name)::@(spec.srv_name)>()
 {
-    return @(spec.pkg_name)::service_type_support::handle;
+    return &@(spec.pkg_name)::service_type_support::handle;
 }
 
 }  // namespace rmw_connext_cpp
