@@ -639,7 +639,7 @@ rmw_take_request(const rmw_service_t * service,
 
     const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
 
-    *taken = callbacks->_take_request(replier, ros_request, ros_request_header);
+    *taken = callbacks->_take_request(replier, ros_request_header, ros_request);
 
     return RMW_RET_OK;
 }
@@ -661,14 +661,14 @@ rmw_take_response(const rmw_client_t * client,
 
     const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
 
-    *taken = callbacks->_take_response(requester, ros_response, ros_request_header);
+    *taken = callbacks->_take_response(requester, ros_request_header, ros_response);
 
     return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_send_response(const rmw_service_t * service,
-                  void * ros_request, void * ros_response)
+                  void * ros_request_header, void * ros_response)
 {
     if (service->implementation_identifier != _rti_connext_identifier)
     {
@@ -683,7 +683,7 @@ rmw_send_response(const rmw_service_t * service,
 
     const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
 
-    callbacks->_send_response(replier, ros_request, ros_response);
+    callbacks->_send_response(replier, ros_request_header, ros_response);
     return RMW_RET_OK;
 }
 

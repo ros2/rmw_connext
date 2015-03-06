@@ -71,7 +71,7 @@ void * create_replier__@(spec.srv_name)(DDSDomainParticipant * participant, cons
     return replier;
 }
 
-bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_request, void * untyped_ros_request_header)
+bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_request_header, void * untyped_ros_request)
 {
     @(spec.pkg_name)::@(spec.srv_name)Request & ros_request = *(@(spec.pkg_name)::@(spec.srv_name)Request *)untyped_ros_request;
     rmw_request_id_t & req_id = *(rmw_request_id_t *)untyped_ros_request_header;
@@ -97,7 +97,7 @@ bool take_request__@(spec.srv_name)(void * untyped_replier, void * untyped_ros_r
     return false;
 }
 
-bool take_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ros_response, void * untyped_ros_request_header)
+bool take_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ros_request_header, void * untyped_ros_response)
 {
     @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(@(spec.pkg_name)::@(spec.srv_name)Response *)untyped_ros_response;
     connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_requester);
