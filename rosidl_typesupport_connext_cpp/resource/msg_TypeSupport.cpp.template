@@ -211,7 +211,7 @@ static rmw_connext_cpp::MessageTypeSupportCallbacks callbacks = {
     &take__@(spec.base_type.type)
 };
 
-static rosidl_generator_cpp::MessageTypeSupportHandle handle = {
+static rosidl_message_type_support_t handle = {
     "connext_static",
     &callbacks
 };
@@ -220,14 +220,26 @@ static rosidl_generator_cpp::MessageTypeSupportHandle handle = {
 
 }  // namespace @(spec.base_type.pkg_name)
 
-
 namespace rmw_connext_cpp
 {
 
 template<>
-const rosidl_generator_cpp::MessageTypeSupportHandle& get_type_support_handle<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
+const rosidl_message_type_support_t * get_type_support_handle<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
 {
-    return @(spec.base_type.pkg_name)::type_support::handle;
+    return &@(spec.base_type.pkg_name)::type_support::handle;
 }
 
 }  // namespace rmw_connext_cpp
+
+namespace rosidl_generator_cpp
+{
+
+template<>
+const rosidl_message_type_support_t *
+get_type_support_handle<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
+{
+    return rmw_connext_cpp::get_type_support_handle<
+        @(spec.base_type.pkg_name)::@(spec.base_type.type)>();
+}
+
+}  // namespace rosidl_generator_cpp
