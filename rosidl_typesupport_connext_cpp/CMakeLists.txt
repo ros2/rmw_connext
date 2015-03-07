@@ -20,6 +20,11 @@ ament_export_include_directories(include)
 
 ament_python_install_package(${PROJECT_NAME})
 
+if(AMENT_ENABLE_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 ament_package(
   CONFIG_EXTRAS "rosidl_typesupport_connext_cpp-extras.cmake.in"
 )

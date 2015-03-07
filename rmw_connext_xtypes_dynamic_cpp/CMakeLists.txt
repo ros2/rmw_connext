@@ -34,6 +34,11 @@ ament_target_dependencies(rmw_connext_xtypes_dynamic_cpp
 
 ament_export_libraries(rmw_connext_xtypes_dynamic_cpp dl pthread)
 
+if(AMENT_ENABLE_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 ament_package()
 
 install(
