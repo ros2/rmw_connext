@@ -32,6 +32,11 @@ ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
 
 register_rmw_implementation()
 
+if(AMENT_ENABLE_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
+endif()
+
 ament_package()
 
 install(
