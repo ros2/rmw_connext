@@ -1,5 +1,3 @@
-#include <rmw/types.h>
-
 #include <iostream>
 #include <stdexcept>
 
@@ -9,6 +7,8 @@
 #include <rmw/rmw.h>
 #include <rmw/allocators.h>
 #include <rmw/error_handling.h>
+#include <rmw/types.h>
+
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 
