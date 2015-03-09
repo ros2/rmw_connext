@@ -287,6 +287,11 @@ rmw_create_subscription(const rmw_node_t * node,
 rmw_ret_t
 rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
 {
+    if (taken == NULL) {
+        rmw_set_error_string("taken argument can't be null");
+        return RMW_RET_ERROR;
+    }
+
     if (subscription->implementation_identifier != _rti_connext_identifier)
     {
         rmw_set_error_string("subscriber handle not from this implementation");
@@ -626,6 +631,11 @@ rmw_ret_t
 rmw_take_request(const rmw_service_t * service,
                  void * ros_request_header, void * ros_request, bool * taken)
 {
+    if (taken == NULL) {
+        rmw_set_error_string("taken argument can't be null");
+        return RMW_RET_ERROR;
+    }
+
     if (service->implementation_identifier != _rti_connext_identifier)
     {
         rmw_set_error_string("service handle not from this implementation");
@@ -648,6 +658,11 @@ rmw_ret_t
 rmw_take_response(const rmw_client_t * client,
                   void * ros_request_header, void * ros_response, bool * taken)
 {
+    if (taken == NULL) {
+        rmw_set_error_string("taken argument can't be null");
+        return RMW_RET_ERROR;
+    }
+
     if (client->implementation_identifier != _rti_connext_identifier)
     {
         rmw_set_error_string("client handle not from this implementation");
