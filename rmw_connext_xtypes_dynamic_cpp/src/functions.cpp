@@ -4,39 +4,42 @@
 #include "ndds/ndds_cpp.h"
 
 #include <rmw/rmw.h>
+#include <rmw/allocators.h>
+#include <rmw/error_handling.h>
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
+#include <rmw/types.h>
 #include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
 #include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
 
 #include "rosidl_generator_cpp/ServiceTypeSupport.h"
 
-namespace ros_middleware_interface
+extern "C"
 {
 
 const char * _rti_connext_dynamic_identifier = "connext_dynamic";
 
-void init()
+const char *
+rmw_get_implementation_identifier() {
+  return _rti_connext_dynamic_identifier;
+}
+
+rmw_ret_t
+rmw_init()
 {
-    std::cout << "init()" << std::endl;
-    std::cout << "  init() get_instance" << std::endl;
     DDSDomainParticipantFactory* dpf_ = DDSDomainParticipantFactory::get_instance();
     if (!dpf_) {
-        printf("  init() could not get participant factory\n");
-        throw std::runtime_error("could not get participant factory");
+        rmw_set_error_string("  init() could not get participant factory");
+        return RMW_RET_ERROR;
     };
 }
 
-ros_middleware_interface::NodeHandle create_node()
+rmw_node_t *
+rmw_create_node(const char * name)
 {
-    std::cout << "create_node()" << std::endl;
-
-    std::cout << "  create_node() " << _rti_connext_dynamic_identifier << std::endl;
-
-    std::cout << "  create_node() get_instance" << std::endl;
     DDSDomainParticipantFactory* dpf_ = DDSDomainParticipantFactory::get_instance();
     if (!dpf_) {
-        printf("  create_node() could not get participant factory\n");
-        throw std::runtime_error("could not get participant factory");
+        rmw_set_error_string("  create_node() could not get participant factory");
+        return NULL;
     };
 
     // use loopback interface to enable cross vendor communication
@@ -44,8 +47,8 @@ ros_middleware_interface::NodeHandle create_node()
     DDS_ReturnCode_t status = dpf_->get_default_participant_qos(participant_qos);
     if (status != DDS_RETCODE_OK)
     {
-        printf("  create_node() could not get participant qos\n");
-        throw std::runtime_error("could not get participant qos");
+        rmw_set_error_string("  create_node() could not get participant qos");
+        return NULL;
     }
     status = DDSPropertyQosPolicyHelper::add_property(participant_qos.property,
         "dds.transport.UDPv4.builtin.ignore_loopback_interface",
@@ -53,30 +56,25 @@ ros_middleware_interface::NodeHandle create_node()
         DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK)
     {
-        printf("  create_node() could not add qos property\n");
-        throw std::runtime_error("could not add qos property");
+        rmw_set_error_string("  create_node() could not add qos property");
+        return NULL;
     }
-    std::cout << "  create_node() disable shared memory, enable loopback interface" << std::endl;
 
     DDS_DomainId_t domain = 0;
 
-    std::cout << "  create_node() create_participant in domain " << domain << std::endl;
     DDSDomainParticipant* participant = dpf_->create_participant(
         //domain, DDS_PARTICIPANT_QOS_DEFAULT, NULL,
         domain, participant_qos, NULL,
         DDS_STATUS_MASK_NONE);
     if (!participant) {
-        printf("  create_node() could not create participant\n");
-        throw std::runtime_error("could not create participant");
+        rmw_set_error_string("  create_node() could not create participant");
+        return NULL;
     };
 
-    std::cout << "  create_node() pass opaque node handle" << std::endl;
-
-    ros_middleware_interface::NodeHandle node_handle = {
-        _rti_connext_dynamic_identifier,
-        participant
-    };
-    return node_handle;
+    rmw_node_t * node = new rmw_node_t;
+    node->implementation_identifier = _rti_connext_dynamic_identifier;
+    node->data = participant;
+    return node;
 }
 
 DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_introspection_cpp::MessageMembers * members, DDS_DomainParticipantQos& participant_qos)
@@ -84,7 +82,7 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
     DDS_TypeCodeFactory * factory = NULL;
     factory = DDS_TypeCodeFactory::get_instance();
     if (!factory) {
-        printf("  create_type_code() could not get typecode factory\n");
+        rmw_set_error_string("  create_type_code() could not get typecode factory");
         throw std::runtime_error("could not get typecode factory");
     };
 
@@ -94,7 +92,6 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
     for(unsigned long i = 0; i < members->member_count_; ++i)
     {
         const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
-        std::cout << "  create_type_code() create type code - add member " << i << ": " << member->name_ << std::endl;
         const DDS_TypeCode * member_type_code;
         // TODO support arrays: create_array_tc / create_sequence_tc
         switch (member->type_id_)
@@ -154,11 +151,9 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                 {
-                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
-                    std::cout << "  create_type_code() create type code - add sub member of type " << sub_members->package_name_ << "/" << sub_members->message_name_ << std::endl;
+                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->data;
                     std::string field_type_name = std::string(sub_members->package_name_) + "::dds_::" + sub_members->message_name_ + "_";
                     member_type_code = create_type_code(field_type_name, sub_members, participant_qos);
-                    std::cout << "  create_type_code() create type code - added sub member of type " << sub_members->package_name_ << "/" << sub_members->message_name_ << std::endl;
                 }
                 break;
             default:
@@ -168,7 +163,6 @@ DDS_TypeCode * create_type_code(std::string type_name, const rosidl_typesupport_
         type_code->add_member((std::string(member->name_) + "_").c_str(), DDS_TYPECODE_MEMBER_ID_INVALID, member_type_code,
                     DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
     }
-    std::cout << "  type name: " << type_code->name(ex) << std::endl;
     type_code->print_IDL(1, ex);
     DDS_StructMemberSeq_finalize(&struct_members);
     return type_code;
@@ -183,108 +177,106 @@ struct CustomPublisherInfo {
   DDS_DynamicData * dynamic_data;
 };
 
-ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_interface::NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
+rmw_publisher_t *
+rmw_create_publisher(const rmw_node_t * node,
+                     const rosidl_message_type_support_t * type_support,
+                     const char * topic_name,
+                     size_t queue_size)
 {
-    std::cout << "create_publisher()" << std::endl;
-
-    if (node_handle._implementation_identifier != _rti_connext_dynamic_identifier)
+    if (node->implementation_identifier != _rti_connext_dynamic_identifier)
     {
-        printf("node handle not from this implementation\n");
-        printf("but from: %s\n", node_handle._implementation_identifier);
-        throw std::runtime_error("node handle not from this implementation");
+        rmw_set_error_string("node handle not from this implementation");
+        // printf("but from: %s\n", node->implementation_identifier);
+        return NULL;
     }
 
-    std::cout << "create_publisher() " << node_handle._implementation_identifier << std::endl;
+    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
 
-    std::cout << "  create_publisher() extract participant from opaque node handle" << std::endl;
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
-
-    if (type_support_handle._typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+    if (type_support->typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
     {
-        printf("type support not from this implementation\n");
-        printf("but from: %s\n", type_support_handle._typesupport_identifier);
-        throw std::runtime_error("type support not from this implementation");
+        rmw_set_error_string("type support not from this implementation");
+        // printf("but from: %s\n", type_support->typesupport_identifier);
+        return NULL;
     }
 
-    const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support_handle._data;
+    const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support->data;
     std::string type_name = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
 
     DDS_DomainParticipantQos participant_qos;
     DDS_ReturnCode_t status = participant->get_qos(participant_qos);
     if (status != DDS_RETCODE_OK) {
-        printf("get_qos() failed. Status = %d\n", status);
-        throw std::runtime_error("get participant qos failed");
+        rmw_set_error_string("failed to get participant qos");
+        // printf("get_qos() failed. Status = %d\n", status);
+        return NULL;
     };
 
-    std::cout << "  create_publisher() create type code for " << type_name.c_str() << std::endl;
     DDS_TypeCode * type_code = create_type_code(type_name, members, participant_qos);
 
 
-    std::cout << "  create_publisher() register type code" << std::endl;
     DDSDynamicDataTypeSupport* ddts = new DDSDynamicDataTypeSupport(
         type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
     status = ddts->register_type(participant, type_name.c_str());
     if (status != DDS_RETCODE_OK) {
-        printf("register_type() failed. Status = %d\n", status);
-        throw std::runtime_error("register type failed");
+        rmw_set_error_string("failed to register type");
+        // printf("register_type() failed. Status = %d\n", status);
+        return NULL;
     };
 
 
     DDS_PublisherQos publisher_qos;
     status = participant->get_default_publisher_qos(publisher_qos);
     if (status != DDS_RETCODE_OK) {
-        printf("get_default_publisher_qos() failed. Status = %d\n", status);
-        throw std::runtime_error("get default publisher qos failed");
+        rmw_set_error_string("failed to get default publisher qos");
+        // printf("get_default_publisher_qos() failed. Status = %d\n", status);
+        return NULL;
     };
 
-    std::cout << "  create_publisher() create dds publisher" << std::endl;
     DDSPublisher* dds_publisher = participant->create_publisher(
         publisher_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!dds_publisher) {
-        printf("  create_publisher() could not create publisher\n");
-        throw std::runtime_error("could not create publisher");
+        rmw_set_error_string("  create_publisher() could not create publisher");
+        return NULL;
     };
 
 
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
     if (status != DDS_RETCODE_OK) {
-        printf("get_default_topic_qos() failed. Status = %d\n", status);
-        throw std::runtime_error("get default topic qos failed");
+        rmw_set_error_string("failed to get default topic qos");
+        // printf("get_default_topic_qos() failed. Status = %d\n", status);
+        return NULL;
     };
 
-    std::cout << "  create_publisher() create topic" << std::endl;
     DDSTopic* topic = participant->create_topic(
         topic_name, type_name.c_str(), default_topic_qos, NULL,
         DDS_STATUS_MASK_NONE
     );
     if (!topic) {
-        printf("  create_topic() could not create topic\n");
-        throw std::runtime_error("could not create topic");
+        rmw_set_error_string("  create_topic() could not create topic");
+        return NULL;
     };
 
 
     DDS_DataWriterQos default_datawriter_qos;
     status = participant->get_default_datawriter_qos(default_datawriter_qos);
     if (status != DDS_RETCODE_OK) {
-        printf("get_default_datawriter_qos() failed. Status = %d\n", status);
-        throw std::runtime_error("get default datawriter qos failed");
+        rmw_set_error_string("failed to get default datawriter qos");
+        // printf("get_default_datawriter_qos() failed. Status = %d\n", status);
+        return NULL;
     };
 
-    std::cout << "  create_publisher() create data writer" << std::endl;
     DDSDataWriter* topic_writer = dds_publisher->create_datawriter(
         topic, default_datawriter_qos,
         NULL, DDS_STATUS_MASK_NONE);
 
     DDSDynamicDataWriter* dynamic_writer = DDSDynamicDataWriter::narrow(topic_writer);
     if (!dynamic_writer) {
-        printf("narrow() failed.\n");
-        throw std::runtime_error("narrow datawriter failed");
+        rmw_set_error_string("narrow() failed.");
+        return NULL;
     };
 
     DDS_DynamicData * dynamic_data = ddts->create_data();
 
-    std::cout << "  create_publisher() build opaque publisher handle" << std::endl;
     CustomPublisherInfo* custom_publisher_info = new CustomPublisherInfo();
     custom_publisher_info->dynamic_data_type_support_ = ddts;
     custom_publisher_info->dynamic_writer_ = dynamic_writer;
@@ -292,14 +284,12 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
     custom_publisher_info->members_ = members;
     custom_publisher_info->dynamic_data = dynamic_data;
 
-    ros_middleware_interface::PublisherHandle publisher_handle = {
-        _rti_connext_dynamic_identifier,
-        custom_publisher_info
-    };
-    return publisher_handle;
+    rmw_publisher_t * publisher = new rmw_publisher_t;
+    publisher->implementation_identifier = _rti_connext_dynamic_identifier;
+    publisher->data = custom_publisher_info;
+    return publisher;
 }
 
-//std::cout << "  publish() set member " << i << ": " << member->name_ << " = " << value << std::endl;
 #define SET_VALUE(TYPE, METHOD_NAME) \
     { \
         TYPE value = *((TYPE*)((char*)ros_message + member->offset_)); \
@@ -322,13 +312,11 @@ ros_middleware_interface::PublisherHandle create_publisher(const ros_middleware_
 
 void _publish(DDS_DynamicData * dynamic_data, const void * ros_message, const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
-    //std::cout << "  publish() create " << members->package_name_ << "/" << members->message_name_ << " and populate dynamic data" << std::endl;
     //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
     //DDS_DynamicData * dynamic_data = ddts->create_data();
     for(unsigned long i = 0; i < members->member_count_; ++i)
     {
         const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
-        //std::cout << "  publish() set member " << i << ": " << member->_name << std::endl;
         DDS_TypeCode * member_type_code;
         switch (member->type_id_)
         {
@@ -379,7 +367,7 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message, const ro
                     DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
                     dynamic_data->bind_complex_member(sub_dynamic_data, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
                     void * sub_ros_message = (void*)((char*)ros_message + member->offset_);
-                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
+                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->data;
                     _publish(&sub_dynamic_data, sub_ros_message, sub_members);
                     dynamic_data->unbind_complex_member(sub_dynamic_data);
                 }
@@ -391,20 +379,17 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message, const ro
     }
 }
 
-void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, const void * ros_message)
+rmw_ret_t
+rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
-    //std::cout << "publish()" << std::endl;
-
-
-    if (publisher_handle._implementation_identifier != _rti_connext_dynamic_identifier)
+    if (publisher->implementation_identifier != _rti_connext_dynamic_identifier)
     {
-        printf("publisher handle not from this implementation\n");
-        printf("but from: %s\n", publisher_handle._implementation_identifier);
-        throw std::runtime_error("publisher handle not from this implementation");
+        rmw_set_error_string("publisher handle not from this implementation");
+        // printf("but from: %s\n", publisher->implementation_identifier);
+        return RMW_RET_ERROR;
     }
 
-    //std::cout << "  publish() extract data writer and type code from opaque publisher handle" << std::endl;
-    CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher_handle._data;
+    CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher->data;
     DDSDynamicDataTypeSupport* ddts = custom_publisher_info->dynamic_data_type_support_;
     DDSDynamicDataWriter * dynamic_writer = custom_publisher_info->dynamic_writer_;
     DDS_TypeCode * type_code = custom_publisher_info->type_code_;
@@ -413,14 +398,15 @@ void publish(const ros_middleware_interface::PublisherHandle& publisher_handle, 
 
     _publish(dynamic_data, ros_message, members);
 
-    //std::cout << "  publish() write dynamic data" << std::endl;
     DDS_ReturnCode_t status = dynamic_writer->write(*dynamic_data, DDS_HANDLE_NIL);
     if (status != DDS_RETCODE_OK) {
-        printf("write() failed. Status = %d\n", status);
-        throw std::runtime_error("write failed");
+        rmw_set_error_string("failed to write");
+        // printf("write() failed. Status = %d\n", status);
+        return RMW_RET_ERROR;
     };
 
     //ddts->delete_data(dynamic_data);
+    return RMW_RET_OK;
 }
 
 struct CustomSubscriberInfo {
@@ -431,108 +417,106 @@ struct CustomSubscriberInfo {
   DDS_DynamicData * dynamic_data;
 };
 
-ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middleware_interface::NodeHandle& node_handle, const rosidl_generator_cpp::MessageTypeSupportHandle & type_support_handle, const char * topic_name)
+rmw_subscription_t *
+rmw_create_subscription(const rmw_node_t * node,
+                        const rosidl_message_type_support_t * type_support,
+                        const char * topic_name,
+                        size_t queue_size)
 {
-    std::cout << "create_subscriber()" << std::endl;
-
-    if (node_handle._implementation_identifier != _rti_connext_dynamic_identifier)
+    if (node->implementation_identifier != _rti_connext_dynamic_identifier)
     {
-        printf("node handle not from this implementation\n");
-        printf("but from: %s\n", node_handle._implementation_identifier);
-        throw std::runtime_error("node handle not from this implementation");
+        rmw_set_error_string("node handle not from this implementation");
+        // printf("but from: %s\n", node->implementation_identifier);
+        return NULL;
     }
 
-    std::cout << "create_subscriber() " << node_handle._implementation_identifier << std::endl;
+    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
 
-    std::cout << "  create_subscriber() extract participant from opaque node handle" << std::endl;
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node_handle._data;
-
-    if (type_support_handle._typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+    if (type_support->typesupport_identifier != rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
     {
-        printf("type support not from this implementation\n");
-        printf("but from: %s\n", type_support_handle._typesupport_identifier);
-        throw std::runtime_error("type support not from this implementation");
+        rmw_set_error_string("type support not from this implementation");
+        // printf("but from: %s\n", type_support->typesupport_identifier);
+        return NULL;
     }
 
-    const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support_handle._data;
+    const rosidl_typesupport_introspection_cpp::MessageMembers * members = (rosidl_typesupport_introspection_cpp::MessageMembers*)type_support->data;
     std::string type_name = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
 
     DDS_DomainParticipantQos participant_qos;
     DDS_ReturnCode_t status = participant->get_qos(participant_qos);
     if (status != DDS_RETCODE_OK) {
-        printf("get_qos() failed. Status = %d\n", status);
-        throw std::runtime_error("get participant qos failed");
+        rmw_set_error_string("failed to get participant qos");
+        // printf("get_qos() failed. Status = %d\n", status);
+        return NULL;
     };
 
-    std::cout << "  create_subscriber() create type code for " << type_name.c_str() << std::endl;
     DDS_TypeCode * type_code = create_type_code(type_name, members, participant_qos);
 
 
-    std::cout << "  create_subscriber() register type code" << std::endl;
     DDSDynamicDataTypeSupport* ddts = new DDSDynamicDataTypeSupport(
         type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
     status = ddts->register_type(participant, type_name.c_str());
     if (status != DDS_RETCODE_OK) {
-        printf("register_type() failed. Status = %d\n", status);
-        throw std::runtime_error("register type failed");
+        rmw_set_error_string("failed to register type");
+        // printf("register_type() failed. Status = %d\n", status);
+        return NULL;
     };
 
 
     DDS_SubscriberQos subscriber_qos;
     status = participant->get_default_subscriber_qos(subscriber_qos);
     if (status != DDS_RETCODE_OK) {
-        printf("get_default_subscriber_qos() failed. Status = %d\n", status);
-        throw std::runtime_error("get default subscriber qos failed");
+        rmw_set_error_string("failed to get default subscriber qos");
+        // printf("get_default_subscriber_qos() failed. Status = %d\n", status);
+        return NULL;
     };
 
-    std::cout << "  create_subscriber() create dds subscriber" << std::endl;
     DDSSubscriber* dds_subscriber = participant->create_subscriber(
         subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!dds_subscriber) {
-        printf("  create_subscriber() could not create subscriber\n");
-        throw std::runtime_error("could not create subscriber");
+        rmw_set_error_string("  create_subscriber() could not create subscriber");
+        return NULL;
     };
 
 
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
     if (status != DDS_RETCODE_OK) {
-        printf("get_default_topic_qos() failed. Status = %d\n", status);
-        throw std::runtime_error("get default topic qos failed");
+        rmw_set_error_string("failed to get default topic qos");
+        // printf("get_default_topic_qos() failed. Status = %d\n", status);
+        return NULL;
     };
 
-    std::cout << "  create_subscriber() create topic" << std::endl;
     DDSTopic* topic = participant->create_topic(
         topic_name, type_name.c_str(), default_topic_qos, NULL,
         DDS_STATUS_MASK_NONE
     );
     if (!topic) {
-        printf("  create_topic() could not create topic\n");
-        throw std::runtime_error("could not create topic");
+        rmw_set_error_string("  create_topic() could not create topic");
+        return NULL;
     };
 
 
     DDS_DataReaderQos default_datareader_qos;
     status = participant->get_default_datareader_qos(default_datareader_qos);
     if (status != DDS_RETCODE_OK) {
-        printf("get_default_datareader_qos() failed. Status = %d\n", status);
-        throw std::runtime_error("get default datareader qos failed");
+        rmw_set_error_string("failed to get default datareader qos");
+        // printf("get_default_datareader_qos() failed. Status = %d\n", status);
+        return NULL;
     };
 
-    std::cout << "  create_subscriber() create data reader" << std::endl;
     DDSDataReader* topic_reader = dds_subscriber->create_datareader(
         topic, default_datareader_qos,
         NULL, DDS_STATUS_MASK_NONE);
 
     DDSDynamicDataReader* dynamic_reader = DDSDynamicDataReader::narrow(topic_reader);
     if (!dynamic_reader) {
-        printf("narrow() failed.\n");
-        throw std::runtime_error("narrow datareader failed");
+        rmw_set_error_string("narrow() failed.\n");
+        return NULL;
     };
 
     DDS_DynamicData * dynamic_data = ddts->create_data();
 
-    std::cout << "  create_subscriber() build opaque subscriber handle" << std::endl;
     CustomSubscriberInfo* custom_subscriber_info = new CustomSubscriberInfo();
     custom_subscriber_info->dynamic_data_type_support_ = ddts;
     custom_subscriber_info->dynamic_reader_ = dynamic_reader;
@@ -540,14 +524,12 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
     custom_subscriber_info->members_ = members;
     custom_subscriber_info->dynamic_data = dynamic_data;
 
-    ros_middleware_interface::SubscriberHandle subscriber_handle = {
-        _rti_connext_dynamic_identifier,
-        custom_subscriber_info
-    };
-    return subscriber_handle;
+    rmw_subscription_t * subscription = new rmw_subscription_t;
+    subscription->implementation_identifier = _rti_connext_dynamic_identifier;
+    subscription->data = custom_subscriber_info;
+    return subscription;
 }
 
-//std::cout << "  take() get member " << i << ": " << member->name_ << " = " << value << std::endl;
 #define GET_VALUE(TYPE, METHOD_NAME) \
     { \
         TYPE value; \
@@ -574,13 +556,11 @@ ros_middleware_interface::SubscriberHandle create_subscriber(const ros_middlewar
 
 void _take(DDS_DynamicData * dynamic_data, void * ros_message, const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
-    //std::cout << "  take() create " << members->package_name_ << "/" << members->message_name_ << " and populate dynamic data" << std::endl;
     //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
     //DDS_DynamicData * dynamic_data = ddts->create_data();
     for(unsigned long i = 0; i < members->member_count_; ++i)
     {
         const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
-        //std::cout << "  take() get member " << i << ": " << member->_name << std::endl;
         switch (member->type_id_)
         {
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
@@ -641,7 +621,7 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message, const rosidl_type
                     DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
                     dynamic_data->bind_complex_member(sub_dynamic_data, (std::string(member->name_) + "_").c_str(), DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
                     void * sub_ros_message = (void*)((char*)ros_message + member->offset_);
-                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->_data;
+                    const ::rosidl_typesupport_introspection_cpp::MessageMembers* sub_members = (const ::rosidl_typesupport_introspection_cpp::MessageMembers*)member->members_->data;
                     _take(&sub_dynamic_data, sub_ros_message, sub_members);
                     dynamic_data->unbind_complex_member(sub_dynamic_data);
                 }
@@ -653,20 +633,17 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message, const rosidl_type
     }
 }
 
-bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, void * ros_message)
+rmw_ret_t
+rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
 {
-    //std::cout << "take()" << std::endl;
-
-
-    if (subscriber_handle.implementation_identifier_ != _rti_connext_dynamic_identifier)
+    if (subscription->implementation_identifier != _rti_connext_dynamic_identifier)
     {
-        printf("subscriber handle not from this implementation\n");
-        printf("but from: %s\n", subscriber_handle.implementation_identifier_);
-        throw std::runtime_error("subscriber handle not from this implementation");
+        rmw_set_error_string("subscriber handle not from this implementation");
+        // printf("but from: %s\n", subscription->implementation_identifier);
+        return RMW_RET_ERROR;
     }
 
-    //std::cout << "  take() extract data writer and type code from opaque subscriber handle" << std::endl;
-    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscriber_handle.data_;
+    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscription->data;
     DDSDynamicDataTypeSupport* ddts = custom_subscriber_info->dynamic_data_type_support_;
     DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
     DDS_TypeCode * type_code = custom_subscriber_info->type_code_;
@@ -682,58 +659,78 @@ bool take(const ros_middleware_interface::SubscriberHandle& subscriber_handle, v
         DDS_ANY_VIEW_STATE,
         DDS_ANY_INSTANCE_STATE);
     if (status == DDS_RETCODE_NO_DATA) {
-        return false;
+        *taken = false;
+        return RMW_RET_OK;
     }
     if (status != DDS_RETCODE_OK) {
-        printf("take() failed. Status = %d\n", status);
-        throw std::runtime_error("take next sample failed");
+        rmw_set_error_string("failed to take");
+        // printf("take() failed. Status = %d\n", status);
+        return RMW_RET_ERROR;
     };
 
     if (ros_message == 0) {
-        printf("take() invoked without a valid ROS message pointer\n");
-        throw std::runtime_error("invalid ROS message pointer");
+        rmw_set_error_string("take() invoked without a valid ROS message pointer\n");
+        return RMW_RET_ERROR;
     };
 
     _take(&dynamic_data_sequence[0], ros_message, members);
 
     dynamic_reader->return_loan(dynamic_data_sequence, sample_infos);
 
-    return true;
+    *taken = true;
+
+    return RMW_RET_OK;
 }
 
-ros_middleware_interface::GuardConditionHandle create_guard_condition()
+rmw_guard_condition_t *
+rmw_create_guard_condition()
 {
-    ros_middleware_interface::GuardConditionHandle guard_condition_handle;
-    guard_condition_handle.implementation_identifier_ = _rti_connext_dynamic_identifier;
-    guard_condition_handle.data_ = new DDSGuardCondition();
+    rmw_guard_condition_t * guard_condition_handle = new rmw_guard_condition_t;
+    guard_condition_handle->implementation_identifier = _rti_connext_dynamic_identifier;
+    guard_condition_handle->data = new DDSGuardCondition();
     return guard_condition_handle;
 }
 
-void trigger_guard_condition(const ros_middleware_interface::GuardConditionHandle& guard_condition_handle)
+rmw_ret_t
+rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 {
-    //std::cout << "trigger_guard_condition()" << std::endl;
+  if (guard_condition) {
+    delete guard_condition->data;
+    delete guard_condition;
+    return RMW_RET_OK;
+  }
 
-    if (guard_condition_handle.implementation_identifier_ != _rti_connext_dynamic_identifier)
-    {
-        printf("guard condition handle not from this implementation\n");
-        printf("but from: %s\n", guard_condition_handle.implementation_identifier_);
-        throw std::runtime_error("guard condition handle not from this implementation");
-    }
-
-    DDSGuardCondition * guard_condition = (DDSGuardCondition*)guard_condition_handle.data_;
-    guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
+  return RMW_RET_ERROR;
 }
 
-void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_middleware_interface::GuardConditionHandles& guard_condition_handles, ros_middleware_interface::ServiceHandles& service_handles, ros_middleware_interface::ClientHandles& client_handles, bool non_blocking)
+rmw_ret_t
+rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
 {
-    //std::cout << "wait()" << std::endl;
+    if (guard_condition_handle->implementation_identifier != _rti_connext_dynamic_identifier)
+    {
+        rmw_set_error_string("guard condition handle not from this implementation");
+        // printf("but from: %s\n", guard_condition_handle->implementation_identifier);
+        return RMW_RET_ERROR;
+    }
 
+    DDSGuardCondition * guard_condition = (DDSGuardCondition*)guard_condition_handle->data;
+    guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
+    return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_wait(rmw_subscriptions_t * subscriptions,
+         rmw_guard_conditions_t * guard_conditions,
+         rmw_services_t * services,
+         rmw_clients_t * clients,
+         bool non_blocking)
+{
     DDSWaitSet waitset;
 
     // add a condition for each subscriber
-    for (unsigned long i = 0; i < subscriber_handles.subscriber_count_; ++i)
+    for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
     {
-        void * data = subscriber_handles.subscribers_[i];
+        void * data = subscriptions->subscribers[i];
         CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
         DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
         DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
@@ -742,9 +739,9 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
     }
 
     // add a condition for each guard condition
-    for (unsigned long i = 0; i < guard_condition_handles.guard_condition_count_; ++i)
+    for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
     {
-        void * data = guard_condition_handles.guard_conditions_[i];
+        void * data = guard_conditions->guard_conditions[i];
         DDSGuardCondition * guard_condition = (DDSGuardCondition*)data;
         waitset.attach_condition(guard_condition);
     }
@@ -761,19 +758,19 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
             {
                break;
             }
-            //std::cout << "wait() no data - rinse and repeat" << std::endl;
             continue;
         };
         if (status != DDS_RETCODE_OK) {
-            printf("wait() failed. Status = %d\n", status);
-            throw std::runtime_error("wait failed");
+            rmw_set_error_string("fail to wait on waitset");
+            // printf("wait() failed. Status = %d\n", status);
+            return RMW_RET_ERROR;
         };
     }
 
     // set subscriber handles to zero for all not triggered conditions
-    for (unsigned long i = 0; i < subscriber_handles.subscriber_count_; ++i)
+    for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
     {
-        void * data = subscriber_handles.subscribers_[i];
+        void * data = subscriptions->subscribers[i];
         CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
         DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
         DDSCondition * condition = dynamic_reader->get_statuscondition();
@@ -791,14 +788,14 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         // reset the subscriber handle
         if (!(j < active_conditions.length()))
         {
-            subscriber_handles.subscribers_[i] = 0;
+            subscriptions->subscribers[i] = 0;
         }
     }
 
     // set subscriber handles to zero for all not triggered conditions
-    for (unsigned long i = 0; i < guard_condition_handles.guard_condition_count_; ++i)
+    for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
     {
-        void * data = guard_condition_handles.guard_conditions_[i];
+        void * data = guard_conditions->guard_conditions[i];
         DDSCondition * condition = (DDSCondition*)data;
 
         // search for guard condition in active set
@@ -816,58 +813,66 @@ void wait(ros_middleware_interface::SubscriberHandles& subscriber_handles, ros_m
         // reset the guard handle
         if (!(j < active_conditions.length()))
         {
-            guard_condition_handles.guard_conditions_[i] = 0;
+            guard_conditions->guard_conditions[i] = 0;
         }
     }
 }
 
-ros_middleware_interface::ClientHandle create_client(
-  const ros_middleware_interface::NodeHandle& node_handle,
-  const rosidl_generator_cpp::ServiceTypeSupportHandle & type_support_handle,
-  const char * service_name)
+rmw_client_t *
+rmw_create_client(const rmw_node_t * node,
+                  const rosidl_service_type_support_t * type_support,
+                  const char * service_name)
 {
 }
 
-int64_t send_request(
-  const ros_middleware_interface::ClientHandle& client_handle,
-  const void * ros_client)
+rmw_ret_t
+rmw_send_request(const rmw_client_t * client, const void * ros_request,
+                 int64_t * sequence_id)
 {
-  return -1;
+  return RMW_RET_ERROR;
 }
 
-ros_middleware_interface::ROS2_RETCODE_t receive_response(
-  const ClientHandle& client_handle, void * ros_response)
+rmw_ret_t
+rmw_take_request(const rmw_service_t * service,
+                 void * ros_request_header, void * ros_request, bool * taken)
 {
-    return ROS2_RETCODE_ERROR;
+  *taken = false;
+  return RMW_RET_ERROR;
 }
 
-bool take_request(
-  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request,
-  void * ros_request_header)
+rmw_ret_t
+rmw_take_response(const rmw_client_t * client,
+                  void * ros_request_header, void * ros_response, bool * taken)
 {
-    return false;
+  *taken = false;
+  return RMW_RET_ERROR;
 }
 
-bool take_response(
-  const ros_middleware_interface::ClientHandle& client_handle, void * ros_response,
-  void * ros_request_header)
+rmw_ret_t
+rmw_send_response(const rmw_service_t * service,
+                  void * ros_request, void * ros_response)
 {
-    return false;
+  return RMW_RET_ERROR;
 }
 
-void send_response(
-  const ros_middleware_interface::ServiceHandle& service_handle, void * ros_request,
-  void * ros_response)
+rmw_service_t *
+rmw_create_service(const rmw_node_t * node,
+                   const rosidl_service_type_support_t * type_support,
+                   const char * service_name)
 {
+  return NULL;
 }
 
-ros_middleware_interface::ServiceHandle create_service(
-  const ros_middleware_interface::NodeHandle& node_handle,
-  const rosidl_generator_cpp::ServiceTypeSupportHandle & type_support_handle,
-  const char * service_name)
+rmw_ret_t
+rmw_destroy_service(rmw_service_t * service)
 {
-    ros_middleware_interface::ServiceHandle service_handle;
-    return service_handle;
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_destroy_client(rmw_client_t * client)
+{
+  return RMW_RET_ERROR;
 }
 
 }

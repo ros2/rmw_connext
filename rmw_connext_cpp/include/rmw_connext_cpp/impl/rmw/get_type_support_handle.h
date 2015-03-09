@@ -7,7 +7,7 @@
 namespace rmw
 {
 template<typename T>
-const rosidl_generator_cpp::MessageTypeSupportHandle& get_type_support_handle()
+const rosidl_service_type_support_t * get_type_support_handle()
 {
   return rmw_connext_cpp::get_type_support_handle<T>();
 }
