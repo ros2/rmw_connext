@@ -16,11 +16,11 @@ typedef struct service_type_support_callbacks_t
   // Function to send ROS requests
   int64_t (*send_request)(void * requester, const void * ros_request);
   // Function to read a ROS request from the wire
-  bool (*take_request)(void * replier, void * ros_request, void * ros_request_header);
+  bool (*take_request)(void * replier, void * ros_request_header, void * ros_request);
   // Function to send ROS responses
-  void (*send_response)(void * replier, const void * ros_request, const void * ros_response);
+  void (*send_response)(void * replier, const void * ros_request_header, const void * ros_response);
   // Function to read a ROS response from the wire
-  bool (*take_response)(void * requester, void * ros_response, void * ros_request_header);
+  bool (*take_response)(void * requester, void * ros_request_header, void * ros_response);
 } service_type_support_callbacks_t;
 
 #endif  /* ROSIDL_TYPESUPPORT_CONNEXT_CPP_ROSIDL_TYPESUPPORT_CONNEXT_CPP_SERVICE_TYPE_SUPPORT_H_ */
