@@ -19,6 +19,7 @@
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_TypeSupport.h"
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
+#include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
 @[for field in spec.fields]@
 @[if not field.type.is_primitive_type()]@
@@ -40,8 +41,9 @@ namespace @(spec.base_type.pkg_name)
 namespace type_support
 {
 
-void register_type__@(spec.base_type.type)(DDSDomainParticipant * participant, const char * type_name)
+void register_type__@(spec.base_type.type)(void * untyped_participant, const char * type_name)
 {
+    DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
     std::cout << "  @(spec.base_type.pkg_name)::type_support::register_type__@(spec.base_type.type)()" << std::endl;
     @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
     std::cout << "  type name: " << @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::get_type_name() << std::endl;
@@ -104,8 +106,9 @@ void convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_ty
 @[end for]@
 }
 
-void publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * untyped_ros_message)
+void publish__@(spec.base_type.type)(void * untyped_topic_writer, const void * untyped_ros_message)
 {
+    DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
 
     const @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(const @(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
@@ -165,8 +168,9 @@ void convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.b
 }
 
 // ToDo review
-bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_ros_message)
+bool take__@(spec.base_type.type)(void * untyped_topic_reader, void * untyped_ros_message)
 {
+    DDSDataReader * topic_reader = static_cast<DDSDataReader *>(untyped_topic_reader);
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
 
     @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataReader * data_reader = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
@@ -203,7 +207,7 @@ bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_r
     return true;
 }
 
-static rmw_connext_cpp::MessageTypeSupportCallbacks callbacks = {
+static message_type_support_callbacks_t callbacks = {
     "@(spec.base_type.pkg_name)",
     "@(spec.base_type.type)",
     &register_type__@(spec.base_type.type),

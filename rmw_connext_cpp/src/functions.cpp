@@ -9,11 +9,8 @@
 #include <rmw/error_handling.h>
 #include <rmw/types.h>
 
-#include "rosidl_generator_cpp/MessageTypeSupport.h"
-#include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
-
-#include "rosidl_generator_cpp/ServiceTypeSupport.h"
-#include "rosidl_typesupport_connext_cpp/ServiceTypeSupport.h"
+#include <rosidl_typesupport_connext_cpp/message_type_support.h>
+#include <rosidl_typesupport_connext_cpp/service_type_support.h>
 
 extern "C"
 {
@@ -25,16 +22,26 @@ rmw_get_implementation_identifier() {
   return _rti_connext_identifier;
 }
 
-struct CustomServiceInfo {
-  void * replier_;
-  DDSDataReader * request_datareader_;
-  rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks_;
+struct ConnextStaticPublisherInfo {
+  DDSDataWriter * topic_writer_;
+  const message_type_support_callbacks_t * callbacks_;
 };
 
-struct CustomClientInfo {
+struct ConnextStaticSubscriberInfo {
+  DDSDataReader * topic_reader_;
+  const message_type_support_callbacks_t * callbacks_;
+};
+
+struct ConnextStaticClientInfo {
   void * requester_;
   DDSDataReader * response_datareader_;
-  rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks_;
+  const service_type_support_callbacks_t * callbacks_;
+};
+
+struct ConnextStaticServiceInfo {
+  void * replier_;
+  DDSDataReader * request_datareader_;
+  const service_type_support_callbacks_t * callbacks_;
 };
 
 rmw_ret_t
@@ -93,11 +100,6 @@ rmw_create_node(const char * name)
     return node_handle;
 }
 
-struct CustomPublisherInfo {
-  DDSDataWriter * topic_writer_;
-  rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
-};
-
 rmw_publisher_t *
 rmw_create_publisher(const rmw_node_t * node,
                      const rosidl_message_type_support_t * type_support,
@@ -111,12 +113,13 @@ rmw_create_publisher(const rmw_node_t * node,
         return NULL;
     }
 
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
+    DDSDomainParticipant* participant = static_cast<DDSDomainParticipant*>(node->data);
 
-    rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = (rmw_connext_cpp::MessageTypeSupportCallbacks*)type_support->data;
-    std::string type_name = std::string(callbacks->_package_name) + "::dds_::" + callbacks->_message_name + "_";
+    const message_type_support_callbacks_t * callbacks = \
+      static_cast<const message_type_support_callbacks_t *>(type_support->data);
+    std::string type_name = std::string(callbacks->package_name) + "::dds_::" + callbacks->message_name + "_";
 
-    callbacks->_register_type(participant, type_name.c_str());
+    callbacks->register_type(participant, type_name.c_str());
 
 
     DDS_PublisherQos publisher_qos;
@@ -176,13 +179,13 @@ rmw_create_publisher(const rmw_node_t * node,
         NULL, DDS_STATUS_MASK_NONE);
 
 
-    CustomPublisherInfo* custom_publisher_info = new CustomPublisherInfo();
-    custom_publisher_info->topic_writer_ = topic_writer;
-    custom_publisher_info->callbacks_ = callbacks;
+    ConnextStaticPublisherInfo* publisher_info = new ConnextStaticPublisherInfo();
+    publisher_info->topic_writer_ = topic_writer;
+    publisher_info->callbacks_ = callbacks;
 
     rmw_publisher_t * publisher = new rmw_publisher_t;
     publisher->implementation_identifier = _rti_connext_identifier;
-    publisher->data = custom_publisher_info;
+    publisher->data = publisher_info;
     return publisher;
 }
 
@@ -196,18 +199,14 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
         return RMW_RET_ERROR;
     }
 
-    CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo*)publisher->data;
-    DDSDataWriter * topic_writer = custom_publisher_info->topic_writer_;
-    const rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_publisher_info->callbacks_;
+    ConnextStaticPublisherInfo * publisher_info = \
+      static_cast<ConnextStaticPublisherInfo *>(publisher->data);
+    DDSDataWriter * topic_writer = publisher_info->topic_writer_;
+    const message_type_support_callbacks_t * callbacks = publisher_info->callbacks_;
 
-    callbacks->_publish(topic_writer, ros_message);
+    callbacks->publish(topic_writer, ros_message);
     return RMW_RET_OK;
 }
-
-struct CustomSubscriberInfo {
-  DDSDataReader * topic_reader_;
-  rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks_;
-};
 
 rmw_subscription_t *
 rmw_create_subscription(const rmw_node_t * node,
@@ -222,12 +221,13 @@ rmw_create_subscription(const rmw_node_t * node,
         return NULL;
     }
 
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
+    DDSDomainParticipant* participant = static_cast<DDSDomainParticipant*>(node->data);
 
-    rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = (rmw_connext_cpp::MessageTypeSupportCallbacks*)type_support->data;
-    std::string type_name = std::string(callbacks->_package_name) + "::dds_::" + callbacks->_message_name + "_";
+    const message_type_support_callbacks_t * callbacks = \
+      static_cast<const message_type_support_callbacks_t *>(type_support->data);
+    std::string type_name = std::string(callbacks->package_name) + "::dds_::" + callbacks->message_name + "_";
 
-    callbacks->_register_type(participant, type_name.c_str());
+    callbacks->register_type(participant, type_name.c_str());
 
     DDS_SubscriberQos subscriber_qos;
     DDS_ReturnCode_t status = participant->get_default_subscriber_qos(subscriber_qos);
@@ -274,13 +274,13 @@ rmw_create_subscription(const rmw_node_t * node,
         NULL, DDS_STATUS_MASK_NONE);
 
 
-    CustomSubscriberInfo* custom_subscriber_info = new CustomSubscriberInfo();
-    custom_subscriber_info->topic_reader_ = topic_reader;
-    custom_subscriber_info->callbacks_ = callbacks;
+    ConnextStaticSubscriberInfo* subscriber_info = new ConnextStaticSubscriberInfo();
+    subscriber_info->topic_reader_ = topic_reader;
+    subscriber_info->callbacks_ = callbacks;
 
     rmw_subscription_t * subscription = new rmw_subscription_t;
     subscription->implementation_identifier = _rti_connext_identifier;
-    subscription->data = custom_subscriber_info;
+    subscription->data = subscriber_info;
     return subscription;
 }
 
@@ -299,11 +299,12 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
         return RMW_RET_ERROR;
     }
 
-    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)subscription->data;
-    DDSDataReader* topic_reader = custom_subscriber_info->topic_reader_;
-    const rmw_connext_cpp::MessageTypeSupportCallbacks * callbacks = custom_subscriber_info->callbacks_;
+    ConnextStaticSubscriberInfo * subscriber_info = \
+      static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
+    DDSDataReader* topic_reader = subscriber_info->topic_reader_;
+    const message_type_support_callbacks_t * callbacks = subscriber_info->callbacks_;
 
-    *taken = callbacks->_take(topic_reader, ros_message);
+    *taken = callbacks->take(topic_reader, ros_message);
 
     return RMW_RET_OK;
 }
@@ -340,7 +341,8 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
         return RMW_RET_ERROR;
     }
 
-    DDSGuardCondition * guard_condition = (DDSGuardCondition*)guard_condition_handle->data;
+    DDSGuardCondition * guard_condition = \
+      static_cast<DDSGuardCondition*>(guard_condition_handle->data);
     guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
     return RMW_RET_OK;
 }
@@ -357,9 +359,9 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     // add a condition for each subscriber
     for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
     {
-        void * data = subscriptions->subscribers[i];
-        CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
-        DDSDataReader* topic_reader = custom_subscriber_info->topic_reader_;
+        ConnextStaticSubscriberInfo * subscriber_info = \
+          static_cast<ConnextStaticSubscriberInfo *>(subscriptions->subscribers[i]);
+        DDSDataReader* topic_reader = subscriber_info->topic_reader_;
         DDSStatusCondition * condition = topic_reader->get_statuscondition();
         condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
         waitset.attach_condition(condition);
@@ -368,17 +370,17 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     // add a condition for each guard condition
     for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
     {
-        void * data = guard_conditions->guard_conditions[i];
-        DDSGuardCondition * guard_condition = (DDSGuardCondition*)data;
+        DDSGuardCondition * guard_condition = \
+          static_cast<DDSGuardCondition*>(guard_conditions->guard_conditions[i]);
         waitset.attach_condition(guard_condition);
     }
 
     // add a condition for each service
     for (unsigned long i = 0; i < services->service_count; ++i)
     {
-        void * data = services->services[i];
-        CustomServiceInfo * custom_service_info = (CustomServiceInfo*)data;
-        DDSDataReader* request_datareader = custom_service_info->request_datareader_;
+        ConnextStaticServiceInfo * service_info = \
+          static_cast<ConnextStaticServiceInfo *>(services->services[i]);
+        DDSDataReader* request_datareader = service_info->request_datareader_;
         DDSStatusCondition * condition = request_datareader->get_statuscondition();
         condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
 
@@ -388,9 +390,9 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     // add a condition for each client
     for (unsigned long i = 0; i < clients->client_count; ++i)
     {
-        void * data = clients->clients[i];
-        CustomClientInfo * custom_client_info = (CustomClientInfo*)data;
-        DDSDataReader* response_datareader = custom_client_info->response_datareader_;
+        ConnextStaticClientInfo * client_info = \
+          static_cast<ConnextStaticClientInfo *>(clients->clients[i]);
+        DDSDataReader* response_datareader = client_info->response_datareader_;
         DDSStatusCondition * condition = response_datareader->get_statuscondition();
         condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
 
@@ -421,9 +423,9 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     // set subscriber handles to zero for all not triggered conditions
     for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
     {
-        void * data = subscriptions->subscribers[i];
-        CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo*)data;
-        DDSDataReader* topic_reader = custom_subscriber_info->topic_reader_;
+        ConnextStaticSubscriberInfo * subscriber_info = \
+          static_cast<ConnextStaticSubscriberInfo *>(subscriptions->subscribers[i]);
+        DDSDataReader* topic_reader = subscriber_info->topic_reader_;
         DDSStatusCondition * condition = topic_reader->get_statuscondition();
 
         // search for subscriber condition in active set
@@ -446,8 +448,8 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     // set subscriber handles to zero for all not triggered conditions
     for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
     {
-        void * data = guard_conditions->guard_conditions[i];
-        DDSCondition * condition = (DDSCondition*)data;
+        DDSCondition * condition = \
+          static_cast<DDSCondition*>(guard_conditions->guard_conditions[i]);
 
         // search for guard condition in active set
         unsigned long j = 0;
@@ -455,7 +457,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
         {
             if (active_conditions[j] == condition)
             {
-                DDSGuardCondition *guard = (DDSGuardCondition*)condition;
+                DDSGuardCondition *guard = static_cast<DDSGuardCondition*>(condition);
                 guard->set_trigger_value(DDS_BOOLEAN_FALSE);
                 break;
             }
@@ -471,9 +473,9 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     // set service handles to zero for all not triggered conditions
     for (unsigned long i = 0; i < services->service_count; ++i)
     {
-        void * data = services->services[i];
-        CustomServiceInfo * custom_service_info = (CustomServiceInfo*)data;
-        DDSDataReader* request_datareader = custom_service_info->request_datareader_;
+        ConnextStaticServiceInfo * service_info = \
+          static_cast<ConnextStaticServiceInfo *>(services->services[i]);
+        DDSDataReader* request_datareader = service_info->request_datareader_;
         DDSStatusCondition * condition = request_datareader->get_statuscondition();
 
         // search for service condition in active set
@@ -496,9 +498,9 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     // set client handles to zero for all not triggered conditions
     for (unsigned long i = 0; i < clients->client_count; ++i)
     {
-        void * data = clients->clients[i];
-        CustomClientInfo * custom_client_info = (CustomClientInfo*)data;
-        DDSDataReader* response_datareader = custom_client_info->response_datareader_;
+        ConnextStaticClientInfo * client_info = \
+          static_cast<ConnextStaticClientInfo *>(clients->clients[i]);
+        DDSDataReader* response_datareader = client_info->response_datareader_;
         DDSStatusCondition * condition = response_datareader->get_statuscondition();
 
         // search for service condition in active set
@@ -533,22 +535,24 @@ rmw_create_client(
         return NULL;
     }
 
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
+    DDSDomainParticipant* participant = static_cast<DDSDomainParticipant*>(node->data);
 
-    rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (rmw_connext_cpp::ServiceTypeSupportCallbacks*)type_support->data;
+    const service_type_support_callbacks_t * callbacks = \
+      static_cast<const service_type_support_callbacks_t *>(type_support->data);
 
     DDSDataReader * response_datareader;
 
-    void * requester = callbacks->_create_requester(participant, service_name, &response_datareader);
+    void * requester = callbacks->create_requester(
+      participant, service_name, reinterpret_cast<void **>(&response_datareader));
 
-    CustomClientInfo* custom_client_info = new CustomClientInfo();
-    custom_client_info->requester_ = requester;
-    custom_client_info->callbacks_ = callbacks;
-    custom_client_info->response_datareader_ = response_datareader;
+    ConnextStaticClientInfo* client_info = new ConnextStaticClientInfo();
+    client_info->requester_ = requester;
+    client_info->callbacks_ = callbacks;
+    client_info->response_datareader_ = response_datareader;
 
     rmw_client_t * client = new rmw_client_t;
     client->implementation_identifier =_rti_connext_identifier;
-    client->data = custom_client_info;
+    client->data = client_info;
     return client;
 }
 
@@ -576,11 +580,11 @@ rmw_send_request(const rmw_client_t * client, const void * ros_request,
         return RMW_RET_ERROR;
     }
 
-    CustomClientInfo * custom_client_info = (CustomClientInfo*)client->data;
-    void * requester = custom_client_info->requester_;
-    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
+    ConnextStaticClientInfo * client_info = static_cast<ConnextStaticClientInfo*>(client->data);
+    void * requester = client_info->requester_;
+    const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
 
-    *sequence_id = callbacks->_send_request(requester, ros_request);
+    *sequence_id = callbacks->send_request(requester, ros_request);
     return RMW_RET_OK;
 }
 
@@ -596,22 +600,24 @@ rmw_create_service(const rmw_node_t * node,
         return NULL;
     }
 
-    DDSDomainParticipant* participant = (DDSDomainParticipant*)node->data;
+    DDSDomainParticipant* participant = static_cast<DDSDomainParticipant*>(node->data);
 
-    rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = (rmw_connext_cpp::ServiceTypeSupportCallbacks*)type_support->data;
+    const service_type_support_callbacks_t * callbacks = \
+      static_cast<const service_type_support_callbacks_t *>(type_support->data);
 
     DDSDataReader * request_datareader;
 
-    void * replier = callbacks->_create_replier(participant, service_name, &request_datareader);
+    void * replier = callbacks->create_replier(
+      participant, service_name, reinterpret_cast<void **>(&request_datareader));
 
-    CustomServiceInfo* custom_service_info = new CustomServiceInfo();
-    custom_service_info->replier_ = replier;
-    custom_service_info->callbacks_ = callbacks;
-    custom_service_info->request_datareader_ = request_datareader;
+    ConnextStaticServiceInfo* service_info = new ConnextStaticServiceInfo();
+    service_info->replier_ = replier;
+    service_info->callbacks_ = callbacks;
+    service_info->request_datareader_ = request_datareader;
 
     rmw_service_t * service = new rmw_service_t;
     service->implementation_identifier =_rti_connext_identifier;
-    service->data = custom_service_info;
+    service->data = service_info;
     return service;
 }
 
@@ -643,13 +649,14 @@ rmw_take_request(const rmw_service_t * service,
         return RMW_RET_ERROR;
     }
 
-    CustomServiceInfo * custom_service_info = (CustomServiceInfo*)service->data;
+    ConnextStaticServiceInfo * service_info = \
+      static_cast<ConnextStaticServiceInfo*>(service->data);
 
-    void * replier = custom_service_info->replier_;
+    void * replier = service_info->replier_;
 
-    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
+    const service_type_support_callbacks_t * callbacks = service_info->callbacks_;
 
-    *taken = callbacks->_take_request(replier, ros_request_header, ros_request);
+    *taken = callbacks->take_request(replier, ros_request_header, ros_request);
 
     return RMW_RET_OK;
 }
@@ -670,13 +677,14 @@ rmw_take_response(const rmw_client_t * client,
         return RMW_RET_ERROR;
     }
 
-    CustomClientInfo * custom_client_info = (CustomClientInfo*)client->data;
+    ConnextStaticClientInfo * client_info = \
+      static_cast<ConnextStaticClientInfo*>(client->data);
 
-    void * requester = custom_client_info->requester_;
+    void * requester = client_info->requester_;
 
-    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_client_info->callbacks_;
+    const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
 
-    *taken = callbacks->_take_response(requester, ros_request_header, ros_response);
+    *taken = callbacks->take_response(requester, ros_request_header, ros_response);
 
     return RMW_RET_OK;
 }
@@ -692,13 +700,14 @@ rmw_send_response(const rmw_service_t * service,
         return RMW_RET_ERROR;
     }
 
-    CustomServiceInfo * custom_service_info = (CustomServiceInfo*)service->data;
+    ConnextStaticServiceInfo * service_info = \
+      static_cast<ConnextStaticServiceInfo*>(service->data);
 
-    void * replier = custom_service_info->replier_;
+    void * replier = service_info->replier_;
 
-    const rmw_connext_cpp::ServiceTypeSupportCallbacks * callbacks = custom_service_info->callbacks_;
+    const service_type_support_callbacks_t * callbacks = service_info->callbacks_;
 
-    callbacks->_send_response(replier, ros_request_header, ros_response);
+    callbacks->send_response(replier, ros_request_header, ros_response);
     return RMW_RET_OK;
 }
 
