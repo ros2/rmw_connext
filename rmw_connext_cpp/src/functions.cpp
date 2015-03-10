@@ -22,25 +22,25 @@ rmw_get_implementation_identifier() {
   return _rti_connext_identifier;
 }
 
-struct ConnextStaticSubscriberInfo {
-  DDSDataReader * topic_reader_;
-  const message_type_support_callbacks_t * callbacks_;
-};
-
 struct ConnextStaticPublisherInfo {
   DDSDataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
 };
 
-struct ConnextStaticServiceInfo {
-  void * replier_;
-  DDSDataReader * request_datareader_;
-  const service_type_support_callbacks_t * callbacks_;
+struct ConnextStaticSubscriberInfo {
+  DDSDataReader * topic_reader_;
+  const message_type_support_callbacks_t * callbacks_;
 };
 
 struct ConnextStaticClientInfo {
   void * requester_;
   DDSDataReader * response_datareader_;
+  const service_type_support_callbacks_t * callbacks_;
+};
+
+struct ConnextStaticServiceInfo {
+  void * replier_;
+  DDSDataReader * request_datareader_;
   const service_type_support_callbacks_t * callbacks_;
 };
 
