@@ -63,7 +63,6 @@ if(NOT "$ENV{NDDSHOME} " STREQUAL " ")
   endforeach()
 
   # find library nddscpp
-  set(Connext_LIBRARIES "")
   file(GLOB_RECURSE _libs
     RELATIVE "${_lib_path}"
     ${_search_library_paths}
@@ -120,14 +119,13 @@ if(NOT "$ENV{NDDSHOME} " STREQUAL " ")
 
   list(GET _libs 0 _libndds)
   list(GET _libs 1 _libmessaging)
+  set(Connext_LIBRARIES "")
   list(APPEND Connext_LIBRARIES "${_lib_path}/${_libndds}")
+  get_filename_component(Connext_LIBRARY_DIRS "${Connext_LIBRARIES}" DIRECTORY)
   list(APPEND Connext_LIBRARIES "${_lib_path}/${_libmessaging}")
 
-  get_filename_component(_lib_path "${Connext_LIBRARIES}" DIRECTORY)
-  set(Connext_LIBRARY_DIRS "${_lib_path}")
-
   set(Connext_DEFINITIONS "-DRTI_LINUX" "-DRTI_UNIX")
-  set(Connext_DDSGEN2 "$ENV{NDDSHOME}/bin/rtiddsgen2")
+  set(Connext_DDSGEN2 "${Connext_LIBRARY_DIRS}/rtiddsgen2")
   set(Connext_FOUND TRUE)
 else()
   # try to find_package() it
