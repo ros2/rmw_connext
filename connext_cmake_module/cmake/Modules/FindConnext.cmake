@@ -148,6 +148,6 @@ else()
   endif()
 endif()
 
-if(Connext_FOUND)
+if(Connext_FOUND AND NOT WIN32)
   list(APPEND Connext_LIBRARIES "pthread" "dl")
 endif()
