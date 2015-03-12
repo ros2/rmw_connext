@@ -12,7 +12,9 @@ if(NOT Connext_FOUND)
   return()
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+if(NOT WIN32)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+endif()
 
 find_package(rmw REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)

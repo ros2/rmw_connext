@@ -93,7 +93,9 @@ add_custom_command(
 
 set(_target_suffix "__dds_connext_cpp")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-tautological-compare")
+if(NOT WIN32)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-tautological-compare")
+endif()
 
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED ${_generated_files})
