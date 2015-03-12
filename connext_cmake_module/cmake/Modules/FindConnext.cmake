@@ -5,8 +5,8 @@
 # Input variables:
 #
 # - NDDSHOME (optional): When specified, header files and libraries
-#   will be searched for in `${NDDSHOME}/include/ndds` and
-#   `${NDDSHOME}/lib` respectively.
+#   will be searched for in `${NDDSHOME}/include`, `${NDDSHOME}/include/ndds`
+#   and `${NDDSHOME}/lib` respectively.
 #
 # Output variables:
 #
@@ -53,7 +53,9 @@ set(_expected_library_names
 if(NOT "$ENV{NDDSHOME} " STREQUAL " ")
   # look inside of NDDSHOME if defined
   message(STATUS "Found RTI Connext: $ENV{NDDSHOME}")
-  set(Connext_INCLUDE_DIRS "$ENV{NDDSHOME}/include/ndds")
+  set(Connext_INCLUDE_DIRS
+    "$ENV{NDDSHOME}/include"
+    "$ENV{NDDSHOME}/include/ndds")
 
   set(_lib_path "$ENV{NDDSHOME}/lib")
 
