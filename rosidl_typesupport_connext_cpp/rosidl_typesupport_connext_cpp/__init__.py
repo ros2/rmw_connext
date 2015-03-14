@@ -32,7 +32,8 @@ def generate_dds_connext_cpp(
 
     include_dirs = [dds_interface_base_path]
     for dep in deps:
-        dep_parts = dep.split(':')
+        # Only take the first : for separation, as Windows follows with a C:\
+        dep_parts = dep.split(':', 1)
         assert(len(dep_parts) == 2)
         idl_path = dep_parts[1]
         idl_base_path = os.path.dirname(

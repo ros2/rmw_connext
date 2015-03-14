@@ -26,7 +26,7 @@ ament_export_include_directories(include/${PROJECT_NAME}/impl ${Connext_INCLUDE_
 
 register_rmw_implementation()
 
-link_directories(${Connext_LIBRARY_DIRS})
+link_directories("${Connext_LIBRARY_DIRS}")
 add_library(rmw_connext_xtypes_dynamic_cpp SHARED src/functions.cpp)
 ament_target_dependencies(rmw_connext_xtypes_dynamic_cpp
   "rosidl_typesupport_introspection_cpp"
@@ -55,6 +55,7 @@ install(
 
 install(
   TARGETS rmw_connext_xtypes_dynamic_cpp
-  LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )

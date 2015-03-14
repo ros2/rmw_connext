@@ -30,6 +30,15 @@
 #include "ndds/ndds_cpp.h"
 #include "ndds/ndds_requestreply_cpp.h"
 
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef __GNUC__
+    #define DLLEXPORT __attribute__ ((dllexport))
+  #else
+    #define DLLEXPORT __declspec(dllexport)
+  #endif
+#else
+  #define DLLEXPORT
+#endif
 
 namespace @(spec.pkg_name)
 {
@@ -186,6 +195,7 @@ namespace rosidl_generator_cpp
 {
 
 template<>
+DLLEXPORT
 const rosidl_service_type_support_t *
 get_service_type_support_handle<@(spec.pkg_name)::@(spec.srv_name)>()
 {

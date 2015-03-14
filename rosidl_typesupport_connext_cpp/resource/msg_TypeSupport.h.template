@@ -20,23 +20,43 @@
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 
+#if defined _WIN32 || defined __CYGWIN__
+  #ifdef __GNUC__
+    #define DLLEXPORT __attribute__ ((dllexport))
+  #else
+    #define DLLEXPORT __declspec(dllexport)
+  #endif
+#else
+  #define DLLEXPORT
+#endif
+
 namespace @(spec.base_type.pkg_name)
 {
 
 namespace type_support
 {
 
-void register_type__@(spec.base_type.type)(DDSDomainParticipant * participant, const char * type_name);
+void
+DLLEXPORT
+register_type__@(spec.base_type.type)(DDSDomainParticipant * participant, const char * type_name);
 
-void convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message, @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message);
+void
+DLLEXPORT
+convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message, @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message);
 
-void publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * untyped_ros_message);
+void
+DLLEXPORT
+publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * untyped_ros_message);
 
 // ToDo Review
-void convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message, @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message);
+void
+DLLEXPORT
+convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message, @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message);
 
 // ToDo review
-bool take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_ros_message);
+bool
+DLLEXPORT
+take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_ros_message);
 
 }  // namespace type_support
 

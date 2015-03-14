@@ -25,11 +25,18 @@
 @[if not field.type.is_primitive_type()]@
 namespace @(field.type.pkg_name) {
 namespace dds_ {
-struct @(field.type.type)_;
+struct DLLEXPORT @(field.type.type)_;
 }  // namespace dds_
 namespace type_support {
-void convert_ros_message_to_dds(const @(field.type.pkg_name)::@(field.type.type)&, @(field.type.pkg_name)::dds_::@(field.type.type)_&);
-void convert_dds_message_to_ros(const @(field.type.pkg_name)::dds_::@(field.type.type)_&, @(field.type.pkg_name)::@(field.type.type)&);
+
+void
+DLLEXPORT
+convert_ros_message_to_dds(const @(field.type.pkg_name)::@(field.type.type)&, @(field.type.pkg_name)::dds_::@(field.type.type)_&);
+
+void
+DLLEXPORT
+convert_dds_message_to_ros(const @(field.type.pkg_name)::dds_::@(field.type.type)_&, @(field.type.pkg_name)::@(field.type.type)&);
+
 }  // namespace type_support
 }  // namespace @(field.type.pkg_name)
 @[end if]@
@@ -41,7 +48,9 @@ namespace @(spec.base_type.pkg_name)
 namespace type_support
 {
 
-void register_type__@(spec.base_type.type)(void * untyped_participant, const char * type_name)
+void
+DLLEXPORT
+register_type__@(spec.base_type.type)(void * untyped_participant, const char * type_name)
 {
     DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
     std::cout << "  @(spec.base_type.pkg_name)::type_support::register_type__@(spec.base_type.type)()" << std::endl;
@@ -52,7 +61,9 @@ void register_type__@(spec.base_type.type)(void * untyped_participant, const cha
     type_code->print_IDL(1, ex);
 }
 
-void convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message, @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message)
+void
+DLLEXPORT
+convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message, @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message)
 {
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_ros_message_to_dds(@(spec.base_type.type))" << std::endl;
 @[for field in spec.fields]@
@@ -106,7 +117,9 @@ void convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_ty
 @[end for]@
 }
 
-void publish__@(spec.base_type.type)(void * untyped_topic_writer, const void * untyped_ros_message)
+void
+DLLEXPORT
+publish__@(spec.base_type.type)(void * untyped_topic_writer, const void * untyped_ros_message)
 {
     DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
@@ -128,7 +141,9 @@ void publish__@(spec.base_type.type)(void * untyped_topic_writer, const void * u
 }
 
 // ToDo Review
-void convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message, @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message)
+void
+DLLEXPORT
+convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message, @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message)
 {
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_dds_message_to_ros(@(spec.base_type.type))" << std::endl;
 @[for field in spec.fields]@
@@ -168,7 +183,9 @@ void convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.b
 }
 
 // ToDo review
-bool take__@(spec.base_type.type)(void * untyped_topic_reader, void * untyped_ros_message)
+bool
+DLLEXPORT
+take__@(spec.base_type.type)(void * untyped_topic_reader, void * untyped_ros_message)
 {
     DDSDataReader * topic_reader = static_cast<DDSDataReader *>(untyped_topic_reader);
     //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
@@ -239,6 +256,7 @@ namespace rosidl_generator_cpp
 {
 
 template<>
+DLLEXPORT
 const rosidl_message_type_support_t *
 get_type_support_handle<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
 {
