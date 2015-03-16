@@ -8,7 +8,6 @@ foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   get_filename_component(_extension "${_idl_file}" EXT)
   # Skip .srv files
   if("${_extension}" STREQUAL ".msg")
-    get_filename_component(name "${_idl_file}" NAME_WE)
     list(APPEND _ros_idl_files "${_idl_file}")
   endif()
 endforeach()
