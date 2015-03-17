@@ -3,9 +3,18 @@ message("   - target: ${rosidl_generate_interfaces_TARGET}")
 message("   - interface files: ${rosidl_generate_interfaces_IDL_FILES}")
 message("   - dependency package names: ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES}")
 
+set(_ros_idl_files "")
+foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
+  get_filename_component(_extension "${_idl_file}" EXT)
+  # Skip .srv files
+  if("${_extension}" STREQUAL ".msg")
+    list(APPEND _ros_idl_files "${_idl_file}")
+  endif()
+endforeach()
+
 rosidl_generate_dds_interfaces(
   ${rosidl_generate_interfaces_TARGET}__dds_connext_idl
-  IDL_FILES ${rosidl_generate_interfaces_IDL_FILES}
+  IDL_FILES ${_ros_idl_files}
   DEPENDENCY_PACKAGE_NAMES ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES}
   OUTPUT_SUBFOLDERS "dds_connext"
 )
