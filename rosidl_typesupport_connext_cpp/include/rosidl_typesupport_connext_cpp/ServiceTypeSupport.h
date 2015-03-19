@@ -9,13 +9,6 @@ class DDSDomainParticipant;
 class DDSDataReader;
 struct DDS_SampleIdentity_t;
 
-namespace rmw
-{
-
-extern const char * _rti_connext_identifier;
-
-}  // namespace rmw
-
 namespace rmw_connext_cpp
 {
 
