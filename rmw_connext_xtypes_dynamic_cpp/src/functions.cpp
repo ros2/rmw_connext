@@ -9,6 +9,7 @@
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include <rmw/types.h>
 #include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
+#include "rosidl_typesupport_introspection_cpp/Identifier.h"
 #include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
 
 #include "rosidl_generator_cpp/ServiceTypeSupport.h"
