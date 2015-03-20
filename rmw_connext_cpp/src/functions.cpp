@@ -15,12 +15,7 @@
 extern "C"
 {
 
-const char * _rti_connext_identifier = "connext_static";
-
-const char *
-rmw_get_implementation_identifier() {
-  return _rti_connext_identifier;
-}
+const char * rti_connext_identifier = "connext_static";
 
 struct ConnextStaticPublisherInfo {
   DDSDataWriter * topic_writer_;
@@ -43,6 +38,12 @@ struct ConnextStaticServiceInfo {
   DDSDataReader * request_datareader_;
   const service_type_support_callbacks_t * callbacks_;
 };
+
+const char *
+rmw_get_implementation_identifier()
+{
+  return rti_connext_identifier;
+}
 
 rmw_ret_t
 rmw_init()
@@ -94,7 +95,7 @@ rmw_create_node(const char * name)
     };
 
     rmw_node_t * node_handle = new rmw_node_t;
-    node_handle->implementation_identifier = _rti_connext_identifier;
+    node_handle->implementation_identifier = rti_connext_identifier;
     node_handle->data = participant;
 
     return node_handle;
@@ -106,7 +107,7 @@ rmw_create_publisher(const rmw_node_t * node,
                      const char * topic_name,
                      size_t queue_size)
 {
-    if (node->implementation_identifier != _rti_connext_identifier)
+    if (node->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("node handle not from this implementation");
         // printf("but from: %s\n", node->implementation_identifier);
@@ -184,7 +185,7 @@ rmw_create_publisher(const rmw_node_t * node,
     publisher_info->callbacks_ = callbacks;
 
     rmw_publisher_t * publisher = new rmw_publisher_t;
-    publisher->implementation_identifier = _rti_connext_identifier;
+    publisher->implementation_identifier = rti_connext_identifier;
     publisher->data = publisher_info;
     return publisher;
 }
@@ -192,7 +193,7 @@ rmw_create_publisher(const rmw_node_t * node,
 rmw_ret_t
 rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
-    if (publisher->implementation_identifier != _rti_connext_identifier)
+    if (publisher->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("publisher handle not from this implementation");
         // rmw_set_error_string("but from: %s\n", publisher->implementation_identifier);
@@ -214,7 +215,7 @@ rmw_create_subscription(const rmw_node_t * node,
                         const char * topic_name,
                         size_t queue_size)
 {
-    if (node->implementation_identifier != _rti_connext_identifier)
+    if (node->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("node handle not from this implementation");
         // printf("but from: %s\n", node->implementation_identifier);
@@ -279,7 +280,7 @@ rmw_create_subscription(const rmw_node_t * node,
     subscriber_info->callbacks_ = callbacks;
 
     rmw_subscription_t * subscription = new rmw_subscription_t;
-    subscription->implementation_identifier = _rti_connext_identifier;
+    subscription->implementation_identifier = rti_connext_identifier;
     subscription->data = subscriber_info;
     return subscription;
 }
@@ -292,7 +293,7 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
         return RMW_RET_ERROR;
     }
 
-    if (subscription->implementation_identifier != _rti_connext_identifier)
+    if (subscription->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("subscriber handle not from this implementation");
         // printf("but from: %s\n", subscription->implementation_identifier);
@@ -313,7 +314,7 @@ rmw_guard_condition_t *
 rmw_create_guard_condition()
 {
     rmw_guard_condition_t * guard_condition = new rmw_guard_condition_t;
-    guard_condition->implementation_identifier = _rti_connext_identifier;
+    guard_condition->implementation_identifier = rti_connext_identifier;
     guard_condition->data = new DDSGuardCondition();
     return guard_condition;
 
@@ -334,7 +335,7 @@ rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 rmw_ret_t
 rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
 {
-    if (guard_condition_handle->implementation_identifier != _rti_connext_identifier)
+    if (guard_condition_handle->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("guard condition handle not from this implementation");
         // printf("but from: %s\n", guard_condition_handle->implementation_identifier);
@@ -528,7 +529,7 @@ rmw_create_client(
   const rosidl_service_type_support_t * type_support,
   const char * service_name)
 {
-    if (node->implementation_identifier != _rti_connext_identifier)
+    if (node->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("node handle not from this implementation");
         // printf("but from: %s\n", node->implementation_identifier);
@@ -551,7 +552,7 @@ rmw_create_client(
     client_info->response_datareader_ = response_datareader;
 
     rmw_client_t * client = new rmw_client_t;
-    client->implementation_identifier =_rti_connext_identifier;
+    client->implementation_identifier =rti_connext_identifier;
     client->data = client_info;
     return client;
 }
@@ -573,7 +574,7 @@ rmw_ret_t
 rmw_send_request(const rmw_client_t * client, const void * ros_request,
                  int64_t * sequence_id)
 {
-    if (client->implementation_identifier != _rti_connext_identifier)
+    if (client->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("client handle not from this implementation");
         // printf("but from: %s\n", client->implementation_identifier);
@@ -593,7 +594,7 @@ rmw_create_service(const rmw_node_t * node,
                    const rosidl_service_type_support_t * type_support,
                    const char * service_name)
 {
-    if (node->implementation_identifier != _rti_connext_identifier)
+    if (node->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("node handle not from this implementation");
         // printf("but from: %s\n", node->implementation_identifier);
@@ -616,7 +617,7 @@ rmw_create_service(const rmw_node_t * node,
     service_info->request_datareader_ = request_datareader;
 
     rmw_service_t * service = new rmw_service_t;
-    service->implementation_identifier =_rti_connext_identifier;
+    service->implementation_identifier =rti_connext_identifier;
     service->data = service_info;
     return service;
 }
@@ -642,7 +643,7 @@ rmw_take_request(const rmw_service_t * service,
         return RMW_RET_ERROR;
     }
 
-    if (service->implementation_identifier != _rti_connext_identifier)
+    if (service->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("service handle not from this implementation");
         // printf("but from: %s\n", service->implementation_identifier);
@@ -670,7 +671,7 @@ rmw_take_response(const rmw_client_t * client,
         return RMW_RET_ERROR;
     }
 
-    if (client->implementation_identifier != _rti_connext_identifier)
+    if (client->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("client handle not from this implementation");
         // printf("but from: %s\n", client->implementation_identifier);
@@ -693,7 +694,7 @@ rmw_ret_t
 rmw_send_response(const rmw_service_t * service,
                   void * ros_request_header, void * ros_response)
 {
-    if (service->implementation_identifier != _rti_connext_identifier)
+    if (service->implementation_identifier != rti_connext_identifier)
     {
         rmw_set_error_string("service handle not from this implementation");
         // printf("but from: %s\n", service->implementation_identifier);

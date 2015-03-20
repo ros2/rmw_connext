@@ -27,6 +27,7 @@ ament_target_dependencies(rmw_connext_cpp
   "rosidl_generator_cpp"
   "rosidl_typesupport_connext_cpp"
   "Connext")
+configure_rmw_library(rmw_connext_cpp)
 
 ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
 
@@ -43,6 +44,7 @@ install(
   DIRECTORY include/
   DESTINATION include
 )
+
 install(
   TARGETS rmw_connext_cpp
   LIBRARY DESTINATION lib

@@ -4,6 +4,10 @@
 
 #include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 
+extern "C" {
+  extern const char * rti_connext_dynamic_identifier;
+}
+
 namespace rmw
 {
 template<typename T>

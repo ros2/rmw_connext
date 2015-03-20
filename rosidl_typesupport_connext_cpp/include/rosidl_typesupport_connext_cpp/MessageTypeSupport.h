@@ -9,13 +9,6 @@ class DDSDomainParticipant;
 class DDSDataWriter;
 class DDSDataReader;
 
-namespace rmw
-{
-
-extern const char * _rti_connext_identifier;
-
-}  // namespace rmw
-
 namespace rmw_connext_cpp
 {
 
