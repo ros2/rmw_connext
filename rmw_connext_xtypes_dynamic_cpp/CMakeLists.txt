@@ -19,8 +19,8 @@ find_package(rosidl_generator_cpp REQUIRED)
 
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
-ament_export_include_directories(include/${PROJECT_NAME}/impl ${Connext_INCLUDE_DIRS})
 ament_export_dependencies(rmw rosidl_generator_cpp)
+ament_export_include_directories(include/${PROJECT_NAME}/impl ${Connext_INCLUDE_DIRS})
 
 register_rmw_implementation()
 
