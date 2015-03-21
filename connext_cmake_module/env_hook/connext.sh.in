@@ -1,0 +1,18 @@
+export Connext_HOME="@Connext_HOME@"
+
+# detect if running on Darwin platform
+_UNAME=`uname -s`
+_IS_DARWIN=0
+if [ "$_UNAME" = "Darwin" ]; then
+  _IS_DARWIN=1
+fi
+unset _UNAME
+
+# Put this libary dir on the PATH and LD_LIBRARY_PATH for the rtiddsgen tool.
+ament_prepend_unique_value PATH "@Connext_LIBRARY_DIR@"
+if [ $_IS_DARWIN -eq 0 ]; then
+  ament_prepend_unique_value LD_LIBRARY_PATH "@Connext_LIBRARY_DIR@"
+else
+  ament_prepend_unique_value DYLD_LIBRARY_PATH "@Connext_LIBRARY_DIR@"
+fi
+unset _IS_DARWIN

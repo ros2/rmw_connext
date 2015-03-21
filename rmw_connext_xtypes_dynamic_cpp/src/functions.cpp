@@ -9,6 +9,7 @@
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
 #include <rmw/types.h>
 #include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
+#include "rosidl_typesupport_introspection_cpp/Identifier.h"
 #include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
 
 #include "rosidl_generator_cpp/ServiceTypeSupport.h"
@@ -824,6 +825,7 @@ rmw_create_client(const rmw_node_t * node,
                   const rosidl_service_type_support_t * type_support,
                   const char * service_name)
 {
+  return NULL;
 }
 
 rmw_ret_t

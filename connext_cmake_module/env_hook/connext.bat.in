@@ -1,0 +1,37 @@
+set "Connext_HOME=@Connext_HOME@"
+
+:: Call RTI's env setup script, piping stdout to nul, since they have echo on.
+call "%Connext_HOME:/=\%\..\rti_set_env_5.1.0.bat" 1> nul
+
+:: Add the Connext_LIBRARY_DIR to the Path so .dll's can be found at runtime.
+set "Connext_LIBRARY_DIR=@Connext_LIBRARY_DIR@"
+call:ament_prepend_unique_value PATH "%Connext_LIBRARY_DIR:/=\%"
+set "Connext_LIBRARY_DIR="
+
+goto:eof
+
+:: function to prepend non-duplicate values to environment variables
+:: using colons as separators and avoiding trailing separators
+:ament_prepend_unique_value
+  setlocal enabledelayedexpansion
+  :: arguments
+  set "_listname=%~1"
+  set "_value=%~2"
+  :: expand the list variable
+  set "_list=!%_listname%!"
+  :: check if the list contains the value
+  set "_is_duplicate="
+  if "%_list%" NEQ "" (
+    for %%a in ("%_list:;=";"%") do (
+      if "%%~a" == "%_value%" set "_is_duplicate=1"
+    )
+  )
+  :: if it is not a duplicate prepend it
+  if "%_is_duplicate%" == "" (
+    :: produces a trailing semicolon when the list empty, but that's ok
+    set "_list=%_value%;%_list%"
+  )
+  (endlocal
+    set "%~1=%_list%"
+  )
+goto:eof

@@ -93,10 +93,13 @@ add_custom_command(
 
 set(_target_suffix "__dds_connext_cpp")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-tautological-compare")
+if(NOT WIN32)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-tautological-compare")
+endif()
 
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED ${_generated_files})
+target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix} PRIVATE "-DNDDS_USER_DLL_EXPORT")
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
@@ -135,7 +138,9 @@ install(
 )
 install(
   TARGETS ${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  DESTINATION "lib"
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${Connext_LIBRARIES})

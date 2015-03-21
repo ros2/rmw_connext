@@ -18,7 +18,7 @@ find_package(rosidl_typesupport_connext_cpp REQUIRED)
 
 ament_export_definitions(${Connext_DEFINITIONS})
 ament_export_dependencies(rmw rosidl_generator_cpp rosidl_typesupport_connext_cpp)
-ament_export_include_directories(include/${PROJECT_NAME}/impl ${Connext_INCLUDE_DIRS})
+ament_export_include_directories(include/${PROJECT_NAME}/impl "${Connext_INCLUDE_DIRS}")
 
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(rmw_connext_cpp SHARED src/functions.cpp)
@@ -29,7 +29,7 @@ ament_target_dependencies(rmw_connext_cpp
   "Connext")
 configure_rmw_library(rmw_connext_cpp)
 
-ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
+ament_export_libraries(rmw_connext_cpp "${Connext_LIBRARIES}")
 
 register_rmw_implementation()
 
@@ -47,6 +47,7 @@ install(
 
 install(
   TARGETS rmw_connext_cpp
-  LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
