@@ -241,7 +241,7 @@ static rosidl_message_type_support_t handle = {
 
 }  // namespace @(spec.base_type.pkg_name)
 
-namespace rmw_connext_cpp
+namespace rosidl_typesupport_connext_cpp
 {
 
 template<>
@@ -251,4 +251,4 @@ const rosidl_message_type_support_t * get_type_support_handle_impl<@(spec.base_t
     return &@(spec.base_type.pkg_name)::type_support::handle;
 }
 
-}  // namespace rmw_connext_cpp
+}  // namespace rosidl_typesupport_connext_cpp

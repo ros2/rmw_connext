@@ -11,7 +11,7 @@
 // skipped.
 #include <rosidl_generator_cpp/MessageTypeSupport.h>
 
-namespace rmw_connext_cpp
+namespace rosidl_typesupport_connext_cpp
 {
 
 // This is implemented in the shared library which goes with this header.
@@ -19,7 +19,7 @@ template<typename T>
 ROSIDL_PUBLIC
 const rosidl_message_type_support_t * get_type_support_handle_impl();
 
-}  // namespace rmw_connext_cpp
+}  // namespace rosidl_typesupport_connext_cpp
 
 namespace rosidl_generator_cpp
 {
@@ -34,7 +34,7 @@ const rosidl_message_type_support_t * get_type_support_handle()
   // message library. This is intentional to allow the linker to pick the
   // correct implementation library when being over linked with multiple
   // implementation options.
-  return rmw_connext_cpp::get_type_support_handle_impl<T>();
+  return rosidl_typesupport_connext_cpp::get_type_support_handle_impl<T>();
 }
 
 }  // namespace rosidl_generator_cpp
