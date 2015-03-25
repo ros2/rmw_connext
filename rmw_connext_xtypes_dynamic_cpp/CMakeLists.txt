@@ -22,7 +22,7 @@ find_package(rosidl_generator_cpp REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(rmw rosidl_generator_cpp)
-ament_export_include_directories(include/${PROJECT_NAME}/impl ${Connext_INCLUDE_DIRS})
+ament_export_include_directories(${Connext_INCLUDE_DIRS})
 
 register_rmw_implementation()
 
@@ -47,11 +47,6 @@ if(AMENT_ENABLE_TESTING)
 endif()
 
 ament_package()
-
-install(
-  DIRECTORY include/
-  DESTINATION include
-)
 
 install(
   TARGETS rmw_connext_xtypes_dynamic_cpp

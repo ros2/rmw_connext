@@ -22,7 +22,6 @@
 #include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Response_Support.h"
 #include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Response_TypeSupport.h"
 #include "rosidl_generator_cpp/MessageTypeSupport.h"
-#include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 #include "rosidl_typesupport_connext_cpp/ServiceTypeSupport.h"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"

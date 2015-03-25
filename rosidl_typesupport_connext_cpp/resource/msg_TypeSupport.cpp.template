@@ -14,11 +14,11 @@
 
 #include <iostream>
 
+#include <rosidl_generator_cpp/MessageTypeSupport.h>
+
 #include "@(spec.base_type.pkg_name)/@(spec.base_type.type)_Struct.h"
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_Support.h"
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_TypeSupport.h"
-#include "rosidl_generator_cpp/MessageTypeSupport.h"
-#include "rosidl_typesupport_connext_cpp/MessageTypeSupport.h"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
 @[for field in spec.fields]@
@@ -245,23 +245,10 @@ namespace rmw_connext_cpp
 {
 
 template<>
-const rosidl_message_type_support_t * get_type_support_handle<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
+DLLEXPORT
+const rosidl_message_type_support_t * get_type_support_handle_impl<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
 {
     return &@(spec.base_type.pkg_name)::type_support::handle;
 }
 
 }  // namespace rmw_connext_cpp
-
-namespace rosidl_generator_cpp
-{
-
-template<>
-DLLEXPORT
-const rosidl_message_type_support_t *
-get_type_support_handle<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
-{
-    return rmw_connext_cpp::get_type_support_handle<
-        @(spec.base_type.pkg_name)::@(spec.base_type.type)>();
-}
-
-}  // namespace rosidl_generator_cpp
