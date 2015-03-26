@@ -52,12 +52,15 @@ set(_expected_library_base_names
   "nddsc"
   "nddscore"
   "nddscpp"
+  "rticonnextmsgc"
   "rticonnextmsgcpp"
 )
 
 foreach(_base_name IN LISTS _expected_library_base_names)
   if(WIN32)
     list(APPEND _expected_library_names "${_base_name}.lib")
+  elseif(APPLE)
+    list(APPEND _expected_library_names "lib${_base_name}.dylib")
   else()
     list(APPEND _expected_library_names "lib${_base_name}.so")
   endif()
@@ -103,6 +106,13 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
     string(FIND "${_lib}" "Linux2" _found)
     if(NOT ${_found} EQUAL -1)
       set(_match FALSE)
+    endif()
+    # If this is Darwin, only accept Darwin
+    if(APPLE)
+      string(FIND "${_lib}" "Darwin" _found)
+      if(${_found} EQUAL -1)
+        set(_match FALSE)
+      endif()
     endif()
     if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
       # on 64 bit platforms ignore libraries in folders containing 'i86'
@@ -183,7 +193,7 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
     set(Connext_DDSGEN2 "rtiddsgen2.bat")
   else()
     set(Connext_DEFINITIONS "-DRTI_LINUX" "-DRTI_UNIX")
-    set(Connext_DDSGEN2 "${Connext_LIBRARY_DIRS}/rtiddsgen2")
+    set(Connext_DDSGEN2 "${Connext_HOME}/scripts/rtiddsgen2")
   endif()
   set(Connext_FOUND TRUE)
 else()

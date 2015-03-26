@@ -50,6 +50,20 @@ foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   endif()
 endforeach()
 
+# If not on Windows, disable some warnings with Connext's generated code
+if(NOT WIN32)
+  set(_connext_compile_flags
+    "-Wno-tautological-compare"
+    "-Wno-return-type-c-linkage"
+    "-Wno-deprecated-register"
+  )
+  string(REPLACE ";" " " _connext_compile_flags ${_connext_compile_flags})
+  foreach(_gen_file ${_generated_files})
+    set_source_files_properties("${_gen_file}"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
+  endforeach()
+endif()
+
 set(_dependency_files "")
 set(_dependencies "")
 foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
@@ -94,12 +108,19 @@ add_custom_command(
 set(_target_suffix "__dds_connext_cpp")
 
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-tautological-compare")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED ${_generated_files})
-target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix} PRIVATE "-DNDDS_USER_DLL_EXPORT")
+if(WIN32)
+  target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+    PRIVATE "ROSIDL_BUILDING_DLL")
+endif()
+target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+  PRIVATE
+    "-DNDDS_USER_DLL_EXPORT"
+)
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
@@ -117,7 +138,8 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
 endforeach()
 ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   "Connext"
-  "rosidl_generator_cpp")
+  "rosidl_generator_cpp"
+  "rosidl_typesupport_connext_cpp")
 
 add_dependencies(
   ${rosidl_generate_interfaces_TARGET}

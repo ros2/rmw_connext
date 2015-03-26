@@ -1,19 +1,26 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "ndds/ndds_cpp.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wdeprecated-register"
+#include <ndds/ndds_cpp.h>
+#pragma GCC diagnostic pop
 
-#include <rmw/rmw.h>
 #include <rmw/allocators.h>
 #include <rmw/error_handling.h>
-#include "rosidl_generator_cpp/MessageTypeSupport.h"
+#include <rmw/rmw.h>
 #include <rmw/types.h>
-#include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
-#include "rosidl_typesupport_introspection_cpp/Identifier.h"
-#include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
+// This header is in the rosidl_typesupport_connext_cpp package and
+// is in the include/rosidl_typesupport_connext_cpp/impl folder.
+#include <rosidl_generator_cpp/message_type_support.hpp>
 
-#include "rosidl_generator_cpp/ServiceTypeSupport.h"
+#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
+#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
+#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 
+// This extern "C" prevents accidental overloading of functions. With this in
+// place, overloading produces an error rather than a new C++ symbol.
 extern "C"
 {
 
@@ -33,6 +40,7 @@ rmw_init()
         rmw_set_error_string("  init() could not get participant factory");
         return RMW_RET_ERROR;
     };
+    return RMW_RET_OK;
 }
 
 rmw_node_t *
@@ -697,7 +705,7 @@ rmw_ret_t
 rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 {
   if (guard_condition) {
-    delete guard_condition->data;
+    delete static_cast<DDSGuardCondition *>(guard_condition->data);
     delete guard_condition;
     return RMW_RET_OK;
   }
@@ -818,6 +826,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
             guard_conditions->guard_conditions[i] = 0;
         }
     }
+    return RMW_RET_OK;
 }
 
 rmw_client_t *
@@ -878,4 +887,4 @@ rmw_destroy_client(rmw_client_t * client)
   return RMW_RET_ERROR;
 }
 
-}
+}  // extern "C"
