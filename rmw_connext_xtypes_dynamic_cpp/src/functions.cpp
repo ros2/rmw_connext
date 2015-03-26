@@ -3,16 +3,17 @@
 
 #include "ndds/ndds_cpp.h"
 
-#include <rmw/rmw.h>
 #include <rmw/allocators.h>
 #include <rmw/error_handling.h>
-#include "rosidl_generator_cpp/MessageTypeSupport.h"
+#include <rmw/rmw.h>
 #include <rmw/types.h>
-#include "rosidl_typesupport_introspection_cpp/FieldTypes.h"
-#include "rosidl_typesupport_introspection_cpp/Identifier.h"
-#include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
+// This header is in the rosidl_typesupport_connext_cpp package and
+// is in the include/rosidl_typesupport_connext_cpp/impl folder.
+#include <rosidl_generator_cpp/message_type_support.hpp>
 
-#include "rosidl_generator_cpp/ServiceTypeSupport.h"
+#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
+#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
+#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 
 extern "C"
 {
