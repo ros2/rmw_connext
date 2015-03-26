@@ -52,6 +52,7 @@ set(_expected_library_base_names
   "nddsc"
   "nddscore"
   "nddscpp"
+  "rticonnextmsgc"
   "rticonnextmsgcpp"
 )
 
