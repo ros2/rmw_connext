@@ -328,7 +328,7 @@ rmw_ret_t
 rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 {
   if (guard_condition) {
-    delete static_cast<DDSGuardCondition *>(guard_condition->data);
+    delete guard_condition->data;
     delete guard_condition;
     return RMW_RET_OK;
   }

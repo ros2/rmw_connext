@@ -181,6 +181,7 @@ namespace rosidl_typesupport_connext_cpp
 {
 
 template<>
+ROSIDL_PUBLIC
 const rosidl_service_type_support_t *
 get_service_type_support_handle_connext<@(spec.pkg_name)::@(spec.srv_name)>()
 {
