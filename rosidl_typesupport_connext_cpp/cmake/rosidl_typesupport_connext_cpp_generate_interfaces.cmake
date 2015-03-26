@@ -32,18 +32,35 @@ endforeach()
 
 set(_output_path "${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp/${PROJECT_NAME}/dds_connext")
 set(_generated_files "")
+set(_connext_compile_flags "-Wno-tautological-compare -Wno-return-type-c-linkage -Wno-deprecated-register")
 foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   get_filename_component(_extension "${_idl_file}" EXT)
   if("${_extension}" STREQUAL ".msg")
     get_filename_component(name "${_idl_file}" NAME_WE)
     list(APPEND _generated_files "${_output_path}/${name}_.h")
+    set_source_files_properties("${_output_path}/${name}_.h"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
     list(APPEND _generated_files "${_output_path}/${name}_.cxx")
+    set_source_files_properties("${_output_path}/${name}_.cxx"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
     list(APPEND _generated_files "${_output_path}/${name}_Plugin.h")
+    set_source_files_properties("${_output_path}/${name}_Plugin.h"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
     list(APPEND _generated_files "${_output_path}/${name}_Plugin.cxx")
+    set_source_files_properties("${_output_path}/${name}_Plugin.cxx"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
     list(APPEND _generated_files "${_output_path}/${name}_Support.h")
+    set_source_files_properties("${_output_path}/${name}_Support.h"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
     list(APPEND _generated_files "${_output_path}/${name}_Support.cxx")
+    set_source_files_properties("${_output_path}/${name}_Support.cxx"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
     list(APPEND _generated_files "${_output_path}/${name}_TypeSupport.h")
+    set_source_files_properties("${_output_path}/${name}_TypeSupport.h"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
     list(APPEND _generated_files "${_output_path}/${name}_TypeSupport.cpp")
+    set_source_files_properties("${_output_path}/${name}_TypeSupport.cpp"
+      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
   elseif("${_extension}" STREQUAL ".srv")
     get_filename_component(name "${_idl_file}" NAME_WE)
     list(APPEND _generated_files "${_output_path}/${name}_ServiceTypeSupport.cpp")
@@ -94,12 +111,15 @@ add_custom_command(
 set(_target_suffix "__dds_connext_cpp")
 
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-tautological-compare")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED ${_generated_files})
-target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix} PRIVATE "-DNDDS_USER_DLL_EXPORT")
+target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+  PRIVATE
+    "-DNDDS_USER_DLL_EXPORT"
+)
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp

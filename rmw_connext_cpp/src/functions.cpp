@@ -1,8 +1,12 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "ndds/ndds_cpp.h"
-#include "ndds/ndds_requestreply_cpp.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wdeprecated-register"
+#include <ndds/ndds_cpp.h>
+#include <ndds/ndds_requestreply_cpp.h>
+#pragma GCC diagnostic pop
 
 #include <rmw/rmw.h>
 #include <rmw/allocators.h>
@@ -324,7 +328,7 @@ rmw_ret_t
 rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 {
   if (guard_condition) {
-    delete guard_condition->data;
+    delete static_cast<DDSGuardCondition *>(guard_condition->data);
     delete guard_condition;
     return RMW_RET_OK;
   }
@@ -562,7 +566,7 @@ rmw_destroy_client(rmw_client_t * client)
 {
   if (client) {
     // TODO(esteve): de-allocate Requester and response DataReader
-    delete client->data;
+    delete static_cast<ConnextStaticClientInfo *>(client->data);
     delete client;
     return RMW_RET_OK;
   }
@@ -626,7 +630,7 @@ rmw_ret_t
 rmw_destroy_service(rmw_service_t * service)
 {
   if(service) {
-    delete service->data;
+    delete static_cast<ConnextStaticServiceInfo *>(service->data);
     delete service;
     return RMW_RET_OK;
   }

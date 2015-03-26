@@ -14,6 +14,14 @@
 
 #include <iostream>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wdeprecated-register"
+#include <ndds/connext_cpp/connext_cpp_requester_details.h>
+#include <ndds/ndds_cpp.h>
+#include <ndds/ndds_requestreply_cpp.h>
+#pragma GCC diagnostic pop
+
 #include <rmw/rmw.h>
 // This is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder.

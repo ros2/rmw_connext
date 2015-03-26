@@ -21,8 +21,12 @@
 #include <rosidl_generator_cpp/message_type_support.hpp>
 
 #include "@(spec.base_type.pkg_name)/@(spec.base_type.type)_Struct.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wdeprecated-register"
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_Support.h"
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_TypeSupport.h"
+#pragma GCC diagnostic pop
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
 @[for field in spec.fields]@
