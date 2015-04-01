@@ -180,9 +180,11 @@ def _step_2_3(unbounded_fields, lines):
                 ]
                 if dds_type == 'DDS_String':
                     lines_inserted += [
-                        'void* buffer = DDS_StringSeq_get_contiguous_bufferI(&sample->%s);' % field_name,
+                        'void* buffer = DDS_StringSeq_get_contiguous_bufferI(&sample->%s);' %
+                        field_name,
                         'if (buffer) {',
-                        '    if (!RTICdrType_initStringArray(buffer, (sequence_length), (255)+1, RTI_CDR_CHAR_TYPE)) {',
+                        '    if (!RTICdrType_initStringArray(buffer, (sequence_length), ' +
+                        '(255)+1, RTI_CDR_CHAR_TYPE)) {',
                         '        goto fin;',
                         '    }',
                         '}',
@@ -242,7 +244,8 @@ def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_di
     }
 
     mapping_srvs = {
-        os.path.join(template_dir, 'srv_ServiceTypeSupport.cpp.template'): '%s_ServiceTypeSupport.cpp',
+        os.path.join(template_dir, 'srv_ServiceTypeSupport.cpp.template'):
+        '%s_ServiceTypeSupport.cpp',
     }
 
     for template_file in mapping_msgs.keys():
