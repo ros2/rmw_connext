@@ -93,6 +93,7 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
   set(_search_library_paths "")
   foreach(_library_name ${_expected_library_names})
     list(APPEND _search_library_paths "${_lib_path}/*/${_library_name}")
+    list(APPEND _search_library_paths "${_lib_path}/${_library_name}")
   endforeach()
 
   # find library nddscpp
