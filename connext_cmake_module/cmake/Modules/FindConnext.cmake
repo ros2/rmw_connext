@@ -70,6 +70,7 @@ set(_expected_library_base_names
   "rticonnextmsgcpp"
 )
 
+set(_expected_library_names "")
 foreach(_base_name IN LISTS _expected_library_base_names)
   if(WIN32)
     list(APPEND _expected_library_names "${_base_name}.lib")
@@ -92,7 +93,6 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
 
   set(_search_library_paths "")
   foreach(_library_name ${_expected_library_names})
-    list(APPEND _search_library_paths "${_lib_path}/*/${_library_name}")
     list(APPEND _search_library_paths "${_lib_path}/${_library_name}")
   endforeach()
 
