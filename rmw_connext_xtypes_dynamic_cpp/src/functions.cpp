@@ -654,11 +654,10 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message,
         {
           char * value = 0;
           DDS_UnsignedLong size;
-          DDS_ReturnCode_t status =
-            dynamic_data->get_string(
-              value, &size,
-              (std::string(member->name_) + "_").c_str(),
-              DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
+          DDS_ReturnCode_t status = dynamic_data->get_string(
+            value, &size,
+            (std::string(member->name_) + "_").c_str(),
+            DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
           if (status != DDS_RETCODE_OK) {
             printf("get_string() failed. Status = %d\n", status);
             throw std::runtime_error("get member failed");
