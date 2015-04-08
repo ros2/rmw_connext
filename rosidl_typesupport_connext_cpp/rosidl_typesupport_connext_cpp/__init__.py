@@ -25,7 +25,6 @@ def parse_ros_interface_files(pkg_name, ros_interface_files):
     message_specs = []
     service_specs = []
     for idl_file in ros_interface_files:
-        print(pkg_name, idl_file)
         filename, extension = os.path.splitext(idl_file)
         if extension == '.msg':
             message_spec = parse_message_file(pkg_name, idl_file)
@@ -56,10 +55,6 @@ def generate_dds_connext_cpp(
             include_dirs.append(idl_base_path)
 
     for index, idl_file in enumerate(dds_interface_files):
-        msg_name = os.path.splitext(os.path.basename(idl_file))[0]
-        generated_file = os.path.join(output_dir, msg_name + '.h/cpp')
-        print('Generating: %s' % generated_file)
-
         cmd = [idl_pp]
         for include_dir in include_dirs:
             cmd += ['-I', include_dir]
@@ -80,6 +75,7 @@ def generate_dds_connext_cpp(
                             f.type.array_size is None and
                             not f.type.is_upper_bound]
         if unbounded_fields:
+            msg_name = os.path.splitext(os.path.basename(idl_file))[0]
             msg_cxx_filename = os.path.join(output_dir, msg_name + '.cxx')
             _modify(msg_cxx_filename, unbounded_fields, _step_2_2)
             plugin_cxx_filename = os.path.join(output_dir, msg_name + 'Plugin.cxx')
@@ -276,7 +272,6 @@ def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_di
     for spec in message_specs:
         for template_file, generated_filename in mapping_msgs.items():
             generated_file = os.path.join(output_dir, generated_filename % spec.base_type.type)
-            print('Generating MESSAGE: %s' % generated_file)
 
             try:
                 # TODO only touch generated file if its content actually changes
@@ -299,7 +294,6 @@ def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_di
     for spec in service_specs:
         for template_file, generated_filename in mapping_srvs.items():
             generated_file = os.path.join(output_dir, generated_filename % spec.srv_name)
-            print('Generating SERVICE: %s' % generated_file)
 
             try:
                 # TODO only touch generated file if its content actually changes

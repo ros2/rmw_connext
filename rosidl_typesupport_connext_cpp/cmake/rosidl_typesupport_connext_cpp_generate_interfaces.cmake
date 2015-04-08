@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-message(" - rosidl_typesupport_connext_cpp_generate_interfaces.cmake")
-message("   - target: ${rosidl_generate_interfaces_TARGET}")
-message("   - interface files: ${rosidl_generate_interfaces_IDL_FILES}")
-message("   - dependency package names: ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES}")
-
 set(_ros_idl_files "")
 foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   get_filename_component(_extension "${_idl_file}" EXT)
@@ -92,9 +87,6 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
     endif()
   endforeach()
 endforeach()
-
-message("   - generated files: ${_generated_files}")
-message("   - dependencies: ${_dependencies}")
 
 add_custom_command(
   OUTPUT ${_generated_files}
