@@ -217,10 +217,8 @@ rmw_create_publisher(
 
   DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
 
-  // TODO avoid string comparison
-  if (strncmp(type_support->typesupport_identifier,
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
-    strlen(rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)))
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
   {
     rmw_set_error_string("type support not from this implementation");
     // printf("but from: %s\n", type_support->typesupport_identifier);
@@ -470,10 +468,8 @@ rmw_create_subscription(const rmw_node_t * node,
 
   DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
 
-  // TODO avoid string comparison
-  if (strncmp(type_support->typesupport_identifier,
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
-    strlen(rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)))
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
   {
     rmw_set_error_string("type support not from this implementation");
     // printf("but from: %s\n", type_support->typesupport_identifier);
