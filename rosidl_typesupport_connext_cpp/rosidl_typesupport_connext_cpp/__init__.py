@@ -243,8 +243,11 @@ IDL_TYPE_TO_DDS = {
 
 def _get_dds_type(fields, field_name):
     field = [f for f in fields if '%s_' % f.name == field_name][0]
-    idl_type = MSG_TYPE_TO_IDL[field.type.type]
-    return IDL_TYPE_TO_DDS[idl_type]
+    if field.type.is_primitive_type():
+      idl_type = MSG_TYPE_TO_IDL[field.type.type]
+      return IDL_TYPE_TO_DDS[idl_type]
+    else:
+      return '%s::dds_::%s_' % (field.type.pkg_name, field.type.type)
 
 
 def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_dir):
