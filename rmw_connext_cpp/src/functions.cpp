@@ -27,6 +27,7 @@
 #include <rmw/error_handling.h>
 #include <rmw/types.h>
 
+#include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include <rosidl_typesupport_connext_cpp/message_type_support.h>
 #include <rosidl_typesupport_connext_cpp/service_type_support.h>
 
@@ -137,6 +138,14 @@ rmw_create_publisher(
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
 
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_connext_cpp::typesupport_connext_identifier)
+  {
+    rmw_set_error_string("type support not from this implementation");
+    // printf("but from: %s\n", type_support->typesupport_identifier);
+    return NULL;
+  }
+
   const message_type_support_callbacks_t * callbacks = \
     static_cast<const message_type_support_callbacks_t *>(type_support->data);
   std::string type_name = std::string(callbacks->package_name) + "::dds_::" +
@@ -243,6 +252,14 @@ rmw_create_subscription(const rmw_node_t * node,
   }
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
+
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_connext_cpp::typesupport_connext_identifier)
+  {
+    rmw_set_error_string("type support not from this implementation");
+    // printf("but from: %s\n", type_support->typesupport_identifier);
+    return NULL;
+  }
 
   const message_type_support_callbacks_t * callbacks = \
     static_cast<const message_type_support_callbacks_t *>(type_support->data);
@@ -533,6 +550,14 @@ rmw_create_client(
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
 
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_connext_cpp::typesupport_connext_identifier)
+  {
+    rmw_set_error_string("type support not from this implementation");
+    // printf("but from: %s\n", type_support->typesupport_identifier);
+    return NULL;
+  }
+
   const service_type_support_callbacks_t * callbacks = \
     static_cast<const service_type_support_callbacks_t *>(type_support->data);
 
@@ -598,6 +623,14 @@ rmw_create_service(
   }
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
+
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_connext_cpp::typesupport_connext_identifier)
+  {
+    rmw_set_error_string("type support not from this implementation");
+    // printf("but from: %s\n", type_support->typesupport_identifier);
+    return NULL;
+  }
 
   const service_type_support_callbacks_t * callbacks = \
     static_cast<const service_type_support_callbacks_t *>(type_support->data);

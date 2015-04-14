@@ -27,6 +27,7 @@
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_Support.h"
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_TypeSupport.h"
 #pragma GCC diagnostic pop
+#include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
 @[for field in spec.fields]@
@@ -234,7 +235,7 @@ static message_type_support_callbacks_t callbacks = {
 };
 
 static rosidl_message_type_support_t handle = {
-    "connext_static",
+    rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
     &callbacks
 };
 
