@@ -32,6 +32,7 @@
 #include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Request_TypeSupport.h"
 #include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Response_Support.h"
 #include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Response_TypeSupport.h"
+#include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
 
 class DDSDomainParticipant;
@@ -169,7 +170,7 @@ static service_type_support_callbacks_t callbacks = {
 };
 
 static rosidl_service_type_support_t handle = {
-    "connext_static",
+    rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
     &callbacks
 };
 
