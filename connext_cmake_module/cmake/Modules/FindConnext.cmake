@@ -66,7 +66,6 @@ set(_expected_library_base_names
   "nddsc"
   "nddscore"
   "nddscpp"
-  "rticonnextmsgc"
   "rticonnextmsgcpp"
 )
 
@@ -218,10 +217,11 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
 else()
   # try to find_package() it
   find_package(nddscpp)
-  if(nddscpp_FOUND)
+  find_package(rticonnextmsgcpp)
+  if(nddscpp_FOUND AND rticonnextmsgcpp_FOUND)
     message(STATUS "Found RTI Connext: ${nddscpp_DIR}")
     set(Connext_INCLUDE_DIRS ${nddscpp_INCLUDE_DIRS})
-    set(Connext_LIBRARIES ${nddscpp_LIBRARIES})
+    set(Connext_LIBRARIES ${rticonnextmsgcpp_LIBRARIES})
     set(Connext_LIBRARY_DIRS "")
     set(Connext_LIBRARY_DIR "")
     set(Connext_DEFINITIONS ${nddscpp_DEFINITIONS})
