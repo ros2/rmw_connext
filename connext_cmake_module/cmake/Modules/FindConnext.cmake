@@ -244,14 +244,12 @@ if(Connext_FOUND AND NOT WIN32)
 endif()
 
 include(FindPackageHandleStandardArgs)
+# Connext_HOME, Connext_LIBRARY_DIRS, and Connext_LIBRARY_DIR are not always set, depending on the source of Connext.
 find_package_handle_standard_args(Connext
   FOUND_VAR Connext_FOUND
   REQUIRED_VARS
     Connext_INCLUDE_DIRS
-    Connext_HOME
     Connext_LIBRARIES
-    Connext_LIBRARY_DIRS
-    Connext_LIBRARY_DIR
     Connext_DEFINITIONS
     Connext_DDSGEN2
 )
