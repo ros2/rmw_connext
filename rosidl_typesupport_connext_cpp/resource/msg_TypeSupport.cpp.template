@@ -14,11 +14,11 @@
 
 #include <iostream>
 
-#include <rosidl_generator_c/visibility_control.h>
 #include <rosidl_generator_c/message_type_support.h>
 // This is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder.
 #include <rosidl_generator_cpp/message_type_support.hpp>
+#include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
 #include "@(spec.base_type.pkg_name)/@(spec.base_type.type)_Struct.h"
 #pragma GCC diagnostic push
@@ -261,7 +261,7 @@ namespace rosidl_typesupport_connext_cpp
 {
 
 template<>
-ROSIDL_EXPORT
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
 const rosidl_message_type_support_t *
 get_message_type_support_handle_connext<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
 {
