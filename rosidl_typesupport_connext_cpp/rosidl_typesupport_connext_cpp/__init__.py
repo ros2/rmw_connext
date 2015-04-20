@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import em
+from io import StringIO
 import os
 import re
 import subprocess
@@ -277,11 +278,10 @@ def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_di
             generated_file = os.path.join(output_dir, generated_filename % spec.base_type.type)
 
             try:
-                # TODO only touch generated file if its content actually changes
-                ofile = open(generated_file, 'w')
+                output = StringIO()
                 # TODO reuse interpreter
                 interpreter = em.Interpreter(
-                    output=ofile,
+                    output=output,
                     options={
                         em.RAW_OPT: True,
                         em.BUFFERED_OPT: True,
@@ -289,21 +289,29 @@ def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_di
                     globals={'spec': spec},
                 )
                 interpreter.file(open(template_file))
+                content = output.getvalue()
                 interpreter.shutdown()
             except Exception:
                 os.remove(generated_file)
                 raise
+
+            # only overwrite file if necessary
+            if os.path.exists(generated_file):
+                with open(generated_file, 'r') as h:
+                    if h.read() == content:
+                        continue
+            with open(generated_file, 'w') as h:
+                h.write(content)
 
     for spec in service_specs:
         for template_file, generated_filename in mapping_srvs.items():
             generated_file = os.path.join(output_dir, generated_filename % spec.srv_name)
 
             try:
-                # TODO only touch generated file if its content actually changes
-                ofile = open(generated_file, 'w')
+                output = StringIO()
                 # TODO reuse interpreter
                 interpreter = em.Interpreter(
-                    output=ofile,
+                    output=output,
                     options={
                         em.RAW_OPT: True,
                         em.BUFFERED_OPT: True,
@@ -311,9 +319,18 @@ def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_di
                     globals={'spec': spec},
                 )
                 interpreter.file(open(template_file))
+                content = output.getvalue()
                 interpreter.shutdown()
             except Exception:
                 os.remove(generated_file)
                 raise
+
+            # only overwrite file if necessary
+            if os.path.exists(generated_file):
+                with open(generated_file, 'r') as h:
+                    if h.read() == content:
+                        continue
+            with open(generated_file, 'w') as h:
+                h.write(content)
 
     return 0
