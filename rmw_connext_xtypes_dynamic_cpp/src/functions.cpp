@@ -18,7 +18,10 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
 #pragma GCC diagnostic ignored "-Wdeprecated-register"
+#include <ndds/connext_cpp/connext_cpp_replier_details.h>
+#include <ndds/connext_cpp/connext_cpp_requester_details.h>
 #include <ndds/ndds_cpp.h>
+#include <ndds/ndds_requestreply_cpp.h>
 #pragma GCC diagnostic pop
 
 #include <rmw/allocators.h>
@@ -32,6 +35,7 @@
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
+#include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
 
 // This extern "C" prevents accidental overloading of functions. With this in
 // place, overloading produces an error rather than a new C++ symbol.
@@ -326,7 +330,7 @@ rmw_create_publisher(
         DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
         value); \
     if (status != DDS_RETCODE_OK) { \
-      printf(#METHOD_NAME "() failed. Status = %d\n", status); \
+      printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
       throw std::runtime_error("set member failed"); \
     } \
   }
@@ -339,7 +343,7 @@ rmw_create_publisher(
       DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
       value SUFFIX); \
     if (status != DDS_RETCODE_OK) { \
-      printf(#METHOD_NAME "() failed. Status = %d\n", status); \
+      printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
       throw std::runtime_error("set member failed"); \
     } \
   }
@@ -577,7 +581,7 @@ rmw_create_subscription(const rmw_node_t * node,
       (std::string(member->name_) + "_").c_str(), \
       DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
     if (status != DDS_RETCODE_OK) { \
-      printf(#METHOD_NAME "() failed. Status = %d\n", status); \
+      printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
       throw std::runtime_error("get member failed"); \
     } \
     TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
@@ -592,7 +596,7 @@ rmw_create_subscription(const rmw_node_t * node,
       (std::string(member->name_) + "_").c_str(), \
       DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
     if (status != DDS_RETCODE_OK) { \
-      printf(#METHOD_NAME "() failed. Status = %d\n", status); \
+      printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
       throw std::runtime_error("get member failed"); \
     } \
     TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
@@ -655,7 +659,7 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message,
             (std::string(member->name_) + "_").c_str(),
             DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
           if (status != DDS_RETCODE_OK) {
-            printf("get_string() failed. Status = %d\n", status);
+            printf("get_string(%s) failed. Status = %d\n", member->name_, status);
             throw std::runtime_error("get member failed");
           }
           std::string * ros_value = (std::string *)((char *)ros_message + member->offset_);
@@ -768,6 +772,24 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
   return RMW_RET_OK;
 }
 
+struct ConnextDynamicServiceInfo
+{
+  connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier_;
+  DDSDataReader * request_datareader_;
+  DDS::DynamicDataTypeSupport * response_type_support_;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * request_members_;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * response_members_;
+};
+
+struct ConnextDynamicClientInfo
+{
+  connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester_;
+  DDSDataReader * response_datareader_;
+  DDS::DynamicDataTypeSupport * request_type_support_;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * request_members_;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * response_members_;
+};
+
 rmw_ret_t
 rmw_wait(
   rmw_subscriptions_t * subscriptions,
@@ -793,6 +815,26 @@ rmw_wait(
     void * data = guard_conditions->guard_conditions[i];
     DDSGuardCondition * guard_condition = (DDSGuardCondition *)data;
     waitset.attach_condition(guard_condition);
+  }
+
+  // add a condition for each service
+  for (unsigned long i = 0; i < services->service_count; ++i) {
+    void * data = services->services[i];
+    ConnextDynamicServiceInfo * custom_service_info = (ConnextDynamicServiceInfo *)data;
+    DDSDataReader * dynamic_reader = custom_service_info->request_datareader_;
+    DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
+    condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
+    waitset.attach_condition(condition);
+  }
+
+  // add a condition for each client
+  for (unsigned long i = 0; i < clients->client_count; ++i) {
+    void * data = clients->clients[i];
+    ConnextDynamicClientInfo * custom_client_info = (ConnextDynamicClientInfo *)data;
+    DDSDataReader * dynamic_reader = custom_client_info->response_datareader_;
+    DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
+    condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
+    waitset.attach_condition(condition);
   }
 
   // invoke wait until one of the conditions triggers
@@ -835,7 +877,7 @@ rmw_wait(
     }
   }
 
-  // set subscriber handles to zero for all not triggered conditions
+  // set guard condition handles to zero for all not triggered conditions
   for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i) {
     void * data = guard_conditions->guard_conditions[i];
     DDSCondition * condition = (DDSCondition *)data;
@@ -855,6 +897,49 @@ rmw_wait(
       guard_conditions->guard_conditions[i] = 0;
     }
   }
+
+  // set service handles to zero for all not triggered conditions
+  for (unsigned long i = 0; i < services->service_count; ++i) {
+    void * data = services->services[i];
+    ConnextDynamicServiceInfo * custom_service_info = (ConnextDynamicServiceInfo *)data;
+    DDSDataReader * dynamic_reader = custom_service_info->request_datareader_;
+    DDSCondition * condition = dynamic_reader->get_statuscondition();
+
+    // search for service condition in active set
+    unsigned long j = 0;
+    for (; j < active_conditions.length(); ++j) {
+      if (active_conditions[j] == condition) {
+        break;
+      }
+    }
+    // if service condition is not found in the active set
+    // reset the service handle
+    if (!(j < active_conditions.length())) {
+      services->services[i] = 0;
+    }
+  }
+
+  // set client handles to zero for all not triggered conditions
+  for (unsigned long i = 0; i < clients->client_count; ++i) {
+    void * data = clients->clients[i];
+    ConnextDynamicClientInfo * custom_client_info = (ConnextDynamicClientInfo *)data;
+    DDSDataReader * dynamic_reader = custom_client_info->response_datareader_;
+    DDSCondition * condition = dynamic_reader->get_statuscondition();
+
+    // search for client condition in active set
+    unsigned long j = 0;
+    for (; j < active_conditions.length(); ++j) {
+      if (active_conditions[j] == condition) {
+        break;
+      }
+    }
+    // if client condition is not found in the active set
+    // reset the service handle
+    if (!(j < active_conditions.length())) {
+      clients->clients[i] = 0;
+    }
+  }
+
   return RMW_RET_OK;
 }
 
@@ -864,7 +949,73 @@ rmw_create_client(
   const rosidl_service_type_support_t * type_support,
   const char * service_name)
 {
-  return NULL;
+  if (node->implementation_identifier != rti_connext_dynamic_identifier) {
+    rmw_set_error_string("node handle not from this implementation");
+    // printf("but from: %s\n", node->implementation_identifier);
+    return NULL;
+  }
+
+  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
+
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+  {
+    rmw_set_error_string("type support not from this implementation");
+    // printf("but from: %s\n", type_support->typesupport_identifier);
+    return NULL;
+  }
+
+  const rosidl_typesupport_introspection_cpp::ServiceMembers * service_members =
+    (rosidl_typesupport_introspection_cpp::ServiceMembers *)type_support->data;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * request_members =
+    service_members->request_members_;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * response_members =
+    service_members->response_members_;
+  std::string request_type_name = std::string(request_members->package_name_) + "::dds_::" +
+    request_members->message_name_ + "_";
+  std::string response_type_name = std::string(response_members->package_name_) + "::dds_::" +
+    response_members->message_name_ + "_";
+
+  DDS_DomainParticipantQos participant_qos;
+  DDS_ReturnCode_t status = participant->get_qos(participant_qos);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to get participant qos");
+    // printf("get_qos() failed. Status = %d\n", status);
+    return NULL;
+  }
+
+  DDS_TypeCode * request_type_code = create_type_code(
+    request_type_name, request_members, participant_qos);
+  DDS::DynamicDataTypeSupport * request_type_support = new DDS::DynamicDataTypeSupport(
+    request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+
+  DDS_TypeCode * response_type_code = create_type_code(
+    response_type_name, response_members, participant_qos);
+  DDS::DynamicDataTypeSupport * response_type_support = new DDS::DynamicDataTypeSupport(
+    response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+
+  // create requester
+  connext::RequesterParams requester_params(participant);
+  requester_params.service_name(service_name);
+  requester_params.request_type_support(request_type_support);
+  requester_params.reply_type_support(response_type_support);
+
+  connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester(
+    new connext::Requester<DDS_DynamicData, DDS_DynamicData>(requester_params));
+
+  DDSDataReader * response_datareader = requester->get_reply_datareader();
+
+  ConnextDynamicClientInfo * client_info = new ConnextDynamicClientInfo();
+  client_info->requester_ = requester;
+  client_info->response_datareader_ = response_datareader;
+  client_info->request_type_support_ = request_type_support;
+  client_info->request_members_ = request_members;
+  client_info->response_members_ = response_members;
+
+  rmw_client_t * client = new rmw_client_t;
+  client->implementation_identifier = rti_connext_dynamic_identifier;
+  client->data = client_info;
+  return client;
 }
 
 rmw_ret_t
@@ -872,7 +1023,26 @@ rmw_send_request(
   const rmw_client_t * client, const void * ros_request,
   int64_t * sequence_id)
 {
-  return RMW_RET_ERROR;
+  if (client->implementation_identifier != rti_connext_dynamic_identifier) {
+    rmw_set_error_string("client handle not from this implementation");
+    // printf("but from: %s\n", client->implementation_identifier);
+    return RMW_RET_ERROR;
+  }
+
+  ConnextDynamicClientInfo * client_info = static_cast<ConnextDynamicClientInfo *>(client->data);
+  connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester = client_info->requester_;
+
+  DDS::DynamicData * sample = client_info->request_type_support_->create_data();
+  DDS::WriteParams_t writeParams;
+  connext::WriteSampleRef<DDS::DynamicData> request(*sample, writeParams);
+
+  _publish(sample, ros_request, client_info->request_members_);
+
+  requester->send_request(request);
+  *sequence_id = ((int64_t)request.identity().sequence_number.high) << 32 |
+    request.identity().sequence_number.low;
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
@@ -880,8 +1050,40 @@ rmw_take_request(
   const rmw_service_t * service,
   void * ros_request_header, void * ros_request, bool * taken)
 {
-  *taken = false;
-  return RMW_RET_ERROR;
+  if (taken == NULL) {
+    rmw_set_error_string("taken argument can't be null");
+    return RMW_RET_ERROR;
+  }
+
+  if (service->implementation_identifier != rti_connext_dynamic_identifier) {
+    rmw_set_error_string("service handle not from this implementation");
+    // printf("but from: %s\n", service->implementation_identifier);
+    return RMW_RET_ERROR;
+  }
+
+  ConnextDynamicServiceInfo * service_info = \
+    static_cast<ConnextDynamicServiceInfo *>(service->data);
+  connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier = service_info->replier_;
+
+  rmw_request_id_t & req_id = *(static_cast<rmw_request_id_t *>(ros_request_header));
+
+  connext::LoanedSamples<DDS::DynamicData> requests = replier->take_requests(1);
+  if (requests.begin() != requests.end() && requests.begin()->info().valid_data) {
+    _take(&requests.begin()->data(), ros_request, service_info->request_members_);
+
+    size_t SAMPLE_IDENTITY_SIZE = 16;
+    memcpy(
+      &req_id.writer_guid[0], requests.begin()->identity().writer_guid.value,
+      SAMPLE_IDENTITY_SIZE);
+
+    req_id.sequence_number = ((int64_t)requests.begin()->identity().sequence_number.high) << 32 |
+      requests.begin()->identity().sequence_number.low;
+    *taken = true;
+  } else {
+    *taken = false;
+  }
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
@@ -889,16 +1091,73 @@ rmw_take_response(
   const rmw_client_t * client,
   void * ros_request_header, void * ros_response, bool * taken)
 {
-  *taken = false;
-  return RMW_RET_ERROR;
+  if (taken == NULL) {
+    rmw_set_error_string("taken argument can't be null");
+    return RMW_RET_ERROR;
+  }
+
+  if (client->implementation_identifier != rti_connext_dynamic_identifier) {
+    rmw_set_error_string("client handle not from this implementation");
+    // printf("but from: %s\n", client->implementation_identifier);
+    return RMW_RET_ERROR;
+  }
+
+  ConnextDynamicClientInfo * client_info = \
+    static_cast<ConnextDynamicClientInfo *>(client->data);
+  connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester = client_info->requester_;
+
+  connext::LoanedSamples<DDS::DynamicData> replies = requester->take_replies(1);
+  if (replies.begin() != replies.end() && replies.begin()->info().valid_data) {
+    _take(&replies.begin()->data(), ros_response, client_info->response_members_);
+
+    rmw_request_id_t & req_id = *(reinterpret_cast<rmw_request_id_t *>(ros_request_header));
+    req_id.sequence_number =
+      (((int64_t)replies.begin()->related_identity().sequence_number.high) << 32) |
+      replies.begin()->related_identity().sequence_number.low;
+    *taken = true;
+  } else {
+    *taken = false;
+  }
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_send_response(
   const rmw_service_t * service,
-  void * ros_request, void * ros_response)
+  void * ros_request_header, void * ros_response)
 {
-  return RMW_RET_ERROR;
+  if (service->implementation_identifier != rti_connext_dynamic_identifier) {
+    rmw_set_error_string("service handle not from this implementation");
+    // printf("but from: %s\n", service->implementation_identifier);
+    return RMW_RET_ERROR;
+  }
+
+  ConnextDynamicServiceInfo * service_info =
+    static_cast<ConnextDynamicServiceInfo *>(service->data);
+  connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier = service_info->replier_;
+
+  DDS::DynamicData * sample = service_info->response_type_support_->create_data();
+  DDS::WriteParams_t writeParams;
+  connext::WriteSampleRef<DDS::DynamicData> response(*sample, writeParams);
+
+  _publish(sample, ros_response, service_info->response_members_);
+
+  const rmw_request_id_t & req_id =
+    *(reinterpret_cast<const rmw_request_id_t *>(ros_request_header));
+
+  DDS_SampleIdentity_t request_identity;
+
+  size_t SAMPLE_IDENTITY_SIZE = 16;
+  memcpy(request_identity.writer_guid.value, &req_id.writer_guid[0], SAMPLE_IDENTITY_SIZE);
+
+  request_identity.sequence_number.high = (int32_t)(
+    (req_id.sequence_number & 0xFFFFFFFF00000000) >> 32);
+  request_identity.sequence_number.low = (uint32_t)(req_id.sequence_number & 0xFFFFFFFF);
+
+  replier->send_reply(response, request_identity);
+
+  return RMW_RET_OK;
 }
 
 rmw_service_t *
@@ -907,18 +1166,98 @@ rmw_create_service(
   const rosidl_service_type_support_t * type_support,
   const char * service_name)
 {
-  return NULL;
+  if (node->implementation_identifier != rti_connext_dynamic_identifier) {
+    rmw_set_error_string("node handle not from this implementation");
+    // printf("but from: %s\n", node->implementation_identifier);
+    return NULL;
+  }
+
+  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
+
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+  {
+    rmw_set_error_string("type support not from this implementation");
+    // printf("but from: %s\n", type_support->typesupport_identifier);
+    return NULL;
+  }
+
+  const rosidl_typesupport_introspection_cpp::ServiceMembers * service_members =
+    (rosidl_typesupport_introspection_cpp::ServiceMembers *)type_support->data;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * request_members =
+    service_members->request_members_;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * response_members =
+    service_members->response_members_;
+  std::string request_type_name = std::string(request_members->package_name_) + "::dds_::" +
+    request_members->message_name_ + "_";
+  std::string response_type_name = std::string(response_members->package_name_) + "::dds_::" +
+    response_members->message_name_ + "_";
+
+  DDS_DomainParticipantQos participant_qos;
+  DDS_ReturnCode_t status = participant->get_qos(participant_qos);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to get participant qos");
+    // printf("get_qos() failed. Status = %d\n", status);
+    return NULL;
+  }
+
+  DDS_TypeCode * request_type_code = create_type_code(
+    request_type_name, request_members, participant_qos);
+  DDS::DynamicDataTypeSupport * request_type_support = new DDS::DynamicDataTypeSupport(
+    request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+
+  DDS_TypeCode * response_type_code = create_type_code(
+    response_type_name, response_members, participant_qos);
+  DDS::DynamicDataTypeSupport * response_type_support = new DDS::DynamicDataTypeSupport(
+    response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+
+  // create requester
+  connext::ReplierParams<DDS_DynamicData, DDS_DynamicData> replier_params(participant);
+  replier_params.service_name(service_name);
+  replier_params.request_type_support(request_type_support);
+  replier_params.reply_type_support(response_type_support);
+
+  connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier(
+    new connext::Replier<DDS_DynamicData, DDS_DynamicData>(replier_params));
+
+  DDSDataReader * request_datareader = replier->get_request_datareader();
+
+  ConnextDynamicServiceInfo * server_info = new ConnextDynamicServiceInfo();
+  server_info->replier_ = replier;
+  server_info->request_datareader_ = request_datareader;
+  server_info->response_type_support_ = response_type_support;
+  server_info->request_members_ = request_members;
+  server_info->response_members_ = response_members;
+
+  rmw_service_t * service = rmw_service_allocate();
+  service->implementation_identifier = rti_connext_dynamic_identifier;
+  service->data = server_info;
+  return service;
 }
 
 rmw_ret_t
 rmw_destroy_service(rmw_service_t * service)
 {
+  if (service) {
+    // TODO de-allocate Replier and request DataReader
+    delete static_cast<ConnextDynamicServiceInfo *>(service->data);
+    delete service;
+    return RMW_RET_OK;
+  }
+
   return RMW_RET_ERROR;
 }
 
 rmw_ret_t
 rmw_destroy_client(rmw_client_t * client)
 {
+  if (client) {
+    // TODO de-allocate Requester and response DataReader
+    delete static_cast<ConnextDynamicClientInfo *>(client->data);
+    delete client;
+    return RMW_RET_OK;
+  }
+
   return RMW_RET_ERROR;
 }
 

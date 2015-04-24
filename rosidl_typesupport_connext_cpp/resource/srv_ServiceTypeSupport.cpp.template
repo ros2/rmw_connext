@@ -123,7 +123,9 @@ bool take_response__@(spec.srv_name)(void * untyped_requester, void * untyped_ro
         if(response.info().valid_data) {
             rmw_request_id_t & req_id = *(reinterpret_cast<rmw_request_id_t *>(untyped_ros_request_header));
 
-            int64_t sequence_number = ((int64_t)response.related_identity().sequence_number.high) << 32 | response.related_identity().sequence_number.low;
+            int64_t sequence_number =
+              (((int64_t)response.related_identity().sequence_number.high) << 32) |
+              response.related_identity().sequence_number.low;
             req_id.sequence_number = sequence_number;
 
             @(spec.pkg_name)::type_support::convert_dds_message_to_ros(response.data(), ros_response);
