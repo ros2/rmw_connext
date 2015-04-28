@@ -38,8 +38,8 @@ ament_target_dependencies(rmw_connext_xtypes_dynamic_cpp
 configure_rmw_library(rmw_connext_xtypes_dynamic_cpp)
 # Additionally, on Windows, add the -DROSIDL_TYPESUPPORT_INTROSPECTION_CPP_BUILDING_DLL definition.
 if(WIN32)
-  set_target_properties(rmw_connext_xtypes_dynamic_cpp PROPERTIES
-    COMPILE_FLAGS "-DROSIDL_TYPESUPPORT_INTROSPECTION_CPP_BUILDING_DLL")
+  target_compile_definitions(rmw_connext_xtypes_dynamic_cpp
+      PRIVATE "-DROSIDL_TYPESUPPORT_INTROSPECTION_CPP_BUILDING_DLL")
 endif()
 
 if(NOT WIN32)

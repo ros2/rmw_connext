@@ -32,8 +32,8 @@ ament_target_dependencies(rmw_connext_cpp
 configure_rmw_library(rmw_connext_cpp)
 # Additionally, on Windows, add the -DROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL definition.
 if(WIN32)
-  set_target_properties(rmw_connext_cpp PROPERTIES
-    COMPILE_FLAGS "-DROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
+  target_compile_definitions(rmw_connext_cpp
+      PRIVATE "-DROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
 endif()
 
 ament_export_libraries(rmw_connext_cpp "${Connext_LIBRARIES}")
