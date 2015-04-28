@@ -24,7 +24,7 @@ ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(rmw rosidl_generator_cpp)
 ament_export_include_directories(${Connext_INCLUDE_DIRS})
 
-register_rmw_implementation()
+register_rmw_implementation("rosidl_typesupport_introspection_cpp")
 
 link_directories("${Connext_LIBRARY_DIRS}")
 add_library(rmw_connext_xtypes_dynamic_cpp SHARED src/functions.cpp)
