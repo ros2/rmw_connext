@@ -31,7 +31,7 @@ configure_rmw_library(rmw_connext_cpp)
 
 ament_export_libraries(rmw_connext_cpp "${Connext_LIBRARIES}")
 
-register_rmw_implementation()
+register_rmw_implementation("rosidl_typesupport_connext_cpp")
 
 if(AMENT_ENABLE_TESTING)
   find_package(ament_lint_auto REQUIRED)
