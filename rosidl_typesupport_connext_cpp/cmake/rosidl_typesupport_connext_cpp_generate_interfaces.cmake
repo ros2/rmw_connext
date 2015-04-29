@@ -121,11 +121,11 @@ link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED ${_generated_files})
 if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-    PRIVATE "-DROSIDL_BUILDING_DLL")
+    PRIVATE "ROSIDL_BUILDING_DLL")
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-    PRIVATE "-DROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
+    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-    PRIVATE "-DNDDS_USER_DLL_EXPORT")
+    PRIVATE "NDDS_USER_DLL_EXPORT")
 endif()
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC

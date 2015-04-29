@@ -27,13 +27,13 @@ ament_target_dependencies(rmw_connext_cpp
   "rosidl_generator_cpp"
   "rosidl_typesupport_connext_cpp"
   "Connext")
-# On Windows this adds the -DRMW_BUILDING_DLL definition.
+# On Windows this adds the RMW_BUILDING_DLL definition.
 # On Unix (GCC or Clang) it hides the symbols with -fvisibility=hidden.
 configure_rmw_library(rmw_connext_cpp)
-# Additionally, on Windows, add the -DROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL definition.
+# Additionally, on Windows, add the ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL definition.
 if(WIN32)
   target_compile_definitions(rmw_connext_cpp
-      PRIVATE "-DROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
+      PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
 endif()
 
 ament_export_libraries(rmw_connext_cpp "${Connext_LIBRARIES}")
