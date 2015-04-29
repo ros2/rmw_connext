@@ -33,25 +33,35 @@ namespace type_support
 
 void
 ROSIDL_EXPORT
-register_type__@(spec.base_type.type)(DDSDomainParticipant * participant, const char * type_name);
+register_type__@(spec.base_type.type)(
+  DDSDomainParticipant * participant,
+  const char * type_name);
 
 void
 ROSIDL_EXPORT
-convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message, @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message);
+convert_ros_message_to_dds(
+  const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message,
+  @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message);
 
 void
 ROSIDL_EXPORT
-publish__@(spec.base_type.type)(DDSDataWriter * topic_writer, const void * untyped_ros_message);
+publish__@(spec.base_type.type)(
+  DDSDataWriter * topic_writer,
+  const void * untyped_ros_message);
 
 // ToDo Review
 void
 ROSIDL_EXPORT
-convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message, @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message);
+convert_dds_message_to_ros(
+  const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message,
+  @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message);
 
 // ToDo review
 bool
 ROSIDL_EXPORT
-take__@(spec.base_type.type)(DDSDataReader * topic_reader, void * untyped_ros_message);
+take__@(spec.base_type.type)(
+  DDSDataReader * topic_reader,
+  void * untyped_ros_message);
 
 }  // namespace type_support
 

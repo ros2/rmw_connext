@@ -39,10 +39,14 @@ struct @(field.type.type)_;
 namespace type_support {
 
 void
-convert_ros_message_to_dds(const @(field.type.pkg_name)::@(field.type.type)&, @(field.type.pkg_name)::dds_::@(field.type.type)_&);
+convert_ros_message_to_dds(
+  const @(field.type.pkg_name)::@(field.type.type)&,
+  @(field.type.pkg_name)::dds_::@(field.type.type)_&);
 
 void
-convert_dds_message_to_ros(const @(field.type.pkg_name)::dds_::@(field.type.type)_&, @(field.type.pkg_name)::@(field.type.type)&);
+convert_dds_message_to_ros(
+  const @(field.type.pkg_name)::dds_::@(field.type.type)_&,
+  @(field.type.pkg_name)::@(field.type.type)&);
 
 }  // namespace type_support
 }  // namespace @(field.type.pkg_name)
@@ -56,130 +60,138 @@ namespace type_support
 {
 
 void
-register_type__@(spec.base_type.type)(void * untyped_participant, const char * type_name)
+register_type__@(spec.base_type.type)(
+  void * untyped_participant,
+  const char * type_name)
 {
-    DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
-    std::cout << "  @(spec.base_type.pkg_name)::type_support::register_type__@(spec.base_type.type)()" << std::endl;
-    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
-    std::cout << "  type name: " << @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::get_type_name() << std::endl;
-    DDS_TypeCode * type_code = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)__get_typecode();
-    DDS_ExceptionCode_t ex;
-    type_code->print_IDL(1, ex);
+  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
+  std::cout << "  @(spec.base_type.pkg_name)::type_support::register_type__@(spec.base_type.type)()" << std::endl;
+  @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
+  std::cout << "  type name: " << @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::get_type_name() << std::endl;
+  DDS_TypeCode * type_code = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)__get_typecode();
+  DDS_ExceptionCode_t ex;
+  type_code->print_IDL(1, ex);
 }
 
 void
-convert_ros_message_to_dds(const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message, @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message)
+convert_ros_message_to_dds(
+  const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message,
+  @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message)
 {
-    //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_ros_message_to_dds(@(spec.base_type.type))" << std::endl;
+  //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_ros_message_to_dds(@(spec.base_type.type))" << std::endl;
 @[for field in spec.fields]@
-    // field.name @(field.name)
-    // field.type @(field.type)
-    // field.type.is_array @(field.type.is_array)
+  // field.name @(field.name)
+  // field.type @(field.type)
+  // field.type.is_array @(field.type.is_array)
 @[if field.type.array_size]@
-    // field.type.array_size @(field.type.array_size)
+  // field.type.array_size @(field.type.array_size)
 @[else]@
-    // field.type.array_size dynamic
+  // field.type.array_size dynamic
 @[end if]@
 @[if field.type.is_array]@
-    {
+  {
 @[if field.type.array_size]@
-        size_t size = @(field.type.array_size);
+    size_t size = @(field.type.array_size);
 @[else]@
-        size_t size = ros_message.@(field.name).size();
+    size_t size = ros_message.@(field.name).size();
 @[if not field.type.is_upper_bound]@
-        if (!dds_message.@(field.name)_.maximum(size)) {
-            printf("maximum() set maximum of sequence failed\n");
-            throw std::runtime_error("failed to set maximum of sequence");
-        }
-@[end if]@
-        if (!dds_message.@(field.name)_.length(size)) {
-            printf("length() set length of sequence failed\n");
-            throw std::runtime_error("failed to set length of sequence");
-        }
-@[end if]@
-        for (size_t i = 0; i < size; i++) {
-@[if field.type.type == 'string']@
-            DDS_String_free(dds_message.@(field.name)_[i]);
-            dds_message.@(field.name)_[i] = DDS_String_dup(ros_message.@(field.name)[i].c_str());
-@[elif field.type.is_primitive_type()]@
-            dds_message.@(field.name)_[i] = ros_message.@(field.name)[i];
-@[else]@
-            //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name)[i], dds_message.@(field.name)_[i]);
-            @(field.type.pkg_name)::type_support::convert_ros_message_to_dds(ros_message.@(field.name)[i], dds_message.@(field.name)_[i]);
-@[end if]@
-        }
+    if (!dds_message.@(field.name)_.maximum(size)) {
+      printf("maximum() set maximum of sequence failed\n");
+      throw std::runtime_error("failed to set maximum of sequence");
     }
-@[elif field.type.type == 'string']@
-      DDS_String_free(dds_message.@(field.name)_);
-      dds_message.@(field.name)_ = DDS_String_dup(ros_message.@(field.name).c_str());
+@[end if]@
+    if (!dds_message.@(field.name)_.length(size)) {
+      printf("length() set length of sequence failed\n");
+      throw std::runtime_error("failed to set length of sequence");
+    }
+@[end if]@
+    for (size_t i = 0; i < size; i++) {
+@[if field.type.type == 'string']@
+      DDS_String_free(dds_message.@(field.name)_[i]);
+      dds_message.@(field.name)_[i] = DDS_String_dup(ros_message.@(field.name)[i].c_str());
 @[elif field.type.is_primitive_type()]@
-      dds_message.@(field.name)_ = ros_message.@(field.name);
+      dds_message.@(field.name)_[i] = ros_message.@(field.name)[i];
 @[else]@
-      //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name), dds_message.@(field.name)_);
-      @(field.type.pkg_name)::type_support::convert_ros_message_to_dds(ros_message.@(field.name), dds_message.@(field.name)_);
+      //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name)[i], dds_message.@(field.name)_[i]);
+      @(field.type.pkg_name)::type_support::convert_ros_message_to_dds(ros_message.@(field.name)[i], dds_message.@(field.name)_[i]);
+@[end if]@
+    }
+  }
+@[elif field.type.type == 'string']@
+  DDS_String_free(dds_message.@(field.name)_);
+  dds_message.@(field.name)_ = DDS_String_dup(ros_message.@(field.name).c_str());
+@[elif field.type.is_primitive_type()]@
+  dds_message.@(field.name)_ = ros_message.@(field.name);
+@[else]@
+  //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name), dds_message.@(field.name)_);
+  @(field.type.pkg_name)::type_support::convert_ros_message_to_dds(ros_message.@(field.name), dds_message.@(field.name)_);
 @[end if]@
 
 @[end for]@
 }
 
 void
-publish__@(spec.base_type.type)(void * untyped_topic_writer, const void * untyped_ros_message)
+publish__@(spec.base_type.type)(
+  void * untyped_topic_writer,
+  const void * untyped_ros_message)
 {
-    DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
-    //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
+  DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
+  //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
 
-    const @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(const @(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
-    //@(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_ dds_message;
-    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
-    convert_ros_message_to_dds(ros_message, *dds_message);
+  const @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(const @(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
+  //@(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_ dds_message;
+  @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+  convert_ros_message_to_dds(ros_message, *dds_message);
 
-    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataWriter * data_writer = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
-    //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)() write dds message" << std::endl;
-    DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
-    if (status != DDS_RETCODE_OK) {
-        printf("write() failed. Status = %d\n", status);
-        throw std::runtime_error("write failed");
-    };
+  @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataWriter * data_writer = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
+  //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)() write dds message" << std::endl;
+  DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
+  if (status != DDS_RETCODE_OK) {
+    printf("write() failed. Status = %d\n", status);
+    throw std::runtime_error("write failed");
+  };
 
-    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
+  @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
 }
 
 // ToDo Review
 void
-convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message, @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message)
+convert_dds_message_to_ros(
+  const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message,
+  @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message)
 {
-    //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_dds_message_to_ros(@(spec.base_type.type))" << std::endl;
+  //std::cout << "  @(spec.base_type.pkg_name)::type_support::convert_dds_message_to_ros(@(spec.base_type.type))" << std::endl;
 @[for field in spec.fields]@
-    // field.name @(field.name)
-    // field.type @(field.type)
-    // field.type.is_array @(field.type.is_array)
+  // field.name @(field.name)
+  // field.type @(field.type)
+  // field.type.is_array @(field.type.is_array)
 @[if field.type.array_size]@
-    // field.type.array_size @(field.type.array_size)
+  // field.type.array_size @(field.type.array_size)
 @[else]@
-    // field.type.array_size dynamic
+  // field.type.array_size dynamic
 @[end if]@
 @[if field.type.is_array]@
-    {
+  {
 @[if field.type.array_size]@
-        size_t size = @(field.type.array_size);
+    size_t size = @(field.type.array_size);
 @[else]@
-        size_t size = dds_message.@(field.name)_.length();
-        ros_message.@(field.name).resize(size);
+    size_t size = dds_message.@(field.name)_.length();
+    ros_message.@(field.name).resize(size);
 @[end if]@
-        for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
 @[if field.type.is_primitive_type()]@
-            ros_message.@(field.name)[i] = dds_message.@(field.name)_[i];
+      ros_message.@(field.name)[i] = dds_message.@(field.name)_[i];
 @[else]@
-            //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name)[i], dds_message.@(field.name)_[i]);
-            @(field.type.pkg_name)::type_support::convert_dds_message_to_ros(dds_message.@(field.name)_[i], ros_message.@(field.name)[i]);
+      //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name)[i], dds_message.@(field.name)_[i]);
+      @(field.type.pkg_name)::type_support::convert_dds_message_to_ros(dds_message.@(field.name)_[i], ros_message.@(field.name)[i]);
 @[end if]@
-        }
     }
+  }
 @[elif field.type.is_primitive_type()]@
-      ros_message.@(field.name) = dds_message.@(field.name)_;
+  ros_message.@(field.name) = dds_message.@(field.name)_;
 @[else]@
-      //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name), dds_message.@(field.name)_);
-      @(field.type.pkg_name)::type_support::convert_dds_message_to_ros(dds_message.@(field.name)_, ros_message.@(field.name));
+  //::dds_impl::DDSTypeResolver<@(field.type.pkg_name)::@(field.type.type)>::convert_ros_message_to_dds(ros_message.@(field.name), dds_message.@(field.name)_);
+  @(field.type.pkg_name)::type_support::convert_dds_message_to_ros(dds_message.@(field.name)_, ros_message.@(field.name));
 @[end if]@
 
 @[end for]@
@@ -187,56 +199,58 @@ convert_dds_message_to_ros(const @(spec.base_type.pkg_name)::dds_::@(spec.base_t
 
 // ToDo review
 bool
-take__@(spec.base_type.type)(void * untyped_topic_reader, void * untyped_ros_message)
+take__@(spec.base_type.type)(
+  void * untyped_topic_reader,
+  void * untyped_ros_message)
 {
-    DDSDataReader * topic_reader = static_cast<DDSDataReader *>(untyped_topic_reader);
-    //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
+  DDSDataReader * topic_reader = static_cast<DDSDataReader *>(untyped_topic_reader);
+  //std::cout << "  @(spec.base_type.pkg_name)::type_support::publish__@(spec.base_type.type)()" << std::endl;
 
-    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataReader * data_reader = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
-    //std::cout << "  @(spec.base_type.pkg_name)::type_support::take__@(spec.base_type.type)() take dds message" << std::endl;
+  @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataReader * data_reader = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
+  //std::cout << "  @(spec.base_type.pkg_name)::type_support::take__@(spec.base_type.type)() take dds message" << std::endl;
 
-    @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_Seq dds_messages;
-    DDS_SampleInfoSeq sample_infos;
-    DDS_ReturnCode_t status = data_reader->take(
-        dds_messages,
-        sample_infos,
-        1,
-        DDS_NOT_READ_SAMPLE_STATE,
-        DDS_ANY_VIEW_STATE,
-        DDS_ANY_INSTANCE_STATE);
-    if (status == DDS_RETCODE_NO_DATA) {
-        printf("take() failed due to DDS_RETCODE_NO_DATA. Status = %d\n", status);
-        return false;
-    }
-    if (status != DDS_RETCODE_OK) {
-        printf("take() failed. Status = %d\n", status);
-        throw std::runtime_error("write failed");
-    };
+  @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_Seq dds_messages;
+  DDS_SampleInfoSeq sample_infos;
+  DDS_ReturnCode_t status = data_reader->take(
+    dds_messages,
+    sample_infos,
+    1,
+    DDS_NOT_READ_SAMPLE_STATE,
+    DDS_ANY_VIEW_STATE,
+    DDS_ANY_INSTANCE_STATE);
+  if (status == DDS_RETCODE_NO_DATA) {
+    printf("take() failed due to DDS_RETCODE_NO_DATA. Status = %d\n", status);
+    return false;
+  }
+  if (status != DDS_RETCODE_OK) {
+    printf("take() failed. Status = %d\n", status);
+    throw std::runtime_error("write failed");
+  };
 
-    if (untyped_ros_message == 0) {
-        printf("take() invoked without a valid ROS message pointer\n");
-        throw std::runtime_error("invalid ROS message pointer");
-    };
+  if (untyped_ros_message == 0) {
+    printf("take() invoked without a valid ROS message pointer\n");
+    throw std::runtime_error("invalid ROS message pointer");
+  };
 
-    @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(@(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
-    convert_dds_message_to_ros(dds_messages[0], ros_message);
+  @(spec.base_type.pkg_name)::@(spec.base_type.type) & ros_message = *(@(spec.base_type.pkg_name)::@(spec.base_type.type) *)untyped_ros_message;
+  convert_dds_message_to_ros(dds_messages[0], ros_message);
 
-    data_reader->return_loan(dds_messages, sample_infos);
+  data_reader->return_loan(dds_messages, sample_infos);
 
-    return true;
+  return true;
 }
 
 static message_type_support_callbacks_t callbacks = {
-    "@(spec.base_type.pkg_name)",
-    "@(spec.base_type.type)",
-    &register_type__@(spec.base_type.type),
-    &publish__@(spec.base_type.type),
-    &take__@(spec.base_type.type)
+  "@(spec.base_type.pkg_name)",
+  "@(spec.base_type.type)",
+  &register_type__@(spec.base_type.type),
+  &publish__@(spec.base_type.type),
+  &take__@(spec.base_type.type)
 };
 
 static rosidl_message_type_support_t handle = {
-    rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
-    &callbacks
+  rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
+  &callbacks
 };
 
 }  // namespace type_support
@@ -251,7 +265,7 @@ ROSIDL_EXPORT
 const rosidl_message_type_support_t *
 get_message_type_support_handle_connext<@(spec.base_type.pkg_name)::@(spec.base_type.type)>()
 {
-    return &@(spec.base_type.pkg_name)::type_support::handle;
+  return &@(spec.base_type.pkg_name)::type_support::handle;
 }
 
 }  // namespace rosidl_typesupport_connext_cpp
