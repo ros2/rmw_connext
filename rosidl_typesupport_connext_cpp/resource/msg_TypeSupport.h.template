@@ -37,6 +37,7 @@ register_type__@(spec.base_type.type)(
   const char * type_name);
 
 void
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
 convert_ros_message_to_dds(
   const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message,
   @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message);
@@ -48,6 +49,7 @@ publish__@(spec.base_type.type)(
 
 // ToDo Review
 void
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
 convert_dds_message_to_ros(
   const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message,
   @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message);
