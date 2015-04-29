@@ -645,7 +645,7 @@ rmw_create_service(
   service_info->callbacks_ = callbacks;
   service_info->request_datareader_ = request_datareader;
 
-  rmw_service_t * service = new rmw_service_t;
+  rmw_service_t * service = rmw_service_allocate();
   service->implementation_identifier = rti_connext_identifier;
   service->data = service_info;
   return service;
