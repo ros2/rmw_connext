@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rmw_connext_xtypes_dynamic_cpp</name>
+  <name>rmw_connext_dynamic_cpp</name>
   <version>0.0.0</version>
   <description>Implement the ROS middleware interface using RTI Connext DynammicData interface in C++.</description>
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
