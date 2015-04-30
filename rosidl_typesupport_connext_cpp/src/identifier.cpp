@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rosidl_typesupport_connext_cpp/identifier.hpp>
+#include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
 namespace rosidl_typesupport_connext_cpp
 {
 
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
 const char * typesupport_connext_identifier = "connext_static";
 
 }  // namespace rosidl_typesupport_connext_cpp

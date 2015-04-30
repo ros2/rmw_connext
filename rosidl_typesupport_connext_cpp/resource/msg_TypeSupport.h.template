@@ -15,7 +15,7 @@
 #ifndef __@(spec.base_type.pkg_name)__dds_connext__@(spec.base_type.type)_TypeSupport__h__
 #define __@(spec.base_type.pkg_name)__dds_connext__@(spec.base_type.type)_TypeSupport__h__
 
-#include <rosidl_generator_c/visibility_control.h>
+#include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
 #include "@(spec.base_type.pkg_name)/@(spec.base_type.type)_Struct.h"
 #include "@(spec.base_type.pkg_name)/dds_connext/@(spec.base_type.type)_Support.h"
@@ -32,33 +32,30 @@ namespace type_support
 {
 
 void
-ROSIDL_EXPORT
 register_type__@(spec.base_type.type)(
   DDSDomainParticipant * participant,
   const char * type_name);
 
 void
-ROSIDL_EXPORT
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
 convert_ros_message_to_dds(
   const @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message,
   @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message);
 
 void
-ROSIDL_EXPORT
 publish__@(spec.base_type.type)(
   DDSDataWriter * topic_writer,
   const void * untyped_ros_message);
 
 // ToDo Review
 void
-ROSIDL_EXPORT
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
 convert_dds_message_to_ros(
   const @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_& dds_message,
   @(spec.base_type.pkg_name)::@(spec.base_type.type)& ros_message);
 
 // ToDo review
 bool
-ROSIDL_EXPORT
 take__@(spec.base_type.type)(
   DDSDataReader * topic_reader,
   void * untyped_ros_message);

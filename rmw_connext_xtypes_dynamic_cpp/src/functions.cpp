@@ -36,13 +36,15 @@
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 #include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
+#include "rosidl_typesupport_introspection_cpp/visibility_control.h"
 
 // This extern "C" prevents accidental overloading of functions. With this in
 // place, overloading produces an error rather than a new C++ symbol.
 extern "C"
 {
 
-RMW_PUBLIC const char * rti_connext_dynamic_identifier = "connext_dynamic";
+ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
+const char * rti_connext_dynamic_identifier = "connext_dynamic";
 
 const char *
 rmw_get_implementation_identifier()

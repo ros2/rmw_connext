@@ -122,11 +122,11 @@ add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED ${_gene
 if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "ROSIDL_BUILDING_DLL")
+  target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
+  target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+    PRIVATE "NDDS_USER_DLL_EXPORT")
 endif()
-target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  PRIVATE
-    "-DNDDS_USER_DLL_EXPORT"
-)
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp

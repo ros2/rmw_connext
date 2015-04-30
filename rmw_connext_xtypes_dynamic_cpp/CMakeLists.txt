@@ -33,7 +33,14 @@ ament_target_dependencies(rmw_connext_xtypes_dynamic_cpp
   "rmw"
   "rosidl_generator_cpp"
   "Connext")
+# On Windows this adds the RMW_BUILDING_DLL definition.
+# On Unix (GCC or Clang) it hides the symbols by default with -fvisibility=hidden.
 configure_rmw_library(rmw_connext_xtypes_dynamic_cpp)
+# Additionally, on Windows, add the ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_BUILDING_DLL definition.
+if(WIN32)
+  target_compile_definitions(rmw_connext_xtypes_dynamic_cpp
+      PRIVATE "ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_BUILDING_DLL")
+endif()
 
 if(NOT WIN32)
   set(rmw_connext_xtypes_dynamic_cpp_ADDITIONAL_LIBRARIES dl pthread)

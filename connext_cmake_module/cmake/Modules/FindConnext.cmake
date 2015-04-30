@@ -204,11 +204,11 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
   set(Connext_LIBRARY_DIR "${Connext_LIBRARY_DIRS}")
 
   if(WIN32)
-    set(Connext_DEFINITIONS "-DRTI_WIN32" "-DNDDS_DLL_VARIABLE")
+    set(Connext_DEFINITIONS "RTI_WIN32" "NDDS_DLL_VARIABLE")
     # This will be a .bat file and it will be on the PATH.
     set(Connext_DDSGEN2 "rtiddsgen2.bat")
   else()
-    set(Connext_DEFINITIONS "-DRTI_LINUX" "-DRTI_UNIX")
+    set(Connext_DEFINITIONS "RTI_LINUX" "RTI_UNIX")
     if(EXISTS "${Connext_HOME}/bin/rtiddsgen2")
       set(Connext_DDSGEN2 "${Connext_HOME}/bin/rtiddsgen2")
     else()
