@@ -125,7 +125,9 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
     endif()
     # If this is Darwin, only accept Darwin
     if(APPLE)
-      string(FIND "${_lib}" "Darwin" _found)
+      # Only match binaries for x64Darwin14clang6.0.
+      # As this is the only binary that is known to work.
+      string(FIND "${_lib}" "x64Darwin14clang6.0" _found)
       if(${_found} EQUAL -1)
         set(_match FALSE)
       endif()
