@@ -170,7 +170,8 @@ DDS_TypeCode * create_type_code(
           if (member->string_upper_bound_) {
             max_string_size = member->string_upper_bound_;
           } else {
-            max_string_size = std::string().max_size();
+            // TODO use std::string().max_size() as soon as Connext supports dynamic allocation
+            max_string_size = 1024 * 1024;
           }
           member_type_code = factory->create_string_tc(max_string_size, ex);
         }
