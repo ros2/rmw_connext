@@ -291,17 +291,23 @@ rmw_create_publisher(
   }
 
 
-  DDS_DataWriterQos default_datawriter_qos;
-  status = participant->get_default_datawriter_qos(default_datawriter_qos);
+  DDS_DataWriterQos datawriter_qos;
+  status = participant->get_default_datawriter_qos(datawriter_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default datawriter qos");
     // printf("get_default_datawriter_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
+  // ensure the history depth is at least the requested queue size
+  if (datawriter_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
+    datawriter_qos.history.depth < queue_size
+  ) {
+    datawriter_qos.history.depth = queue_size;
+  }
+
   DDSDataWriter * topic_writer = dds_publisher->create_datawriter(
-    topic, default_datawriter_qos,
-    NULL, DDS_STATUS_MASK_NONE);
+    topic, datawriter_qos, NULL, DDS_STATUS_MASK_NONE);
 
   DDSDynamicDataWriter * dynamic_writer = DDSDynamicDataWriter::narrow(topic_writer);
   if (!dynamic_writer) {
@@ -542,17 +548,23 @@ rmw_create_subscription(const rmw_node_t * node,
   }
 
 
-  DDS_DataReaderQos default_datareader_qos;
-  status = participant->get_default_datareader_qos(default_datareader_qos);
+  DDS_DataReaderQos datareader_qos;
+  status = participant->get_default_datareader_qos(datareader_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default datareader qos");
     // printf("get_default_datareader_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
+  // ensure the history depth is at least the requested queue size
+  if (datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
+    datareader_qos.history.depth < queue_size
+  ) {
+    datareader_qos.history.depth = queue_size;
+  }
+
   DDSDataReader * topic_reader = dds_subscriber->create_datareader(
-    topic, default_datareader_qos,
-    NULL, DDS_STATUS_MASK_NONE);
+    topic, datareader_qos, NULL, DDS_STATUS_MASK_NONE);
 
   DDSDynamicDataReader * dynamic_reader = DDSDynamicDataReader::narrow(topic_reader);
   if (!dynamic_reader) {
