@@ -197,9 +197,12 @@ rmw_create_publisher(
   }
 
   // ensure the history depth is at least the requested queue size
-  if (datawriter_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    datawriter_qos.history.depth < queue_size
-  ) {
+  // *INDENT-OFF*
+  if (
+    datawriter_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
+    datawriter_qos.history.depth < queue_size)
+  // *INDENT-ON*
+  {
     datawriter_qos.history.depth = queue_size;
   }
 
@@ -315,9 +318,12 @@ rmw_create_subscription(const rmw_node_t * node,
   }
 
   // ensure the history depth is at least the requested queue size
-  if (datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    datareader_qos.history.depth < queue_size
-  ) {
+  // *INDENT-OFF*
+  if (
+    datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
+    datareader_qos.history.depth < queue_size)
+  // *INDENT-ON*
+  {
     datareader_qos.history.depth = queue_size;
   }
 
