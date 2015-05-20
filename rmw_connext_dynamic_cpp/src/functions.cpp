@@ -189,6 +189,13 @@ DDS_TypeCode * create_type_code(
         printf("unknown type id %u\n", member->type_id_);
         throw std::runtime_error("unknown type");
     }
+    if (member->is_array_) {
+      if (member->is_upper_bound_) {
+        member_type_code = factory->create_sequence_tc(member->array_size_, member_type_code, ex);
+      } else {
+        member_type_code = factory->create_array_tc(member->array_size_, member_type_code, ex);
+      }
+    }
     type_code->add_member((std::string(
         member->name_) + "_").c_str(), DDS_TYPECODE_MEMBER_ID_INVALID,
       member_type_code,
@@ -343,29 +350,107 @@ rmw_create_publisher(
   return publisher;
 }
 
-#define SET_VALUE(TYPE, METHOD_NAME) \
+#define SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
+  TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
+  DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
+    (std::string(member->name_) + "_").c_str(), \
+    DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+    value); \
+  if (status != DDS_RETCODE_OK) { \
+    printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+    throw std::runtime_error("set member failed"); \
+  }
+
+#define SET_VALUE(TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
   { \
-    TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
-    DDS_ReturnCode_t status = dynamic_data->METHOD_NAME((std::string( \
-          member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
-        value); \
-    if (status != DDS_RETCODE_OK) { \
-      printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-      throw std::runtime_error("set member failed"); \
+    if (member->is_array_) { \
+      if (member->is_upper_bound_) { \
+        printf(#METHOD_NAME "(%s) failed.\n", member->name_); \
+        throw std::runtime_error("set sequence member failed"); \
+      } else { \
+        TYPE * values = (TYPE *)((char *)ros_message + member->offset_); \
+        DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
+          (std::string(member->name_) + "_").c_str(), \
+          DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+          member->array_size_, \
+          values); \
+        if (status != DDS_RETCODE_OK) { \
+          printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+          throw std::runtime_error("set array member failed"); \
+        } \
+      } \
+    } else { \
+      SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
     } \
   }
 
-#define SET_VALUE_WITH_SUFFIX(TYPE, METHOD_NAME, SUFFIX) \
+#define SET_VALUE_WITH_DIFFERENT_TYPES(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
   { \
-    TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
-    DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
-      (std::string(member->name_) + "_").c_str(), \
-      DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
-      value SUFFIX); \
-    if (status != DDS_RETCODE_OK) { \
-      printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-      throw std::runtime_error("set member failed"); \
+    if (member->is_array_) { \
+      if (member->is_upper_bound_) { \
+        printf(#METHOD_NAME "(%s) failed\n", member->name_); \
+        throw std::runtime_error("set sequence member failed"); \
+      } else { \
+        TYPE * ros_values = (TYPE *)((char *)ros_message + member->offset_); \
+        DDS_TYPE * values = new DDS_TYPE[member->array_size_]; \
+        for (size_t i = 0; i < member->array_size_; ++i) { \
+          values[i] = ros_values[i]; \
+        } \
+        DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
+          (std::string(member->name_) + "_").c_str(), \
+          DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+          member->array_size_, \
+          values); \
+        delete[] values; \
+        if (status != DDS_RETCODE_OK) { \
+          printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+          throw std::runtime_error("set array member failed"); \
+        } \
+      } \
+    } else { \
+      SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
+    } \
+  }
+
+#define SET_STRING_VALUE(TYPE, METHOD_NAME) \
+  { \
+    if (member->is_array_) { \
+      if (member->is_upper_bound_) { \
+        printf(#METHOD_NAME "(%s) failed.\n", member->name_); \
+        throw std::runtime_error("set sequence member failed"); \
+      } else { \
+        DDS_DynamicDataProperty_t dd_property; \
+        DDS_DynamicData dynamic_data_member(NULL, dd_property); \
+        DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
+          dynamic_data_member, \
+          (std::string(member->name_) + "_").c_str(), \
+          DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        if (status != DDS_RETCODE_OK) { \
+          printf("bind_complex_member(%s) failed. Status = %d\n", member->name_, status); \
+          throw std::runtime_error("set array member failed"); \
+        } \
+        TYPE * values = (TYPE *)((char *)ros_message + member->offset_); \
+        for (size_t i = 0; i < member->array_size_; ++i) { \
+          status = dynamic_data_member.METHOD_NAME( \
+            NULL, \
+            i + 1, \
+            values[i].c_str()); \
+          if (status != DDS_RETCODE_OK) { \
+            printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+            throw std::runtime_error("set array member failed"); \
+          } \
+        } \
+      } \
+    } else { \
+      TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
+      DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
+        (std::string(member->name_) + "_").c_str(), \
+        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+        value.c_str()); \
+      if (status != DDS_RETCODE_OK) { \
+        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+        throw std::runtime_error("set member failed"); \
+      } \
     } \
   }
 
@@ -378,46 +463,46 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     switch (member->type_id_) {
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-        SET_VALUE(bool, set_boolean)
+        SET_VALUE_WITH_DIFFERENT_TYPES(bool, DDS_Boolean, set_boolean, set_boolean_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
-        SET_VALUE(uint8_t, set_octet)
+        SET_VALUE(uint8_t, set_octet, set_octet_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
-        SET_VALUE(char, set_char)
+        SET_VALUE(char, set_char, set_char_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-        SET_VALUE(float, set_float)
+        SET_VALUE(float, set_float, set_float_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-        SET_VALUE(double, set_double)
+        SET_VALUE(double, set_double, set_double_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-        SET_VALUE(int8_t, set_octet)
+        SET_VALUE_WITH_DIFFERENT_TYPES(int8_t, DDS_Octet, set_octet, set_octet_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-        SET_VALUE(uint8_t, set_octet)
+        SET_VALUE(uint8_t, set_octet, set_octet_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-        SET_VALUE(int16_t, set_short)
+        SET_VALUE(int16_t, set_short, set_short_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-        SET_VALUE(uint16_t, set_ushort)
+        SET_VALUE(uint16_t, set_ushort, set_ushort_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-        SET_VALUE(int32_t, set_long)
+        SET_VALUE(int32_t, set_long, set_long_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-        SET_VALUE(uint32_t, set_ulong)
+        SET_VALUE(uint32_t, set_ulong, set_ulong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-        SET_VALUE(int64_t, set_longlong)
+        SET_VALUE_WITH_DIFFERENT_TYPES(int64_t, DDS_LongLong, set_longlong, set_longlong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-        SET_VALUE(uint64_t, set_ulonglong)
+        SET_VALUE_WITH_DIFFERENT_TYPES(uint64_t, DDS_UnsignedLongLong, set_ulonglong, set_ulonglong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-        SET_VALUE_WITH_SUFFIX(std::string, set_string, .c_str())
+        SET_STRING_VALUE(std::string, set_string)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
@@ -602,36 +687,127 @@ rmw_create_subscription(const rmw_node_t * node,
   return subscription;
 }
 
-#define GET_VALUE(TYPE, METHOD_NAME) \
+#define GET_VALUE(TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
   { \
-    TYPE value; \
-    DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
-      value, \
-      (std::string(member->name_) + "_").c_str(), \
-      DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
-    if (status != DDS_RETCODE_OK) { \
-      printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-      throw std::runtime_error("get member failed"); \
+    if (member->is_array_) { \
+      if (member->is_upper_bound_) { \
+        printf(#METHOD_NAME "(%s) failed.\n", member->name_); \
+        throw std::runtime_error("get sequence member failed"); \
+      } else { \
+        TYPE * values = (TYPE *)((char *)ros_message + member->offset_); \
+        DDS_UnsignedLong length = member->array_size_; \
+        DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
+          values, \
+          &length, \
+          (std::string(member->name_) + "_").c_str(), \
+          DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        if (status != DDS_RETCODE_OK) { \
+          printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+          throw std::runtime_error("get array member failed"); \
+        } \
+      } \
+    } else { \
+      TYPE * value = (TYPE *)((char *)ros_message + member->offset_); \
+      DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
+        *value, \
+        (std::string(member->name_) + "_").c_str(), \
+        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+      if (status != DDS_RETCODE_OK) { \
+        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+        throw std::runtime_error("get member failed"); \
+      } \
     } \
-    TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
-    *ros_value = value; \
   }
 
-#define GET_VALUE_WITH_DIFFERENT_TYPES(TYPE, DDS_TYPE, METHOD_NAME) \
+#define GET_VALUE_WITH_DIFFERENT_TYPES(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
   { \
-    DDS_TYPE value; \
-    DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
-      value, \
-      (std::string(member->name_) + "_").c_str(), \
-      DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
-    if (status != DDS_RETCODE_OK) { \
-      printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-      throw std::runtime_error("get member failed"); \
+    if (member->is_array_) { \
+      if (member->is_upper_bound_) { \
+        printf(#METHOD_NAME "(%s) failed.\n", member->name_); \
+        throw std::runtime_error("get sequence member failed"); \
+      } else { \
+        DDS_TYPE * values = new DDS_TYPE[member->array_size_]; \
+        DDS_UnsignedLong length = member->array_size_; \
+        DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
+          values, \
+          &length, \
+          (std::string(member->name_) + "_").c_str(), \
+          DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        if (status != DDS_RETCODE_OK) { \
+          delete[] values; \
+          printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+          throw std::runtime_error("get array member failed"); \
+        } \
+        TYPE * ros_values = (TYPE *)((char *)ros_message + member->offset_); \
+        for (size_t i = 0; i < member->array_size_; ++i) { \
+          ros_values[i] = values[i]; \
+        } \
+        delete[] values; \
+      } \
+    } else { \
+      DDS_TYPE value; \
+      DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
+        value, \
+        (std::string(member->name_) + "_").c_str(), \
+        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+      if (status != DDS_RETCODE_OK) { \
+        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+        throw std::runtime_error("get member failed"); \
+      } \
+      TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
+      *ros_value = value; \
     } \
-    TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
-    *ros_value = value; \
   }
 
+#define GET_STRING_VALUE(TYPE, METHOD_NAME) \
+  { \
+    if (member->is_array_) { \
+      if (member->is_upper_bound_) { \
+        printf(#METHOD_NAME "(%s) failed.\n", member->name_); \
+        throw std::runtime_error("get sequence member failed"); \
+      } else { \
+        DDS_DynamicDataProperty_t dd_property; \
+        DDS_DynamicData dynamic_data_member(NULL, dd_property); \
+        DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
+          dynamic_data_member, \
+          (std::string(member->name_) + "_").c_str(), \
+          DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        if (status != DDS_RETCODE_OK) { \
+          printf("bind_complex_member(%s) failed. Status = %d\n", member->name_, status); \
+          throw std::runtime_error("get array member failed"); \
+        } \
+        TYPE * ros_values = (TYPE *)((char *)ros_message + member->offset_); \
+        for (size_t i = 0; i < member->array_size_; ++i) { \
+          char * value = 0; \
+          DDS_UnsignedLong size; \
+          status = dynamic_data_member.METHOD_NAME( \
+            value, &size, \
+            NULL, \
+            i + 1); \
+          if (status != DDS_RETCODE_OK) { \
+            printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+            throw std::runtime_error("get member failed"); \
+          } \
+          ros_values[i] = value; \
+          delete[] value; \
+        } \
+      } \
+    } else { \
+      char * value = 0; \
+      DDS_UnsignedLong size; \
+      DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
+        value, &size, \
+        (std::string(member->name_) + "_").c_str(), \
+        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+      if (status != DDS_RETCODE_OK) { \
+        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
+        throw std::runtime_error("get member failed"); \
+      } \
+      TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
+      *ros_value = value; \
+      delete[] value; \
+    } \
+  }
 void _take(DDS_DynamicData * dynamic_data, void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
@@ -641,60 +817,46 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message,
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     switch (member->type_id_) {
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-        GET_VALUE_WITH_DIFFERENT_TYPES(bool, DDS_Boolean, get_boolean)
+        GET_VALUE_WITH_DIFFERENT_TYPES(bool, DDS_Boolean, get_boolean, get_boolean_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
-        GET_VALUE(uint8_t, get_octet)
+        GET_VALUE(uint8_t, get_octet, get_octet_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
-        GET_VALUE(char, get_char)
+        GET_VALUE(char, get_char, get_char_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-        GET_VALUE(float, get_float)
+        GET_VALUE(float, get_float, get_float_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-        GET_VALUE(double, get_double)
+        GET_VALUE(double, get_double, get_double_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-        GET_VALUE_WITH_DIFFERENT_TYPES(int8_t, DDS_Octet, get_octet)
+        GET_VALUE_WITH_DIFFERENT_TYPES(int8_t, DDS_Octet, get_octet, get_octet_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-        GET_VALUE(uint8_t, get_octet)
+        GET_VALUE(uint8_t, get_octet, get_octet_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-        GET_VALUE(int16_t, get_short)
+        GET_VALUE(int16_t, get_short, get_short_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-        GET_VALUE(uint16_t, get_ushort)
+        GET_VALUE(uint16_t, get_ushort, get_ushort_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-        GET_VALUE(int32_t, get_long)
+        GET_VALUE(int32_t, get_long, get_long_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-        GET_VALUE(uint32_t, get_ulong)
+        GET_VALUE(uint32_t, get_ulong, get_ulong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-        GET_VALUE_WITH_DIFFERENT_TYPES(int64_t, DDS_LongLong, get_longlong)
+        GET_VALUE_WITH_DIFFERENT_TYPES(int64_t, DDS_LongLong, get_longlong, get_longlong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-        GET_VALUE_WITH_DIFFERENT_TYPES(uint64_t, DDS_UnsignedLongLong, get_ulonglong)
+        GET_VALUE_WITH_DIFFERENT_TYPES(uint64_t, DDS_UnsignedLongLong, get_ulonglong, get_ulonglong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-        {
-          char * value = 0;
-          DDS_UnsignedLong size;
-          DDS_ReturnCode_t status = dynamic_data->get_string(
-            value, &size,
-            (std::string(member->name_) + "_").c_str(),
-            DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
-          if (status != DDS_RETCODE_OK) {
-            printf("get_string(%s) failed. Status = %d\n", member->name_, status);
-            throw std::runtime_error("get member failed");
-          }
-          std::string * ros_value = (std::string *)((char *)ros_message + member->offset_);
-          *ros_value = value;
-          delete[] value;
-        }
+        GET_STRING_VALUE(std::string, get_string)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
