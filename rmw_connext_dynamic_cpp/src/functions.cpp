@@ -194,6 +194,15 @@ DDS_TypeCode * create_type_code(
       member_type_code,
       DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
   }
+  // since empty message definitions are not supported
+  // we have to add the same dummy field as in rosidl_generator_dds_idl
+  if (members->member_count_ == 0) {
+    const DDS_TypeCode * member_type_code;
+    member_type_code = factory->get_primitive_tc(DDS_TK_BOOLEAN);
+    type_code->add_member("_dummy", DDS_TYPECODE_MEMBER_ID_INVALID,
+      member_type_code,
+      DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
+  }
   type_code->print_IDL(1, ex);
   DDS_StructMemberSeq_finalize(&struct_members);
   return type_code;
@@ -364,7 +373,6 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
   //DDS_DynamicData * dynamic_data = ddts->create_data();
   for (unsigned long i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
-    DDS_TypeCode * member_type_code;
     switch (member->type_id_) {
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
         SET_VALUE(bool, set_boolean)
