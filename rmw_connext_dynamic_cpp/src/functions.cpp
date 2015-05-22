@@ -547,7 +547,8 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
         SET_VALUE_WITH_DIFFERENT_TYPES(int64_t, DDS_LongLong, set_longlong, set_longlong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-        SET_VALUE_WITH_DIFFERENT_TYPES(uint64_t, DDS_UnsignedLongLong, set_ulonglong, set_ulonglong_array)
+        SET_VALUE_WITH_DIFFERENT_TYPES(
+          uint64_t, DDS_UnsignedLongLong, set_ulonglong, set_ulonglong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         SET_STRING_VALUE(std::string, set_string)
@@ -982,7 +983,8 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message,
         GET_VALUE_WITH_DIFFERENT_TYPES(int64_t, DDS_LongLong, get_longlong, get_longlong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-        GET_VALUE_WITH_DIFFERENT_TYPES(uint64_t, DDS_UnsignedLongLong, get_ulonglong, get_ulonglong_array)
+        GET_VALUE_WITH_DIFFERENT_TYPES(
+          uint64_t, DDS_UnsignedLongLong, get_ulonglong, get_ulonglong_array)
         break;
       case::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         GET_STRING_VALUE(std::string, get_string)
