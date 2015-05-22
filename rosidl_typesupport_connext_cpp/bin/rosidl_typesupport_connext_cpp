@@ -3,6 +3,8 @@
 import argparse
 import sys
 
+from rosidl_cmake import extract_message_types
+from rosidl_parser import UnknownMessageType
 from rosidl_typesupport_connext_cpp import generate_cpp
 from rosidl_typesupport_connext_cpp import generate_dds_connext_cpp
 from rosidl_typesupport_connext_cpp import parse_ros_interface_files
@@ -50,7 +52,23 @@ def main(argv=sys.argv[1:]):
         args.pkg_name,
         args.ros_interface_files)
 
-    rc = generate_dds_connext_cpp(
+    known_msg_types = extract_message_types(args.pkg_name, args.ros_interface_files, args.deps)
+
+    try:
+        rc = generate_cpp(
+            args.pkg_name,
+            message_specs,
+            service_specs,
+            known_msg_types,
+            args.output_dir,
+            args.template_dir,
+        )
+    except UnknownMessageType as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    if rc:
+        return rc
+    return generate_dds_connext_cpp(
         args.pkg_name,
         args.dds_interface_files,
         args.dds_interface_base_path,
@@ -59,15 +77,6 @@ def main(argv=sys.argv[1:]):
         args.idl_pp,
         message_specs,
         service_specs,
-    )
-    if rc:
-        return rc
-    return generate_cpp(
-        args.pkg_name,
-        message_specs,
-        service_specs,
-        args.output_dir,
-        args.template_dir,
     )
 
 
