@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
