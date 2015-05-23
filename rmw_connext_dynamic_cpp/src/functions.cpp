@@ -125,46 +125,46 @@ DDS_TypeCode * create_type_code(
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     const DDS_TypeCode * member_type_code;
     switch (member->type_id_) {
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
         member_type_code = factory->get_primitive_tc(DDS_TK_BOOLEAN);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
         member_type_code = factory->get_primitive_tc(DDS_TK_OCTET);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
         member_type_code = factory->get_primitive_tc(DDS_TK_CHAR);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
         member_type_code = factory->get_primitive_tc(DDS_TK_FLOAT);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
         member_type_code = factory->get_primitive_tc(DDS_TK_DOUBLE);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
         member_type_code = factory->get_primitive_tc(DDS_TK_OCTET);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
         member_type_code = factory->get_primitive_tc(DDS_TK_OCTET);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
         member_type_code = factory->get_primitive_tc(DDS_TK_SHORT);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
         member_type_code = factory->get_primitive_tc(DDS_TK_USHORT);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
         member_type_code = factory->get_primitive_tc(DDS_TK_LONG);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
         member_type_code = factory->get_primitive_tc(DDS_TK_ULONG);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
         member_type_code = factory->get_primitive_tc(DDS_TK_LONGLONG);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
         member_type_code = factory->get_primitive_tc(DDS_TK_ULONGLONG);
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         {
           DDS_UnsignedLong max_string_size;
           if (member->string_upper_bound_) {
@@ -176,7 +176,7 @@ DDS_TypeCode * create_type_code(
           member_type_code = factory->create_string_tc(max_string_size, ex);
         }
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
             (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
@@ -201,8 +201,9 @@ DDS_TypeCode * create_type_code(
         }
       }
     }
-    type_code->add_member((std::string(
-        member->name_) + "_").c_str(), DDS_TYPECODE_MEMBER_ID_INVALID,
+    type_code->add_member(
+      (std::string(member->name_) + "_").c_str(),
+      DDS_TYPECODE_MEMBER_ID_INVALID,
       member_type_code,
       DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
   }
@@ -510,50 +511,50 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
   for (unsigned long i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     switch (member->type_id_) {
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
         SET_VALUE_WITH_BOOL_TYPE(bool, DDS_Boolean, set_boolean, set_boolean_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
         SET_VALUE(uint8_t, set_octet, set_octet_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
         SET_VALUE(char, set_char, set_char_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
         SET_VALUE(float, set_float, set_float_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
         SET_VALUE(double, set_double, set_double_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
         SET_VALUE_WITH_DIFFERENT_TYPES(int8_t, DDS_Octet, set_octet, set_octet_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
         SET_VALUE(uint8_t, set_octet, set_octet_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
         SET_VALUE(int16_t, set_short, set_short_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
         SET_VALUE(uint16_t, set_ushort, set_ushort_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
         SET_VALUE(int32_t, set_long, set_long_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
         SET_VALUE(uint32_t, set_ulong, set_ulong_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
         SET_VALUE_WITH_DIFFERENT_TYPES(int64_t, DDS_LongLong, set_longlong, set_longlong_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
         SET_VALUE_WITH_DIFFERENT_TYPES(
           uint64_t, DDS_UnsignedLongLong, set_ulonglong, set_ulonglong_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         SET_STRING_VALUE(std::string, set_string)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
           dynamic_data->bind_complex_member(
@@ -946,50 +947,50 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message,
   for (unsigned long i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     switch (member->type_id_) {
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
         GET_VALUE_WITH_BOOL_TYPE(bool, DDS_Boolean, get_boolean, get_boolean_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
         GET_VALUE(uint8_t, get_octet, get_octet_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
         GET_VALUE(char, get_char, get_char_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
         GET_VALUE(float, get_float, get_float_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
         GET_VALUE(double, get_double, get_double_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
         GET_VALUE_WITH_DIFFERENT_TYPES(int8_t, DDS_Octet, get_octet, get_octet_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
         GET_VALUE(uint8_t, get_octet, get_octet_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
         GET_VALUE(int16_t, get_short, get_short_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
         GET_VALUE(uint16_t, get_ushort, get_ushort_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
         GET_VALUE(int32_t, get_long, get_long_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
         GET_VALUE(uint32_t, get_ulong, get_ulong_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
         GET_VALUE_WITH_DIFFERENT_TYPES(int64_t, DDS_LongLong, get_longlong, get_longlong_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
         GET_VALUE_WITH_DIFFERENT_TYPES(
           uint64_t, DDS_UnsignedLongLong, get_ulonglong, get_ulonglong_array)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         GET_STRING_VALUE(std::string, get_string)
         break;
-      case::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
+      case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
           dynamic_data->bind_complex_member(
