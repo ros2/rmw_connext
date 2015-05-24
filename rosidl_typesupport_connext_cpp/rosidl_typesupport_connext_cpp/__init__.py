@@ -19,7 +19,9 @@ import re
 import subprocess
 
 from rosidl_generator_dds_idl import MSG_TYPE_TO_IDL
-from rosidl_parser import parse_message_file, parse_service_file
+from rosidl_parser import parse_message_file
+from rosidl_parser import parse_service_file
+from rosidl_parser import validate_field_types
 
 
 def parse_ros_interface_files(pkg_name, ros_interface_files):
@@ -251,7 +253,9 @@ def _get_dds_type(fields, field_name):
         return '%s::dds_::%s_' % (field.type.pkg_name, field.type.type)
 
 
-def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_dir):
+def generate_cpp(
+    pkg_name, message_specs, service_specs, known_msg_types, output_dir, template_dir
+):
     mapping_msgs = {
         os.path.join(template_dir, 'msg_TypeSupport.h.template'): '%s_TypeSupport.h',
         os.path.join(template_dir, 'msg_TypeSupport.cpp.template'): '%s_TypeSupport.cpp',
@@ -274,6 +278,7 @@ def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_di
         pass
 
     for spec in message_specs:
+        validate_field_types(spec, known_msg_types)
         for template_file, generated_filename in mapping_msgs.items():
             generated_file = os.path.join(output_dir, generated_filename % spec.base_type.type)
 
@@ -304,6 +309,7 @@ def generate_cpp(pkg_name, message_specs, service_specs, output_dir, template_di
                 h.write(content)
 
     for spec in service_specs:
+        validate_field_types(spec, known_msg_types)
         for template_file, generated_filename in mapping_srvs.items():
             generated_file = os.path.join(output_dir, generated_filename % spec.srv_name)
 
