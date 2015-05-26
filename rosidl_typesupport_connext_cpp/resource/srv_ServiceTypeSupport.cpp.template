@@ -1,19 +1,13 @@
-@###############################################
-@#
-@# ROS message type support code generation for C++
-@#
+// generated from rosidl_typesupport_connext_cpp/resource/srv_ServiceTypeSupport.cpp.template
+
+@#######################################################################
 @# EmPy template for generating <msg>_ServiceTypeSupport.cpp files
-@#
-@###############################################
-@# Start of Template
 @#
 @# Context:
 @#  - spec (rosidl_parser.ServiceSpecification)
 @#    Parsed specification of the .srv file
-@###############################################
-
-#include <iostream>
-
+@#######################################################################
+@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
 #pragma GCC diagnostic ignored "-Wdeprecated-register"
@@ -23,8 +17,8 @@
 #pragma GCC diagnostic pop
 
 #include <rmw/rmw.h>
-// This is defined in the rosidl_typesupport_connext_cpp package and
-// is in the include/rosidl_typesupport_connext_cpp/impl folder.
+// this is defined in the rosidl_typesupport_connext_cpp package and
+// is in the include/rosidl_typesupport_connext_cpp/impl folder
 #include <rosidl_generator_cpp/service_type_support.hpp>
 #include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
