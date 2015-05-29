@@ -59,7 +59,7 @@ register_type__@(spec.base_type.type)(
   @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
   DDS_TypeCode * type_code = @(spec.base_type.pkg_name)::dds_::@(spec.base_type.type)__get_typecode();
   DDS_ExceptionCode_t ex;
-  type_code->print_IDL(1, ex);
+  // type_code->print_IDL(1, ex);
 }
 
 void
