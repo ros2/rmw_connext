@@ -148,7 +148,7 @@ rmw_create_publisher(
 
   const message_type_support_callbacks_t * callbacks = \
     static_cast<const message_type_support_callbacks_t *>(type_support->data);
-  std::string type_name = std::string(callbacks->package_name) + "::dds_::" +
+  std::string type_name = std::string(callbacks->package_name) + "::msg::dds_::" +
     callbacks->message_name + "_";
 
   callbacks->register_type(participant, type_name.c_str());
@@ -272,7 +272,7 @@ rmw_create_subscription(const rmw_node_t * node,
 
   const message_type_support_callbacks_t * callbacks = \
     static_cast<const message_type_support_callbacks_t *>(type_support->data);
-  std::string type_name = std::string(callbacks->package_name) + "::dds_::" +
+  std::string type_name = std::string(callbacks->package_name) + "::msg::dds_::" +
     callbacks->message_name + "_";
 
   callbacks->register_type(participant, type_name.c_str());
