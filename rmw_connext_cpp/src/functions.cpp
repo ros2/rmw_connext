@@ -17,7 +17,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wdeprecated-register"
+#pragma clang diagnostic ignored "-Wdeprecated-register"
 #include <ndds/ndds_cpp.h>
 #include <ndds/ndds_requestreply_cpp.h>
 #pragma GCC diagnostic pop

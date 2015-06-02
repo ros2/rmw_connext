@@ -69,9 +69,9 @@ endforeach()
 # If not on Windows, disable some warnings with Connext's generated code
 if(NOT WIN32)
   set(_connext_compile_flags
-    "-Wno-tautological-compare"
-    "-Wno-return-type-c-linkage"
-    "-Wno-deprecated-register"
+    "-Wno-tautological-compare "
+    "-Wno-return-type-c-linkage "
+    "-Wno-deprecated-register "
   )
   string(REPLACE ";" " " _connext_compile_flags ${_connext_compile_flags})
   foreach(_gen_file ${_generated_msg_files} ${_generated_srv_files})

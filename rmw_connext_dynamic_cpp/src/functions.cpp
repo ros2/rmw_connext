@@ -18,7 +18,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wdeprecated-register"
+#pragma clang diagnostic ignored "-Wdeprecated-register"
 #include <ndds/connext_cpp/connext_cpp_replier_details.h>
 #include <ndds/connext_cpp/connext_cpp_requester_details.h>
 #include <ndds/ndds_cpp.h>
