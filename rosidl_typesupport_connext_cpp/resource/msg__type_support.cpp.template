@@ -66,8 +66,9 @@ register_type__@(spec.base_type.type)(
 {
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
-  DDS_TypeCode * type_code = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)__get_typecode();
-  DDS_ExceptionCode_t ex;
+
+  // DDS_TypeCode * type_code = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)__get_typecode();
+  // DDS_ExceptionCode_t ex;
   // type_code->print_IDL(1, ex);
 }
 
