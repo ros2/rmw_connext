@@ -68,13 +68,13 @@ endforeach()
 
 # If not on Windows, disable some warnings with Connext's generated code
 if(NOT WIN32)
-  if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(_connext_compile_flags
       "-Wno-tautological-compare "
       "-Wno-return-type-c-linkage "
       "-Wno-deprecated-register "
     )
-  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_connext_compile_flags
       "-Wno-unused-variable "
       "-Wno-unused-but-set-variable "
