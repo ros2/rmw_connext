@@ -1,11 +1,12 @@
-// generated from rosidl_typesupport_connext_cpp/resource/srv_ServiceTypeSupport.cpp.template
+// generated from rosidl_typesupport_connext_cpp/resource/srv__type_support.cpp.template
 
 @#######################################################################
-@# EmPy template for generating <msg>_ServiceTypeSupport.cpp files
+@# EmPy template for generating <srv>__type_support.cpp files
 @#
 @# Context:
 @#  - spec (rosidl_parser.ServiceSpecification)
 @#    Parsed specification of the .srv file
+@#  - get_header_filename_from_msg_name (function)
 @#######################################################################
 @
 #pragma GCC diagnostic push
@@ -20,15 +21,15 @@
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
 #include <rosidl_generator_cpp/service_type_support.hpp>
-#include <rosidl_typesupport_connext_cpp/visibility_control.h>
-
-#include "@(spec.pkg_name)/@(spec.srv_name)_Service.h"
-#include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Request_Support.h"
-#include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Request_TypeSupport.h"
-#include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Response_Support.h"
-#include "@(spec.pkg_name)/dds_connext/@(spec.srv_name)Response_TypeSupport.h"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
+#include <rosidl_typesupport_connext_cpp/visibility_control.h>
+
+#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__struct.hpp"
+#include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_Support.h"
+#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__type_support.hpp"
+#include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Response_Support.h"
+#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Response'))__type_support.hpp"
 
 class DDSDomainParticipant;
 class DDSDataReader;
@@ -37,7 +38,10 @@ struct DDS_SampleIdentity_t;
 namespace @(spec.pkg_name)
 {
 
-namespace service_type_support
+namespace srv
+{
+
+namespace type_support
 {
 
 void * create_requester__@(spec.srv_name)(
@@ -49,7 +53,7 @@ void * create_requester__@(spec.srv_name)(
   connext::RequesterParams requester_params(participant);
   requester_params.service_name(service_name);
 
-  connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester(new connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_>(requester_params));
+  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester(new connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(requester_params));
 
   *untyped_reader = requester->get_reply_datareader();
   return requester;
@@ -59,12 +63,12 @@ int64_t send_request__@(spec.srv_name)(
   void * untyped_requester,
   const void * untyped_ros_request)
 {
-  connext::WriteSample<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_> request;
-  const @(spec.pkg_name)::@(spec.srv_name)Request & ros_request = *(reinterpret_cast<const @(spec.pkg_name)::@(spec.srv_name)Request *>(untyped_ros_request));
-  @(spec.pkg_name)::type_support::convert_ros_message_to_dds(ros_request, request.data());
+  connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
+  const @(spec.pkg_name)::srv::@(spec.srv_name)_Request & ros_request = *(reinterpret_cast<const @(spec.pkg_name)::srv::@(spec.srv_name)_Request *>(untyped_ros_request));
+  @(spec.pkg_name)::srv::type_support::convert_ros_message_to_dds(ros_request, request.data());
 
 
-  connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_requester);
+  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_requester);
 
   requester->send_request(request);
   int64_t sequence_number = ((int64_t)request.identity().sequence_number.high) << 32 | request.identity().sequence_number.low;
@@ -77,10 +81,10 @@ void * create_replier__@(spec.srv_name)(
   void ** untyped_reader)
 {
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
-  connext::ReplierParams<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> replier_params(participant);
+  connext::ReplierParams<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> replier_params(participant);
   replier_params.service_name(service_name);
 
-  connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * replier(new connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_>(replier_params));
+  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier(new connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(replier_params));
 
   *untyped_reader = replier->get_request_datareader();
   return replier;
@@ -91,16 +95,16 @@ bool take_request__@(spec.srv_name)(
   void * untyped_ros_request_header,
   void * untyped_ros_request)
 {
-  @(spec.pkg_name)::@(spec.srv_name)Request & ros_request = *(@(spec.pkg_name)::@(spec.srv_name)Request *)untyped_ros_request;
+  @(spec.pkg_name)::srv::@(spec.srv_name)_Request & ros_request = *(@(spec.pkg_name)::srv::@(spec.srv_name)_Request *)untyped_ros_request;
   rmw_request_id_t & req_id = *(static_cast<rmw_request_id_t *>(untyped_ros_request_header));
 
-  connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_replier);
+  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_replier);
 
-  connext::Sample<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_> request;
+  connext::Sample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   bool taken = replier->take_request(request);
   if(taken) {
     if(request.info().valid_data) {
-      @(spec.pkg_name)::type_support::convert_dds_message_to_ros(request.data(), ros_request);
+      @(spec.pkg_name)::srv::type_support::convert_dds_message_to_ros(request.data(), ros_request);
 
       size_t SAMPLE_IDENTITY_SIZE = 16;
       memcpy(&req_id.writer_guid[0], request.identity().writer_guid.value, SAMPLE_IDENTITY_SIZE);
@@ -117,10 +121,10 @@ bool take_response__@(spec.srv_name)(
   void * untyped_ros_request_header,
   void * untyped_ros_response)
 {
-  @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(@(spec.pkg_name)::@(spec.srv_name)Response *)untyped_ros_response;
-  connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_requester);
+  @(spec.pkg_name)::srv::@(spec.srv_name)_Response & ros_response = *(@(spec.pkg_name)::srv::@(spec.srv_name)_Response *)untyped_ros_response;
+  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_requester);
 
-  connext::Sample<@(spec.pkg_name)::dds_::@(spec.srv_name)Response_> response;
+  connext::Sample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
   bool received = requester->take_reply(response);
   if(received) {
     if(response.info().valid_data) {
@@ -131,7 +135,7 @@ bool take_response__@(spec.srv_name)(
         response.related_identity().sequence_number.low;
       req_id.sequence_number = sequence_number;
 
-      @(spec.pkg_name)::type_support::convert_dds_message_to_ros(response.data(), ros_response);
+      @(spec.pkg_name)::srv::type_support::convert_dds_message_to_ros(response.data(), ros_response);
       return true;
     }
   }
@@ -142,9 +146,9 @@ void send_response__@(spec.srv_name)(
   void * untyped_replier, const void * untyped_ros_request_header,
   const void * untyped_ros_response)
 {
-  connext::WriteSample<@(spec.pkg_name)::dds_::@(spec.srv_name)Response_> response;
-  const @(spec.pkg_name)::@(spec.srv_name)Response & ros_response = *(reinterpret_cast<const @(spec.pkg_name)::@(spec.srv_name)Response *>(untyped_ros_response));
-  @(spec.pkg_name)::type_support::convert_ros_message_to_dds(ros_response, response.data());
+  connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
+  const @(spec.pkg_name)::srv::@(spec.srv_name)_Response & ros_response = *(reinterpret_cast<const @(spec.pkg_name)::srv::@(spec.srv_name)_Response *>(untyped_ros_response));
+  @(spec.pkg_name)::srv::type_support::convert_ros_message_to_dds(ros_response, response.data());
 
   const rmw_request_id_t & req_id = *(reinterpret_cast<const rmw_request_id_t *>(untyped_ros_request_header));
 
@@ -156,7 +160,7 @@ void send_response__@(spec.srv_name)(
   request_identity.sequence_number.high = (int32_t)((req_id.sequence_number & 0xFFFFFFFF00000000) >> 32);
   request_identity.sequence_number.low = (uint32_t)(req_id.sequence_number & 0xFFFFFFFF);
 
-  connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::dds_::@(spec.srv_name)Request_, @(spec.pkg_name)::dds_::@(spec.srv_name)Response_> *>(untyped_replier);
+  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_replier);
 
   replier->send_reply(response, request_identity);
 }
@@ -177,7 +181,9 @@ static rosidl_service_type_support_t handle = {
   &callbacks
 };
 
-}  // namespace service_type_support
+}  // namespace type_support
+
+}  // namespace srv
 
 }  // namespace @(spec.pkg_name)
 
@@ -187,9 +193,9 @@ namespace rosidl_typesupport_connext_cpp
 template<>
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
 const rosidl_service_type_support_t *
-get_service_type_support_handle_connext<@(spec.pkg_name)::@(spec.srv_name)>()
+get_service_type_support_handle_connext<@(spec.pkg_name)::srv::@(spec.srv_name)>()
 {
-  return &@(spec.pkg_name)::service_type_support::handle;
+  return &@(spec.pkg_name)::srv::type_support::handle;
 }
 
 }  // namespace rosidl_typesupport_connext_cpp

@@ -180,7 +180,7 @@ DDS_TypeCode * create_type_code(
         {
           const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
             (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
-          std::string field_type_name = std::string(sub_members->package_name_) + "::dds_::" +
+          std::string field_type_name = std::string(sub_members->package_name_) + "::msg::dds_::" +
             sub_members->message_name_ + "_";
           member_type_code = create_type_code(field_type_name, sub_members, participant_qos);
         }
@@ -256,7 +256,7 @@ rmw_create_publisher(
 
   const rosidl_typesupport_introspection_cpp::MessageMembers * members =
     (rosidl_typesupport_introspection_cpp::MessageMembers *)type_support->data;
-  std::string type_name = std::string(members->package_name_) + "::dds_::" +
+  std::string type_name = std::string(members->package_name_) + "::msg::dds_::" +
     members->message_name_ + "_";
 
   DDS_DomainParticipantQos participant_qos;
@@ -639,7 +639,7 @@ rmw_create_subscription(const rmw_node_t * node,
 
   const rosidl_typesupport_introspection_cpp::MessageMembers * members =
     (rosidl_typesupport_introspection_cpp::MessageMembers *)type_support->data;
-  std::string type_name = std::string(members->package_name_) + "::dds_::" +
+  std::string type_name = std::string(members->package_name_) + "::msg::dds_::" +
     members->message_name_ + "_";
 
   DDS_DomainParticipantQos participant_qos;
@@ -1294,9 +1294,9 @@ rmw_create_client(
     service_members->request_members_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * response_members =
     service_members->response_members_;
-  std::string request_type_name = std::string(request_members->package_name_) + "::dds_::" +
+  std::string request_type_name = std::string(request_members->package_name_) + "::srv::dds_::" +
     request_members->message_name_ + "_";
-  std::string response_type_name = std::string(response_members->package_name_) + "::dds_::" +
+  std::string response_type_name = std::string(response_members->package_name_) + "::srv::dds_::" +
     response_members->message_name_ + "_";
 
   DDS_DomainParticipantQos participant_qos;
@@ -1511,9 +1511,9 @@ rmw_create_service(
     service_members->request_members_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * response_members =
     service_members->response_members_;
-  std::string request_type_name = std::string(request_members->package_name_) + "::dds_::" +
+  std::string request_type_name = std::string(request_members->package_name_) + "::srv::dds_::" +
     request_members->message_name_ + "_";
-  std::string response_type_name = std::string(response_members->package_name_) + "::dds_::" +
+  std::string response_type_name = std::string(response_members->package_name_) + "::srv::dds_::" +
     response_members->message_name_ + "_";
 
   DDS_DomainParticipantQos participant_qos;
