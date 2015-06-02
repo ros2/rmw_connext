@@ -70,14 +70,17 @@ endforeach()
 if(NOT WIN32)
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(_connext_compile_flags
-      "-Wno-tautological-compare "
-      "-Wno-return-type-c-linkage "
       "-Wno-deprecated-register "
+      "-Wno-mismatched-tags "
+      "-Wno-return-type-c-linkage "
+      "-Wno-sometimes-uninitialized "
+      "-Wno-tautological-compare "
+      "-Wno-unused-variable "
     )
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_connext_compile_flags
-      "-Wno-unused-variable "
       "-Wno-unused-but-set-variable "
+      "-Wno-unused-variable "
     )
   endif()
   string(REPLACE ";" " " _connext_compile_flags ${_connext_compile_flags})
