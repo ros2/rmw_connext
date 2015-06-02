@@ -21,7 +21,9 @@
 #include "@(spec.base_type.pkg_name)/@(subfolder)/@(get_header_filename_from_msg_name(spec.base_type.type))__struct.hpp"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wall"
-#pragma clang diagnostic ignored "-Wdeprecated-register"
+#ifdef __clang__
+# pragma clang diagnostic ignored "-Wdeprecated-register"
+#endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(get_header_filename_from_msg_name(spec.base_type.type))__type_support.hpp"
 #pragma GCC diagnostic pop
