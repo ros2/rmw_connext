@@ -359,8 +359,8 @@ rmw_create_publisher(
 #define SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
   TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
   DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
-    (std::string(member->name_) + "_").c_str(), \
-    DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+    0, \
+    i + 1, \
     value); \
   if (status != DDS_RETCODE_OK) { \
     printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
@@ -385,8 +385,8 @@ rmw_create_publisher(
     if (member->is_array_) { \
       ARRAY_SIZE_AND_VALUES(TYPE) \
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+        0, \
+        i + 1, \
         array_size, \
         ros_values); \
       if (status != DDS_RETCODE_OK) { \
@@ -410,8 +410,8 @@ rmw_create_publisher(
         } \
       } \
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+        0, \
+        i + 1, \
         array_size, \
         values); \
       if (values) { \
@@ -450,8 +450,8 @@ rmw_create_publisher(
         } \
       } \
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+        0, \
+        i + 1, \
         array_size, \
         values); \
       if (values) { \
@@ -472,8 +472,8 @@ rmw_create_publisher(
       DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
       DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
         dynamic_data_member, \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        0, \
+        i + 1); \
       if (status != DDS_RETCODE_OK) { \
         printf("bind_complex_member(%s) failed. Status = %d\n", member->name_, status); \
         throw std::runtime_error("set array member failed"); \
@@ -493,8 +493,8 @@ rmw_create_publisher(
     } else { \
       TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED, \
+        0, \
+        i + 1, \
         value.c_str()); \
       if (status != DDS_RETCODE_OK) { \
         printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
@@ -559,8 +559,8 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
           DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
           dynamic_data->bind_complex_member(
             sub_dynamic_data,
-            (std::string(member->name_) + "_").c_str(),
-            DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
+            0,
+            i + 1);
           void * sub_ros_message = (void *)((char *)ros_message + member->offset_);
           const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
             (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
@@ -747,8 +747,8 @@ rmw_create_subscription(const rmw_node_t * node,
     DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
     DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
       dynamic_data_member, \
-      (std::string(member->name_) + "_").c_str(), \
-      DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+      0, \
+      i + 1); \
     if (status != DDS_RETCODE_OK) { \
       printf("bind_complex_member(%s) failed. Status = %d\n", member->name_, status); \
       throw std::runtime_error("set array member failed"); \
@@ -777,8 +777,8 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
         ros_values, \
         &length, \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        0, \
+        i + 1); \
       if (status != DDS_RETCODE_OK) { \
         printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
         throw std::runtime_error("get array member failed"); \
@@ -787,8 +787,8 @@ rmw_create_subscription(const rmw_node_t * node,
       TYPE * value = (TYPE *)((char *)ros_message + member->offset_); \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         *value, \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        0, \
+        i + 1); \
       if (status != DDS_RETCODE_OK) { \
         printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
         throw std::runtime_error("get member failed"); \
@@ -807,8 +807,8 @@ rmw_create_subscription(const rmw_node_t * node,
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
           values, \
           &length, \
-          (std::string(member->name_) + "_").c_str(), \
-          DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+          0, \
+          i + 1); \
         if (status != DDS_RETCODE_OK) { \
           delete[] values; \
           printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
@@ -823,8 +823,8 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_TYPE value; \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         value, \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        0, \
+        i + 1); \
       if (status != DDS_RETCODE_OK) { \
         printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
         throw std::runtime_error("get member failed"); \
@@ -844,8 +844,8 @@ rmw_create_subscription(const rmw_node_t * node,
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
           values, \
           &length, \
-          (std::string(member->name_) + "_").c_str(), \
-          DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+          0, \
+          i + 1); \
         if (status != DDS_RETCODE_OK) { \
           delete[] values; \
           printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
@@ -870,8 +870,8 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_TYPE value; \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         value, \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        0, \
+        i + 1); \
       if (status != DDS_RETCODE_OK) { \
         printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
         throw std::runtime_error("get member failed"); \
@@ -889,8 +889,8 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
       DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
         dynamic_data_member, \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        0, \
+        i + 1); \
       if (status != DDS_RETCODE_OK) { \
         printf("bind_complex_member(%s) failed. Status = %d\n", member->name_, status); \
         throw std::runtime_error("get array member failed"); \
@@ -922,8 +922,8 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         value, \
         &size, \
-        (std::string(member->name_) + "_").c_str(), \
-        DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED); \
+        0, \
+        i + 1); \
       if (status != DDS_RETCODE_OK) { \
         if (value) { \
           delete[] value; \
@@ -995,8 +995,8 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message,
           DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
           dynamic_data->bind_complex_member(
             sub_dynamic_data,
-            (std::string(member->name_) + "_").c_str(),
-            DDS_DYNAMIC_DATA_MEMBER_ID_UNSPECIFIED);
+            0,
+            i + 1);
           void * sub_ros_message = (void *)((char *)ros_message + member->offset_);
           const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
             (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
