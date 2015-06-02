@@ -68,26 +68,29 @@ endforeach()
 
 # If not on Windows, disable some warnings with Connext's generated code
 if(NOT WIN32)
+  set(_connext_compile_flags)
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     set(_connext_compile_flags
-      "-Wno-deprecated-register "
-      "-Wno-mismatched-tags "
-      "-Wno-return-type-c-linkage "
-      "-Wno-sometimes-uninitialized "
-      "-Wno-tautological-compare "
-      "-Wno-unused-variable "
+      "-Wno-deprecated-register"
+      "-Wno-mismatched-tags"
+      "-Wno-return-type-c-linkage"
+      "-Wno-sometimes-uninitialized"
+      "-Wno-tautological-compare"
+      "-Wno-unused-variable"
     )
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_connext_compile_flags
-      "-Wno-unused-but-set-variable "
-      "-Wno-unused-variable "
+      "-Wno-unused-but-set-variable"
+      "-Wno-unused-variable"
     )
   endif()
-  string(REPLACE ";" " " _connext_compile_flags ${_connext_compile_flags})
-  foreach(_gen_file ${_generated_msg_files} ${_generated_srv_files})
-    set_source_files_properties("${_gen_file}"
-      PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
-  endforeach()
+  if(NOT "${_opensplice_compile_flags} " STREQUAL " ")
+    string(REPLACE ";" " " _connext_compile_flags "${_connext_compile_flags}")
+    foreach(_gen_file ${_generated_msg_files} ${_generated_srv_files})
+      set_source_files_properties("${_gen_file}"
+        PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
+    endforeach()
+  endif()
 endif()
 
 set(_dependency_files "")
