@@ -191,14 +191,14 @@ DDS_TypeCode * create_type_code(
     }
     if (member->is_array_) {
       if (member->array_size_) {
-        member_type_code = factory->create_array_tc(member->array_size_, member_type_code, ex);
-      } else {
-        if (member->is_upper_bound_) {
-          member_type_code = factory->create_sequence_tc(member->array_size_, member_type_code, ex);
+        if (!member->is_upper_bound_) {
+          member_type_code = factory->create_array_tc(member->array_size_, member_type_code, ex);
         } else {
-          // TODO the default bound of sequences is 100
-          member_type_code = factory->create_sequence_tc(100, member_type_code, ex);
+          member_type_code = factory->create_sequence_tc(member->array_size_, member_type_code, ex);
         }
+      } else {
+        // TODO(dirk-thomas) the default bound of sequences is 100
+        member_type_code = factory->create_sequence_tc(100, member_type_code, ex);
       }
     }
     type_code->add_member(
