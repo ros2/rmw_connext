@@ -43,6 +43,7 @@ endforeach()
 
 set(_output_path "${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp/${PROJECT_NAME}")
 set(_generated_msg_files "")
+set(_generated_external_msg_files "")
 set(_generated_srv_files "")
 foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   get_filename_component(_extension "${_idl_file}" EXT)
@@ -51,12 +52,12 @@ foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   if("${_extension} " STREQUAL ".msg ")
     get_filename_component(_parent_folder "${_idl_file}" DIRECTORY)
     get_filename_component(_parent_folder "${_parent_folder}" NAME)
-    list(APPEND _generated_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_.h")
-    list(APPEND _generated_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_.cxx")
-    list(APPEND _generated_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Plugin.h")
-    list(APPEND _generated_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Plugin.cxx")
-    list(APPEND _generated_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.h")
-    list(APPEND _generated_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.cxx")
+    list(APPEND _generated_external_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_.h")
+    list(APPEND _generated_external_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_.cxx")
+    list(APPEND _generated_external_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Plugin.h")
+    list(APPEND _generated_external_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Plugin.cxx")
+    list(APPEND _generated_external_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.h")
+    list(APPEND _generated_external_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.cxx")
     list(APPEND _generated_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_header_name}__type_support.hpp")
     list(APPEND _generated_msg_files "${_output_path}/${_parent_folder}/dds_connext/${_header_name}__type_support.cpp")
   elseif("${_extension} " STREQUAL ".srv ")
@@ -86,7 +87,7 @@ if(NOT WIN32)
   endif()
   if(NOT "${_opensplice_compile_flags} " STREQUAL " ")
     string(REPLACE ";" " " _connext_compile_flags "${_connext_compile_flags}")
-    foreach(_gen_file ${_generated_msg_files} ${_generated_srv_files})
+    foreach(_gen_file ${_generated_external_msg_files})
       set_source_files_properties("${_gen_file}"
         PROPERTIES COMPILE_FLAGS ${_connext_compile_flags})
     endforeach()
@@ -113,7 +114,7 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
 endforeach()
 
 add_custom_command(
-  OUTPUT ${_generated_msg_files} ${_generated_srv_files}
+  OUTPUT ${_generated_msg_files} ${_generated_external_msg_files} ${_generated_srv_files}
   COMMAND ${PYTHON_EXECUTABLE} ${rosidl_typesupport_connext_cpp_BIN}
   --pkg-name ${PROJECT_NAME}
   --ros-interface-files ${rosidl_generate_interfaces_IDL_FILES}
@@ -143,7 +144,7 @@ endif()
 
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED
-  ${_generated_msg_files} ${_generated_srv_files})
+  ${_generated_msg_files} ${_generated_external_msg_files} ${_generated_srv_files})
 if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "ROSIDL_BUILDING_DLL")
@@ -188,9 +189,9 @@ add_dependencies(
   ${rosidl_generate_interfaces_TARGET}${_target_suffix}
 )
 
-if(NOT "${_generated_msg_files} " STREQUAL " ")
+if(NOT "${_generated_msg_files}${_generated_external_msg_files} " STREQUAL " ")
   install(
-    FILES ${_generated_msg_files}
+    FILES ${_generated_msg_files} ${_generated_external_msg_files}
     DESTINATION "include/${PROJECT_NAME}/msg/dds_connext"
   )
 endif()
