@@ -85,7 +85,7 @@ if(NOT WIN32)
       "-Wno-unused-variable"
     )
   endif()
-  if(NOT "${_opensplice_compile_flags} " STREQUAL " ")
+  if(NOT "${_connext_compile_flags} " STREQUAL " ")
     string(REPLACE ";" " " _connext_compile_flags "${_connext_compile_flags}")
     foreach(_gen_file ${_generated_external_msg_files})
       set_source_files_properties("${_gen_file}"
