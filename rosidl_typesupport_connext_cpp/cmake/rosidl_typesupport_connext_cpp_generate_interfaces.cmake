@@ -159,7 +159,6 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
 endforeach()
 ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   "Connext"
-  "rosidl_generator_cpp"
   "rosidl_typesupport_connext_cpp")
 
 add_dependencies(

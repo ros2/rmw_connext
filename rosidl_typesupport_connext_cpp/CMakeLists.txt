@@ -19,6 +19,8 @@ endif()
 find_package(ament_cmake_python REQUIRED)
 
 ament_export_dependencies(rosidl_cmake)
+ament_export_dependencies(rosidl_generator_c)
+ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_generator_dds_idl)
 # The reason the impl folder is exported is that it contains the implementation
 # for the get_*_type_support_handle functions and defines the connext
