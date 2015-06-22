@@ -60,7 +60,7 @@ rmw_init()
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
-    rmw_set_error_string("  init() could not get participant factory");
+    rmw_set_error_string("failed to get participant factory");
     return RMW_RET_ERROR;
   }
   return RMW_RET_OK;
@@ -71,7 +71,7 @@ rmw_create_node(const char * name)
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
-    rmw_set_error_string("  create_node() could not get participant factory");
+    rmw_set_error_string("failed to get participant factory");
     return NULL;
   }
 
@@ -79,7 +79,7 @@ rmw_create_node(const char * name)
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = dpf_->get_default_participant_qos(participant_qos);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("  create_node() could not get participant qos");
+    rmw_set_error_string("failed to get default participant qos");
     return NULL;
   }
   status = DDSPropertyQosPolicyHelper::add_property(
@@ -88,18 +88,17 @@ rmw_create_node(const char * name)
     "0",
     DDS_BOOLEAN_FALSE);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("  create_node() could not add qos property");
+    rmw_set_error_string("failed to add qos property");
     return NULL;
   }
 
   DDS_DomainId_t domain = 0;
 
   DDSDomainParticipant * participant = dpf_->create_participant(
-    //domain, DDS_PARTICIPANT_QOS_DEFAULT, NULL,
     domain, participant_qos, NULL,
     DDS_STATUS_MASK_NONE);
   if (!participant) {
-    rmw_set_error_string("  create_node() could not create participant");
+    rmw_set_error_string("failed to create participant");
     return NULL;
   }
 
@@ -116,13 +115,17 @@ DDS_TypeCode * create_type_code(
   DDS_TypeCodeFactory * factory = NULL;
   factory = DDS_TypeCodeFactory::get_instance();
   if (!factory) {
-    rmw_set_error_string("  create_type_code() could not get typecode factory");
-    throw std::runtime_error("could not get typecode factory");
+    rmw_set_error_string("failed to get typecode factory");
+    return NULL;
   }
 
   DDS_StructMemberSeq struct_members;
   DDS_ExceptionCode_t ex = DDS_NO_EXCEPTION_CODE;
   DDS_TypeCode * type_code = factory->create_struct_tc(type_name.c_str(), struct_members, ex);
+  if (!type_code || ex != DDS_NO_EXCEPTION_CODE) {
+    rmw_set_error_string("failed to create struct typecode");
+    return NULL;
+  }
   for (unsigned long i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     const DDS_TypeCode * member_type_code;
@@ -177,6 +180,10 @@ DDS_TypeCode * create_type_code(
           }
           member_type_code = factory->create_string_tc(max_string_size, ex);
         }
+        if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
+          rmw_set_error_string("failed to create string typecode");
+          return NULL;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
@@ -185,22 +192,43 @@ DDS_TypeCode * create_type_code(
           std::string field_type_name = std::string(sub_members->package_name_) + "::msg::dds_::" +
             sub_members->message_name_ + "_";
           member_type_code = create_type_code(field_type_name, sub_members, participant_qos);
+          if (!member_type_code) {
+            // error string was set within the function
+            return NULL;
+          }
         }
         break;
       default:
-        printf("unknown type id %u\n", member->type_id_);
-        throw std::runtime_error("unknown type");
+        rmw_set_error_string(
+          (std::string("unknown type id ") + std::to_string(member->type_id_)).c_str());
+        return NULL;
+    }
+    if (!member_type_code) {
+      rmw_set_error_string("failed to create typecode");
+      return NULL;
     }
     if (member->is_array_) {
       if (member->array_size_) {
         if (!member->is_upper_bound_) {
           member_type_code = factory->create_array_tc(member->array_size_, member_type_code, ex);
+          if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
+            rmw_set_error_string("failed to create array typecode");
+            return NULL;
+          }
         } else {
           member_type_code = factory->create_sequence_tc(member->array_size_, member_type_code, ex);
+          if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
+            rmw_set_error_string("failed to create sequence typecode");
+            return NULL;
+          }
         }
       } else {
         // TODO(dirk-thomas) the default bound of sequences is 100
         member_type_code = factory->create_sequence_tc(100, member_type_code, ex);
+        if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
+          rmw_set_error_string("failed to create sequence typecode");
+          return NULL;
+        }
       }
     }
     type_code->add_member(
@@ -208,15 +236,27 @@ DDS_TypeCode * create_type_code(
       DDS_TYPECODE_MEMBER_ID_INVALID,
       member_type_code,
       DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
+    if (ex != DDS_NO_EXCEPTION_CODE) {
+      rmw_set_error_string("failed to add member");
+      return NULL;
+    }
   }
   // since empty message definitions are not supported
   // we have to add the same dummy field as in rosidl_generator_dds_idl
   if (members->member_count_ == 0) {
     const DDS_TypeCode * member_type_code;
     member_type_code = factory->get_primitive_tc(DDS_TK_BOOLEAN);
+    if (!member_type_code) {
+      rmw_set_error_string("failed to get primitive typecode");
+      return NULL;
+    }
     type_code->add_member("_dummy", DDS_TYPECODE_MEMBER_ID_INVALID,
       member_type_code,
       DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
+    if (ex != DDS_NO_EXCEPTION_CODE) {
+      rmw_set_error_string("failed to add member");
+      return NULL;
+    }
   }
   //type_code->print_IDL(1, ex);
   DDS_StructMemberSeq_finalize(&struct_members);
@@ -240,24 +280,37 @@ rmw_create_publisher(
   const char * topic_name,
   size_t queue_size)
 {
+  if (!node) {
+    rmw_set_error_string("node handle is null");
+    return NULL;
+  }
   if (node->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("node handle not from this implementation");
-    // printf("but from: %s\n", node->implementation_identifier);
+    rmw_set_error_string("node handle is not from this rmw implementation");
+    return NULL;
+  }
+  if (!type_support) {
+    rmw_set_error_string("type support handle is null");
+    return NULL;
+  }
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+  {
+    rmw_set_error_string("type support is not from this rmw implementation");
     return NULL;
   }
 
   DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
-
-  if (type_support->typesupport_identifier !=
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
-  {
-    rmw_set_error_string("type support not from this implementation");
-    // printf("but from: %s\n", type_support->typesupport_identifier);
+  if (!participant) {
+    rmw_set_error_string("participant handle is null");
     return NULL;
   }
 
   const rosidl_typesupport_introspection_cpp::MessageMembers * members =
     (rosidl_typesupport_introspection_cpp::MessageMembers *)type_support->data;
+  if (!members) {
+    rmw_set_error_string("members handle is null");
+    return NULL;
+  }
   std::string type_name = std::string(members->package_name_) + "::msg::dds_::" +
     members->message_name_ + "_";
 
@@ -265,11 +318,14 @@ rmw_create_publisher(
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get participant qos");
-    // printf("get_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
   DDS_TypeCode * type_code = create_type_code(type_name, members, participant_qos);
+  if (!type_code) {
+    // error string was set within the function
+    return NULL;
+  }
 
 
   DDSDynamicDataTypeSupport * ddts = new DDSDynamicDataTypeSupport(
@@ -277,7 +333,6 @@ rmw_create_publisher(
   status = ddts->register_type(participant, type_name.c_str());
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to register type");
-    // printf("register_type() failed. Status = %d\n", status);
     return NULL;
   }
 
@@ -286,33 +341,40 @@ rmw_create_publisher(
   status = participant->get_default_publisher_qos(publisher_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default publisher qos");
-    // printf("get_default_publisher_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
   DDSPublisher * dds_publisher = participant->create_publisher(
     publisher_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!dds_publisher) {
-    rmw_set_error_string("  create_publisher() could not create publisher");
+    rmw_set_error_string("failed to create publisher");
     return NULL;
   }
 
 
-  DDS_TopicQos default_topic_qos;
-  status = participant->get_default_topic_qos(default_topic_qos);
-  if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default topic qos");
-    // printf("get_default_topic_qos() failed. Status = %d\n", status);
-    return NULL;
-  }
+  DDSTopic * topic;
+  DDSTopicDescription * topic_description = participant->lookup_topicdescription(topic_name);
+  if (!topic_description) {
+    DDS_TopicQos default_topic_qos;
+    status = participant->get_default_topic_qos(default_topic_qos);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to get default topic qos");
+      return NULL;
+    }
 
-  DDSTopic * topic = participant->create_topic(
-    topic_name, type_name.c_str(), default_topic_qos, NULL,
-    DDS_STATUS_MASK_NONE
-    );
-  if (!topic) {
-    rmw_set_error_string("  create_topic() could not create topic");
-    return NULL;
+    topic = participant->create_topic(
+      topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
+    if (!topic) {
+      rmw_set_error_string("failed to create topic");
+      return NULL;
+    }
+  } else {
+    DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
+    topic = participant->find_topic(topic_name, timeout);
+    if (!topic) {
+      rmw_set_error_string("failed to find topic");
+      return NULL;
+    }
   }
 
 
@@ -320,7 +382,6 @@ rmw_create_publisher(
   status = participant->get_default_datawriter_qos(datawriter_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default datawriter qos");
-    // printf("get_default_datawriter_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
@@ -336,14 +397,22 @@ rmw_create_publisher(
 
   DDSDataWriter * topic_writer = dds_publisher->create_datawriter(
     topic, datawriter_qos, NULL, DDS_STATUS_MASK_NONE);
+  if (!topic_writer) {
+    rmw_set_error_string("failed to create data writer");
+    return NULL;
+  }
 
   DDSDynamicDataWriter * dynamic_writer = DDSDynamicDataWriter::narrow(topic_writer);
   if (!dynamic_writer) {
-    rmw_set_error_string("narrow() failed.");
+    rmw_set_error_string("failed to narrow data writer");
     return NULL;
   }
 
   DDS_DynamicData * dynamic_data = ddts->create_data();
+  if (!dynamic_data) {
+    rmw_set_error_string("failed to create data");
+    return NULL;
+  }
 
   CustomPublisherInfo * custom_publisher_info = new CustomPublisherInfo();
   custom_publisher_info->dynamic_data_type_support_ = ddts;
@@ -365,8 +434,8 @@ rmw_create_publisher(
     i + 1, \
     value); \
   if (status != DDS_RETCODE_OK) { \
-    printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-    throw std::runtime_error("set member failed"); \
+    rmw_set_error_string("failed to set primitive value using " #METHOD_NAME); \
+    return false; \
   }
 
 #define ARRAY_SIZE_AND_VALUES(TYPE) \
@@ -392,8 +461,8 @@ rmw_create_publisher(
         array_size, \
         ros_values); \
       if (status != DDS_RETCODE_OK) { \
-        printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("set array member failed"); \
+        rmw_set_error_string("failed to set array value using " #ARRAY_METHOD_NAME); \
+        return false; \
       } \
     } else { \
       SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
@@ -420,8 +489,8 @@ rmw_create_publisher(
         delete[] values; \
       } \
       if (status != DDS_RETCODE_OK) { \
-        printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("set array member failed"); \
+        rmw_set_error_string("failed to set array value using " #ARRAY_METHOD_NAME); \
+        return false; \
       } \
     } else { \
       SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
@@ -460,8 +529,8 @@ rmw_create_publisher(
         delete[] values; \
       } \
       if (status != DDS_RETCODE_OK) { \
-        printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("set array member failed"); \
+        rmw_set_error_string("failed to set array value using " #ARRAY_METHOD_NAME); \
+        return false; \
       } \
     } else { \
       SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
@@ -477,8 +546,8 @@ rmw_create_publisher(
         0, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
-        printf("bind_complex_member(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("set array member failed"); \
+        rmw_set_error_string("failed to bind complex member"); \
+        return false; \
       } \
       ARRAY_SIZE_AND_VALUES(TYPE) \
       for (size_t i = 0; i < array_size; ++i) { \
@@ -487,11 +556,15 @@ rmw_create_publisher(
           i + 1, \
           ros_values[i].c_str()); \
         if (status != DDS_RETCODE_OK) { \
-          printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-          throw std::runtime_error("set array member failed"); \
+          rmw_set_error_string("failed to set array value using " #METHOD_NAME); \
+          return false; \
         } \
       } \
-      dynamic_data->unbind_complex_member(dynamic_data_member); \
+      status = dynamic_data->unbind_complex_member(dynamic_data_member); \
+      if (status != DDS_RETCODE_OK) { \
+        rmw_set_error_string("failed to unbind complex member"); \
+        return false; \
+      } \
     } else { \
       TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
@@ -499,13 +572,13 @@ rmw_create_publisher(
         i + 1, \
         value.c_str()); \
       if (status != DDS_RETCODE_OK) { \
-        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("set member failed"); \
+        rmw_set_error_string("failed to set value using " #METHOD_NAME); \
+        return false; \
       } \
     } \
   }
 
-void _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
+bool _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
   //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
@@ -559,52 +632,108 @@ void _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-          dynamic_data->bind_complex_member(
+          DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
             sub_dynamic_data,
             0,
             i + 1);
+          if (status != DDS_RETCODE_OK) {
+            rmw_set_error_string("failed to bind complex member");
+            return false;
+          }
           void * sub_ros_message = (void *)((char *)ros_message + member->offset_);
           const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
             (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
-          _publish(&sub_dynamic_data, sub_ros_message, sub_members);
-          dynamic_data->unbind_complex_member(sub_dynamic_data);
+          if (!sub_members) {
+            rmw_set_error_string("sub members handle is null");
+            return false;
+          }
+          bool published = _publish(&sub_dynamic_data, sub_ros_message, sub_members);
+          status = dynamic_data->unbind_complex_member(sub_dynamic_data);
+          if (!published) {
+            rmw_set_error_string("failed to publish sub message");
+            return false;
+          }
+          if (status != DDS_RETCODE_OK) {
+            rmw_set_error_string("failed to unbind complex member");
+            return false;
+          }
         }
         break;
       default:
-        printf("unknown type id %u\n", member->type_id_);
-        throw std::runtime_error("unknown type");
+        rmw_set_error_string(
+          (std::string("unknown type id ") + std::to_string(member->type_id_)).c_str());
+        return false;
     }
   }
+  return true;
 }
 
 rmw_ret_t
 rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
+  if (!publisher) {
+    rmw_set_error_string("publisher handle is null");
+    return RMW_RET_ERROR;
+  }
   if (publisher->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("publisher handle not from this implementation");
-    // printf("but from: %s\n", publisher->implementation_identifier);
+    rmw_set_error_string("publisher handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_message) {
+    rmw_set_error_string("ros message handle is null");
     return RMW_RET_ERROR;
   }
 
-  CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo *)publisher->data;
-  DDSDynamicDataTypeSupport * ddts = custom_publisher_info->dynamic_data_type_support_;
-  DDSDynamicDataWriter * dynamic_writer = custom_publisher_info->dynamic_writer_;
-  DDS_TypeCode * type_code = custom_publisher_info->type_code_;
+  CustomPublisherInfo * publisher_info =
+    static_cast<CustomPublisherInfo *>(publisher->data);
+  if (!publisher_info) {
+    rmw_set_error_string("publisher info handle is null");
+    return RMW_RET_ERROR;
+  }
+  DDSDynamicDataTypeSupport * ddts = publisher_info->dynamic_data_type_support_;
+  if (!ddts) {
+    rmw_set_error_string("dynamic data type support handle is null");
+    return RMW_RET_ERROR;
+  }
+  DDSDynamicDataWriter * dynamic_writer = publisher_info->dynamic_writer_;
+  if (!dynamic_writer) {
+    rmw_set_error_string("data writer handle is null");
+    return RMW_RET_ERROR;
+  }
+  DDS_TypeCode * type_code = publisher_info->type_code_;
+  if (!type_code) {
+    rmw_set_error_string("type code handle is null");
+    return RMW_RET_ERROR;
+  }
   const rosidl_typesupport_introspection_cpp::MessageMembers * members =
-    custom_publisher_info->members_;
-  DDS_DynamicData * dynamic_data = custom_publisher_info->dynamic_data;
+    publisher_info->members_;
+  if (!members) {
+    rmw_set_error_string("members handle is null");
+    return RMW_RET_ERROR;
+  }
+  DDS_DynamicData * dynamic_data = publisher_info->dynamic_data;
+  if (!dynamic_data) {
+    rmw_set_error_string("data handle is null");
+    return RMW_RET_ERROR;
+  }
 
-  dynamic_data->clear_all_members();
-  _publish(dynamic_data, ros_message, members);
+  DDS_ReturnCode_t status = dynamic_data->clear_all_members();
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to clear all members");
+    return RMW_RET_ERROR;
+  }
+  bool published = _publish(dynamic_data, ros_message, members);
+  if (!published) {
+    // error string was set within the function
+    return RMW_RET_ERROR;
+  }
 
-  DDS_ReturnCode_t status = dynamic_writer->write(*dynamic_data, DDS_HANDLE_NIL);
+  status = dynamic_writer->write(*dynamic_data, DDS_HANDLE_NIL);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to write");
-    // printf("write() failed. Status = %d\n", status);
     return RMW_RET_ERROR;
   }
 
-  //ddts->delete_data(dynamic_data);
   return RMW_RET_OK;
 }
 
@@ -623,24 +752,37 @@ rmw_create_subscription(const rmw_node_t * node,
   const char * topic_name,
   size_t queue_size)
 {
+  if (!node) {
+    rmw_set_error_string("node handle is null");
+    return NULL;
+  }
   if (node->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("node handle not from this implementation");
-    // printf("but from: %s\n", node->implementation_identifier);
+    rmw_set_error_string("node handle is not from this rmw implementation");
+    return NULL;
+  }
+  if (!type_support) {
+    rmw_set_error_string("type support handle is null");
+    return NULL;
+  }
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+  {
+    rmw_set_error_string("type support is not from this rmw implementation");
     return NULL;
   }
 
   DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
-
-  if (type_support->typesupport_identifier !=
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
-  {
-    rmw_set_error_string("type support not from this implementation");
-    // printf("but from: %s\n", type_support->typesupport_identifier);
+  if (!participant) {
+    rmw_set_error_string("participant handle is null");
     return NULL;
   }
 
   const rosidl_typesupport_introspection_cpp::MessageMembers * members =
     (rosidl_typesupport_introspection_cpp::MessageMembers *)type_support->data;
+  if (!members) {
+    rmw_set_error_string("members handle is null");
+    return NULL;
+  }
   std::string type_name = std::string(members->package_name_) + "::msg::dds_::" +
     members->message_name_ + "_";
 
@@ -648,11 +790,14 @@ rmw_create_subscription(const rmw_node_t * node,
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get participant qos");
-    // printf("get_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
   DDS_TypeCode * type_code = create_type_code(type_name, members, participant_qos);
+  if (!type_code) {
+    // error string was set within the function
+    return NULL;
+  }
 
 
   DDSDynamicDataTypeSupport * ddts = new DDSDynamicDataTypeSupport(
@@ -660,7 +805,6 @@ rmw_create_subscription(const rmw_node_t * node,
   status = ddts->register_type(participant, type_name.c_str());
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to register type");
-    // printf("register_type() failed. Status = %d\n", status);
     return NULL;
   }
 
@@ -669,33 +813,40 @@ rmw_create_subscription(const rmw_node_t * node,
   status = participant->get_default_subscriber_qos(subscriber_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default subscriber qos");
-    // printf("get_default_subscriber_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
   DDSSubscriber * dds_subscriber = participant->create_subscriber(
     subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!dds_subscriber) {
-    rmw_set_error_string("  create_subscriber() could not create subscriber");
+    rmw_set_error_string("failed to create subscriber");
     return NULL;
   }
 
 
-  DDS_TopicQos default_topic_qos;
-  status = participant->get_default_topic_qos(default_topic_qos);
-  if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default topic qos");
-    // printf("get_default_topic_qos() failed. Status = %d\n", status);
-    return NULL;
-  }
+  DDSTopic * topic;
+  DDSTopicDescription * topic_description = participant->lookup_topicdescription(topic_name);
+  if (!topic_description) {
+    DDS_TopicQos default_topic_qos;
+    status = participant->get_default_topic_qos(default_topic_qos);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to get default topic qos");
+      return NULL;
+    }
 
-  DDSTopic * topic = participant->create_topic(
-    topic_name, type_name.c_str(), default_topic_qos, NULL,
-    DDS_STATUS_MASK_NONE
-    );
-  if (!topic) {
-    rmw_set_error_string("  create_topic() could not create topic");
-    return NULL;
+    topic = participant->create_topic(
+      topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
+    if (!topic) {
+      rmw_set_error_string("failed to create topic");
+      return NULL;
+    }
+  } else {
+    DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
+    topic = participant->find_topic(topic_name, timeout);
+    if (!topic) {
+      rmw_set_error_string("failed to find topic");
+      return NULL;
+    }
   }
 
 
@@ -703,7 +854,6 @@ rmw_create_subscription(const rmw_node_t * node,
   status = participant->get_default_datareader_qos(datareader_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default datareader qos");
-    // printf("get_default_datareader_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
@@ -719,14 +869,22 @@ rmw_create_subscription(const rmw_node_t * node,
 
   DDSDataReader * topic_reader = dds_subscriber->create_datareader(
     topic, datareader_qos, NULL, DDS_STATUS_MASK_NONE);
+  if (!topic_reader) {
+    rmw_set_error_string("failed to create datareader");
+    return NULL;
+  }
 
   DDSDynamicDataReader * dynamic_reader = DDSDynamicDataReader::narrow(topic_reader);
   if (!dynamic_reader) {
-    rmw_set_error_string("narrow() failed.\n");
+    rmw_set_error_string("failed to narrow datareader");
     return NULL;
   }
 
   DDS_DynamicData * dynamic_data = ddts->create_data();
+  if (!dynamic_data) {
+    rmw_set_error_string("failed to create data");
+    return NULL;
+  }
 
   CustomSubscriberInfo * custom_subscriber_info = new CustomSubscriberInfo();
   custom_subscriber_info->dynamic_data_type_support_ = ddts;
@@ -752,11 +910,15 @@ rmw_create_subscription(const rmw_node_t * node,
       0, \
       i + 1); \
     if (status != DDS_RETCODE_OK) { \
-      printf("bind_complex_member(%s) failed. Status = %d\n", member->name_, status); \
-      throw std::runtime_error("set array member failed"); \
+      rmw_set_error_string("failed to bind complex member"); \
+      return false; \
     } \
     array_size = dynamic_data_member.get_member_count(); \
-    dynamic_data->unbind_complex_member(dynamic_data_member); \
+    status = dynamic_data->unbind_complex_member(dynamic_data_member); \
+    if (status != DDS_RETCODE_OK) { \
+      rmw_set_error_string("failed to unbind complex member"); \
+      return false; \
+    } \
   }
 
 #define ARRAY_RESIZE_AND_VALUES(TYPE) \
@@ -782,8 +944,8 @@ rmw_create_subscription(const rmw_node_t * node,
         0, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
-        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("get array member failed"); \
+        rmw_set_error_string("failed to get array value using " #ARRAY_METHOD_NAME); \
+        return false; \
       } \
     } else { \
       TYPE * value = (TYPE *)((char *)ros_message + member->offset_); \
@@ -792,8 +954,8 @@ rmw_create_subscription(const rmw_node_t * node,
         0, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
-        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("get member failed"); \
+        rmw_set_error_string("failed to get primitive value using " #METHOD_NAME); \
+        return false; \
       } \
     } \
   }
@@ -813,8 +975,8 @@ rmw_create_subscription(const rmw_node_t * node,
           i + 1); \
         if (status != DDS_RETCODE_OK) { \
           delete[] values; \
-          printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-          throw std::runtime_error("get array member failed"); \
+          rmw_set_error_string("failed to get array value using " #ARRAY_METHOD_NAME); \
+          return false; \
         } \
         for (size_t i = 0; i < array_size; ++i) { \
           ros_values[i] = values[i]; \
@@ -828,8 +990,8 @@ rmw_create_subscription(const rmw_node_t * node,
         0, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
-        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("get member failed"); \
+        rmw_set_error_string("failed to get primitive value using " #METHOD_NAME); \
+        return false; \
       } \
       TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
       *ros_value = value; \
@@ -850,8 +1012,8 @@ rmw_create_subscription(const rmw_node_t * node,
           i + 1); \
         if (status != DDS_RETCODE_OK) { \
           delete[] values; \
-          printf(#ARRAY_METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-          throw std::runtime_error("get array member failed"); \
+          rmw_set_error_string("failed to get array value using " #ARRAY_METHOD_NAME); \
+          return false; \
         } \
         if (member->array_size_ && !member->is_upper_bound_) { \
           auto ros_values = (TYPE *)((char *)ros_message + member->offset_); \
@@ -875,8 +1037,8 @@ rmw_create_subscription(const rmw_node_t * node,
         0, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
-        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("get member failed"); \
+        rmw_set_error_string("failed to get primitive value using " #METHOD_NAME); \
+        return false; \
       } \
       TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
       *ros_value = value; \
@@ -894,8 +1056,8 @@ rmw_create_subscription(const rmw_node_t * node,
         0, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
-        printf("bind_complex_member(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("get array member failed"); \
+        rmw_set_error_string("failed to bind complex member"); \
+        return false; \
       } \
       for (size_t i = 0; i < array_size; ++i) { \
         char * value = 0; \
@@ -909,15 +1071,19 @@ rmw_create_subscription(const rmw_node_t * node,
           if (value) { \
             delete[] value; \
           } \
-          printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-          throw std::runtime_error("get member failed"); \
+          rmw_set_error_string("failed to get array value using " #METHOD_NAME); \
+          return false; \
         } \
         ros_values[i] = value; \
         if (value) { \
           delete[] value; \
         } \
       } \
-      dynamic_data->unbind_complex_member(dynamic_data_member); \
+      status = dynamic_data->unbind_complex_member(dynamic_data_member); \
+      if (status != DDS_RETCODE_OK) { \
+        rmw_set_error_string("failed to unbind complex member"); \
+        return false; \
+      } \
     } else { \
       char * value = 0; \
       DDS_UnsignedLong size; \
@@ -930,8 +1096,8 @@ rmw_create_subscription(const rmw_node_t * node,
         if (value) { \
           delete[] value; \
         } \
-        printf(#METHOD_NAME "(%s) failed. Status = %d\n", member->name_, status); \
-        throw std::runtime_error("get member failed"); \
+        rmw_set_error_string("failed to get primitive value using " #METHOD_NAME); \
+        return false; \
       } \
       TYPE * ros_value = (TYPE *)((char *)ros_message + member->offset_); \
       *ros_value = value; \
@@ -941,7 +1107,7 @@ rmw_create_subscription(const rmw_node_t * node,
     } \
   }
 
-void _take(DDS_DynamicData * dynamic_data, void * ros_message,
+bool _take(DDS_DynamicData * dynamic_data, void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
   //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
@@ -995,39 +1161,89 @@ void _take(DDS_DynamicData * dynamic_data, void * ros_message,
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-          dynamic_data->bind_complex_member(
+          DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
             sub_dynamic_data,
             0,
             i + 1);
+          if (status != DDS_RETCODE_OK) {
+            rmw_set_error_string("failed to bind complex member");
+            return false;
+          }
           void * sub_ros_message = (void *)((char *)ros_message + member->offset_);
           const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
             (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
-          _take(&sub_dynamic_data, sub_ros_message, sub_members);
-          dynamic_data->unbind_complex_member(sub_dynamic_data);
+          if (!sub_members) {
+            rmw_set_error_string("sub members handle is null");
+            return false;
+          }
+          bool success = _take(&sub_dynamic_data, sub_ros_message, sub_members);
+          status = dynamic_data->unbind_complex_member(sub_dynamic_data);
+          if (!success) {
+            rmw_set_error_string("failed to take sub message");
+            return false;
+          }
+          if (status != DDS_RETCODE_OK) {
+            rmw_set_error_string("failed to unbind complex member");
+            return false;
+          }
         }
         break;
       default:
-        printf("unknown type id %u\n", member->type_id_);
-        throw std::runtime_error("unknown type");
+        rmw_set_error_string(
+          (std::string("unknown type id ") + std::to_string(member->type_id_)).c_str());
+        return false;
     }
   }
+  return true;
 }
 
 rmw_ret_t
 rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
 {
+  if (!subscription) {
+    rmw_set_error_string("subscription handle is null");
+    return RMW_RET_ERROR;
+  }
   if (subscription->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("subscriber handle not from this implementation");
-    // printf("but from: %s\n", subscription->implementation_identifier);
+    rmw_set_error_string("subscriber handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_message) {
+    rmw_set_error_string("ros message handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!taken) {
+    rmw_set_error_string("taken handle is null");
     return RMW_RET_ERROR;
   }
 
-  CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo *)subscription->data;
-  DDSDynamicDataTypeSupport * ddts = custom_subscriber_info->dynamic_data_type_support_;
-  DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
-  DDS_TypeCode * type_code = custom_subscriber_info->type_code_;
+  CustomSubscriberInfo * subscriber_info =
+    static_cast<CustomSubscriberInfo *>(subscription->data);
+  if (!subscriber_info) {
+    rmw_set_error_string("subscriber info handle is null");
+    return RMW_RET_ERROR;
+  }
+  DDSDynamicDataTypeSupport * ddts = subscriber_info->dynamic_data_type_support_;
+  if (!ddts) {
+    rmw_set_error_string("dynamic data type support handle is null");
+    return RMW_RET_ERROR;
+  }
+  DDSDynamicDataReader * dynamic_reader = subscriber_info->dynamic_reader_;
+  if (!dynamic_reader) {
+    rmw_set_error_string("data reader handle is null");
+    return RMW_RET_ERROR;
+  }
+  DDS_TypeCode * type_code = subscriber_info->type_code_;
+  if (!type_code) {
+    rmw_set_error_string("type code handle is null");
+    return RMW_RET_ERROR;
+  }
   const rosidl_typesupport_introspection_cpp::MessageMembers * members =
-    custom_subscriber_info->members_;
+    subscriber_info->members_;
+  if (!members) {
+    rmw_set_error_string("members handle is null");
+    return RMW_RET_ERROR;
+  }
 
   DDS_DynamicDataSeq dynamic_data_sequence;
   DDS_SampleInfoSeq sample_infos;
@@ -1043,17 +1259,15 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     return RMW_RET_OK;
   }
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to take");
-    // printf("take() failed. Status = %d\n", status);
+    rmw_set_error_string("failed to take sample");
     return RMW_RET_ERROR;
   }
 
-  if (ros_message == 0) {
-    rmw_set_error_string("take() invoked without a valid ROS message pointer\n");
+  bool success = _take(&dynamic_data_sequence[0], ros_message, members);
+  if (!success) {
+    rmw_set_error_string("failed to take sample");
     return RMW_RET_ERROR;
   }
-
-  _take(&dynamic_data_sequence[0], ros_message, members);
 
   dynamic_reader->return_loan(dynamic_data_sequence, sample_infos);
 
@@ -1074,26 +1288,39 @@ rmw_create_guard_condition()
 rmw_ret_t
 rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 {
-  if (guard_condition) {
-    delete static_cast<DDSGuardCondition *>(guard_condition->data);
-    delete guard_condition;
-    return RMW_RET_OK;
+  if (!guard_condition) {
+    rmw_set_error_string("guard condition handle is null");
+    return RMW_RET_ERROR;
   }
 
-  return RMW_RET_ERROR;
+  delete static_cast<DDSGuardCondition *>(guard_condition->data);
+  delete guard_condition;
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
 {
+  if (!guard_condition_handle) {
+    rmw_set_error_string("guard condition handle is null");
+    return RMW_RET_ERROR;
+  }
   if (guard_condition_handle->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("guard condition handle not from this implementation");
-    // printf("but from: %s\n", guard_condition_handle->implementation_identifier);
+    rmw_set_error_string("guard condition handle is not from this rmw implementation");
     return RMW_RET_ERROR;
   }
 
-  DDSGuardCondition * guard_condition = (DDSGuardCondition *)guard_condition_handle->data;
-  guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
+  DDSGuardCondition * guard_condition =
+    static_cast<DDSGuardCondition *>(guard_condition_handle->data);
+  if (!guard_condition) {
+    rmw_set_error_string("guard condition is null");
+    return RMW_RET_ERROR;
+  }
+  DDS_ReturnCode_t status = guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to set trigger value");
+    return RMW_RET_ERROR;
+  }
   return RMW_RET_OK;
 }
 
@@ -1127,39 +1354,107 @@ rmw_wait(
 
   // add a condition for each subscriber
   for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i) {
-    void * data = subscriptions->subscribers[i];
-    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo *)data;
-    DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
+    CustomSubscriberInfo * subscriber_info =
+      static_cast<CustomSubscriberInfo *>(subscriptions->subscribers[i]);
+    if (!subscriber_info) {
+      rmw_set_error_string("subscriber info handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDSDynamicDataReader * dynamic_reader = subscriber_info->dynamic_reader_;
+    if (!dynamic_reader) {
+      rmw_set_error_string("data reader handle is null");
+      return RMW_RET_ERROR;
+    }
     DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
-    condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
-    waitset.attach_condition(condition);
+    if (!condition) {
+      rmw_set_error_string("condition handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to set enabled statuses");
+      return RMW_RET_ERROR;
+    }
+    status = waitset.attach_condition(condition);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to attach condition");
+      return RMW_RET_ERROR;
+    }
   }
 
   // add a condition for each guard condition
   for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i) {
-    void * data = guard_conditions->guard_conditions[i];
-    DDSGuardCondition * guard_condition = (DDSGuardCondition *)data;
-    waitset.attach_condition(guard_condition);
+    DDSGuardCondition * guard_condition =
+      static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
+    if (!guard_condition) {
+      rmw_set_error_string("guard condition handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDS_ReturnCode_t status = waitset.attach_condition(guard_condition);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to attach condition");
+      return RMW_RET_ERROR;
+    }
   }
 
   // add a condition for each service
   for (unsigned long i = 0; i < services->service_count; ++i) {
-    void * data = services->services[i];
-    ConnextDynamicServiceInfo * custom_service_info = (ConnextDynamicServiceInfo *)data;
-    DDSDataReader * dynamic_reader = custom_service_info->request_datareader_;
+    ConnextDynamicServiceInfo * service_info =
+      static_cast<ConnextDynamicServiceInfo *>(services->services[i]);
+    if (!service_info) {
+      rmw_set_error_string("service info handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDSDataReader * dynamic_reader = service_info->request_datareader_;
+    if (!dynamic_reader) {
+      rmw_set_error_string("request datareader handle is null");
+      return RMW_RET_ERROR;
+    }
     DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
-    condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
-    waitset.attach_condition(condition);
+    if (!condition) {
+      rmw_set_error_string("condition handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to set enabled statuses");
+      return RMW_RET_ERROR;
+    }
+    status = waitset.attach_condition(condition);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to attach condition");
+      return RMW_RET_ERROR;
+    }
   }
 
   // add a condition for each client
   for (unsigned long i = 0; i < clients->client_count; ++i) {
-    void * data = clients->clients[i];
-    ConnextDynamicClientInfo * custom_client_info = (ConnextDynamicClientInfo *)data;
-    DDSDataReader * dynamic_reader = custom_client_info->response_datareader_;
+    ConnextDynamicClientInfo * client_info =
+      static_cast<ConnextDynamicClientInfo *>(clients->clients[i]);
+    if (!client_info) {
+      rmw_set_error_string("client info handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDSDataReader * dynamic_reader = client_info->response_datareader_;
+    if (!dynamic_reader) {
+      rmw_set_error_string("response datareader handle is null");
+      return RMW_RET_ERROR;
+    }
     DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
-    condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
-    waitset.attach_condition(condition);
+    if (!condition) {
+      rmw_set_error_string("condition handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to set enabled statuses");
+      return RMW_RET_ERROR;
+    }
+    status = waitset.attach_condition(condition);
+    if (status != DDS_RETCODE_OK) {
+      rmw_set_error_string("failed to attach condition");
+      return RMW_RET_ERROR;
+    }
   }
 
   // invoke wait until one of the conditions triggers
@@ -1176,17 +1471,28 @@ rmw_wait(
     }
     if (status != DDS_RETCODE_OK) {
       rmw_set_error_string("fail to wait on waitset");
-      // printf("wait() failed. Status = %d\n", status);
       return RMW_RET_ERROR;
     }
   }
 
   // set subscriber handles to zero for all not triggered conditions
   for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i) {
-    void * data = subscriptions->subscribers[i];
-    CustomSubscriberInfo * custom_subscriber_info = (CustomSubscriberInfo *)data;
-    DDSDynamicDataReader * dynamic_reader = custom_subscriber_info->dynamic_reader_;
+    CustomSubscriberInfo * subscriber_info =
+      static_cast<CustomSubscriberInfo *>(subscriptions->subscribers[i]);
+    if (!subscriber_info) {
+      rmw_set_error_string("subscriber info handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDSDynamicDataReader * dynamic_reader = subscriber_info->dynamic_reader_;
+    if (!dynamic_reader) {
+      rmw_set_error_string("topic reader handle is null");
+      return RMW_RET_ERROR;
+    }
     DDSCondition * condition = dynamic_reader->get_statuscondition();
+    if (!condition) {
+      rmw_set_error_string("condition handle is null");
+      return RMW_RET_ERROR;
+    }
 
     // search for subscriber condition in active set
     unsigned long j = 0;
@@ -1204,15 +1510,23 @@ rmw_wait(
 
   // set guard condition handles to zero for all not triggered conditions
   for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i) {
-    void * data = guard_conditions->guard_conditions[i];
-    DDSCondition * condition = (DDSCondition *)data;
+    DDSCondition * condition =
+      static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
+    if (!condition) {
+      rmw_set_error_string("condition handle is null");
+      return RMW_RET_ERROR;
+    }
 
     // search for guard condition in active set
     unsigned long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         DDSGuardCondition * guard = (DDSGuardCondition *)condition;
-        guard->set_trigger_value(DDS_BOOLEAN_FALSE);
+        DDS_ReturnCode_t status = guard->set_trigger_value(DDS_BOOLEAN_FALSE);
+        if (status != DDS_RETCODE_OK) {
+          rmw_set_error_string("failed to set trigger value");
+          return RMW_RET_ERROR;
+        }
         break;
       }
     }
@@ -1225,10 +1539,22 @@ rmw_wait(
 
   // set service handles to zero for all not triggered conditions
   for (unsigned long i = 0; i < services->service_count; ++i) {
-    void * data = services->services[i];
-    ConnextDynamicServiceInfo * custom_service_info = (ConnextDynamicServiceInfo *)data;
-    DDSDataReader * dynamic_reader = custom_service_info->request_datareader_;
+    ConnextDynamicServiceInfo * service_info =
+      static_cast<ConnextDynamicServiceInfo *>(services->services[i]);
+    if (!service_info) {
+      rmw_set_error_string("service info handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDSDataReader * dynamic_reader = service_info->request_datareader_;
+    if (!dynamic_reader) {
+      rmw_set_error_string("request datareader handle is null");
+      return RMW_RET_ERROR;
+    }
     DDSCondition * condition = dynamic_reader->get_statuscondition();
+    if (!condition) {
+      rmw_set_error_string("condition handle is null");
+      return RMW_RET_ERROR;
+    }
 
     // search for service condition in active set
     unsigned long j = 0;
@@ -1246,10 +1572,22 @@ rmw_wait(
 
   // set client handles to zero for all not triggered conditions
   for (unsigned long i = 0; i < clients->client_count; ++i) {
-    void * data = clients->clients[i];
-    ConnextDynamicClientInfo * custom_client_info = (ConnextDynamicClientInfo *)data;
-    DDSDataReader * dynamic_reader = custom_client_info->response_datareader_;
+    ConnextDynamicClientInfo * client_info =
+      static_cast<ConnextDynamicClientInfo *>(clients->clients[i]);
+    if (!client_info) {
+      rmw_set_error_string("client info handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDSDataReader * dynamic_reader = client_info->response_datareader_;
+    if (!dynamic_reader) {
+      rmw_set_error_string("response datareader handle is null");
+      return RMW_RET_ERROR;
+    }
     DDSCondition * condition = dynamic_reader->get_statuscondition();
+    if (!condition) {
+      rmw_set_error_string("condition handle is null");
+      return RMW_RET_ERROR;
+    }
 
     // search for client condition in active set
     unsigned long j = 0;
@@ -1274,28 +1612,49 @@ rmw_create_client(
   const rosidl_service_type_support_t * type_support,
   const char * service_name)
 {
+  if (!node) {
+    rmw_set_error_string("node handle is null");
+    return NULL;
+  }
   if (node->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("node handle not from this implementation");
-    // printf("but from: %s\n", node->implementation_identifier);
+    rmw_set_error_string("node handle is not from this rmw implementation");
+    return NULL;
+  }
+  if (!type_support) {
+    rmw_set_error_string("type support handle is null");
+    return NULL;
+  }
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+  {
+    rmw_set_error_string("type support is not from this rmw implementation");
     return NULL;
   }
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
-
-  if (type_support->typesupport_identifier !=
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
-  {
-    rmw_set_error_string("type support not from this implementation");
-    // printf("but from: %s\n", type_support->typesupport_identifier);
+  if (!participant) {
+    rmw_set_error_string("participant handle is null");
     return NULL;
   }
 
   const rosidl_typesupport_introspection_cpp::ServiceMembers * service_members =
     (rosidl_typesupport_introspection_cpp::ServiceMembers *)type_support->data;
+  if (!service_members) {
+    rmw_set_error_string("service members handle is null");
+    return NULL;
+  }
   const rosidl_typesupport_introspection_cpp::MessageMembers * request_members =
     service_members->request_members_;
+  if (!request_members) {
+    rmw_set_error_string("request members handle is null");
+    return NULL;
+  }
   const rosidl_typesupport_introspection_cpp::MessageMembers * response_members =
     service_members->response_members_;
+  if (!response_members) {
+    rmw_set_error_string("response members handle is null");
+    return NULL;
+  }
   std::string request_type_name = std::string(request_members->package_name_) + "::srv::dds_::" +
     request_members->message_name_ + "_";
   std::string response_type_name = std::string(response_members->package_name_) + "::srv::dds_::" +
@@ -1305,17 +1664,24 @@ rmw_create_client(
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get participant qos");
-    // printf("get_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
   DDS_TypeCode * request_type_code = create_type_code(
     request_type_name, request_members, participant_qos);
+  if (!request_type_code) {
+    // error string was set within the function
+    return NULL;
+  }
   DDS::DynamicDataTypeSupport * request_type_support = new DDS::DynamicDataTypeSupport(
     request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
 
   DDS_TypeCode * response_type_code = create_type_code(
     response_type_name, response_members, participant_qos);
+  if (!request_type_code) {
+    // error string was set within the function
+    return NULL;
+  }
   DDS::DynamicDataTypeSupport * response_type_support = new DDS::DynamicDataTypeSupport(
     response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
 
@@ -1329,6 +1695,10 @@ rmw_create_client(
     new connext::Requester<DDS_DynamicData, DDS_DynamicData>(requester_params));
 
   DDSDataReader * response_datareader = requester->get_reply_datareader();
+  if (!response_datareader) {
+    rmw_set_error_string("failed to get response datareader");
+    return NULL;
+  }
 
   ConnextDynamicClientInfo * client_info = new ConnextDynamicClientInfo();
   client_info->requester_ = requester;
@@ -1345,23 +1715,47 @@ rmw_create_client(
 
 rmw_ret_t
 rmw_send_request(
-  const rmw_client_t * client, const void * ros_request,
+  const rmw_client_t * client,
+  const void * ros_request,
   int64_t * sequence_id)
 {
+  if (!client) {
+    rmw_set_error_string("client handle is null");
+    return RMW_RET_ERROR;
+  }
   if (client->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("client handle not from this implementation");
-    // printf("but from: %s\n", client->implementation_identifier);
+    rmw_set_error_string("client handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_request) {
+    rmw_set_error_string("ros request handle is null");
     return RMW_RET_ERROR;
   }
 
   ConnextDynamicClientInfo * client_info = static_cast<ConnextDynamicClientInfo *>(client->data);
+  if (!client_info) {
+    rmw_set_error_string("client info handle is null");
+    return RMW_RET_ERROR;
+  }
   connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester = client_info->requester_;
+  if (!requester) {
+    rmw_set_error_string("requester handle is null");
+    return RMW_RET_ERROR;
+  }
 
   DDS::DynamicData * sample = client_info->request_type_support_->create_data();
+  if (!sample) {
+    rmw_set_error_string("failed to create data");
+    return RMW_RET_ERROR;
+  }
   DDS::WriteParams_t writeParams;
   connext::WriteSampleRef<DDS::DynamicData> request(*sample, writeParams);
 
-  _publish(sample, ros_request, client_info->request_members_);
+  bool published = _publish(sample, ros_request, client_info->request_members_);
+  if (!published) {
+    // error string was set within the function
+    return RMW_RET_ERROR;
+  }
 
   requester->send_request(request);
   *sequence_id = ((int64_t)request.identity().sequence_number.high) << 32 |
@@ -1373,28 +1767,52 @@ rmw_send_request(
 rmw_ret_t
 rmw_take_request(
   const rmw_service_t * service,
-  void * ros_request_header, void * ros_request, bool * taken)
+  void * ros_request_header,
+  void * ros_request,
+  bool * taken)
 {
-  if (taken == NULL) {
-    rmw_set_error_string("taken argument can't be null");
+  if (!service) {
+    rmw_set_error_string("service handle is null");
     return RMW_RET_ERROR;
   }
-
   if (service->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("service handle not from this implementation");
-    // printf("but from: %s\n", service->implementation_identifier);
+    rmw_set_error_string("service handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_request_header) {
+    rmw_set_error_string("ros request header handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_request) {
+    rmw_set_error_string("ros request handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!taken) {
+    rmw_set_error_string("taken handle is null");
     return RMW_RET_ERROR;
   }
 
-  ConnextDynamicServiceInfo * service_info = \
+  ConnextDynamicServiceInfo * service_info =
     static_cast<ConnextDynamicServiceInfo *>(service->data);
+  if (!service_info) {
+    rmw_set_error_string("service info handle is null");
+    return RMW_RET_ERROR;
+  }
   connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier = service_info->replier_;
+  if (!replier) {
+    rmw_set_error_string("replier handle is null");
+    return RMW_RET_ERROR;
+  }
 
   rmw_request_id_t & req_id = *(static_cast<rmw_request_id_t *>(ros_request_header));
 
   connext::LoanedSamples<DDS::DynamicData> requests = replier->take_requests(1);
   if (requests.begin() != requests.end() && requests.begin()->info().valid_data) {
-    _take(&requests.begin()->data(), ros_request, service_info->request_members_);
+    bool success = _take(&requests.begin()->data(), ros_request, service_info->request_members_);
+    if (!success) {
+      // error string was set within the function
+      return RMW_RET_ERROR;
+    }
 
     size_t SAMPLE_IDENTITY_SIZE = 16;
     memcpy(
@@ -1414,26 +1832,50 @@ rmw_take_request(
 rmw_ret_t
 rmw_take_response(
   const rmw_client_t * client,
-  void * ros_request_header, void * ros_response, bool * taken)
+  void * ros_request_header,
+  void * ros_response,
+  bool * taken)
 {
-  if (taken == NULL) {
-    rmw_set_error_string("taken argument can't be null");
+  if (!client) {
+    rmw_set_error_string("client handle is null");
     return RMW_RET_ERROR;
   }
-
   if (client->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("client handle not from this implementation");
-    // printf("but from: %s\n", client->implementation_identifier);
+    rmw_set_error_string("client handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_request_header) {
+    rmw_set_error_string("ros request header handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_response) {
+    rmw_set_error_string("ros response handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!taken) {
+    rmw_set_error_string("taken handle is null");
     return RMW_RET_ERROR;
   }
 
-  ConnextDynamicClientInfo * client_info = \
+  ConnextDynamicClientInfo * client_info =
     static_cast<ConnextDynamicClientInfo *>(client->data);
+  if (!client_info) {
+    rmw_set_error_string("client info handle is null");
+    return RMW_RET_ERROR;
+  }
   connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester = client_info->requester_;
+  if (!requester) {
+    rmw_set_error_string("requester handle is null");
+    return RMW_RET_ERROR;
+  }
 
   connext::LoanedSamples<DDS::DynamicData> replies = requester->take_replies(1);
   if (replies.begin() != replies.end() && replies.begin()->info().valid_data) {
-    _take(&replies.begin()->data(), ros_response, client_info->response_members_);
+    bool success = _take(&replies.begin()->data(), ros_response, client_info->response_members_);
+    if (!success) {
+      // error string was set within the function
+      return RMW_RET_ERROR;
+    }
 
     rmw_request_id_t & req_id = *(reinterpret_cast<rmw_request_id_t *>(ros_request_header));
     req_id.sequence_number =
@@ -1450,23 +1892,51 @@ rmw_take_response(
 rmw_ret_t
 rmw_send_response(
   const rmw_service_t * service,
-  void * ros_request_header, void * ros_response)
+  void * ros_request_header,
+  void * ros_response)
 {
+  if (!service) {
+    rmw_set_error_string("service handle is null");
+    return RMW_RET_ERROR;
+  }
   if (service->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("service handle not from this implementation");
-    // printf("but from: %s\n", service->implementation_identifier);
+    rmw_set_error_string("service handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_request_header) {
+    rmw_set_error_string("ros request header handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!ros_response) {
+    rmw_set_error_string("ros response handle is null");
     return RMW_RET_ERROR;
   }
 
   ConnextDynamicServiceInfo * service_info =
     static_cast<ConnextDynamicServiceInfo *>(service->data);
+  if (!service_info) {
+    rmw_set_error_string("service info handle is null");
+    return RMW_RET_ERROR;
+  }
   connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier = service_info->replier_;
+  if (!replier) {
+    rmw_set_error_string("replier handle is null");
+    return RMW_RET_ERROR;
+  }
 
   DDS::DynamicData * sample = service_info->response_type_support_->create_data();
+  if (!sample) {
+    rmw_set_error_string("failed to create data");
+    return RMW_RET_ERROR;
+  }
   DDS::WriteParams_t writeParams;
   connext::WriteSampleRef<DDS::DynamicData> response(*sample, writeParams);
 
-  _publish(sample, ros_response, service_info->response_members_);
+  bool published = _publish(sample, ros_response, service_info->response_members_);
+  if (!published) {
+    // error string was set within the function
+    return RMW_RET_ERROR;
+  }
 
   const rmw_request_id_t & req_id =
     *(reinterpret_cast<const rmw_request_id_t *>(ros_request_header));
@@ -1491,28 +1961,49 @@ rmw_create_service(
   const rosidl_service_type_support_t * type_support,
   const char * service_name)
 {
+  if (!node) {
+    rmw_set_error_string("node handle is null");
+    return NULL;
+  }
   if (node->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("node handle not from this implementation");
-    // printf("but from: %s\n", node->implementation_identifier);
+    rmw_set_error_string("node handle is not from this rmw implementation");
+    return NULL;
+  }
+  if (!type_support) {
+    rmw_set_error_string("type support handle is null");
+    return NULL;
+  }
+  if (type_support->typesupport_identifier !=
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
+  {
+    rmw_set_error_string("type support is not from this rmw implementation");
     return NULL;
   }
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
-
-  if (type_support->typesupport_identifier !=
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
-  {
-    rmw_set_error_string("type support not from this implementation");
-    // printf("but from: %s\n", type_support->typesupport_identifier);
+  if (!participant) {
+    rmw_set_error_string("participant handle is null");
     return NULL;
   }
 
   const rosidl_typesupport_introspection_cpp::ServiceMembers * service_members =
     (rosidl_typesupport_introspection_cpp::ServiceMembers *)type_support->data;
+  if (!service_members) {
+    rmw_set_error_string("service members handle is null");
+    return NULL;
+  }
   const rosidl_typesupport_introspection_cpp::MessageMembers * request_members =
     service_members->request_members_;
+  if (!request_members) {
+    rmw_set_error_string("request members handle is null");
+    return NULL;
+  }
   const rosidl_typesupport_introspection_cpp::MessageMembers * response_members =
     service_members->response_members_;
+  if (!response_members) {
+    rmw_set_error_string("response members handle is null");
+    return NULL;
+  }
   std::string request_type_name = std::string(request_members->package_name_) + "::srv::dds_::" +
     request_members->message_name_ + "_";
   std::string response_type_name = std::string(response_members->package_name_) + "::srv::dds_::" +
@@ -1522,17 +2013,24 @@ rmw_create_service(
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get participant qos");
-    // printf("get_qos() failed. Status = %d\n", status);
     return NULL;
   }
 
   DDS_TypeCode * request_type_code = create_type_code(
     request_type_name, request_members, participant_qos);
+  if (!request_type_code) {
+    // error string was set within the function
+    return NULL;
+  }
   DDS::DynamicDataTypeSupport * request_type_support = new DDS::DynamicDataTypeSupport(
     request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
 
   DDS_TypeCode * response_type_code = create_type_code(
     response_type_name, response_members, participant_qos);
+  if (!response_type_code) {
+    // error string was set within the function
+    return NULL;
+  }
   DDS::DynamicDataTypeSupport * response_type_support = new DDS::DynamicDataTypeSupport(
     response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
 
@@ -1546,6 +2044,10 @@ rmw_create_service(
     new connext::Replier<DDS_DynamicData, DDS_DynamicData>(replier_params));
 
   DDSDataReader * request_datareader = replier->get_request_datareader();
+  if (!request_datareader) {
+    rmw_set_error_string("failed to get request datareader");
+    return NULL;
+  }
 
   ConnextDynamicServiceInfo * server_info = new ConnextDynamicServiceInfo();
   server_info->replier_ = replier;
@@ -1563,27 +2065,29 @@ rmw_create_service(
 rmw_ret_t
 rmw_destroy_service(rmw_service_t * service)
 {
-  if (service) {
-    // TODO de-allocate Replier and request DataReader
-    delete static_cast<ConnextDynamicServiceInfo *>(service->data);
-    delete service;
-    return RMW_RET_OK;
+  if (!service) {
+    rmw_set_error_string("service handle is null");
+    return RMW_RET_ERROR;
   }
 
-  return RMW_RET_ERROR;
+  // TODO de-allocate Replier and request DataReader
+  delete static_cast<ConnextDynamicServiceInfo *>(service->data);
+  delete service;
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_destroy_client(rmw_client_t * client)
 {
-  if (client) {
-    // TODO de-allocate Requester and response DataReader
-    delete static_cast<ConnextDynamicClientInfo *>(client->data);
-    delete client;
-    return RMW_RET_OK;
+  if (!client) {
+    rmw_set_error_string("client handle is null");
+    return RMW_RET_ERROR;
   }
 
-  return RMW_RET_ERROR;
+  // TODO de-allocate Requester and response DataReader
+  delete static_cast<ConnextDynamicClientInfo *>(client->data);
+  delete client;
+  return RMW_RET_OK;
 }
 
 }  // extern "C"
