@@ -34,23 +34,23 @@ namespace @(subfolder)
 namespace type_support
 {
 
-void
+bool
 register_type__@(spec.base_type.type)(
   DDSDomainParticipant * participant,
   const char * type_name);
 
-void
+bool
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
 convert_ros_message_to_dds(
   const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message,
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message);
 
-void
+bool
 publish__@(spec.base_type.type)(
   DDSDataWriter * topic_writer,
   const void * untyped_ros_message);
 
-void
+bool
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
 convert_dds_message_to_ros(
   const @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message,
