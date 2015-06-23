@@ -59,7 +59,9 @@ convert_dds_message_to_ros(
 bool
 take__@(spec.base_type.type)(
   DDSDataReader * topic_reader,
-  void * untyped_ros_message);
+  bool ignore_local_publications,
+  void * untyped_ros_message,
+  bool * taken);
 
 }  // namespace type_support
 

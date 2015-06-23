@@ -47,6 +47,7 @@ struct ConnextStaticPublisherInfo
 struct ConnextStaticSubscriberInfo
 {
   DDSDataReader * topic_reader_;
+  bool ignore_local_publications;
   const message_type_support_callbacks_t * callbacks_;
 };
 
@@ -304,7 +305,8 @@ rmw_subscription_t *
 rmw_create_subscription(const rmw_node_t * node,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
-  size_t queue_size)
+  size_t queue_size,
+  bool ignore_local_publications)
 {
   if (!node) {
     rmw_set_error_string("node handle is null");
@@ -415,6 +417,7 @@ rmw_create_subscription(const rmw_node_t * node,
   ConnextStaticSubscriberInfo * subscriber_info = new ConnextStaticSubscriberInfo();
   subscriber_info->topic_reader_ = topic_reader;
   subscriber_info->callbacks_ = callbacks;
+  subscriber_info->ignore_local_publications = ignore_local_publications;
 
   rmw_subscription_t * subscription = new rmw_subscription_t;
   subscription->implementation_identifier = rti_connext_identifier;
@@ -459,9 +462,10 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     return RMW_RET_ERROR;
   }
 
-  *taken = callbacks->take(topic_reader, ros_message);
+  bool success = callbacks->take(
+    topic_reader, subscriber_info->ignore_local_publications, ros_message, taken);
 
-  return RMW_RET_OK;
+  return success ? RMW_RET_OK : RMW_RET_ERROR;
 }
 
 rmw_guard_condition_t *
