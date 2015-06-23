@@ -741,6 +741,7 @@ struct CustomSubscriberInfo
 {
   DDSDynamicDataTypeSupport * dynamic_data_type_support_;
   DDSDynamicDataReader * dynamic_reader_;
+  bool ignore_local_publications;
   DDS_TypeCode * type_code_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * members_;
   DDS_DynamicData * dynamic_data;
@@ -750,7 +751,8 @@ rmw_subscription_t *
 rmw_create_subscription(const rmw_node_t * node,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
-  size_t queue_size)
+  size_t queue_size,
+  bool ignore_local_publications)
 {
   if (!node) {
     rmw_set_error_string("node handle is null");
@@ -889,6 +891,7 @@ rmw_create_subscription(const rmw_node_t * node,
   CustomSubscriberInfo * custom_subscriber_info = new CustomSubscriberInfo();
   custom_subscriber_info->dynamic_data_type_support_ = ddts;
   custom_subscriber_info->dynamic_reader_ = dynamic_reader;
+  custom_subscriber_info->ignore_local_publications = ignore_local_publications;
   custom_subscriber_info->type_code_ = type_code;
   custom_subscriber_info->members_ = members;
   custom_subscriber_info->dynamic_data = dynamic_data;
@@ -1263,15 +1266,38 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     return RMW_RET_ERROR;
   }
 
-  bool success = _take(&dynamic_data_sequence[0], ros_message, members);
-  if (!success) {
-    rmw_set_error_string("failed to take sample");
-    return RMW_RET_ERROR;
+  bool success = true;
+  bool ignore_sample = false;
+  if (subscriber_info->ignore_local_publications) {
+    // compare the lower 12 octets of the guids from the sender and this receiver
+    // if they are equal the sample has been sent from this process and should be ignored
+    DDS_SampleInfo & sample_info = sample_infos[0];
+    DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
+    DDS_InstanceHandle_t receiver_instance_handle = dynamic_reader->get_instance_handle();
+    ignore_sample = true;
+    for (uint i = 0; i < 12; ++i) {
+      DDS_Octet * sender_element = &(sender_guid.value[i]);
+      DDS_Octet * receiver_element = &(((DDS_Octet *)&receiver_instance_handle)[i]);
+      if (*sender_element != *receiver_element) {
+        ignore_sample = false;
+        break;
+      }
+    }
+  }
+
+  if (!ignore_sample) {
+    success = _take(&dynamic_data_sequence[0], ros_message, members);
+    if (success) {
+      *taken = true;
+    }
   }
 
   dynamic_reader->return_loan(dynamic_data_sequence, sample_infos);
 
-  *taken = true;
+  if (!success) {
+    rmw_set_error_string("failed to take sample");
+    return RMW_RET_ERROR;
+  }
 
   return RMW_RET_OK;
 }

@@ -223,13 +223,18 @@ convert_dds_message_to_ros(
 bool
 take__@(spec.base_type.type)(
   void * untyped_topic_reader,
-  void * untyped_ros_message)
+  bool ignore_local_publications,
+  void * untyped_ros_message,
+  bool * taken)
 {
   if (!untyped_topic_reader) {
     throw std::runtime_error("topic reader handle is null");
   }
   if (!untyped_ros_message) {
     throw std::runtime_error("ros message handle is null");
+  }
+  if (!taken) {
+    throw std::runtime_error("taken handle is null");
   }
 
   DDSDataReader * topic_reader = static_cast<DDSDataReader *>(untyped_topic_reader);
@@ -255,13 +260,38 @@ take__@(spec.base_type.type)(
     return false;
   }
 
-  @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
-    *(@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
-  bool converted = convert_dds_message_to_ros(dds_messages[0], ros_message);
+  bool success = true;
+  bool ignore_sample = false;
+  if (ignore_local_publications) {
+    // compare the lower 12 octets of the guids from the sender and this receiver
+    // if they are equal the sample has been sent from this process and should be ignored
+    DDS_SampleInfo & sample_info = sample_infos[0];
+    DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
+    DDS_InstanceHandle_t receiver_instance_handle = topic_reader->get_instance_handle();
+    ignore_sample = true;
+    for (uint i = 0; i < 12; ++i) {
+      DDS_Octet * sender_element = &(sender_guid.value[i]);
+      DDS_Octet * receiver_element = &(((DDS_Octet *)&receiver_instance_handle)[i]);
+      if (*sender_element != *receiver_element) {
+        ignore_sample = false;
+        break;
+      }
+    }
+  }
 
+  if (!ignore_sample) {
+    @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
+      *(@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
+    success = convert_dds_message_to_ros(dds_messages[0], ros_message);
+    if (success) {
+      *taken = true;
+    }
+  } else {
+    *taken = false;
+  }
   data_reader->return_loan(dds_messages, sample_infos);
 
-  return converted;
+  return success;
 }
 
 static message_type_support_callbacks_t callbacks = {
