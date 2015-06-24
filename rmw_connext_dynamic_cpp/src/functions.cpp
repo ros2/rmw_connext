@@ -1275,7 +1275,7 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
     DDS_InstanceHandle_t receiver_instance_handle = dynamic_reader->get_instance_handle();
     ignore_sample = true;
-    for (uint i = 0; i < 12; ++i) {
+    for (size_t i = 0; i < 12; ++i) {
       DDS_Octet * sender_element = &(sender_guid.value[i]);
       DDS_Octet * receiver_element = &(((DDS_Octet *)&receiver_instance_handle)[i]);
       if (*sender_element != *receiver_element) {
