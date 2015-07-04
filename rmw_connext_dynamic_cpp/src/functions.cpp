@@ -91,6 +91,15 @@ rmw_create_node(const char * name)
     rmw_set_error_string("failed to add qos property");
     return NULL;
   }
+  status = DDSPropertyQosPolicyHelper::add_property(
+    participant_qos.property,
+    "dds.transport.use_510_compatible_locator_kinds",
+    "1",
+    DDS_BOOLEAN_FALSE);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to add qos property");
+    return NULL;
+  }
 
   DDS_DomainId_t domain = 0;
 
