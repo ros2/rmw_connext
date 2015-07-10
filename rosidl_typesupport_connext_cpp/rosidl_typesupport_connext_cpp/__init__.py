@@ -47,7 +47,7 @@ def generate_dds_connext_cpp(
     for dep in deps:
         # Only take the first : for separation, as Windows follows with a C:\
         dep_parts = dep.split(':', 1)
-        assert(len(dep_parts) == 2)
+        assert len(dep_parts) == 2, "The dependency '%s' must contain a double colon" % dep
         idl_path = dep_parts[1]
         idl_base_path = os.path.dirname(
             os.path.dirname(os.path.dirname(os.path.normpath(idl_path))))
