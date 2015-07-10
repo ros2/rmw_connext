@@ -196,8 +196,16 @@ DDS_TypeCode * create_type_code(
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
+          if (!member->members_) {
+            rmw_set_error_string("members handle is null");
+            return NULL;
+          }
           const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
             (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
+          if (!sub_members) {
+            rmw_set_error_string("sub members handle is null");
+            return NULL;
+          }
           std::string field_type_name = std::string(sub_members->package_name_) + "::msg::dds_::" +
             sub_members->message_name_ + "_";
           member_type_code = create_type_code(field_type_name, sub_members, participant_qos);
@@ -240,13 +248,17 @@ DDS_TypeCode * create_type_code(
         }
       }
     }
-    type_code->add_member(
+    auto zero_based_index = type_code->add_member(
       (std::string(member->name_) + "_").c_str(),
-      DDS_TYPECODE_MEMBER_ID_INVALID,
+      i,
       member_type_code,
       DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
     if (ex != DDS_NO_EXCEPTION_CODE) {
       rmw_set_error_string("failed to add member");
+      return NULL;
+    }
+    if (zero_based_index != i) {
+      rmw_set_error_string("unexpected member index");
       return NULL;
     }
   }
@@ -439,7 +451,7 @@ rmw_create_publisher(
 #define SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
   TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
   DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
-    0, \
+    NULL, \
     i + 1, \
     value); \
   if (status != DDS_RETCODE_OK) { \
@@ -465,7 +477,7 @@ rmw_create_publisher(
     if (member->is_array_) { \
       ARRAY_SIZE_AND_VALUES(TYPE) \
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
-        0, \
+        NULL, \
         i + 1, \
         array_size, \
         ros_values); \
@@ -485,12 +497,12 @@ rmw_create_publisher(
       DDS_TYPE * values = nullptr; \
       if (array_size > 0) { \
         values = new DDS_TYPE[array_size]; \
-        for (size_t i = 0; i < array_size; ++i) { \
-          values[i] = ros_values[i]; \
+        for (size_t j = 0; j < array_size; ++j) { \
+          values[j] = ros_values[j]; \
         } \
       } \
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
-        0, \
+        NULL, \
         i + 1, \
         array_size, \
         values); \
@@ -515,8 +527,8 @@ rmw_create_publisher(
         array_size = member->array_size_; \
         auto ros_values = (TYPE *)((char *)ros_message + member->offset_); \
         values = new DDS_TYPE[array_size]; \
-        for (size_t i = 0; i < array_size; ++i) { \
-          values[i] = ros_values[i]; \
+        for (size_t j = 0; j < array_size; ++j) { \
+          values[j] = ros_values[j]; \
         } \
       } else { \
         auto untyped_vector = (void *)((char *)ros_message + member->offset_); \
@@ -524,13 +536,13 @@ rmw_create_publisher(
         array_size = vector->size(); \
         if (array_size > 0) { \
           values = new DDS_TYPE[array_size]; \
-          for (size_t i = 0; i < array_size; ++i) { \
-            values[i] = (*vector)[i]; \
+          for (size_t j = 0; j < array_size; ++j) { \
+            values[j] = (*vector)[j]; \
           } \
         } \
       } \
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
-        0, \
+        NULL, \
         i + 1, \
         array_size, \
         values); \
@@ -552,18 +564,18 @@ rmw_create_publisher(
       DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
       DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
         dynamic_data_member, \
-        0, \
+        NULL, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to bind complex member"); \
         return false; \
       } \
       ARRAY_SIZE_AND_VALUES(TYPE) \
-      for (size_t i = 0; i < array_size; ++i) { \
+      for (size_t j = 0; j < array_size; ++j) { \
         status = dynamic_data_member.METHOD_NAME( \
           NULL, \
-          i + 1, \
-          ros_values[i].c_str()); \
+          j + 1, \
+          ros_values[j].c_str()); \
         if (status != DDS_RETCODE_OK) { \
           rmw_set_error_string("failed to set array value using " #METHOD_NAME); \
           return false; \
@@ -577,7 +589,7 @@ rmw_create_publisher(
     } else { \
       TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
-        0, \
+        NULL, \
         i + 1, \
         value.c_str()); \
       if (status != DDS_RETCODE_OK) { \
@@ -586,6 +598,50 @@ rmw_create_publisher(
       } \
     } \
   }
+
+#define SET_SUBMESSAGE_VALUE(dynamic_data, i) \
+  DDS_DynamicData sub_dynamic_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
+  DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
+    sub_dynamic_data, \
+    NULL, \
+    i + 1); \
+  if (status != DDS_RETCODE_OK) { \
+    rmw_set_error_string("failed to bind complex member"); \
+    return false; \
+  } \
+  void * sub_ros_message = (void *)((char *)ros_message + member->offset_); \
+  if (!member->members_) { \
+    rmw_set_error_string("members handle is null"); \
+    return false; \
+  } \
+  const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members = \
+    (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data; \
+  if (!sub_members) { \
+    rmw_set_error_string("sub members handle is null"); \
+    return false; \
+  } \
+  bool published = _publish(&sub_dynamic_data, sub_ros_message, sub_members); \
+  if (!published) { \
+    DDS_UnsignedLong count = sub_dynamic_data.get_member_count(); \
+    for (DDS_UnsignedLong k = 0; k < count; ++k) { \
+      DDS_DynamicDataMemberInfo info; \
+      status = sub_dynamic_data.get_member_info_by_index(info, k); \
+      if (status != DDS_RETCODE_OK) { \
+        rmw_set_error_string("failed to get member info"); \
+        return false; \
+      } \
+    } \
+  } \
+  status = dynamic_data->unbind_complex_member(sub_dynamic_data); \
+  if (!published) { \
+    rmw_set_error_string("failed to publish sub message"); \
+    return false; \
+  } \
+  if (status != DDS_RETCODE_OK) { \
+    rmw_set_error_string("failed to unbind complex member"); \
+    return false; \
+  }
+
 
 bool _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMembers * members)
@@ -640,31 +696,41 @@ bool _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
-          DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-          DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
-            sub_dynamic_data,
-            0,
-            i + 1);
-          if (status != DDS_RETCODE_OK) {
-            rmw_set_error_string("failed to bind complex member");
-            return false;
-          }
-          void * sub_ros_message = (void *)((char *)ros_message + member->offset_);
-          const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
-            (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
-          if (!sub_members) {
-            rmw_set_error_string("sub members handle is null");
-            return false;
-          }
-          bool published = _publish(&sub_dynamic_data, sub_ros_message, sub_members);
-          status = dynamic_data->unbind_complex_member(sub_dynamic_data);
-          if (!published) {
-            rmw_set_error_string("failed to publish sub message");
-            return false;
-          }
-          if (status != DDS_RETCODE_OK) {
-            rmw_set_error_string("failed to unbind complex member");
-            return false;
+          if (member->is_array_) {
+            auto untyped_member = (void *)((char *)ros_message + member->offset_);
+            if (!member->size_function) {
+              rmw_set_error_string("size function handle is null");
+              return false;
+            }
+            if (!member->get_function) {
+              rmw_set_error_string("get function handle is null");
+              return false;
+            }
+
+            DDS_DynamicData array_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
+            DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
+              array_data,
+              NULL,
+              i + 1);
+            if (status != DDS_RETCODE_OK) {
+              rmw_set_error_string("failed to bind complex member");
+              return false;
+            }
+            size_t array_size = member->size_function(untyped_member);
+            for (size_t j = 0; j < array_size; ++j) {
+              const void * const_sub_ros_message = member->get_function(untyped_member, j);
+              // offset message pointer since the macro adds the member offset to it
+              void * ros_message = (void *)((char *)const_sub_ros_message - member->offset_);
+              DDS_DynamicData * array_data_ptr = &array_data;
+              SET_SUBMESSAGE_VALUE(array_data_ptr, j)
+            }
+            status = dynamic_data->unbind_complex_member(array_data);
+            if (status != DDS_RETCODE_OK) {
+              rmw_set_error_string("failed to unbind complex member");
+              return false;
+            }
+          } else {
+            SET_SUBMESSAGE_VALUE(dynamic_data, i)
           }
         }
         break;
@@ -919,7 +985,7 @@ rmw_create_subscription(const rmw_node_t * node,
     DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
     DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
       dynamic_data_member, \
-      0, \
+      NULL, \
       i + 1); \
     if (status != DDS_RETCODE_OK) { \
       rmw_set_error_string("failed to bind complex member"); \
@@ -953,7 +1019,7 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
         ros_values, \
         &length, \
-        0, \
+        NULL, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to get array value using " #ARRAY_METHOD_NAME); \
@@ -963,7 +1029,7 @@ rmw_create_subscription(const rmw_node_t * node,
       TYPE * value = (TYPE *)((char *)ros_message + member->offset_); \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         *value, \
-        0, \
+        NULL, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to get primitive value using " #METHOD_NAME); \
@@ -983,7 +1049,7 @@ rmw_create_subscription(const rmw_node_t * node,
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
           values, \
           &length, \
-          0, \
+          NULL, \
           i + 1); \
         if (status != DDS_RETCODE_OK) { \
           delete[] values; \
@@ -999,7 +1065,7 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_TYPE value; \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         value, \
-        0, \
+        NULL, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to get primitive value using " #METHOD_NAME); \
@@ -1020,7 +1086,7 @@ rmw_create_subscription(const rmw_node_t * node,
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
           values, \
           &length, \
-          0, \
+          NULL, \
           i + 1); \
         if (status != DDS_RETCODE_OK) { \
           delete[] values; \
@@ -1046,7 +1112,7 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_TYPE value; \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         value, \
-        0, \
+        NULL, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to get primitive value using " #METHOD_NAME); \
@@ -1065,7 +1131,7 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
       DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
         dynamic_data_member, \
-        0, \
+        NULL, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to bind complex member"); \
@@ -1102,7 +1168,7 @@ rmw_create_subscription(const rmw_node_t * node,
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         value, \
         &size, \
-        0, \
+        NULL, \
         i + 1); \
       if (status != DDS_RETCODE_OK) { \
         if (value) { \
@@ -1117,6 +1183,37 @@ rmw_create_subscription(const rmw_node_t * node,
         delete[] value; \
       } \
     } \
+  }
+
+#define GET_SUBMESSAGE_VALUE(dynamic_data, i) \
+  DDS_DynamicData sub_dynamic_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
+  DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
+    sub_dynamic_data, \
+    NULL, \
+    i + 1); \
+  if (status != DDS_RETCODE_OK) { \
+    rmw_set_error_string("failed to bind complex member"); \
+    return false; \
+  } \
+  void * sub_ros_message = (void *)((char *)ros_message + member->offset_); \
+  if (!member->members_) { \
+    rmw_set_error_string("members handle is null"); \
+    return false; \
+  } \
+  const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members = \
+    (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data; \
+  if (!sub_members) { \
+    rmw_set_error_string("sub members handle is null"); \
+    return false; \
+  } \
+  bool success = _take(&sub_dynamic_data, sub_ros_message, sub_members); \
+  status = dynamic_data->unbind_complex_member(sub_dynamic_data); \
+  if (!success) { \
+    return false; \
+  } \
+  if (status != DDS_RETCODE_OK) { \
+    rmw_set_error_string("failed to unbind complex member"); \
+    return false; \
   }
 
 bool _take(DDS_DynamicData * dynamic_data, void * ros_message,
@@ -1172,31 +1269,47 @@ bool _take(DDS_DynamicData * dynamic_data, void * ros_message,
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
-          DDS_DynamicData sub_dynamic_data(0, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-          DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
-            sub_dynamic_data,
-            0,
-            i + 1);
-          if (status != DDS_RETCODE_OK) {
-            rmw_set_error_string("failed to bind complex member");
-            return false;
-          }
-          void * sub_ros_message = (void *)((char *)ros_message + member->offset_);
-          const::rosidl_typesupport_introspection_cpp::MessageMembers * sub_members =
-            (const::rosidl_typesupport_introspection_cpp::MessageMembers *)member->members_->data;
-          if (!sub_members) {
-            rmw_set_error_string("sub members handle is null");
-            return false;
-          }
-          bool success = _take(&sub_dynamic_data, sub_ros_message, sub_members);
-          status = dynamic_data->unbind_complex_member(sub_dynamic_data);
-          if (!success) {
-            rmw_set_error_string("failed to take sub message");
-            return false;
-          }
-          if (status != DDS_RETCODE_OK) {
-            rmw_set_error_string("failed to unbind complex member");
-            return false;
+          if (member->is_array_) {
+            auto untyped_member = (void *)((char *)ros_message + member->offset_);
+            if (!member->array_size_ || member->is_upper_bound_) {
+              if (!member->resize_function) {
+                rmw_set_error_string("resize function handle is null");
+                return false;
+              }
+            }
+            if (!member->get_function) {
+              rmw_set_error_string("get function handle is null");
+              return false;
+            }
+
+            ARRAY_SIZE()
+            DDS_DynamicData array_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
+            DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
+              array_data,
+              NULL,
+              i + 1);
+            if (status != DDS_RETCODE_OK) {
+              rmw_set_error_string("failed to bind complex member");
+              return false;
+            }
+            if (!member->array_size_ || member->is_upper_bound_) {
+              member->resize_function(untyped_member, array_size);
+            }
+            for (size_t j = 0; j < array_size; ++j) {
+              const void * const_sub_ros_message = member->get_function(untyped_member, j);
+              // offset message pointer since the macro adds the member offset to it
+              void * ros_message = (void *)((char *)const_sub_ros_message - member->offset_);
+              DDS_DynamicData * array_data_ptr = &array_data;
+              // TODO(dirk-thomas) if the macro return unbind is not called
+              GET_SUBMESSAGE_VALUE(array_data_ptr, j)
+            }
+            status = dynamic_data->unbind_complex_member(array_data);
+            if (status != DDS_RETCODE_OK) {
+              rmw_set_error_string("failed to unbind complex member");
+              return false;
+            }
+          } else {
+            GET_SUBMESSAGE_VALUE(dynamic_data, i)
           }
         }
         break;
@@ -1304,7 +1417,7 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
   dynamic_reader->return_loan(dynamic_data_sequence, sample_infos);
 
   if (!success) {
-    rmw_set_error_string("failed to take sample");
+    // error string was set within the function
     return RMW_RET_ERROR;
   }
 
