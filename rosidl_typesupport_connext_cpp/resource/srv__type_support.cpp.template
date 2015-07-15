@@ -59,6 +59,7 @@ void * create_requester__@(spec.srv_name)(
   connext::RequesterParams requester_params(participant);
   requester_params.service_name(service_name);
 
+  // TODO(wjwwood): use rmw allocators for this.
   connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester(new connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(requester_params));
 
   *untyped_reader = requester->get_reply_datareader();
@@ -93,6 +94,7 @@ void * create_replier__@(spec.srv_name)(
   connext::ReplierParams<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> replier_params(participant);
   replier_params.service_name(service_name);
 
+  // TODO(wjwwood): use rmw allocators for this.
   connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier(new connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(replier_params));
 
   *untyped_reader = replier->get_request_datareader();

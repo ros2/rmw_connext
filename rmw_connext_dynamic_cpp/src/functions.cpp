@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <exception>
 #include <iostream>
+#include <sstream>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 #pragma GCC diagnostic push
@@ -35,11 +38,23 @@
 // is in the include/rosidl_typesupport_connext_cpp/impl folder.
 #include <rosidl_generator_cpp/message_type_support.hpp>
 
+#include <rmw/impl/cpp/macros.hpp>
+
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 #include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
 #include "rosidl_typesupport_introspection_cpp/visibility_control.h"
+
+ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
+inline std::string
+_create_type_name(
+  const rosidl_typesupport_introspection_cpp::MessageMembers * members,
+  const std::string & sep)
+{
+  return
+    std::string(members->package_name_) + "::" + sep + "::dds_::" + members->message_name_ + "_";
+}
 
 // This extern "C" prevents accidental overloading of functions. With this in
 // place, overloading produces an error rather than a new C++ symbol.
@@ -111,33 +126,89 @@ rmw_create_node(const char * name)
     return NULL;
   }
 
-  rmw_node_t * node = new rmw_node_t;
+  rmw_node_t * node = rmw_node_allocate();
   node->implementation_identifier = rti_connext_dynamic_identifier;
   node->data = participant;
   return node;
+}
+
+rmw_ret_t
+rmw_destroy_node(rmw_node_t * node)
+{
+  if (!node) {
+    rmw_set_error_string("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
+  DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
+  if (!dpf_) {
+    rmw_set_error_string("failed to get participant factory");
+    return RMW_RET_ERROR;
+  }
+
+  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
+  if (!participant) {
+    rmw_set_error_string("participant handle is null");
+  }
+  // This unregisters types and destroys topics which were shared between
+  // publishers and subscribers and could not be cleaned up in the delete functions.
+  participant->delete_contained_entities();
+
+  DDS_ReturnCode_t ret = dpf_->delete_participant(participant);
+  if (ret != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to delete participant");
+    return RMW_RET_ERROR;
+  }
+  rmw_node_free(node);
+  node = nullptr;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+destroy_type_code(DDS_TypeCode * type_code)
+{
+  DDS_TypeCodeFactory * factory = NULL;
+  factory = DDS_TypeCodeFactory::get_instance();
+  if (!factory) {
+    rmw_set_error_string("failed to get typecode factory");
+    return RMW_RET_ERROR;
+  }
+
+  DDS_ExceptionCode_t ex;
+  factory->delete_tc(type_code, ex);
+  if (ex != DDS_NO_EXCEPTION_CODE) {
+    rmw_set_error_string("failed to delete type code struct");
+    return RMW_RET_ERROR;
+  }
+  return RMW_RET_OK;
 }
 
 DDS_TypeCode * create_type_code(
   std::string type_name, const rosidl_typesupport_introspection_cpp::MessageMembers * members,
   DDS_DomainParticipantQos & participant_qos)
 {
-  DDS_TypeCodeFactory * factory = NULL;
-  factory = DDS_TypeCodeFactory::get_instance();
+  DDS_TypeCodeFactory * factory = DDS_TypeCodeFactory::get_instance();
   if (!factory) {
     rmw_set_error_string("failed to get typecode factory");
     return NULL;
   }
-
+  // Past this point, a failure results in unrolling code in the goto fail block.
   DDS_StructMemberSeq struct_members;
   DDS_ExceptionCode_t ex = DDS_NO_EXCEPTION_CODE;
+  // Start initializing elements.
   DDS_TypeCode * type_code = factory->create_struct_tc(type_name.c_str(), struct_members, ex);
   if (!type_code || ex != DDS_NO_EXCEPTION_CODE) {
     rmw_set_error_string("failed to create struct typecode");
-    return NULL;
+    goto fail;
   }
   for (unsigned long i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
-    const DDS_TypeCode * member_type_code;
+    const DDS_TypeCode * member_type_code = nullptr;
+    DDS_TypeCode * member_type_code_non_const = nullptr;
     switch (member->type_id_) {
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
         member_type_code = factory->get_primitive_tc(DDS_TK_BOOLEAN);
@@ -187,11 +258,12 @@ DDS_TypeCode * create_type_code(
             // TODO use std::string().max_size() as soon as Connext supports dynamic allocation
             max_string_size = 255;
           }
-          member_type_code = factory->create_string_tc(max_string_size, ex);
+          member_type_code_non_const = factory->create_string_tc(max_string_size, ex);
+          member_type_code = member_type_code_non_const;
         }
         if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
           rmw_set_error_string("failed to create string typecode");
-          return NULL;
+          goto fail;
         }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
@@ -206,45 +278,49 @@ DDS_TypeCode * create_type_code(
             rmw_set_error_string("sub members handle is null");
             return NULL;
           }
-          std::string field_type_name = std::string(sub_members->package_name_) + "::msg::dds_::" +
-            sub_members->message_name_ + "_";
+          std::string field_type_name = _create_type_name(sub_members, "msg");
           member_type_code = create_type_code(field_type_name, sub_members, participant_qos);
           if (!member_type_code) {
             // error string was set within the function
-            return NULL;
+            goto fail;
           }
         }
         break;
       default:
         rmw_set_error_string(
           (std::string("unknown type id ") + std::to_string(member->type_id_)).c_str());
-        return NULL;
+        goto fail;
     }
     if (!member_type_code) {
       rmw_set_error_string("failed to create typecode");
-      return NULL;
+      goto fail;
     }
     if (member->is_array_) {
       if (member->array_size_) {
         if (!member->is_upper_bound_) {
-          member_type_code = factory->create_array_tc(member->array_size_, member_type_code, ex);
+          member_type_code_non_const =
+            factory->create_array_tc(member->array_size_, member_type_code, ex);
+          member_type_code = member_type_code_non_const;
           if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
             rmw_set_error_string("failed to create array typecode");
-            return NULL;
+            goto fail;
           }
         } else {
-          member_type_code = factory->create_sequence_tc(member->array_size_, member_type_code, ex);
+          member_type_code_non_const =
+            factory->create_sequence_tc(member->array_size_, member_type_code, ex);
+          member_type_code = member_type_code_non_const;
           if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
             rmw_set_error_string("failed to create sequence typecode");
-            return NULL;
+            goto fail;
           }
         }
       } else {
         // TODO(dirk-thomas) the default bound of sequences is 100
-        member_type_code = factory->create_sequence_tc(100, member_type_code, ex);
+        member_type_code_non_const = factory->create_sequence_tc(100, member_type_code, ex);
+        member_type_code = member_type_code_non_const;
         if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
           rmw_set_error_string("failed to create sequence typecode");
-          return NULL;
+          goto fail;
         }
       }
     }
@@ -255,7 +331,7 @@ DDS_TypeCode * create_type_code(
       DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
     if (ex != DDS_NO_EXCEPTION_CODE) {
       rmw_set_error_string("failed to add member");
-      return NULL;
+      goto fail;
     }
     if (zero_based_index != i) {
       rmw_set_error_string("unexpected member index");
@@ -269,25 +345,44 @@ DDS_TypeCode * create_type_code(
     member_type_code = factory->get_primitive_tc(DDS_TK_BOOLEAN);
     if (!member_type_code) {
       rmw_set_error_string("failed to get primitive typecode");
-      return NULL;
+      goto fail;
     }
     type_code->add_member("_dummy", DDS_TYPECODE_MEMBER_ID_INVALID,
       member_type_code,
       DDS_TYPECODE_NONKEY_REQUIRED_MEMBER, ex);
     if (ex != DDS_NO_EXCEPTION_CODE) {
       rmw_set_error_string("failed to add member");
-      return NULL;
+      goto fail;
     }
   }
-  //type_code->print_IDL(1, ex);
   DDS_StructMemberSeq_finalize(&struct_members);
   return type_code;
+fail:
+  if (type_code) {
+    if (factory) {
+      DDS_ExceptionCode_t exc = DDS_NO_EXCEPTION_CODE;
+      factory->delete_tc(type_code, exc);
+      if (exc != DDS_NO_EXCEPTION_CODE) {
+        std::stringstream ss;
+        ss << "failed to delete type code during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    } else {
+      std::stringstream ss;
+      ss << "leaking type code during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  return nullptr;
 }
-
 
 struct CustomPublisherInfo
 {
   DDSDynamicDataTypeSupport * dynamic_data_type_support_;
+  DDSPublisher * dds_publisher_;
+  DDSDataWriter * data_writer_;
   DDSDynamicDataWriter * dynamic_writer_;
   DDS_TypeCode * type_code_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * members_;
@@ -305,20 +400,19 @@ rmw_create_publisher(
     rmw_set_error_string("node handle is null");
     return NULL;
   }
-  if (node->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("node handle is not from this rmw implementation");
-    return NULL;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_dynamic_identifier,
+    return NULL)
   if (!type_support) {
     rmw_set_error_string("type support handle is null");
     return NULL;
   }
-  if (type_support->typesupport_identifier !=
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
-  {
-    rmw_set_error_string("type support is not from this rmw implementation");
-    return NULL;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    type support handle,
+    type_support->typesupport_identifier,
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
+    return NULL)
 
   DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
   if (!participant) {
@@ -332,8 +426,7 @@ rmw_create_publisher(
     rmw_set_error_string("members handle is null");
     return NULL;
   }
-  std::string type_name = std::string(members->package_name_) + "::msg::dds_::" +
-    members->message_name_ + "_";
+  std::string type_name = _create_type_name(members, "msg");
 
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -341,111 +434,320 @@ rmw_create_publisher(
     rmw_set_error_string("failed to get participant qos");
     return NULL;
   }
-
-  DDS_TypeCode * type_code = create_type_code(type_name, members, participant_qos);
-  if (!type_code) {
-    // error string was set within the function
-    return NULL;
+  // Past this point, a failure results in unrolling code in the goto fail block.
+  rmw_publisher_t * publisher = nullptr;
+  DDS_TypeCode * type_code = nullptr;
+  void * buf = nullptr;
+  DDSDynamicDataTypeSupport * ddts = nullptr;
+  DDS_PublisherQos publisher_qos;
+  DDSPublisher * dds_publisher = nullptr;
+  DDSTopic * topic = nullptr;
+  DDSTopicDescription * topic_description = nullptr;
+  DDS_DataWriterQos datawriter_qos;
+  DDSDataWriter * topic_writer = nullptr;
+  DDSDynamicDataWriter * dynamic_writer = nullptr;
+  DDS_DynamicData * dynamic_data = nullptr;
+  CustomPublisherInfo * custom_publisher_info = nullptr;
+  // Start initializing elements.
+  publisher = rmw_publisher_allocate();
+  if (!publisher) {
+    rmw_set_error_string("failed to allocate memory for publisher");
+    goto fail;
   }
 
+  type_code = create_type_code(type_name, members, participant_qos);
+  if (!type_code) {
+    // error string was set within the function
+    goto fail;
+  }
 
-  DDSDynamicDataTypeSupport * ddts = new DDSDynamicDataTypeSupport(
-    type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+  // Allocate memory for the DDSDynamicDataTypeSupport object.
+  buf = rmw_allocate(sizeof(DDSDynamicDataTypeSupport));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the DDSDynamicDataTypeSupport in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(
+    ddts, buf,
+    goto fail,
+    DDSDynamicDataTypeSupport, type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+  buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   status = ddts->register_type(participant, type_name.c_str());
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to register type");
-    return NULL;
+    // Delete ddts to prevent the goto fail block from trying to unregister_type.
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      ddts->~DDSDynamicDataTypeSupport(), DDSDynamicDataTypeSupport)
+    rmw_free(ddts);
+    ddts = nullptr;
+    goto fail;
   }
 
-
-  DDS_PublisherQos publisher_qos;
   status = participant->get_default_publisher_qos(publisher_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default publisher qos");
-    return NULL;
+    goto fail;
   }
 
-  DDSPublisher * dds_publisher = participant->create_publisher(
+  dds_publisher = participant->create_publisher(
     publisher_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!dds_publisher) {
     rmw_set_error_string("failed to create publisher");
-    return NULL;
+    goto fail;
   }
 
-
-  DDSTopic * topic;
-  DDSTopicDescription * topic_description = participant->lookup_topicdescription(topic_name);
+  topic_description = participant->lookup_topicdescription(topic_name);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
     if (status != DDS_RETCODE_OK) {
       rmw_set_error_string("failed to get default topic qos");
-      return NULL;
+      goto fail;
     }
 
     topic = participant->create_topic(
       topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!topic) {
       rmw_set_error_string("failed to create topic");
-      return NULL;
+      goto fail;
     }
   } else {
     DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
     topic = participant->find_topic(topic_name, timeout);
     if (!topic) {
       rmw_set_error_string("failed to find topic");
-      return NULL;
+      goto fail;
     }
   }
 
-
-  DDS_DataWriterQos datawriter_qos;
   status = participant->get_default_datawriter_qos(datawriter_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default datawriter qos");
-    return NULL;
+    goto fail;
   }
 
   // ensure the history depth is at least the requested queue size
-  // *INDENT-OFF*
   if (
     datawriter_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    datawriter_qos.history.depth < queue_size)
-  // *INDENT-ON*
+    datawriter_qos.history.depth < queue_size
+  )
   {
     datawriter_qos.history.depth = queue_size;
   }
 
-  DDSDataWriter * topic_writer = dds_publisher->create_datawriter(
+  topic_writer = dds_publisher->create_datawriter(
     topic, datawriter_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!topic_writer) {
     rmw_set_error_string("failed to create data writer");
-    return NULL;
+    goto fail;
   }
 
-  DDSDynamicDataWriter * dynamic_writer = DDSDynamicDataWriter::narrow(topic_writer);
+  dynamic_writer = DDSDynamicDataWriter::narrow(topic_writer);
   if (!dynamic_writer) {
     rmw_set_error_string("failed to narrow data writer");
-    return NULL;
+    goto fail;
   }
 
-  DDS_DynamicData * dynamic_data = ddts->create_data();
+  dynamic_data = ddts->create_data();
   if (!dynamic_data) {
     rmw_set_error_string("failed to create data");
-    return NULL;
+    goto fail;
   }
 
-  CustomPublisherInfo * custom_publisher_info = new CustomPublisherInfo();
+  // Allocate memory for the CustomPublisherInfo object.
+  buf = rmw_allocate(sizeof(CustomPublisherInfo));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the CustomPublisherInfo in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(custom_publisher_info, buf, goto fail, CustomPublisherInfo);
+  buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   custom_publisher_info->dynamic_data_type_support_ = ddts;
+  custom_publisher_info->dds_publisher_ = dds_publisher;
+  custom_publisher_info->data_writer_ = topic_writer;
   custom_publisher_info->dynamic_writer_ = dynamic_writer;
   custom_publisher_info->type_code_ = type_code;
   custom_publisher_info->members_ = members;
   custom_publisher_info->dynamic_data = dynamic_data;
 
-  rmw_publisher_t * publisher = new rmw_publisher_t;
   publisher->implementation_identifier = rti_connext_dynamic_identifier;
   publisher->data = custom_publisher_info;
   return publisher;
+fail:
+  // Something went wrong, unwind anything that's already been done.
+  if (custom_publisher_info) {
+    rmw_free(custom_publisher_info);
+  }
+  if (dynamic_data) {
+    if (ddts) {
+      if (ddts->delete_data(dynamic_data) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "failed to delete dynamic data during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    } else {
+      std::stringstream ss;
+      ss << "leaking dynamic data during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (topic_writer) {
+    if (dds_publisher) {
+      if (dds_publisher->delete_datawriter(topic_writer) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "failed to delete datawriter during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    } else {
+      std::stringstream ss;
+      ss << "leaking datawriter during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (participant) {
+    if (dds_publisher) {
+      if (participant->delete_publisher(dds_publisher) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "failed to delete publisher during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    }
+    if (ddts) {
+      // Cannot unregister type here, in case another topic is using the same type.
+      // Should be cleaned up when the node is destroyed.
+      // If we figure out a way to unregister types when they are not being used, then we can
+      // add this code back in:
+      /*
+         if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
+         std::stringstream ss;
+         ss << "failed to unregister type during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+         (std::cerr << ss.str()).flush();
+         }
+       */
+      // Call destructor directly since we used a placement new to construct it.
+      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+        ddts->~DDSDynamicDataTypeSupport(), DDSDynamicDataTypeSupport)
+      rmw_free(ddts);
+    }
+  } else if (dds_publisher || ddts) {
+    std::stringstream ss;
+    ss << "leaking type registration and/or publisher during handling of failure at " <<
+      __FILE__ << ":" << __LINE__ << '\n';
+    (std::cerr << ss.str()).flush();
+  }
+  if (type_code) {
+    if (destroy_type_code(type_code) != RMW_RET_OK) {
+      std::stringstream ss;
+      ss << "leaking type code during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+      ss.clear();
+      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (publisher) {
+    rmw_publisher_free(publisher);
+  }
+  if (buf) {
+    rmw_free(buf);
+  }
+  return NULL;
+}
+
+rmw_ret_t
+rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
+{
+  if (!node) {
+    rmw_set_error_string("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
+  if (!publisher) {
+    rmw_set_error_string("publisher handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher handle,
+    publisher->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
+  DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
+  if (!participant) {
+    rmw_set_error_string("participant handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  CustomPublisherInfo * custom_publisher_info = (CustomPublisherInfo *)publisher->data;
+  if (custom_publisher_info) {
+    DDSDynamicDataTypeSupport * ddts = custom_publisher_info->dynamic_data_type_support_;
+    if (ddts) {
+      std::string type_name = _create_type_name(custom_publisher_info->members_, "msg");
+      // Cannot unregister type here, in case another topic is using the same type.
+      // Should be cleaned up when the node is destroyed.
+      // If we figure out a way to unregister types when they are not being used, then we can
+      // add this code back in:
+      /*
+         if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
+         rmw_set_error_string(("failed to unregister type: " + type_name).c_str());
+         return RMW_RET_ERROR;
+         }
+       */
+      if (custom_publisher_info->dynamic_data) {
+        if (ddts->delete_data(custom_publisher_info->dynamic_data) != DDS_RETCODE_OK) {
+          rmw_set_error_string("failed to delete dynamic data");
+          return RMW_RET_ERROR;
+        }
+      }
+      custom_publisher_info->dynamic_data = nullptr;
+      rmw_free(ddts);
+    }
+    custom_publisher_info->dynamic_data_type_support_ = nullptr;
+    DDSPublisher * dds_publisher = custom_publisher_info->dds_publisher_;
+    if (dds_publisher) {
+      auto data_writer = custom_publisher_info->data_writer_;
+      if (data_writer) {
+        if (dds_publisher->delete_datawriter(data_writer) != DDS_RETCODE_OK) {
+          rmw_set_error_string("failed to delete datawriter");
+          return RMW_RET_ERROR;
+        }
+      }
+      custom_publisher_info->data_writer_ = nullptr;
+      custom_publisher_info->dynamic_writer_ = nullptr;
+      if (dds_publisher->delete_contained_entities() != DDS_RETCODE_ERROR) {
+        rmw_set_error_string("failed to delete contained entities for publisher");
+        return RMW_RET_ERROR;
+      }
+      if (participant->delete_publisher(dds_publisher) != DDS_RETCODE_ERROR) {
+        rmw_set_error_string("failed to delete publisher");
+        return RMW_RET_ERROR;
+      }
+    }
+    custom_publisher_info->dds_publisher_ = nullptr;
+    if (custom_publisher_info->type_code_) {
+      if (destroy_type_code(custom_publisher_info->type_code_) != RMW_RET_OK) {
+        // Error string already set.
+        return RMW_RET_ERROR;
+      }
+    }
+    custom_publisher_info->type_code_ = nullptr;
+    rmw_free(custom_publisher_info);
+  }
+  publisher->data = nullptr;
+  rmw_publisher_free(publisher);
+  return RMW_RET_OK;
 }
 
 #define SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
@@ -496,8 +798,24 @@ rmw_create_publisher(
       ARRAY_SIZE_AND_VALUES(TYPE) \
       DDS_TYPE * values = nullptr; \
       if (array_size > 0) { \
-        values = new DDS_TYPE[array_size]; \
+        /* Allocate the memory, but do not do placement new yet. */ \
+        values = reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
+        if (!values) { \
+          rmw_set_error_string("failed to allocate memory"); \
+          return false; \
+        } \
         for (size_t j = 0; j < array_size; ++j) { \
+          /* Now do the placement new for this element. */ \
+          bool construction_successful = true; \
+          RMW_TRY_PLACEMENT_NEW(void * _, values + j, construction_successful = false, DDS_TYPE) \
+          if (!construction_successful) { \
+            for (size_t k = 0; k < j - 1; ++k) { \
+              RMW_TRY_DESTRUCTOR(values[k].~DDS_TYPE(), DDS_TYPE, ) \
+            } \
+            rmw_free(values); \
+            return false; \
+          } \
+          /* Then do assignment (copy constructor). */ \
           values[j] = ros_values[j]; \
         } \
       } \
@@ -507,7 +825,11 @@ rmw_create_publisher(
         array_size, \
         values); \
       if (values) { \
-        delete[] values; \
+        /* First call the destructor for each element, then free the whole block. */ \
+        for (size_t i = 0; i < array_size; ++i) { \
+          RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
+        } \
+        rmw_free(values); \
       } \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to set array value using " #ARRAY_METHOD_NAME); \
@@ -526,8 +848,24 @@ rmw_create_publisher(
       if (member->array_size_ && !member->is_upper_bound_) { \
         array_size = member->array_size_; \
         auto ros_values = (TYPE *)((char *)ros_message + member->offset_); \
-        values = new DDS_TYPE[array_size]; \
+        /* Allocate the memory, but do not do placement new yet. */ \
+        values = reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
+        if (!values) { \
+          rmw_set_error_string("failed to allocate memory"); \
+          return false; \
+        } \
         for (size_t j = 0; j < array_size; ++j) { \
+          /* Now do the placement new for this element. */ \
+          bool construction_successful = true; \
+          RMW_TRY_PLACEMENT_NEW(void * _, values + j, construction_successful = false, DDS_TYPE) \
+          if (!construction_successful) { \
+            for (size_t k = 0; k < j - 1; ++k) { \
+              RMW_TRY_DESTRUCTOR(values[k].~DDS_TYPE(), DDS_TYPE, ) \
+            } \
+            rmw_free(values); \
+            return false; \
+          } \
+          /* Then do assignment (copy constructor). */ \
           values[j] = ros_values[j]; \
         } \
       } else { \
@@ -535,8 +873,24 @@ rmw_create_publisher(
         auto vector = reinterpret_cast<std::vector<TYPE> *>(untyped_vector); \
         array_size = vector->size(); \
         if (array_size > 0) { \
-          values = new DDS_TYPE[array_size]; \
+          /* Allocate the memory, but do not do placement new yet. */ \
+          values = reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
+          if (!values) { \
+            rmw_set_error_string("failed to allocate memory"); \
+            return false; \
+          } \
           for (size_t j = 0; j < array_size; ++j) { \
+            /* Now do the placement new for this element. */ \
+            bool construction_successful = true; \
+            RMW_TRY_PLACEMENT_NEW(void * _, values + j, construction_successful = false, DDS_TYPE) \
+            if (!construction_successful) { \
+              for (size_t k = 0; k < j - 1; ++k) { \
+                RMW_TRY_DESTRUCTOR(values[k].~DDS_TYPE(), DDS_TYPE, ) \
+              } \
+              rmw_free(values); \
+              return false; \
+            } \
+            /* Then do assignment (copy constructor). */ \
             values[j] = (*vector)[j]; \
           } \
         } \
@@ -547,7 +901,11 @@ rmw_create_publisher(
         array_size, \
         values); \
       if (values) { \
-        delete[] values; \
+        /* First call the destructor for each element, then free the whole block. */ \
+        for (size_t i = 0; i < array_size; ++i) { \
+          RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
+        } \
+        rmw_free(values); \
       } \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to set array value using " #ARRAY_METHOD_NAME); \
@@ -642,12 +1000,10 @@ rmw_create_publisher(
     return false; \
   }
 
-
-bool _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
+bool _publish(
+  DDS_DynamicData * dynamic_data, const void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
-  //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-  //DDS_DynamicData * dynamic_data = ddts->create_data();
   for (unsigned long i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     switch (member->type_id_) {
@@ -750,17 +1106,17 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     rmw_set_error_string("publisher handle is null");
     return RMW_RET_ERROR;
   }
-  if (publisher->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("publisher handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher handle,
+    publisher->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
   if (!ros_message) {
     rmw_set_error_string("ros message handle is null");
     return RMW_RET_ERROR;
   }
 
-  CustomPublisherInfo * publisher_info =
-    static_cast<CustomPublisherInfo *>(publisher->data);
+  CustomPublisherInfo * publisher_info = static_cast<CustomPublisherInfo *>(publisher->data);
   if (!publisher_info) {
     rmw_set_error_string("publisher info handle is null");
     return RMW_RET_ERROR;
@@ -780,8 +1136,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     rmw_set_error_string("type code handle is null");
     return RMW_RET_ERROR;
   }
-  const rosidl_typesupport_introspection_cpp::MessageMembers * members =
-    publisher_info->members_;
+  const rosidl_typesupport_introspection_cpp::MessageMembers * members = publisher_info->members_;
   if (!members) {
     rmw_set_error_string("members handle is null");
     return RMW_RET_ERROR;
@@ -816,6 +1171,8 @@ struct CustomSubscriberInfo
 {
   DDSDynamicDataTypeSupport * dynamic_data_type_support_;
   DDSDynamicDataReader * dynamic_reader_;
+  DDSDataReader * data_reader_;
+  DDSSubscriber * dds_subscriber_;
   bool ignore_local_publications;
   DDS_TypeCode * type_code_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * members_;
@@ -823,7 +1180,8 @@ struct CustomSubscriberInfo
 };
 
 rmw_subscription_t *
-rmw_create_subscription(const rmw_node_t * node,
+rmw_create_subscription(
+  const rmw_node_t * node,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
   size_t queue_size,
@@ -833,20 +1191,20 @@ rmw_create_subscription(const rmw_node_t * node,
     rmw_set_error_string("node handle is null");
     return NULL;
   }
-  if (node->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("node handle is not from this rmw implementation");
-    return NULL;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_dynamic_identifier,
+    return NULL)
+
   if (!type_support) {
     rmw_set_error_string("type support handle is null");
     return NULL;
   }
-  if (type_support->typesupport_identifier !=
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
-  {
-    rmw_set_error_string("type support is not from this rmw implementation");
-    return NULL;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    type support handle,
+    type_support->typesupport_identifier,
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
+    return NULL)
 
   DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
   if (!participant) {
@@ -860,8 +1218,7 @@ rmw_create_subscription(const rmw_node_t * node,
     rmw_set_error_string("members handle is null");
     return NULL;
   }
-  std::string type_name = std::string(members->package_name_) + "::msg::dds_::" +
-    members->message_name_ + "_";
+  std::string type_name = _create_type_name(members, "msg");
 
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -869,69 +1226,97 @@ rmw_create_subscription(const rmw_node_t * node,
     rmw_set_error_string("failed to get participant qos");
     return NULL;
   }
-
-  DDS_TypeCode * type_code = create_type_code(type_name, members, participant_qos);
-  if (!type_code) {
-    // error string was set within the function
-    return NULL;
+  // Past this point, a failure results in unrolling code in the goto fail block.
+  rmw_subscription_t * subscription = nullptr;
+  DDS_TypeCode * type_code = nullptr;
+  void * buf = nullptr;
+  DDSDynamicDataTypeSupport * ddts = nullptr;
+  DDS_SubscriberQos subscriber_qos;
+  DDSSubscriber * dds_subscriber = nullptr;
+  DDSTopic * topic;
+  DDSTopicDescription * topic_description = nullptr;
+  DDSDataReader * topic_reader = nullptr;
+  DDSDynamicDataReader * dynamic_reader = nullptr;
+  DDS_DataReaderQos datareader_qos;
+  DDS_DynamicData * dynamic_data = nullptr;
+  CustomSubscriberInfo * custom_subscriber_info = nullptr;
+  // Begin initialization of elements.
+  subscription = rmw_subscription_allocate();
+  if (!subscription) {
+    rmw_set_error_string("failed to allocate memory for subscription");
+    goto fail;
   }
 
+  type_code = create_type_code(type_name, members, participant_qos);
+  if (!type_code) {
+    // error string was set within the function
+    goto fail;
+  }
 
-  DDSDynamicDataTypeSupport * ddts = new DDSDynamicDataTypeSupport(
-    type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+  // Allocate memory for the DDSDynamicDataTypeSupport object.
+  buf = rmw_allocate(sizeof(DDSDynamicDataTypeSupport));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the DDSDynamicDataTypeSupport in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(
+    ddts, buf,
+    goto fail,
+    DDSDynamicDataTypeSupport, type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+  buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   status = ddts->register_type(participant, type_name.c_str());
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to register type");
-    return NULL;
+    // Delete ddts to prevent the goto fail block from trying to unregister_type.
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      ddts->~DDSDynamicDataTypeSupport(), DDSDynamicDataTypeSupport)
+    rmw_free(ddts);
+    ddts = nullptr;
+    goto fail;
   }
 
-
-  DDS_SubscriberQos subscriber_qos;
   status = participant->get_default_subscriber_qos(subscriber_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default subscriber qos");
-    return NULL;
+    goto fail;
   }
 
-  DDSSubscriber * dds_subscriber = participant->create_subscriber(
+  dds_subscriber = participant->create_subscriber(
     subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!dds_subscriber) {
     rmw_set_error_string("failed to create subscriber");
-    return NULL;
+    goto fail;
   }
 
-
-  DDSTopic * topic;
-  DDSTopicDescription * topic_description = participant->lookup_topicdescription(topic_name);
+  topic_description = participant->lookup_topicdescription(topic_name);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
     if (status != DDS_RETCODE_OK) {
       rmw_set_error_string("failed to get default topic qos");
-      return NULL;
+      goto fail;
     }
 
     topic = participant->create_topic(
       topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!topic) {
       rmw_set_error_string("failed to create topic");
-      return NULL;
+      goto fail;
     }
   } else {
     DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
     topic = participant->find_topic(topic_name, timeout);
     if (!topic) {
       rmw_set_error_string("failed to find topic");
-      return NULL;
+      goto fail;
     }
   }
 
-
-  DDS_DataReaderQos datareader_qos;
   status = participant->get_default_datareader_qos(datareader_qos);
   if (status != DDS_RETCODE_OK) {
     rmw_set_error_string("failed to get default datareader qos");
-    return NULL;
+    goto fail;
   }
 
   // ensure the history depth is at least the requested queue size
@@ -944,37 +1329,214 @@ rmw_create_subscription(const rmw_node_t * node,
     datareader_qos.history.depth = queue_size;
   }
 
-  DDSDataReader * topic_reader = dds_subscriber->create_datareader(
+  topic_reader = dds_subscriber->create_datareader(
     topic, datareader_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!topic_reader) {
     rmw_set_error_string("failed to create datareader");
-    return NULL;
+    goto fail;
   }
 
-  DDSDynamicDataReader * dynamic_reader = DDSDynamicDataReader::narrow(topic_reader);
+  dynamic_reader = DDSDynamicDataReader::narrow(topic_reader);
   if (!dynamic_reader) {
     rmw_set_error_string("failed to narrow datareader");
-    return NULL;
+    goto fail;
   }
 
-  DDS_DynamicData * dynamic_data = ddts->create_data();
+  dynamic_data = ddts->create_data();
   if (!dynamic_data) {
     rmw_set_error_string("failed to create data");
-    return NULL;
+    goto fail;
   }
 
-  CustomSubscriberInfo * custom_subscriber_info = new CustomSubscriberInfo();
+  // Allocate memory for the CustomSubscriberInfo object.
+  buf = rmw_allocate(sizeof(CustomSubscriberInfo));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the CustomSubscriberInfo in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(custom_subscriber_info, buf, goto fail, CustomSubscriberInfo);
+  buf = nullptr;  // Only free the casted pointer; don't need the buf anymore.
   custom_subscriber_info->dynamic_data_type_support_ = ddts;
   custom_subscriber_info->dynamic_reader_ = dynamic_reader;
+  custom_subscriber_info->data_reader_ = topic_reader;
+  custom_subscriber_info->dds_subscriber_ = dds_subscriber;
   custom_subscriber_info->ignore_local_publications = ignore_local_publications;
   custom_subscriber_info->type_code_ = type_code;
   custom_subscriber_info->members_ = members;
   custom_subscriber_info->dynamic_data = dynamic_data;
 
-  rmw_subscription_t * subscription = new rmw_subscription_t;
   subscription->implementation_identifier = rti_connext_dynamic_identifier;
   subscription->data = custom_subscriber_info;
   return subscription;
+fail:
+  // Something has gone wrong, unroll what has been done.
+  if (custom_subscriber_info) {
+    rmw_free(custom_subscriber_info);
+  }
+  if (dynamic_data) {
+    if (ddts) {
+      if (ddts->delete_data(dynamic_data) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "failed to delete dynamic data during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    } else {
+      std::stringstream ss;
+      ss << "leaking dynamic data during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (topic_reader) {
+    if (dds_subscriber) {
+      if (dds_subscriber->delete_datareader(topic_reader) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "failed to delete datareader during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    } else {
+      std::stringstream ss;
+      ss << "leaking datareader during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (participant) {
+    if (dds_subscriber) {
+      if (participant->delete_subscriber(dds_subscriber) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "failed to delete subscriber during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    }
+    if (ddts) {
+      // Cannot unregister type here, in case another topic is using the same type.
+      // Should be cleaned up when the node is destroyed.
+      // If we figure out a way to unregister types when they are not being used, then we can
+      // add this code back in:
+      /*
+         if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
+         std::stringstream ss;
+         ss << "failed to unregister type during handling of failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+         (std::cerr << ss.str()).flush();
+         }
+       */
+      // Call destructor directly since we used a placement new to construct it.
+      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+        ddts->~DDSDynamicDataTypeSupport(), DDSDynamicDataTypeSupport)
+      rmw_free(ddts);
+    }
+  } else if (dds_subscriber || ddts) {
+    std::stringstream ss;
+    ss << "leaking type registration and/or publisher during handling of failure at " <<
+      __FILE__ << ":" << __LINE__ << '\n';
+    (std::cerr << ss.str()).flush();
+  }
+  if (type_code) {
+    if (destroy_type_code(type_code) != RMW_RET_OK) {
+      std::stringstream ss;
+      ss << "leaking type code during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+      ss.clear();
+      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (subscription) {
+    rmw_subscription_free(subscription);
+  }
+  if (buf) {
+    rmw_free(buf);
+  }
+  return NULL;
+}
+
+rmw_ret_t
+rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
+{
+  if (!node) {
+    rmw_set_error_string("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
+  if (!subscription) {
+    rmw_set_error_string("subscription handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription handle,
+    subscription->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
+  DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
+  if (!participant) {
+    rmw_set_error_string("participant handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  CustomSubscriberInfo * custom_subscription_info = (CustomSubscriberInfo *)subscription->data;
+  if (custom_subscription_info) {
+    DDSDynamicDataTypeSupport * ddts = custom_subscription_info->dynamic_data_type_support_;
+    if (ddts) {
+      std::string type_name = _create_type_name(custom_subscription_info->members_, "msg");
+      // Cannot unregister type here, in case another topic is using the same type.
+      // Should be cleaned up when the node is destroyed.
+      // If we figure out a way to unregister types when they are not being used, then we can
+      // add this code back in:
+      /*
+         if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
+         rmw_set_error_string(("failed to unregister type: " + type_name).c_str());
+         return RMW_RET_ERROR;
+         }
+       */
+      if (custom_subscription_info->dynamic_data) {
+        if (ddts->delete_data(custom_subscription_info->dynamic_data) != DDS_RETCODE_OK) {
+          rmw_set_error_string("failed to delete dynamic data");
+          return RMW_RET_ERROR;
+        }
+      }
+      custom_subscription_info->dynamic_data = nullptr;
+      rmw_free(ddts);
+    }
+    custom_subscription_info->dynamic_data_type_support_ = nullptr;
+    DDSSubscriber * dds_subscriber = custom_subscription_info->dds_subscriber_;
+    if (dds_subscriber) {
+      auto data_reader = custom_subscription_info->data_reader_;
+      if (data_reader) {
+        if (dds_subscriber->delete_datareader(data_reader) != DDS_RETCODE_OK) {
+          rmw_set_error_string("failed to delete datareader");
+          return RMW_RET_ERROR;
+        }
+      }
+      custom_subscription_info->data_reader_ = nullptr;
+      custom_subscription_info->dynamic_reader_ = nullptr;
+      if (participant->delete_subscriber(dds_subscriber) != DDS_RETCODE_ERROR) {
+        rmw_set_error_string("failed to delete subscriber");
+        return RMW_RET_ERROR;
+      }
+    }
+    custom_subscription_info->dds_subscriber_ = nullptr;
+    if (custom_subscription_info->type_code_) {
+      if (destroy_type_code(custom_subscription_info->type_code_) != RMW_RET_OK) {
+        return RMW_RET_ERROR;
+      }
+    }
+    custom_subscription_info->type_code_ = nullptr;
+    rmw_free(custom_subscription_info);
+  }
+  subscription->data = nullptr;
+  rmw_subscription_free(subscription);
+  return RMW_RET_OK;
 }
 
 #define ARRAY_SIZE() \
@@ -1044,7 +1606,25 @@ rmw_create_subscription(const rmw_node_t * node,
       ARRAY_SIZE() \
       ARRAY_RESIZE_AND_VALUES(TYPE) \
       if (array_size > 0) { \
-        DDS_TYPE * values = new DDS_TYPE[array_size]; \
+        /* Allocate the memory, but do not do placement new yet. */ \
+        DDS_TYPE * values = \
+          reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
+        if (!values) { \
+          rmw_set_error_string("failed to allocate memory"); \
+          return false; \
+        } \
+        for (size_t i = 0; i < array_size; ++i) { \
+          /* Now do the placement new for this element. */ \
+          bool construction_successful = true; \
+          RMW_TRY_PLACEMENT_NEW(void * _, values + i, construction_successful = false, DDS_TYPE) \
+          if (!construction_successful) { \
+            for (size_t j = 0; j < i - 1; ++j) { \
+              RMW_TRY_DESTRUCTOR(values[j].~DDS_TYPE(), DDS_TYPE, ) \
+            } \
+            rmw_free(values); \
+            return false; \
+          } \
+        } \
         DDS_UnsignedLong length = array_size; \
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
           values, \
@@ -1052,14 +1632,27 @@ rmw_create_subscription(const rmw_node_t * node,
           NULL, \
           i + 1); \
         if (status != DDS_RETCODE_OK) { \
-          delete[] values; \
+          if (values) { \
+            /* First call the destructor for each element, then free the whole block. */ \
+            for (size_t i = 0; i < array_size; ++i) { \
+              RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
+            } \
+            rmw_free(values); \
+          } \
           rmw_set_error_string("failed to get array value using " #ARRAY_METHOD_NAME); \
           return false; \
         } \
         for (size_t i = 0; i < array_size; ++i) { \
           ros_values[i] = values[i]; \
         } \
-        delete[] values; \
+        if (values) { \
+          /* First call the destructor for each element, then free the whole block. */ \
+          for (size_t i = 0; i < array_size; ++i) { \
+            /* TODO(wjwwood): what happens if the ~ fails? is the error really propagated? */ \
+            RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
+          } \
+          rmw_free(values); \
+        } \
       } \
     } else { \
       DDS_TYPE value; \
@@ -1081,7 +1674,25 @@ rmw_create_subscription(const rmw_node_t * node,
     if (member->is_array_) { \
       ARRAY_SIZE() \
       if (array_size > 0) { \
-        DDS_TYPE * values = new DDS_TYPE[array_size]; \
+        /* Allocate the memory, but do not do placement new yet. */ \
+        DDS_TYPE * values = \
+          reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
+        if (!values) { \
+          rmw_set_error_string("failed to allocate memory"); \
+          return false; \
+        } \
+        for (size_t i = 0; i < array_size; ++i) { \
+          /* Now do the placement new for this element. */ \
+          bool construction_successful = true; \
+          RMW_TRY_PLACEMENT_NEW(void * _, values + i, construction_successful = false, DDS_TYPE) \
+          if (!construction_successful) { \
+            for (size_t j = 0; j < i - 1; ++j) { \
+              RMW_TRY_DESTRUCTOR(values[j].~DDS_TYPE(), DDS_TYPE, ) \
+            } \
+            rmw_free(values); \
+            return false; \
+          } \
+        } \
         DDS_UnsignedLong length = array_size; \
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
           values, \
@@ -1089,7 +1700,13 @@ rmw_create_subscription(const rmw_node_t * node,
           NULL, \
           i + 1); \
         if (status != DDS_RETCODE_OK) { \
-          delete[] values; \
+          if (values) { \
+            /* First call the destructor for each element, then free the whole block. */ \
+            for (size_t i = 0; i < array_size; ++i) { \
+              RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
+            } \
+            rmw_free(values); \
+          } \
           rmw_set_error_string("failed to get array value using " #ARRAY_METHOD_NAME); \
           return false; \
         } \
@@ -1106,7 +1723,13 @@ rmw_create_subscription(const rmw_node_t * node,
             (*vector)[i] = values[i]; \
           } \
         } \
-        delete[] values; \
+        if (values) { \
+          /* First call the destructor for each element, then free the whole block. */ \
+          for (size_t i = 0; i < array_size; ++i) { \
+            RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
+          } \
+          rmw_free(values); \
+        } \
       } \
     } else { \
       DDS_TYPE value; \
@@ -1140,6 +1763,7 @@ rmw_create_subscription(const rmw_node_t * node,
       for (size_t i = 0; i < array_size; ++i) { \
         char * value = 0; \
         DDS_UnsignedLong size; \
+        /* TODO(wjwwood): Figure out how value is allocated. Why are we freeing it? */ \
         status = dynamic_data_member.METHOD_NAME( \
           value, \
           &size, \
@@ -1219,8 +1843,6 @@ rmw_create_subscription(const rmw_node_t * node,
 bool _take(DDS_DynamicData * dynamic_data, void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
-  //DDS_DynamicData dynamic_data(type_code, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
-  //DDS_DynamicData * dynamic_data = ddts->create_data();
   for (unsigned long i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     switch (member->type_id_) {
@@ -1329,10 +1951,11 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     rmw_set_error_string("subscription handle is null");
     return RMW_RET_ERROR;
   }
-  if (subscription->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("subscriber handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription handle,
+    subscription->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
   if (!ros_message) {
     rmw_set_error_string("ros message handle is null");
     return RMW_RET_ERROR;
@@ -1427,10 +2050,30 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
 rmw_guard_condition_t *
 rmw_create_guard_condition()
 {
-  rmw_guard_condition_t * guard_condition_handle = new rmw_guard_condition_t;
+  rmw_guard_condition_t * guard_condition_handle = rmw_guard_condition_allocate();
+  if (!guard_condition_handle) {
+    rmw_set_error_string("failed to allocate memory for guard condition");
+    return NULL;
+  }
   guard_condition_handle->implementation_identifier = rti_connext_dynamic_identifier;
-  guard_condition_handle->data = new DDSGuardCondition();
+  // Allocate memory for the DDSGuardCondition object.
+  void * buf = rmw_allocate(sizeof(DDSGuardCondition));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the DDSGuardCondition in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(guard_condition_handle->data, buf, goto fail, DDSGuardCondition)
+  buf = nullptr;
   return guard_condition_handle;
+fail:
+  if (guard_condition_handle) {
+    rmw_guard_condition_free(guard_condition_handle);
+  }
+  if (buf) {
+    rmw_free(buf);
+  }
+  return NULL;
 }
 
 rmw_ret_t
@@ -1440,10 +2083,19 @@ rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
     rmw_set_error_string("guard condition handle is null");
     return RMW_RET_ERROR;
   }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    guard condition handle,
+    guard_condition->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
 
-  delete static_cast<DDSGuardCondition *>(guard_condition->data);
-  delete guard_condition;
-  return RMW_RET_OK;
+  auto result = RMW_RET_OK;
+  if (guard_condition->data) {
+    DDSGuardCondition * dds_gc = static_cast<DDSGuardCondition *>(guard_condition->data);
+    RMW_TRY_DESTRUCTOR(dds_gc->~DDSGuardCondition(), DDSGuardCondition, result = RMW_RET_ERROR)
+    rmw_free(guard_condition->data);
+  }
+  rmw_guard_condition_free(guard_condition);
+  return result;
 }
 
 rmw_ret_t
@@ -1453,10 +2105,10 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
     rmw_set_error_string("guard condition handle is null");
     return RMW_RET_ERROR;
   }
-  if (guard_condition_handle->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("guard condition handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    guard condition handle,
+    guard_condition_handle->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
 
   DDSGuardCondition * guard_condition =
     static_cast<DDSGuardCondition *>(guard_condition_handle->data);
@@ -1476,7 +2128,10 @@ struct ConnextDynamicServiceInfo
 {
   connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier_;
   DDSDataReader * request_datareader_;
+  DDS::DynamicDataTypeSupport * request_type_support_;
   DDS::DynamicDataTypeSupport * response_type_support_;
+  DDS_TypeCode * response_type_code_;
+  DDS_TypeCode * request_type_code_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * request_members_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * response_members_;
 };
@@ -1486,6 +2141,9 @@ struct ConnextDynamicClientInfo
   connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester_;
   DDSDataReader * response_datareader_;
   DDS::DynamicDataTypeSupport * request_type_support_;
+  DDS::DynamicDataTypeSupport * response_type_support_;
+  DDS_TypeCode * response_type_code_;
+  DDS_TypeCode * request_type_code_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * request_members_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * response_members_;
 };
@@ -1764,20 +2422,20 @@ rmw_create_client(
     rmw_set_error_string("node handle is null");
     return NULL;
   }
-  if (node->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("node handle is not from this rmw implementation");
-    return NULL;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_dynamic_identifier,
+    return NULL)
+
   if (!type_support) {
     rmw_set_error_string("type support handle is null");
     return NULL;
   }
-  if (type_support->typesupport_identifier !=
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
-  {
-    rmw_set_error_string("type support is not from this rmw implementation");
-    return NULL;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    type support handle,
+    type_support->typesupport_identifier,
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
+    return NULL)
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
   if (!participant) {
@@ -1803,10 +2461,8 @@ rmw_create_client(
     rmw_set_error_string("response members handle is null");
     return NULL;
   }
-  std::string request_type_name = std::string(request_members->package_name_) + "::srv::dds_::" +
-    request_members->message_name_ + "_";
-  std::string response_type_name = std::string(response_members->package_name_) + "::srv::dds_::" +
-    response_members->message_name_ + "_";
+  std::string request_type_name = _create_type_name(request_members, "srv");
+  std::string response_type_name = _create_type_name(response_members, "srv");
 
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -1814,51 +2470,216 @@ rmw_create_client(
     rmw_set_error_string("failed to get participant qos");
     return NULL;
   }
+  // Past this point, a failure results in unrolling code in the goto fail block.
+  rmw_client_t * client = nullptr;
+  DDS_TypeCode * request_type_code = nullptr;
+  void * buf = nullptr;
+  DDS::DynamicDataTypeSupport * request_type_support = nullptr;
+  DDS_TypeCode * response_type_code = nullptr;
+  DDS::DynamicDataTypeSupport * response_type_support = nullptr;
+  connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester = nullptr;
+  DDSDataReader * response_datareader = nullptr;
+  ConnextDynamicClientInfo * client_info = nullptr;
+  // Begin initializing elements
+  client = rmw_client_allocate();
+  if (!client) {
+    rmw_set_error_string("failed to allocate memory for client");
+    goto fail;
+  }
 
-  DDS_TypeCode * request_type_code = create_type_code(
-    request_type_name, request_members, participant_qos);
+  request_type_code = create_type_code(request_type_name, request_members, participant_qos);
   if (!request_type_code) {
     // error string was set within the function
-    return NULL;
+    goto fail;
   }
-  DDS::DynamicDataTypeSupport * request_type_support = new DDS::DynamicDataTypeSupport(
-    request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+  // Allocate memory for the DDS::DynamicDataTypeSupport object.
+  buf = rmw_allocate(sizeof(DDS::DynamicDataTypeSupport));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the DDS::DynamicDataTypeSupport in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(
+    request_type_support, buf,
+    goto fail,
+    DDS::DynamicDataTypeSupport, request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
+  buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
 
-  DDS_TypeCode * response_type_code = create_type_code(
-    response_type_name, response_members, participant_qos);
+  response_type_code = create_type_code(response_type_name, response_members, participant_qos);
   if (!request_type_code) {
     // error string was set within the function
-    return NULL;
+    goto fail;
   }
-  DDS::DynamicDataTypeSupport * response_type_support = new DDS::DynamicDataTypeSupport(
-    response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+  // Allocate memory for the DDS::DynamicDataTypeSupport object.
+  buf = rmw_allocate(sizeof(DDS::DynamicDataTypeSupport));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the DDS::DynamicDataTypeSupport in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(
+    response_type_support, buf,
+    goto fail,
+    DDS::DynamicDataTypeSupport, response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
+  buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
 
   // create requester
-  connext::RequesterParams requester_params(participant);
-  requester_params.service_name(service_name);
-  requester_params.request_type_support(request_type_support);
-  requester_params.reply_type_support(response_type_support);
+  {
+    connext::RequesterParams requester_params(participant);
+    requester_params.service_name(service_name);
+    requester_params.request_type_support(request_type_support);
+    requester_params.reply_type_support(response_type_support);
 
-  connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester(
-    new connext::Requester<DDS_DynamicData, DDS_DynamicData>(requester_params));
-
-  DDSDataReader * response_datareader = requester->get_reply_datareader();
-  if (!response_datareader) {
-    rmw_set_error_string("failed to get response datareader");
-    return NULL;
+    // Allocate memory for the Requester object.
+    typedef connext::Requester<DDS_DynamicData, DDS_DynamicData> Requester;
+    buf = rmw_allocate(sizeof(connext::Requester<DDS_DynamicData, DDS_DynamicData>));
+    if (!buf) {
+      rmw_set_error_string("failed to allocate memory");
+      goto fail;
+    }
+    // Use a placement new to construct the Requester in the preallocated buffer.
+    RMW_TRY_PLACEMENT_NEW(
+      requester, buf,
+      goto fail,
+      Requester, requester_params)
+    buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   }
 
-  ConnextDynamicClientInfo * client_info = new ConnextDynamicClientInfo();
+  response_datareader = requester->get_reply_datareader();
+  if (!response_datareader) {
+    rmw_set_error_string("failed to get response datareader");
+    goto fail;
+  }
+
+  // Allocate memory for the ConnextDynamicClientInfo object.
+  buf = rmw_allocate(sizeof(ConnextDynamicClientInfo));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the ConnextDynamicClientInfo in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextDynamicClientInfo)
+  buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   client_info->requester_ = requester;
   client_info->response_datareader_ = response_datareader;
   client_info->request_type_support_ = request_type_support;
+  client_info->response_type_support_ = response_type_support;
+  client_info->response_type_code_ = response_type_code;
+  client_info->request_type_code_ = request_type_code;
   client_info->request_members_ = request_members;
   client_info->response_members_ = response_members;
 
-  rmw_client_t * client = new rmw_client_t;
   client->implementation_identifier = rti_connext_dynamic_identifier;
   client->data = client_info;
   return client;
+fail:
+  if (client) {
+    rmw_client_free(client);
+  }
+  if (request_type_code) {
+    if (destroy_type_code(request_type_code) != RMW_RET_OK) {
+      std::stringstream ss;
+      ss << "leaking type code during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+      ss.clear();
+      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (request_type_support) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      request_type_support->~DynamicDataTypeSupport(), DynamicDataTypeSupport)
+    rmw_free(request_type_support);
+  }
+  if (response_type_code) {
+    if (destroy_type_code(response_type_code) != RMW_RET_OK) {
+      std::stringstream ss;
+      ss << "leaking type code during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+      ss.clear();
+      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (response_type_support) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      response_type_support->~DynamicDataTypeSupport(), DynamicDataTypeSupport)
+    rmw_free(response_type_support);
+  }
+  if (requester) {
+    typedef connext::Requester<DDS_DynamicData, DDS_DynamicData> Requester;
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(requester->~Requester(), Requester)
+    rmw_free(requester);
+  }
+  if (client_info) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      client_info->~ConnextDynamicClientInfo(), ConnextDynamicClientInfo)
+    rmw_free(client_info);
+  }
+  if (buf) {
+    rmw_free(buf);
+  }
+  return NULL;
+}
+
+rmw_ret_t
+rmw_destroy_client(rmw_client_t * client)
+{
+  if (!client) {
+    rmw_set_error_string("client handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    client handle,
+    client->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
+  auto result = RMW_RET_OK;
+  ConnextDynamicClientInfo * client_info = static_cast<ConnextDynamicClientInfo *>(client->data);
+  if (client_info) {
+    if (client_info->request_type_code_) {
+      if (destroy_type_code(client_info->request_type_code_) != RMW_RET_OK) {
+        rmw_set_error_string("failed to destroy type code");
+        return RMW_RET_ERROR;
+      }
+    }
+    if (client_info->response_type_code_) {
+      if (destroy_type_code(client_info->response_type_code_) != RMW_RET_OK) {
+        rmw_set_error_string("failed to destroy type code");
+        return RMW_RET_ERROR;
+      }
+    }
+    if (client_info->request_type_support_) {
+      RMW_TRY_DESTRUCTOR(
+        client_info->request_type_support_->~DynamicDataTypeSupport(),
+        DynamicDataTypeSupport, result = RMW_RET_ERROR)
+      rmw_free(client_info->request_type_support_);
+    }
+    if (client_info->response_type_support_) {
+      RMW_TRY_DESTRUCTOR(
+        client_info->response_type_support_->~DynamicDataTypeSupport(),
+        DynamicDataTypeSupport, result = RMW_RET_ERROR)
+      rmw_free(client_info->response_type_support_);
+    }
+    if (client_info->requester_) {
+      typedef connext::Requester<DDS_DynamicData, DDS_DynamicData> Requester;
+      RMW_TRY_DESTRUCTOR(client_info->requester_->~Requester(), Requester, result = RMW_RET_ERROR)
+      rmw_free(client_info->requester_);
+    }
+  }
+
+  if (client_info) {
+    RMW_TRY_DESTRUCTOR(
+      client_info->~ConnextDynamicClientInfo(), ConnextDynamicClientInfo, result = RMW_RET_ERROR)
+    rmw_free(client_info);
+  }
+
+  rmw_client_free(client);
+
+  // TODO(wjwwood): if multiple destructors fail, some of the error messages could be suppressed.
+  return result;
 }
 
 rmw_ret_t
@@ -1871,10 +2692,11 @@ rmw_send_request(
     rmw_set_error_string("client handle is null");
     return RMW_RET_ERROR;
   }
-  if (client->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("client handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    client handle,
+    client->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
   if (!ros_request) {
     rmw_set_error_string("ros request handle is null");
     return RMW_RET_ERROR;
@@ -1902,12 +2724,23 @@ rmw_send_request(
   bool published = _publish(sample, ros_request, client_info->request_members_);
   if (!published) {
     // error string was set within the function
+    if (client_info->request_type_support_->delete_data(sample) != DDS_RETCODE_OK) {
+      std::stringstream ss;
+      ss << "leaking dynamic data object while handling error at " <<
+        __FILE__ << ":" << __LINE__;
+      (std::cerr << ss.str()).flush();
+    }
     return RMW_RET_ERROR;
   }
 
   requester->send_request(request);
   *sequence_id = ((int64_t)request.identity().sequence_number.high) << 32 |
     request.identity().sequence_number.low;
+
+  if (client_info->request_type_support_->delete_data(sample) != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to delete dynamic data object");
+    return RMW_RET_ERROR;
+  }
 
   return RMW_RET_OK;
 }
@@ -1923,10 +2756,11 @@ rmw_take_request(
     rmw_set_error_string("service handle is null");
     return RMW_RET_ERROR;
   }
-  if (service->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("service handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    service handle,
+    service->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
   if (!ros_request_header) {
     rmw_set_error_string("ros request header handle is null");
     return RMW_RET_ERROR;
@@ -1988,10 +2822,11 @@ rmw_take_response(
     rmw_set_error_string("client handle is null");
     return RMW_RET_ERROR;
   }
-  if (client->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("client handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    client handle,
+    client->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
   if (!ros_request_header) {
     rmw_set_error_string("ros request header handle is null");
     return RMW_RET_ERROR;
@@ -2047,10 +2882,11 @@ rmw_send_response(
     rmw_set_error_string("service handle is null");
     return RMW_RET_ERROR;
   }
-  if (service->implementation_identifier != rti_connext_dynamic_identifier) {
-    rmw_set_error_string("service handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    service handle,
+    service->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+
   if (!ros_request_header) {
     rmw_set_error_string("ros request header handle is null");
     return RMW_RET_ERROR;
@@ -2083,6 +2919,12 @@ rmw_send_response(
   bool published = _publish(sample, ros_response, service_info->response_members_);
   if (!published) {
     // error string was set within the function
+    if (service_info->response_type_support_->delete_data(sample) != DDS_RETCODE_OK) {
+      std::stringstream ss;
+      ss << "leaking dynamic data object while handling error at " <<
+        __FILE__ << ":" << __LINE__;
+      (std::cerr << ss.str()).flush();
+    }
     return RMW_RET_ERROR;
   }
 
@@ -2100,6 +2942,11 @@ rmw_send_response(
 
   replier->send_reply(response, request_identity);
 
+  if (service_info->response_type_support_->delete_data(sample) != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to delete dynamic data object");
+    return RMW_RET_ERROR;
+  }
+
   return RMW_RET_OK;
 }
 
@@ -2113,20 +2960,24 @@ rmw_create_service(
     rmw_set_error_string("node handle is null");
     return NULL;
   }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_dynamic_identifier,
+    return NULL)
   if (node->implementation_identifier != rti_connext_dynamic_identifier) {
     rmw_set_error_string("node handle is not from this rmw implementation");
     return NULL;
   }
+
   if (!type_support) {
     rmw_set_error_string("type support handle is null");
     return NULL;
   }
-  if (type_support->typesupport_identifier !=
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier)
-  {
-    rmw_set_error_string("type support is not from this rmw implementation");
-    return NULL;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    type support handle,
+    type_support->typesupport_identifier,
+    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
+    return NULL)
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
   if (!participant) {
@@ -2152,10 +3003,8 @@ rmw_create_service(
     rmw_set_error_string("response members handle is null");
     return NULL;
   }
-  std::string request_type_name = std::string(request_members->package_name_) + "::srv::dds_::" +
-    request_members->message_name_ + "_";
-  std::string response_type_name = std::string(response_members->package_name_) + "::srv::dds_::" +
-    response_members->message_name_ + "_";
+  std::string request_type_name = _create_type_name(request_members, "srv");
+  std::string response_type_name = _create_type_name(response_members, "srv");
 
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -2163,51 +3012,152 @@ rmw_create_service(
     rmw_set_error_string("failed to get participant qos");
     return NULL;
   }
+  // Past this point, a failure results in unrolling code in the goto fail block.
+  rmw_service_t * service = nullptr;
+  DDS_TypeCode * request_type_code = nullptr;
+  void * buf = nullptr;
+  DDS::DynamicDataTypeSupport * request_type_support = nullptr;
+  DDS_TypeCode * response_type_code = nullptr;
+  DDS::DynamicDataTypeSupport * response_type_support = nullptr;
+  connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier = nullptr;
+  DDSDataReader * request_datareader = nullptr;
+  ConnextDynamicServiceInfo * server_info = nullptr;
+  // Begin initializing elements
+  service = rmw_service_allocate();
+  if (!service) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
 
-  DDS_TypeCode * request_type_code = create_type_code(
-    request_type_name, request_members, participant_qos);
+  request_type_code = create_type_code(request_type_name, request_members, participant_qos);
   if (!request_type_code) {
     // error string was set within the function
-    return NULL;
+    goto fail;
   }
-  DDS::DynamicDataTypeSupport * request_type_support = new DDS::DynamicDataTypeSupport(
-    request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+  // Allocate memory for the DDS::DynamicDataTypeSupport object.
+  buf = rmw_allocate(sizeof(DDS::DynamicDataTypeSupport));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the DDS::DynamicDataTypeSupport in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(
+    request_type_support, buf,
+    goto fail,
+    DDS::DynamicDataTypeSupport, request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
+  buf = nullptr;  // Only free the casted pointer; don't need the buf anymore.
 
-  DDS_TypeCode * response_type_code = create_type_code(
-    response_type_name, response_members, participant_qos);
+  response_type_code = create_type_code(response_type_name, response_members, participant_qos);
   if (!response_type_code) {
     // error string was set within the function
-    return NULL;
+    goto fail;
   }
-  DDS::DynamicDataTypeSupport * response_type_support = new DDS::DynamicDataTypeSupport(
-    response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT);
+  // Allocate memory for the DDS::DynamicDataTypeSupport object.
+  buf = rmw_allocate(sizeof(DDS::DynamicDataTypeSupport));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the DDS::DynamicDataTypeSupport in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(
+    response_type_support, buf,
+    goto fail,
+    DDS::DynamicDataTypeSupport, response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
+  buf = nullptr;  // Only free the casted pointer; don't need the buf anymore.
 
-  // create requester
-  connext::ReplierParams<DDS_DynamicData, DDS_DynamicData> replier_params(participant);
-  replier_params.service_name(service_name);
-  replier_params.request_type_support(request_type_support);
-  replier_params.reply_type_support(response_type_support);
+  {
+    // create requester
+    connext::ReplierParams<DDS_DynamicData, DDS_DynamicData> replier_params(participant);
+    replier_params.service_name(service_name);
+    replier_params.request_type_support(request_type_support);
+    replier_params.reply_type_support(response_type_support);
 
-  connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier(
-    new connext::Replier<DDS_DynamicData, DDS_DynamicData>(replier_params));
+    // Allocate memory for the Replier object.
+    typedef connext::Replier<DDS_DynamicData, DDS_DynamicData> Replier;
+    buf = rmw_allocate(sizeof(Replier));
+    if (!buf) {
+      rmw_set_error_string("failed to allocate memory");
+      goto fail;
+    }
+    // Use a placement new to construct the Replier in the preallocated buffer.
+    RMW_TRY_PLACEMENT_NEW(replier, buf, goto fail, Replier, replier_params)
+    buf = nullptr;  // Only free casted pointer; don't need the buf pointer anymore.
+  }
 
-  DDSDataReader * request_datareader = replier->get_request_datareader();
+  request_datareader = replier->get_request_datareader();
   if (!request_datareader) {
     rmw_set_error_string("failed to get request datareader");
-    return NULL;
+    goto fail;
   }
 
-  ConnextDynamicServiceInfo * server_info = new ConnextDynamicServiceInfo();
+  // Allocate memory for the ConnextDynamicServiceInfo object.
+  buf = rmw_allocate(sizeof(ConnextDynamicServiceInfo));
+  if (!buf) {
+    rmw_set_error_string("failed to allocate memory");
+    goto fail;
+  }
+  // Use a placement new to construct the ConnextDynamicServiceInfo in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(server_info, buf, goto fail, ConnextDynamicServiceInfo)
+  buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   server_info->replier_ = replier;
   server_info->request_datareader_ = request_datareader;
   server_info->response_type_support_ = response_type_support;
   server_info->request_members_ = request_members;
   server_info->response_members_ = response_members;
 
-  rmw_service_t * service = rmw_service_allocate();
   service->implementation_identifier = rti_connext_dynamic_identifier;
   service->data = server_info;
   return service;
+fail:
+  if (service) {
+    rmw_service_free(service);
+  }
+  if (request_type_code) {
+    if (destroy_type_code(request_type_code) != RMW_RET_OK) {
+      std::stringstream ss;
+      ss << "leaking type code during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+      ss.clear();
+      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (request_type_support) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      request_type_support->~DynamicDataTypeSupport(), DynamicDataTypeSupport)
+    rmw_free(request_type_support);
+  }
+  if (response_type_code) {
+    if (destroy_type_code(response_type_code) != RMW_RET_OK) {
+      std::stringstream ss;
+      ss << "leaking type code during handling of failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+      ss.clear();
+      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (response_type_support) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      response_type_support->~DynamicDataTypeSupport(), DynamicDataTypeSupport)
+    rmw_free(response_type_support);
+  }
+  if (replier) {
+    typedef connext::Replier<DDS_DynamicData, DDS_DynamicData> Replier;
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(replier->~Replier(), Replier)
+    rmw_free(replier);
+  }
+  if (server_info) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      server_info->~ConnextDynamicServiceInfo(), ConnextDynamicServiceInfo)
+    rmw_free(server_info);
+  }
+  if (buf) {
+    rmw_free(buf);
+  }
+  return NULL;
 }
 
 rmw_ret_t
@@ -2217,25 +3167,54 @@ rmw_destroy_service(rmw_service_t * service)
     rmw_set_error_string("service handle is null");
     return RMW_RET_ERROR;
   }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    service handle,
+    service->implementation_identifier, rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
 
-  // TODO de-allocate Replier and request DataReader
-  delete static_cast<ConnextDynamicServiceInfo *>(service->data);
-  delete service;
-  return RMW_RET_OK;
-}
-
-rmw_ret_t
-rmw_destroy_client(rmw_client_t * client)
-{
-  if (!client) {
-    rmw_set_error_string("client handle is null");
-    return RMW_RET_ERROR;
+  auto result = RMW_RET_OK;
+  auto service_info = static_cast<ConnextDynamicServiceInfo *>(service->data);
+  if (service_info) {
+    if (service_info->request_type_code_) {
+      if (destroy_type_code(service_info->request_type_code_) != RMW_RET_OK) {
+        rmw_set_error_string("failed to destroy type code");
+        return RMW_RET_ERROR;
+      }
+    }
+    if (service_info->response_type_code_) {
+      if (destroy_type_code(service_info->response_type_code_) != RMW_RET_OK) {
+        rmw_set_error_string("failed to destroy type code");
+        return RMW_RET_ERROR;
+      }
+    }
+    if (service_info->request_type_support_) {
+      RMW_TRY_DESTRUCTOR(
+        service_info->request_type_support_->~DynamicDataTypeSupport(),
+        DynamicDataTypeSupport, result = RMW_RET_ERROR)
+      rmw_free(service_info->request_type_support_);
+    }
+    if (service_info->response_type_support_) {
+      RMW_TRY_DESTRUCTOR(
+        service_info->response_type_support_->~DynamicDataTypeSupport(),
+        DynamicDataTypeSupport, result = RMW_RET_ERROR)
+      rmw_free(service_info->response_type_support_);
+    }
+    if (service_info->replier_) {
+      typedef connext::Replier<DDS_DynamicData, DDS_DynamicData> Replier;
+      RMW_TRY_DESTRUCTOR(service_info->replier_->~Replier(), Replier, result = RMW_RET_ERROR)
+      rmw_free(service_info->replier_);
+    }
+  }
+  if (service_info) {
+    RMW_TRY_DESTRUCTOR(service_info->~ConnextDynamicServiceInfo(),
+      ConnextDynamicServiceInfo, result = RMW_RET_ERROR)
+    rmw_free(service_info);
   }
 
-  // TODO de-allocate Requester and response DataReader
-  delete static_cast<ConnextDynamicClientInfo *>(client->data);
-  delete client;
-  return RMW_RET_OK;
+  rmw_service_free(service);
+
+  // TODO(wjwwood): if the function returns early some memory leaks will occur.
+  return result;
 }
 
 }  // extern "C"
