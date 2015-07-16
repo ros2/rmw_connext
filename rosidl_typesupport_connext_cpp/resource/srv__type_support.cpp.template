@@ -43,7 +43,7 @@ namespace @(spec.pkg_name)
 namespace srv
 {
 
-namespace type_support
+namespace typesupport_connext_cpp
 {
 
 void * create_requester__@(spec.srv_name)(
@@ -72,7 +72,7 @@ int64_t send_request__@(spec.srv_name)(
 {
   connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   const @(spec.pkg_name)::srv::@(spec.srv_name)_Request & ros_request = *(reinterpret_cast<const @(spec.pkg_name)::srv::@(spec.srv_name)_Request *>(untyped_ros_request));
-  @(spec.pkg_name)::srv::type_support::convert_ros_message_to_dds(ros_request, request.data());
+  @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(ros_request, request.data());
 
   connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_requester);
 
@@ -125,7 +125,7 @@ bool take_request__@(spec.srv_name)(
   }
 
   bool converted =
-    @(spec.pkg_name)::srv::type_support::convert_dds_message_to_ros(request.data(), ros_request);
+    @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_dds_message_to_ros(request.data(), ros_request);
   if (!converted) {
     return false;
   }
@@ -166,7 +166,7 @@ bool take_response__@(spec.srv_name)(
   req_id.sequence_number = sequence_number;
 
   bool converted =
-    @(spec.pkg_name)::srv::type_support::convert_dds_message_to_ros(response.data(), ros_response);
+    @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_dds_message_to_ros(response.data(), ros_response);
   return converted;
 }
 
@@ -182,7 +182,7 @@ bool send_response__@(spec.srv_name)(
   connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
   const @(spec.pkg_name)::srv::@(spec.srv_name)_Response & ros_response = *(reinterpret_cast<const @(spec.pkg_name)::srv::@(spec.srv_name)_Response *>(untyped_ros_response));
   bool converted =
-    @(spec.pkg_name)::srv::type_support::convert_ros_message_to_dds(ros_response, response.data());
+    @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(ros_response, response.data());
   if (!converted) {
     return false;
   }
@@ -219,7 +219,7 @@ static rosidl_service_type_support_t handle = {
   &callbacks
 };
 
-}  // namespace type_support
+}  // namespace typesupport_connext_cpp
 
 }  // namespace srv
 
@@ -233,7 +233,7 @@ ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
 const rosidl_service_type_support_t *
 get_service_type_support_handle_connext<@(spec.pkg_name)::srv::@(spec.srv_name)>()
 {
-  return &@(spec.pkg_name)::srv::type_support::handle;
+  return &@(spec.pkg_name)::srv::typesupport_connext_cpp::handle;
 }
 
 }  // namespace rosidl_typesupport_connext_cpp
