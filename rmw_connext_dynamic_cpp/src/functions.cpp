@@ -1320,11 +1320,10 @@ rmw_create_subscription(
   }
 
   // ensure the history depth is at least the requested queue size
-  // *INDENT-OFF*
   if (
     datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    datareader_qos.history.depth < queue_size)
-  // *INDENT-ON*
+    datareader_qos.history.depth < queue_size
+  )
   {
     datareader_qos.history.depth = queue_size;
   }
