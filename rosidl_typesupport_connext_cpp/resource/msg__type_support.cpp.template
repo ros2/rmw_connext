@@ -41,7 +41,7 @@ namespace dds_
 {
 struct @(field.type.type)_;
 }  // namespace dds_
-namespace type_support
+namespace typesupport_connext_cpp
 {
 bool convert_ros_message_to_dds(
   const @(field.type.pkg_name)::msg::@(field.type.type) &,
@@ -49,7 +49,7 @@ bool convert_ros_message_to_dds(
 bool convert_dds_message_to_ros(
   const @(field.type.pkg_name)::msg::dds_::@(field.type.type)_ &,
   @(field.type.pkg_name)::msg::@(field.type.type) &);
-}  // namespace type_support
+}  // namespace typesupport_connext_cpp
 }  // namespace msg
 }  // namespace @(field.type.pkg_name)
 
@@ -62,7 +62,7 @@ namespace @(spec.base_type.pkg_name)
 namespace @(subfolder)
 {
 
-namespace type_support
+namespace typesupport_connext_cpp
 {
 
 bool
@@ -109,7 +109,7 @@ convert_ros_message_to_dds(
         ros_message.@(field.name)[i];
 @[else]@
       if (
-        !@(field.type.pkg_name)::msg::type_support::convert_ros_message_to_dds(
+        !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_ros_message_to_dds(
           ros_message.@(field.name)[i],
           dds_message.@(field.name)_[i]))
       {
@@ -127,7 +127,7 @@ convert_ros_message_to_dds(
     ros_message.@(field.name);
 @[else]@
   if (
-    !@(field.type.pkg_name)::msg::type_support::convert_ros_message_to_dds(
+    !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_ros_message_to_dds(
       ros_message.@(field.name),
       dds_message.@(field.name)_))
   {
@@ -190,7 +190,7 @@ convert_dds_message_to_ros(
         dds_message.@(field.name)_[i];
 @[else]@
       if (
-        !@(field.type.pkg_name)::msg::type_support::convert_dds_message_to_ros(
+        !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_dds_message_to_ros(
           dds_message.@(field.name)_[i],
           ros_message.@(field.name)[i]))
       {
@@ -204,7 +204,7 @@ convert_dds_message_to_ros(
     dds_message.@(field.name)_;
 @[else]@
   if (
-    !@(field.type.pkg_name)::msg::type_support::convert_dds_message_to_ros(
+    !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_dds_message_to_ros(
       dds_message.@(field.name)_,
       ros_message.@(field.name)))
   {
@@ -303,7 +303,7 @@ static rosidl_message_type_support_t handle = {
   &callbacks
 };
 
-}  // namespace type_support
+}  // namespace typesupport_connext_cpp
 
 }  // namespace @(subfolder)
 
@@ -317,7 +317,7 @@ ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
 const rosidl_message_type_support_t *
 get_message_type_support_handle_connext<@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type)>()
 {
-  return &@(spec.base_type.pkg_name)::@(subfolder)::type_support::handle;
+  return &@(spec.base_type.pkg_name)::@(subfolder)::typesupport_connext_cpp::handle;
 }
 
 }  // namespace rosidl_typesupport_connext_cpp

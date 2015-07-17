@@ -31,7 +31,7 @@ namespace @(spec.base_type.pkg_name)
 namespace @(subfolder)
 {
 
-namespace type_support
+namespace typesupport_connext_cpp
 {
 
 bool
@@ -63,7 +63,7 @@ take__@(spec.base_type.type)(
   void * untyped_ros_message,
   bool * taken);
 
-}  // namespace type_support
+}  // namespace typesupport_connext_cpp
 
 }  // namespace @(subfolder)
 
