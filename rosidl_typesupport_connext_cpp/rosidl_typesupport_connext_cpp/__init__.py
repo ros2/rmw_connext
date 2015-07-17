@@ -283,7 +283,10 @@ def generate_cpp(args, message_specs, service_specs, known_msg_types):
     functions = {
         'get_header_filename_from_msg_name': convert_camel_case_to_lower_case_underscore,
     }
-    latest_target_timestamp = get_newest_modification_time(args['target_dependencies'])
+    # generate_dds_connext_cpp() and therefore the make target depend on the additional files
+    # therefore they must be listed here even if the generated type support files are independent
+    latest_target_timestamp = get_newest_modification_time(
+        args['target_dependencies'] + args.get('additional_files', []))
 
     for idl_file, spec in message_specs:
         validate_field_types(spec, known_msg_types)
