@@ -193,6 +193,7 @@ rmw_destroy_node(rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
+  node->data = nullptr;
   rmw_node_free(node);
 
   return RMW_RET_OK;
@@ -416,11 +417,13 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
           rmw_set_error_string("failed to delete datawriter");
           return RMW_RET_ERROR;
         }
+        publisher_info->topic_writer_ = nullptr;
       }
       if (participant->delete_publisher(dds_publisher) != DDS_RETCODE_OK) {
         rmw_set_error_string("failed to delete publisher");
         return RMW_RET_ERROR;
       }
+      publisher_info->dds_publisher_ = nullptr;
     } else if (publisher_info->topic_writer_) {
       rmw_set_error_string("cannot delete datawriter because the publisher is null");
       return RMW_RET_ERROR;
@@ -429,8 +432,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       publisher_info->~ConnextStaticPublisherInfo(),
       ConnextStaticPublisherInfo, return RMW_RET_ERROR)
     rmw_free(publisher_info);
+    publisher->data = nullptr;
   }
-  publisher->data = nullptr;
   rmw_publisher_free(publisher);
 
   return RMW_RET_OK;
@@ -688,11 +691,13 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           rmw_set_error_string("failed to delete datareader");
           return RMW_RET_ERROR;
         }
+        subscriber_info->topic_reader_ = nullptr;
       }
       if (participant->delete_subscriber(dds_subscriber) != DDS_RETCODE_OK) {
         rmw_set_error_string("failed to delete subscriber");
         return RMW_RET_ERROR;
       }
+      subscriber_info->dds_subscriber_ = nullptr;
     } else if (subscriber_info->topic_reader_) {
       rmw_set_error_string("cannot delete datareader because the subscriber is null");
       return RMW_RET_ERROR;
@@ -701,8 +706,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       subscriber_info->~ConnextStaticSubscriberInfo(),
       ConnextStaticSubscriberInfo, return RMW_RET_ERROR)
     rmw_free(subscriber_info);
+    subscription->data = nullptr;
   }
-  subscription->data = nullptr;
   rmw_subscription_free(subscription);
 
   return RMW_RET_OK;
