@@ -49,6 +49,8 @@ namespace typesupport_connext_cpp
 void * create_requester__@(spec.srv_name)(
   void * untyped_participant,
   const char * service_name,
+  const void * untyped_datareader_qos,
+  const void * untyped_datawriter_qos,
   void ** untyped_reader)
 {
   if (!untyped_participant || !service_name || !untyped_reader) {
@@ -56,8 +58,12 @@ void * create_requester__@(spec.srv_name)(
   }
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
+  const DDS_DataReaderQos * datareader_qos = static_cast<const DDS_DataReaderQos *>(untyped_datareader_qos);
+  const DDS_DataWriterQos * datawriter_qos = static_cast<const DDS_DataWriterQos *>(untyped_datawriter_qos);
   connext::RequesterParams requester_params(participant);
   requester_params.service_name(service_name);
+  requester_params.datareader_qos(*datareader_qos);
+  requester_params.datawriter_qos(*datawriter_qos);
 
   // TODO(wjwwood): use rmw allocators for this.
   connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester(new connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(requester_params));
@@ -84,6 +90,8 @@ int64_t send_request__@(spec.srv_name)(
 void * create_replier__@(spec.srv_name)(
   void * untyped_participant,
   const char * service_name,
+  const void * untyped_datareader_qos,
+  const void * untyped_datawriter_qos,
   void ** untyped_reader)
 {
   if (!untyped_participant || !service_name || !untyped_reader) {
@@ -91,8 +99,12 @@ void * create_replier__@(spec.srv_name)(
   }
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
+  const DDS_DataReaderQos * datareader_qos = static_cast<const DDS_DataReaderQos *>(untyped_datareader_qos);
+  const DDS_DataWriterQos * datawriter_qos = static_cast<const DDS_DataWriterQos *>(untyped_datawriter_qos);
   connext::ReplierParams<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> replier_params(participant);
   replier_params.service_name(service_name);
+  replier_params.datareader_qos(*datareader_qos);
+  replier_params.datawriter_qos(*datawriter_qos);
 
   // TODO(wjwwood): use rmw allocators for this.
   connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier(new connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(replier_params));

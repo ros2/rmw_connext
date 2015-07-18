@@ -199,6 +199,58 @@ rmw_destroy_node(rmw_node_t * node)
   return RMW_RET_OK;
 }
 
+bool
+get_datareader_qos(DDSDomainParticipant * participant, DDS_DataReaderQos & datareader_qos)
+{
+  DDS_ReturnCode_t status = participant->get_default_datareader_qos(datareader_qos);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to get default datareader qos");
+    return false;
+  }
+
+  status = DDSPropertyQosPolicyHelper::add_property(
+    datareader_qos.property,
+    "dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size",
+    "4096",
+    DDS_BOOLEAN_FALSE);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to add qos property");
+    return false;
+  }
+
+  status = DDSPropertyQosPolicyHelper::add_property(
+    datareader_qos.property,
+    "reader_resource_limits.dynamically_allocate_fragmented_samples",
+    "1",
+    DDS_BOOLEAN_FALSE);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to add qos property");
+    return false;
+  }
+  return true;
+}
+
+bool
+get_datawriter_qos(DDSDomainParticipant * participant, DDS_DataWriterQos & datawriter_qos)
+{
+  DDS_ReturnCode_t status = participant->get_default_datawriter_qos(datawriter_qos);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to get default datawriter qos");
+    return false;
+  }
+
+  status = DDSPropertyQosPolicyHelper::add_property(
+    datawriter_qos.property,
+    "dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size",
+    "4096",
+    DDS_BOOLEAN_FALSE);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to add qos property");
+    return false;
+  }
+  return true;
+}
+
 rmw_publisher_t *
 rmw_create_publisher(
   const rmw_node_t * node,
@@ -300,9 +352,8 @@ rmw_create_publisher(
     }
   }
 
-  status = participant->get_default_datawriter_qos(datawriter_qos);
-  if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default datawriter qos");
+  if (!get_datawriter_qos(participant, datawriter_qos)) {
+    // error string was set within the function
     goto fail;
   }
 
@@ -313,16 +364,6 @@ rmw_create_publisher(
   )
   {
     datawriter_qos.history.depth = queue_size;
-  }
-
-  status = DDSPropertyQosPolicyHelper::add_property(
-    datawriter_qos.property,
-    "dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size",
-    "4096",
-    DDS_BOOLEAN_FALSE);
-  if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to add qos property");
-    goto fail;
   }
 
   topic_writer = dds_publisher->create_datawriter(
@@ -579,9 +620,8 @@ rmw_create_subscription(const rmw_node_t * node,
     }
   }
 
-  status = participant->get_default_datareader_qos(datareader_qos);
-  if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default datareader qos");
+  if (!get_datareader_qos(participant, datareader_qos)) {
+    // error string was set within the function
     goto fail;
   }
 
@@ -1133,6 +1173,8 @@ rmw_create_client(
   }
   // Past this point, a failure results in unrolling code in the goto fail block.
   rmw_client_t * client = nullptr;
+  DDS_DataReaderQos datareader_qos;
+  DDS_DataWriterQos datawriter_qos;
   DDSDataReader * response_datareader = nullptr;
   void * requester = nullptr;
   void * buf = nullptr;
@@ -1143,8 +1185,19 @@ rmw_create_client(
     rmw_set_error_string("failed to allocate client");
     goto fail;
   }
+
+  if (!get_datareader_qos(participant, datareader_qos)) {
+    // error string was set within the function
+    goto fail;
+  }
+  if (!get_datawriter_qos(participant, datawriter_qos)) {
+    // error string was set within the function
+    goto fail;
+  }
+
   requester = callbacks->create_requester(
-    participant, service_name, reinterpret_cast<void **>(&response_datareader));
+    participant, service_name, &datareader_qos, &datawriter_qos,
+    reinterpret_cast<void **>(&response_datareader));
   if (!requester) {
     rmw_set_error_string("failed to create requester");
     goto fail;
@@ -1294,6 +1347,8 @@ rmw_create_service(
   }
   // Past this point, a failure results in unrolling code in the goto fail block.
   DDSDataReader * request_datareader = nullptr;
+  DDS_DataReaderQos datareader_qos;
+  DDS_DataWriterQos datawriter_qos;
   void * replier = nullptr;
   void * buf = nullptr;
   ConnextStaticServiceInfo * service_info = nullptr;
@@ -1304,8 +1359,19 @@ rmw_create_service(
     rmw_set_error_string("service handle is null");
     goto fail;
   }
+
+  if (!get_datareader_qos(participant, datareader_qos)) {
+    // error string was set within the function
+    goto fail;
+  }
+  if (!get_datawriter_qos(participant, datawriter_qos)) {
+    // error string was set within the function
+    goto fail;
+  }
+
   replier = callbacks->create_replier(
-    participant, service_name, reinterpret_cast<void **>(&request_datareader));
+    participant, service_name, &datareader_qos, &datawriter_qos,
+    reinterpret_cast<void **>(&request_datareader));
   if (!replier) {
     rmw_set_error_string("failed to create replier");
     goto fail;

@@ -26,10 +26,12 @@ typedef struct service_type_support_callbacks_t
   // Function to create a requester
   void * (*create_requester)(
     void * participant, const char * service_name,
+    const void * datareader_qos, const void * datawriter_qos,
     void ** reader);
   // Function to create a replier
   void * (*create_replier)(
     void * participant, const char * service_name,
+    const void * datareader_qos, const void * datawriter_qos,
     void ** reader);
   // Function to send ROS requests
   int64_t (* send_request)(void * requester, const void * ros_request);
