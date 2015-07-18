@@ -378,6 +378,58 @@ fail:
   return nullptr;
 }
 
+bool
+get_datareader_qos(DDSDomainParticipant * participant, DDS_DataReaderQos & datareader_qos)
+{
+  DDS_ReturnCode_t status = participant->get_default_datareader_qos(datareader_qos);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to get default datareader qos");
+    return false;
+  }
+
+  status = DDSPropertyQosPolicyHelper::add_property(
+    datareader_qos.property,
+    "dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size",
+    "4096",
+    DDS_BOOLEAN_FALSE);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to add qos property");
+    return false;
+  }
+
+  status = DDSPropertyQosPolicyHelper::add_property(
+    datareader_qos.property,
+    "reader_resource_limits.dynamically_allocate_fragmented_samples",
+    "1",
+    DDS_BOOLEAN_FALSE);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to add qos property");
+    return false;
+  }
+  return true;
+}
+
+bool
+get_datawriter_qos(DDSDomainParticipant * participant, DDS_DataWriterQos & datawriter_qos)
+{
+  DDS_ReturnCode_t status = participant->get_default_datawriter_qos(datawriter_qos);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to get default datawriter qos");
+    return false;
+  }
+
+  status = DDSPropertyQosPolicyHelper::add_property(
+    datawriter_qos.property,
+    "dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size",
+    "4096",
+    DDS_BOOLEAN_FALSE);
+  if (status != DDS_RETCODE_OK) {
+    rmw_set_error_string("failed to add qos property");
+    return false;
+  }
+  return true;
+}
+
 struct CustomPublisherInfo
 {
   DDSDynamicDataTypeSupport * dynamic_data_type_support_;
@@ -521,9 +573,8 @@ rmw_create_publisher(
     }
   }
 
-  status = participant->get_default_datawriter_qos(datawriter_qos);
-  if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default datawriter qos");
+  if (!get_datawriter_qos(participant, datawriter_qos)) {
+    // error string was set within the function
     goto fail;
   }
 
@@ -1265,9 +1316,8 @@ rmw_create_subscription(
     }
   }
 
-  status = participant->get_default_datareader_qos(datareader_qos);
-  if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default datareader qos");
+  if (!get_datareader_qos(participant, datareader_qos)) {
+    // error string was set within the function
     goto fail;
   }
 
@@ -2377,6 +2427,8 @@ rmw_create_client(
   DDS::DynamicDataTypeSupport * request_type_support = nullptr;
   DDS_TypeCode * response_type_code = nullptr;
   DDS::DynamicDataTypeSupport * response_type_support = nullptr;
+  DDS_DataReaderQos datareader_qos;
+  DDS_DataWriterQos datawriter_qos;
   connext::Requester<DDS_DynamicData, DDS_DynamicData> * requester = nullptr;
   DDSDataReader * response_datareader = nullptr;
   ConnextDynamicClientInfo * client_info = nullptr;
@@ -2425,10 +2477,21 @@ rmw_create_client(
 
   // create requester
   {
+    if (!get_datareader_qos(participant, datareader_qos)) {
+      // error string was set within the function
+      goto fail;
+    }
+    if (!get_datawriter_qos(participant, datawriter_qos)) {
+      // error string was set within the function
+      goto fail;
+    }
+
     connext::RequesterParams requester_params(participant);
     requester_params.service_name(service_name);
     requester_params.request_type_support(request_type_support);
     requester_params.reply_type_support(response_type_support);
+    requester_params.datareader_qos(datareader_qos);
+    requester_params.datawriter_qos(datawriter_qos);
 
     // Allocate memory for the Requester object.
     typedef connext::Requester<DDS_DynamicData, DDS_DynamicData> Requester;
@@ -2919,6 +2982,8 @@ rmw_create_service(
   DDS::DynamicDataTypeSupport * request_type_support = nullptr;
   DDS_TypeCode * response_type_code = nullptr;
   DDS::DynamicDataTypeSupport * response_type_support = nullptr;
+  DDS_DataReaderQos datareader_qos;
+  DDS_DataWriterQos datawriter_qos;
   connext::Replier<DDS_DynamicData, DDS_DynamicData> * replier = nullptr;
   DDSDataReader * request_datareader = nullptr;
   ConnextDynamicServiceInfo * server_info = nullptr;
@@ -2966,11 +3031,22 @@ rmw_create_service(
   buf = nullptr;  // Only free the casted pointer; don't need the buf anymore.
 
   {
+    if (!get_datareader_qos(participant, datareader_qos)) {
+      // error string was set within the function
+      goto fail;
+    }
+    if (!get_datawriter_qos(participant, datawriter_qos)) {
+      // error string was set within the function
+      goto fail;
+    }
+
     // create requester
     connext::ReplierParams<DDS_DynamicData, DDS_DynamicData> replier_params(participant);
     replier_params.service_name(service_name);
     replier_params.request_type_support(request_type_support);
     replier_params.reply_type_support(response_type_support);
+    replier_params.datareader_qos(datareader_qos);
+    replier_params.datawriter_qos(datawriter_qos);
 
     // Allocate memory for the Replier object.
     typedef connext::Replier<DDS_DynamicData, DDS_DynamicData> Replier;
