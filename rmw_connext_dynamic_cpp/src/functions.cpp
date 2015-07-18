@@ -798,24 +798,12 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       ARRAY_SIZE_AND_VALUES(TYPE) \
       DDS_TYPE * values = nullptr; \
       if (array_size > 0) { \
-        /* Allocate the memory, but do not do placement new yet. */ \
         values = reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
         if (!values) { \
           rmw_set_error_string("failed to allocate memory"); \
           return false; \
         } \
         for (size_t j = 0; j < array_size; ++j) { \
-          /* Now do the placement new for this element. */ \
-          bool construction_successful = true; \
-          RMW_TRY_PLACEMENT_NEW(void * _, values + j, construction_successful = false, DDS_TYPE) \
-          if (!construction_successful) { \
-            for (size_t k = 0; k < j - 1; ++k) { \
-              RMW_TRY_DESTRUCTOR(values[k].~DDS_TYPE(), DDS_TYPE, ) \
-            } \
-            rmw_free(values); \
-            return false; \
-          } \
-          /* Then do assignment (copy constructor). */ \
           values[j] = ros_values[j]; \
         } \
       } \
@@ -824,13 +812,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         i + 1, \
         array_size, \
         values); \
-      if (values) { \
-        /* First call the destructor for each element, then free the whole block. */ \
-        for (size_t i = 0; i < array_size; ++i) { \
-          RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
-        } \
-        rmw_free(values); \
-      } \
+      rmw_free(values); \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to set array value using " #ARRAY_METHOD_NAME); \
         return false; \
@@ -848,24 +830,12 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       if (member->array_size_ && !member->is_upper_bound_) { \
         array_size = member->array_size_; \
         auto ros_values = (TYPE *)((char *)ros_message + member->offset_); \
-        /* Allocate the memory, but do not do placement new yet. */ \
         values = reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
         if (!values) { \
           rmw_set_error_string("failed to allocate memory"); \
           return false; \
         } \
         for (size_t j = 0; j < array_size; ++j) { \
-          /* Now do the placement new for this element. */ \
-          bool construction_successful = true; \
-          RMW_TRY_PLACEMENT_NEW(void * _, values + j, construction_successful = false, DDS_TYPE) \
-          if (!construction_successful) { \
-            for (size_t k = 0; k < j - 1; ++k) { \
-              RMW_TRY_DESTRUCTOR(values[k].~DDS_TYPE(), DDS_TYPE, ) \
-            } \
-            rmw_free(values); \
-            return false; \
-          } \
-          /* Then do assignment (copy constructor). */ \
           values[j] = ros_values[j]; \
         } \
       } else { \
@@ -873,24 +843,12 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         auto vector = reinterpret_cast<std::vector<TYPE> *>(untyped_vector); \
         array_size = vector->size(); \
         if (array_size > 0) { \
-          /* Allocate the memory, but do not do placement new yet. */ \
           values = reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
           if (!values) { \
             rmw_set_error_string("failed to allocate memory"); \
             return false; \
           } \
           for (size_t j = 0; j < array_size; ++j) { \
-            /* Now do the placement new for this element. */ \
-            bool construction_successful = true; \
-            RMW_TRY_PLACEMENT_NEW(void * _, values + j, construction_successful = false, DDS_TYPE) \
-            if (!construction_successful) { \
-              for (size_t k = 0; k < j - 1; ++k) { \
-                RMW_TRY_DESTRUCTOR(values[k].~DDS_TYPE(), DDS_TYPE, ) \
-              } \
-              rmw_free(values); \
-              return false; \
-            } \
-            /* Then do assignment (copy constructor). */ \
             values[j] = (*vector)[j]; \
           } \
         } \
@@ -900,13 +858,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         i + 1, \
         array_size, \
         values); \
-      if (values) { \
-        /* First call the destructor for each element, then free the whole block. */ \
-        for (size_t i = 0; i < array_size; ++i) { \
-          RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
-        } \
-        rmw_free(values); \
-      } \
+      rmw_free(values); \
       if (status != DDS_RETCODE_OK) { \
         rmw_set_error_string("failed to set array value using " #ARRAY_METHOD_NAME); \
         return false; \
@@ -1605,24 +1557,11 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       ARRAY_SIZE() \
       ARRAY_RESIZE_AND_VALUES(TYPE) \
       if (array_size > 0) { \
-        /* Allocate the memory, but do not do placement new yet. */ \
         DDS_TYPE * values = \
           reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
         if (!values) { \
           rmw_set_error_string("failed to allocate memory"); \
           return false; \
-        } \
-        for (size_t i = 0; i < array_size; ++i) { \
-          /* Now do the placement new for this element. */ \
-          bool construction_successful = true; \
-          RMW_TRY_PLACEMENT_NEW(void * _, values + i, construction_successful = false, DDS_TYPE) \
-          if (!construction_successful) { \
-            for (size_t j = 0; j < i - 1; ++j) { \
-              RMW_TRY_DESTRUCTOR(values[j].~DDS_TYPE(), DDS_TYPE, ) \
-            } \
-            rmw_free(values); \
-            return false; \
-          } \
         } \
         DDS_UnsignedLong length = array_size; \
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
@@ -1631,27 +1570,14 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           NULL, \
           i + 1); \
         if (status != DDS_RETCODE_OK) { \
-          if (values) { \
-            /* First call the destructor for each element, then free the whole block. */ \
-            for (size_t i = 0; i < array_size; ++i) { \
-              RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
-            } \
-            rmw_free(values); \
-          } \
+          rmw_free(values); \
           rmw_set_error_string("failed to get array value using " #ARRAY_METHOD_NAME); \
           return false; \
         } \
         for (size_t i = 0; i < array_size; ++i) { \
           ros_values[i] = values[i]; \
         } \
-        if (values) { \
-          /* First call the destructor for each element, then free the whole block. */ \
-          for (size_t i = 0; i < array_size; ++i) { \
-            /* TODO(wjwwood): what happens if the ~ fails? is the error really propagated? */ \
-            RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
-          } \
-          rmw_free(values); \
-        } \
+        rmw_free(values); \
       } \
     } else { \
       DDS_TYPE value; \
@@ -1673,24 +1599,11 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     if (member->is_array_) { \
       ARRAY_SIZE() \
       if (array_size > 0) { \
-        /* Allocate the memory, but do not do placement new yet. */ \
         DDS_TYPE * values = \
           reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
         if (!values) { \
           rmw_set_error_string("failed to allocate memory"); \
           return false; \
-        } \
-        for (size_t i = 0; i < array_size; ++i) { \
-          /* Now do the placement new for this element. */ \
-          bool construction_successful = true; \
-          RMW_TRY_PLACEMENT_NEW(void * _, values + i, construction_successful = false, DDS_TYPE) \
-          if (!construction_successful) { \
-            for (size_t j = 0; j < i - 1; ++j) { \
-              RMW_TRY_DESTRUCTOR(values[j].~DDS_TYPE(), DDS_TYPE, ) \
-            } \
-            rmw_free(values); \
-            return false; \
-          } \
         } \
         DDS_UnsignedLong length = array_size; \
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
@@ -1699,13 +1612,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           NULL, \
           i + 1); \
         if (status != DDS_RETCODE_OK) { \
-          if (values) { \
-            /* First call the destructor for each element, then free the whole block. */ \
-            for (size_t i = 0; i < array_size; ++i) { \
-              RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
-            } \
-            rmw_free(values); \
-          } \
+          rmw_free(values); \
           rmw_set_error_string("failed to get array value using " #ARRAY_METHOD_NAME); \
           return false; \
         } \
@@ -1722,13 +1629,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
             (*vector)[i] = values[i]; \
           } \
         } \
-        if (values) { \
-          /* First call the destructor for each element, then free the whole block. */ \
-          for (size_t i = 0; i < array_size; ++i) { \
-            RMW_TRY_DESTRUCTOR(values[i].~DDS_TYPE(), DDS_TYPE, ) \
-          } \
-          rmw_free(values); \
-        } \
+        rmw_free(values); \
       } \
     } else { \
       DDS_TYPE value; \
