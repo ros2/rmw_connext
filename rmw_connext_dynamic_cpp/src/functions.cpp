@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cassert>
 #include <exception>
 #include <iostream>
 #include <sstream>
@@ -20,7 +21,7 @@
 #include <vector>
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #ifdef __clang__
 # pragma clang diagnostic ignored "-Wdeprecated-register"
 #endif
@@ -84,6 +85,8 @@ rmw_init()
 rmw_node_t *
 rmw_create_node(const char * name)
 {
+  (void)name;
+
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
     rmw_set_error_string("failed to get participant factory");
@@ -579,9 +582,10 @@ rmw_create_publisher(
   }
 
   // ensure the history depth is at least the requested queue size
+  assert(datawriter_qos.history.depth >= 0);
   if (
     datawriter_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    datawriter_qos.history.depth < queue_size
+    static_cast<size_t>(datawriter_qos.history.depth) < queue_size
   )
   {
     datawriter_qos.history.depth = queue_size;
@@ -1322,9 +1326,10 @@ rmw_create_subscription(
   }
 
   // ensure the history depth is at least the requested queue size
+  assert(datareader_qos.history.depth >= 0);
   if (
     datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    datareader_qos.history.depth < queue_size
+    static_cast<size_t>(datareader_qos.history.depth) < queue_size
   )
   {
     datareader_qos.history.depth = queue_size;
@@ -2251,7 +2256,7 @@ rmw_wait(
     }
 
     // search for subscriber condition in active set
-    unsigned long j = 0;
+    DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         break;
@@ -2265,7 +2270,7 @@ rmw_wait(
   }
 
   // set guard condition handles to zero for all not triggered conditions
-  for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i) {
+  for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
     DDSCondition * condition =
       static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
     if (!condition) {
@@ -2274,7 +2279,7 @@ rmw_wait(
     }
 
     // search for guard condition in active set
-    unsigned long j = 0;
+    DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         DDSGuardCondition * guard = (DDSGuardCondition *)condition;
@@ -2294,7 +2299,7 @@ rmw_wait(
   }
 
   // set service handles to zero for all not triggered conditions
-  for (unsigned long i = 0; i < services->service_count; ++i) {
+  for (size_t i = 0; i < services->service_count; ++i) {
     ConnextDynamicServiceInfo * service_info =
       static_cast<ConnextDynamicServiceInfo *>(services->services[i]);
     if (!service_info) {
@@ -2313,7 +2318,7 @@ rmw_wait(
     }
 
     // search for service condition in active set
-    unsigned long j = 0;
+    DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         break;
@@ -2327,7 +2332,7 @@ rmw_wait(
   }
 
   // set client handles to zero for all not triggered conditions
-  for (unsigned long i = 0; i < clients->client_count; ++i) {
+  for (size_t i = 0; i < clients->client_count; ++i) {
     ConnextDynamicClientInfo * client_info =
       static_cast<ConnextDynamicClientInfo *>(clients->clients[i]);
     if (!client_info) {
@@ -2346,7 +2351,7 @@ rmw_wait(
     }
 
     // search for client condition in active set
-    unsigned long j = 0;
+    DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         break;
@@ -2572,8 +2577,8 @@ fail:
     rmw_free(response_type_support);
   }
   if (requester) {
-    typedef connext::Requester<DDS_DynamicData, DDS_DynamicData> Requester;
-    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(requester->~Requester(), Requester)
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      requester->~Requester(), "connext::Requester<DDS_DynamicData, DDS_DynamicData>")
     rmw_free(requester);
   }
   if (client_info) {
@@ -2627,8 +2632,10 @@ rmw_destroy_client(rmw_client_t * client)
       rmw_free(client_info->response_type_support_);
     }
     if (client_info->requester_) {
-      typedef connext::Requester<DDS_DynamicData, DDS_DynamicData> Requester;
-      RMW_TRY_DESTRUCTOR(client_info->requester_->~Requester(), Requester, result = RMW_RET_ERROR)
+      RMW_TRY_DESTRUCTOR(
+        client_info->requester_->~Requester(),
+        "connext::Requester<DDS_DynamicData, DDS_DynamicData>",
+        result = RMW_RET_ERROR)
       rmw_free(client_info->requester_);
     }
   }
@@ -3121,8 +3128,8 @@ fail:
     rmw_free(response_type_support);
   }
   if (replier) {
-    typedef connext::Replier<DDS_DynamicData, DDS_DynamicData> Replier;
-    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(replier->~Replier(), Replier)
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      replier->~Replier(), "connext::Replier<DDS_DynamicData, DDS_DynamicData>")
     rmw_free(replier);
   }
   if (server_info) {
@@ -3176,8 +3183,10 @@ rmw_destroy_service(rmw_service_t * service)
       rmw_free(service_info->response_type_support_);
     }
     if (service_info->replier_) {
-      typedef connext::Replier<DDS_DynamicData, DDS_DynamicData> Replier;
-      RMW_TRY_DESTRUCTOR(service_info->replier_->~Replier(), Replier, result = RMW_RET_ERROR)
+      RMW_TRY_DESTRUCTOR(
+        service_info->replier_->~Replier(),
+        "connext::Replier<DDS_DynamicData, DDS_DynamicData>",
+        result = RMW_RET_ERROR)
       rmw_free(service_info->replier_);
     }
   }

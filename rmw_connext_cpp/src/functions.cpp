@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cassert>
 #include <exception>
 #include <iostream>
 #include <sstream>
@@ -19,7 +20,7 @@
 #include <string>
 
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #ifdef __clang__
 # pragma clang diagnostic ignored "-Wdeprecated-register"
 #endif
@@ -102,6 +103,8 @@ rmw_init()
 rmw_node_t *
 rmw_create_node(const char * name)
 {
+  (void)name;
+
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
     rmw_set_error_string("failed to get participant factory");
@@ -358,9 +361,10 @@ rmw_create_publisher(
   }
 
   // ensure the history depth is at least the requested queue size
+  assert(datawriter_qos.history.depth >= 0);
   if (
     datawriter_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    datawriter_qos.history.depth < queue_size
+    static_cast<size_t>(datawriter_qos.history.depth) < queue_size
   )
   {
     datawriter_qos.history.depth = queue_size;
@@ -626,9 +630,10 @@ rmw_create_subscription(const rmw_node_t * node,
   }
 
   // ensure the history depth is at least the requested queue size
+  assert(datareader_qos.history.depth >= 0);
   if (
     datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    datareader_qos.history.depth < queue_size
+    static_cast<size_t>(datareader_qos.history.depth) < queue_size
   )
   {
     datareader_qos.history.depth = queue_size;
@@ -814,7 +819,7 @@ rmw_create_guard_condition()
   RMW_TRY_PLACEMENT_NEW(dds_guard_condition, buf, goto fail, DDSGuardCondition)
   buf = nullptr;  // Only free the dds_guard_condition pointer; don't need the buf pointer anymore.
   guard_condition->implementation_identifier = rti_connext_identifier;
-  guard_condition->data = new DDSGuardCondition();
+  guard_condition->data = dds_guard_condition;
   return guard_condition;
 fail:
   if (guard_condition) {
@@ -1024,7 +1029,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     }
 
     // search for subscriber condition in active set
-    unsigned long j = 0;
+    DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         break;
@@ -1047,7 +1052,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     }
 
     // search for guard condition in active set
-    unsigned long j = 0;
+    DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         DDSGuardCondition * guard = static_cast<DDSGuardCondition *>(condition);
@@ -1086,7 +1091,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     }
 
     // search for service condition in active set
-    unsigned long j = 0;
+    DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         break;
@@ -1119,7 +1124,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     }
 
     // search for service condition in active set
-    unsigned long j = 0;
+    DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
       if (active_conditions[j] == condition) {
         break;
