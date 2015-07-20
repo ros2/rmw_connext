@@ -476,7 +476,7 @@ rmw_create_publisher(
   }
 
   const rosidl_typesupport_introspection_cpp::MessageMembers * members =
-    (rosidl_typesupport_introspection_cpp::MessageMembers *)type_support->data;
+    (const rosidl_typesupport_introspection_cpp::MessageMembers *)type_support->data;
   if (!members) {
     RMW_SET_ERROR_MSG("members handle is null");
     return NULL;
@@ -806,7 +806,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 }
 
 #define SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
-  TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
+  const TYPE value = *((const TYPE *)((const char *)ros_message + member->offset_)); \
   DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
     NULL, \
     i + 1, \
@@ -817,14 +817,14 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   }
 
 #define ARRAY_SIZE_AND_VALUES(TYPE) \
-  TYPE * ros_values = nullptr; \
+  const TYPE * ros_values = nullptr; \
   size_t array_size; \
   if (member->array_size_ && !member->is_upper_bound_) { \
-    ros_values = (TYPE *)((char *)ros_message + member->offset_); \
+    ros_values = (const TYPE *)((const char *)ros_message + member->offset_); \
     array_size = member->array_size_; \
   } else { \
-    auto untyped_vector = (void *)((char *)ros_message + member->offset_); \
-    auto vector = reinterpret_cast<std::vector<TYPE> *>(untyped_vector); \
+    auto untyped_vector = (const void *)((const char *)ros_message + member->offset_); \
+    auto vector = reinterpret_cast<const std::vector<TYPE> *>(untyped_vector); \
     ros_values = vector->data(); \
     array_size = vector->size(); \
   }
@@ -884,8 +884,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       size_t array_size; \
       if (member->array_size_ && !member->is_upper_bound_) { \
         array_size = member->array_size_; \
-        auto ros_values = (TYPE *)((char *)ros_message + member->offset_); \
-        values = reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
+        auto ros_values = (const TYPE *)((const char *)ros_message + member->offset_); \
+        values = static_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
         if (!values) { \
           RMW_SET_ERROR_MSG("failed to allocate memory"); \
           return false; \
@@ -894,8 +894,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
           values[j] = ros_values[j]; \
         } \
       } else { \
-        auto untyped_vector = (void *)((char *)ros_message + member->offset_); \
-        auto vector = reinterpret_cast<std::vector<TYPE> *>(untyped_vector); \
+        auto untyped_vector = (const void *)((const char *)ros_message + member->offset_); \
+        auto vector = reinterpret_cast<const std::vector<TYPE> *>(untyped_vector); \
         array_size = vector->size(); \
         if (array_size > 0) { \
           values = reinterpret_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
@@ -952,7 +952,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         return false; \
       } \
     } else { \
-      TYPE value = *((TYPE *)((char *)ros_message + member->offset_)); \
+      const TYPE value = *((const TYPE *)((const char *)ros_message + member->offset_)); \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         NULL, \
         i + 1, \
@@ -974,7 +974,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     RMW_SET_ERROR_MSG("failed to bind complex member"); \
     return false; \
   } \
-  void * sub_ros_message = (void *)((char *)ros_message + member->offset_); \
+  const void * sub_ros_message = reinterpret_cast<const void *>(reinterpret_cast<const char *>(ros_message) + member->offset_); \
   if (!member->members_) { \
     RMW_SET_ERROR_MSG("members handle is null"); \
     return false; \
@@ -1060,13 +1060,13 @@ bool _publish(
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           if (member->is_array_) {
-            auto untyped_member = (void *)((char *)ros_message + member->offset_);
+            auto untyped_member = (const void *)((const char *)ros_message + member->offset_);
             if (!member->size_function) {
               RMW_SET_ERROR_MSG("size function handle is null");
               return false;
             }
-            if (!member->get_function) {
-              RMW_SET_ERROR_MSG("get function handle is null");
+            if (!member->get_const_function) {
+              rmw_set_error_string("get const function handle is null");
               return false;
             }
 
@@ -1081,9 +1081,9 @@ bool _publish(
             }
             size_t array_size = member->size_function(untyped_member);
             for (size_t j = 0; j < array_size; ++j) {
-              const void * const_sub_ros_message = member->get_function(untyped_member, j);
+              const void * const_sub_ros_message = member->get_const_function(untyped_member, j);
               // offset message pointer since the macro adds the member offset to it
-              void * ros_message = (void *)((char *)const_sub_ros_message - member->offset_);
+              const void * ros_message = (const void *)((const char *)const_sub_ros_message - member->offset_);
               DDS_DynamicData * array_data_ptr = &array_data;
               SET_SUBMESSAGE_VALUE(array_data_ptr, j)
             }
@@ -1220,7 +1220,7 @@ rmw_create_subscription(
   }
 
   const rosidl_typesupport_introspection_cpp::MessageMembers * members =
-    (rosidl_typesupport_introspection_cpp::MessageMembers *)type_support->data;
+    (const rosidl_typesupport_introspection_cpp::MessageMembers *)type_support->data;
   if (!members) {
     RMW_SET_ERROR_MSG("members handle is null");
     return NULL;
@@ -1873,9 +1873,12 @@ bool _take(DDS_DynamicData * dynamic_data, void * ros_message,
               member->resize_function(untyped_member, array_size);
             }
             for (size_t j = 0; j < array_size; ++j) {
-              const void * const_sub_ros_message = member->get_function(untyped_member, j);
-              // offset message pointer since the macro adds the member offset to it
-              void * ros_message = (void *)((char *)const_sub_ros_message - member->offset_);
+              void * ros_message;
+              {
+                void * sub_ros_message = member->get_function(untyped_member, j);
+                // offset message pointer since the macro adds the member offset to it
+                ros_message = reinterpret_cast<void *>(reinterpret_cast<char *>(sub_ros_message) - member->offset_);
+              }
               DDS_DynamicData * array_data_ptr = &array_data;
               // TODO(dirk-thomas) if the macro return unbind is not called
               GET_SUBMESSAGE_VALUE(array_data_ptr, j)
@@ -2399,7 +2402,7 @@ rmw_create_client(
   }
 
   const rosidl_typesupport_introspection_cpp::ServiceMembers * service_members =
-    (rosidl_typesupport_introspection_cpp::ServiceMembers *)type_support->data;
+    (const rosidl_typesupport_introspection_cpp::ServiceMembers *)type_support->data;
   if (!service_members) {
     RMW_SET_ERROR_MSG("service members handle is null");
     return NULL;
@@ -2956,7 +2959,7 @@ rmw_create_service(
   }
 
   const rosidl_typesupport_introspection_cpp::ServiceMembers * service_members =
-    (rosidl_typesupport_introspection_cpp::ServiceMembers *)type_support->data;
+    (const rosidl_typesupport_introspection_cpp::ServiceMembers *)type_support->data;
   if (!service_members) {
     RMW_SET_ERROR_MSG("service members handle is null");
     return NULL;
