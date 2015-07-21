@@ -807,7 +807,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 }
 
 #define SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
-  const TYPE * value = reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
+  const TYPE * value = \
+    reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
   DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
     NULL, \
     i + 1, \
@@ -821,7 +822,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   const TYPE * ros_values = nullptr; \
   size_t array_size; \
   if (member->array_size_ && !member->is_upper_bound_) { \
-    ros_values = reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
+    ros_values = \
+      reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
     array_size = member->array_size_; \
   } else { \
     const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_; \
@@ -885,7 +887,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       size_t array_size; \
       if (member->array_size_ && !member->is_upper_bound_) { \
         array_size = member->array_size_; \
-        auto ros_values = reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
+        auto ros_values = \
+          reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
         values = static_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
         if (!values) { \
           RMW_SET_ERROR_MSG("failed to allocate memory"); \
@@ -953,7 +956,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         return false; \
       } \
     } else { \
-      const TYPE * value = reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
+      const TYPE * value = \
+        reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         NULL, \
         i + 1, \
@@ -1676,7 +1680,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           return false; \
         } \
         if (member->array_size_ && !member->is_upper_bound_) { \
-          auto ros_values = reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
+          auto ros_values = \
+            reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
           for (size_t i = 0; i < array_size; ++i) { \
             ros_values[i] = values[i]; \
           } \
