@@ -82,6 +82,7 @@ if(NOT WIN32)
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_connext_compile_flags
       "-Wno-unused-but-set-variable"
+      "-Wno-unused-parameter"
       "-Wno-unused-variable"
     )
   endif()
@@ -167,9 +168,7 @@ if(WIN32)
     PRIVATE "NDDS_USER_DLL_EXPORT")
 endif()
 set_target_properties(${rosidl_generate_interfaces_TARGET}${_target_suffix} PROPERTIES COMPILE_FLAGS
-  "-Wall"
-  "-Wextra"
-  "-Wno-unused-parameter")
+  "-Wall -Wextra")
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
