@@ -1067,7 +1067,7 @@ bool _publish(
               return false;
             }
             if (!member->get_const_function) {
-              rmw_set_error_string("get const function handle is null");
+              RMW_SET_ERROR_MSG("get const function handle is null");
               return false;
             }
 
