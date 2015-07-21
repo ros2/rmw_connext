@@ -23,6 +23,7 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #ifdef __clang__
 # pragma clang diagnostic ignored "-Wdeprecated-register"
+# pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #endif
 #include <ndds/ndds_cpp.h>
 #include <ndds/ndds_requestreply_cpp.h>

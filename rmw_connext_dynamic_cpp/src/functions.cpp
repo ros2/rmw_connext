@@ -24,6 +24,7 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #ifdef __clang__
 # pragma clang diagnostic ignored "-Wdeprecated-register"
+# pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #endif
 #include <ndds/connext_cpp/connext_cpp_replier_details.h>
 #include <ndds/connext_cpp/connext_cpp_requester_details.h>
