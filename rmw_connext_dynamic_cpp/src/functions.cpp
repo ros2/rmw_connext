@@ -1949,7 +1949,7 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     dynamic_data_sequence,
     sample_infos,
     1,
-    DDS_NOT_READ_SAMPLE_STATE,
+    DDS_ANY_SAMPLE_STATE,
     DDS_ANY_VIEW_STATE,
     DDS_ANY_INSTANCE_STATE);
   if (status == DDS_RETCODE_NO_DATA) {
