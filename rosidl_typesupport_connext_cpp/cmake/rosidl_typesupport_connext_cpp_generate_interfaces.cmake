@@ -77,6 +77,7 @@ if(NOT WIN32)
       "-Wno-return-type-c-linkage"
       "-Wno-sometimes-uninitialized"
       "-Wno-tautological-compare"
+      "-Wno-unused-parameter"
       "-Wno-unused-variable"
     )
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
