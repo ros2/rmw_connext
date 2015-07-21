@@ -93,7 +93,7 @@ rmw_init()
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
-    rmw_set_error_string("failed to get participant factory");
+    RMW_SET_ERROR_MSG("failed to get participant factory");
     return RMW_RET_ERROR;
   }
   return RMW_RET_OK;
@@ -104,7 +104,7 @@ rmw_create_node(const char * name)
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
-    rmw_set_error_string("failed to get participant factory");
+    RMW_SET_ERROR_MSG("failed to get participant factory");
     return NULL;
   }
 
@@ -112,7 +112,7 @@ rmw_create_node(const char * name)
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = dpf_->get_default_participant_qos(participant_qos);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default participant qos");
+    RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
   }
   status = DDSPropertyQosPolicyHelper::add_property(
@@ -121,7 +121,7 @@ rmw_create_node(const char * name)
     "0",
     DDS_BOOLEAN_FALSE);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to add qos property");
+    RMW_SET_ERROR_MSG("failed to add qos property");
     return NULL;
   }
   status = DDSPropertyQosPolicyHelper::add_property(
@@ -130,7 +130,7 @@ rmw_create_node(const char * name)
     "1",
     DDS_BOOLEAN_FALSE);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to add qos property");
+    RMW_SET_ERROR_MSG("failed to add qos property");
     return NULL;
   }
 
@@ -140,13 +140,13 @@ rmw_create_node(const char * name)
     domain, participant_qos, NULL,
     DDS_STATUS_MASK_NONE);
   if (!participant) {
-    rmw_set_error_string("failed to create participant");
+    RMW_SET_ERROR_MSG("failed to create participant");
     return NULL;
   }
 
   rmw_node_t * node_handle = rmw_node_allocate();
   if (!node_handle) {
-    rmw_set_error_string("failed to allocate memory for node handle");
+    RMW_SET_ERROR_MSG("failed to allocate memory for node handle");
     if (dpf_->delete_participant(participant) != DDS_RETCODE_OK) {
       std::stringstream ss;
       ss << "leaking participant while handling failue at " <<
@@ -165,7 +165,7 @@ rmw_ret_t
 rmw_destroy_node(rmw_node_t * node)
 {
   if (!node) {
-    rmw_set_error_string("node handle is null");
+    RMW_SET_ERROR_MSG("node handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -175,13 +175,13 @@ rmw_destroy_node(rmw_node_t * node)
 
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
-    rmw_set_error_string("failed to get participant factory");
+    RMW_SET_ERROR_MSG("failed to get participant factory");
     return RMW_RET_ERROR;
   }
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
   if (!participant) {
-    rmw_set_error_string("participant handle is null");
+    RMW_SET_ERROR_MSG("participant handle is null");
   }
   // This unregisters types and destroys topics which were shared between
   // publishers and subscribers and could not be cleaned up in the delete functions.
@@ -189,7 +189,7 @@ rmw_destroy_node(rmw_node_t * node)
 
   DDS_ReturnCode_t ret = dpf_->delete_participant(participant);
   if (ret != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to delete participant");
+    RMW_SET_ERROR_MSG("failed to delete participant");
     return RMW_RET_ERROR;
   }
 
@@ -204,7 +204,7 @@ get_datareader_qos(DDSDomainParticipant * participant, DDS_DataReaderQos & datar
 {
   DDS_ReturnCode_t status = participant->get_default_datareader_qos(datareader_qos);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default datareader qos");
+    RMW_SET_ERROR_MSG("failed to get default datareader qos");
     return false;
   }
 
@@ -214,7 +214,7 @@ get_datareader_qos(DDSDomainParticipant * participant, DDS_DataReaderQos & datar
     "4096",
     DDS_BOOLEAN_FALSE);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to add qos property");
+    RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
   }
 
@@ -224,7 +224,7 @@ get_datareader_qos(DDSDomainParticipant * participant, DDS_DataReaderQos & datar
     "1",
     DDS_BOOLEAN_FALSE);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to add qos property");
+    RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
   }
   return true;
@@ -235,7 +235,7 @@ get_datawriter_qos(DDSDomainParticipant * participant, DDS_DataWriterQos & dataw
 {
   DDS_ReturnCode_t status = participant->get_default_datawriter_qos(datawriter_qos);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default datawriter qos");
+    RMW_SET_ERROR_MSG("failed to get default datawriter qos");
     return false;
   }
 
@@ -245,7 +245,7 @@ get_datawriter_qos(DDSDomainParticipant * participant, DDS_DataWriterQos & dataw
     "4096",
     DDS_BOOLEAN_FALSE);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to add qos property");
+    RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
   }
   return true;
@@ -259,7 +259,7 @@ rmw_create_publisher(
   size_t queue_size)
 {
   if (!node) {
-    rmw_set_error_string("node handle is null");
+    RMW_SET_ERROR_MSG("node handle is null");
     return NULL;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -268,7 +268,7 @@ rmw_create_publisher(
     return NULL)
 
   if (!type_support) {
-    rmw_set_error_string("type support handle is null");
+    RMW_SET_ERROR_MSG("type support handle is null");
     return NULL;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -279,14 +279,14 @@ rmw_create_publisher(
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
   if (!participant) {
-    rmw_set_error_string("participant handle is null");
+    RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
   }
 
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(type_support->data);
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return NULL;
   }
   std::string type_name = _create_type_name(callbacks, "msg");
@@ -305,26 +305,26 @@ rmw_create_publisher(
   // Begin initializing elements
   publisher = rmw_publisher_allocate();
   if (!publisher) {
-    rmw_set_error_string("failed to allocate publisher");
+    RMW_SET_ERROR_MSG("failed to allocate publisher");
     goto fail;
   }
 
   registered = callbacks->register_type(participant, type_name.c_str());
   if (!registered) {
-    rmw_set_error_string("failed to register type");
+    RMW_SET_ERROR_MSG("failed to register type");
     goto fail;
   }
 
   status = participant->get_default_publisher_qos(publisher_qos);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default publisher qos");
+    RMW_SET_ERROR_MSG("failed to get default publisher qos");
     goto fail;
   }
 
   dds_publisher = participant->create_publisher(
     publisher_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!dds_publisher) {
-    rmw_set_error_string("failed to create publisher");
+    RMW_SET_ERROR_MSG("failed to create publisher");
     goto fail;
   }
 
@@ -333,21 +333,21 @@ rmw_create_publisher(
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to get default topic qos");
+      RMW_SET_ERROR_MSG("failed to get default topic qos");
       goto fail;
     }
 
     topic = participant->create_topic(
       topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!topic) {
-      rmw_set_error_string("failed to create topic");
+      RMW_SET_ERROR_MSG("failed to create topic");
       goto fail;
     }
   } else {
     DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
     topic = participant->find_topic(topic_name, timeout);
     if (!topic) {
-      rmw_set_error_string("failed to find topic");
+      RMW_SET_ERROR_MSG("failed to find topic");
       goto fail;
     }
   }
@@ -369,14 +369,14 @@ rmw_create_publisher(
   topic_writer = dds_publisher->create_datawriter(
     topic, datawriter_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!topic_writer) {
-    rmw_set_error_string("failed to create datawriter");
+    RMW_SET_ERROR_MSG("failed to create datawriter");
     goto fail;
   }
 
   // Allocate memory for the ConnextStaticPublisherInfo object.
   buf = rmw_allocate(sizeof(ConnextStaticPublisherInfo));
   if (!buf) {
-    rmw_set_error_string("failed to allocate memory");
+    RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticPublisherInfo in the preallocated buffer.
@@ -425,7 +425,7 @@ rmw_ret_t
 rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 {
   if (!node) {
-    rmw_set_error_string("node handle is null");
+    RMW_SET_ERROR_MSG("node handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -434,7 +434,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     return RMW_RET_ERROR)
 
   if (!publisher) {
-    rmw_set_error_string("publisher handle is null");
+    RMW_SET_ERROR_MSG("publisher handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -444,7 +444,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 
   DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
   if (!participant) {
-    rmw_set_error_string("participant handle is null");
+    RMW_SET_ERROR_MSG("participant handle is null");
     return RMW_RET_ERROR;
   }
   // TODO(wjwwood): need to figure out when to unregister types with the participant.
@@ -454,18 +454,18 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     if (dds_publisher) {
       if (publisher_info->topic_writer_) {
         if (dds_publisher->delete_datawriter(publisher_info->topic_writer_) != DDS_RETCODE_OK) {
-          rmw_set_error_string("failed to delete datawriter");
+          RMW_SET_ERROR_MSG("failed to delete datawriter");
           return RMW_RET_ERROR;
         }
         publisher_info->topic_writer_ = nullptr;
       }
       if (participant->delete_publisher(dds_publisher) != DDS_RETCODE_OK) {
-        rmw_set_error_string("failed to delete publisher");
+        RMW_SET_ERROR_MSG("failed to delete publisher");
         return RMW_RET_ERROR;
       }
       publisher_info->dds_publisher_ = nullptr;
     } else if (publisher_info->topic_writer_) {
-      rmw_set_error_string("cannot delete datawriter because the publisher is null");
+      RMW_SET_ERROR_MSG("cannot delete datawriter because the publisher is null");
       return RMW_RET_ERROR;
     }
     RMW_TRY_DESTRUCTOR(
@@ -483,38 +483,38 @@ rmw_ret_t
 rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
   if (!publisher) {
-    rmw_set_error_string("publisher handle is null");
+    RMW_SET_ERROR_MSG("publisher handle is null");
     return RMW_RET_ERROR;
   }
   if (publisher->implementation_identifier != rti_connext_identifier) {
-    rmw_set_error_string("publisher handle is not from this rmw implementation");
+    RMW_SET_ERROR_MSG("publisher handle is not from this rmw implementation");
     return RMW_RET_ERROR;
   }
   if (!ros_message) {
-    rmw_set_error_string("ros message handle is null");
+    RMW_SET_ERROR_MSG("ros message handle is null");
     return RMW_RET_ERROR;
   }
 
   ConnextStaticPublisherInfo * publisher_info =
     static_cast<ConnextStaticPublisherInfo *>(publisher->data);
   if (!publisher_info) {
-    rmw_set_error_string("publisher info handle is null");
+    RMW_SET_ERROR_MSG("publisher info handle is null");
     return RMW_RET_ERROR;
   }
   const message_type_support_callbacks_t * callbacks = publisher_info->callbacks_;
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
   DDSDataWriter * topic_writer = publisher_info->topic_writer_;
   if (!topic_writer) {
-    rmw_set_error_string("topic writer handle is null");
+    RMW_SET_ERROR_MSG("topic writer handle is null");
     return RMW_RET_ERROR;
   }
 
   bool published = callbacks->publish(topic_writer, ros_message);
   if (!published) {
-    rmw_set_error_string("failed to publish message");
+    RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;
   }
   return RMW_RET_OK;
@@ -528,7 +528,7 @@ rmw_create_subscription(const rmw_node_t * node,
   bool ignore_local_publications)
 {
   if (!node) {
-    rmw_set_error_string("node handle is null");
+    RMW_SET_ERROR_MSG("node handle is null");
     return NULL;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -537,7 +537,7 @@ rmw_create_subscription(const rmw_node_t * node,
     return NULL)
 
   if (!type_support) {
-    rmw_set_error_string("type support handle is null");
+    RMW_SET_ERROR_MSG("type support handle is null");
     return NULL;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -548,14 +548,14 @@ rmw_create_subscription(const rmw_node_t * node,
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
   if (!participant) {
-    rmw_set_error_string("participant handle is null");
+    RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
   }
 
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(type_support->data);
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return NULL;
   }
   std::string type_name = _create_type_name(callbacks, "msg");
@@ -574,25 +574,25 @@ rmw_create_subscription(const rmw_node_t * node,
   // Begin initializing elements.
   subscription = rmw_subscription_allocate();
   if (!subscription) {
-    rmw_set_error_string("failed to allocate subscription");
+    RMW_SET_ERROR_MSG("failed to allocate subscription");
     goto fail;
   }
 
   registered = callbacks->register_type(participant, type_name.c_str());
   if (!registered) {
-    rmw_set_error_string("failed to register type");
+    RMW_SET_ERROR_MSG("failed to register type");
     goto fail;
   }
 
   status = participant->get_default_subscriber_qos(subscriber_qos);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to get default subscriber qos");
+    RMW_SET_ERROR_MSG("failed to get default subscriber qos");
     goto fail;
   }
 
   dds_subscriber = participant->create_subscriber(subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!dds_subscriber) {
-    rmw_set_error_string("failed to create subscriber");
+    RMW_SET_ERROR_MSG("failed to create subscriber");
     goto fail;
   }
 
@@ -601,21 +601,21 @@ rmw_create_subscription(const rmw_node_t * node,
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to get default topic qos");
+      RMW_SET_ERROR_MSG("failed to get default topic qos");
       goto fail;
     }
 
     topic = participant->create_topic(
       topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!topic) {
-      rmw_set_error_string("failed to create topic");
+      RMW_SET_ERROR_MSG("failed to create topic");
       goto fail;
     }
   } else {
     DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
     topic = participant->find_topic(topic_name, timeout);
     if (!topic) {
-      rmw_set_error_string("failed to find topic");
+      RMW_SET_ERROR_MSG("failed to find topic");
       goto fail;
     }
   }
@@ -638,14 +638,14 @@ rmw_create_subscription(const rmw_node_t * node,
     topic, datareader_qos,
     NULL, DDS_STATUS_MASK_NONE);
   if (!topic_reader) {
-    rmw_set_error_string("failed to create datareader");
+    RMW_SET_ERROR_MSG("failed to create datareader");
     goto fail;
   }
 
   // Allocate memory for the ConnextStaticSubscriberInfo object.
   buf = rmw_allocate(sizeof(ConnextStaticSubscriberInfo));
   if (!buf) {
-    rmw_set_error_string("failed to allocate memory");
+    RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticSubscriberInfo in the preallocated buffer.
@@ -695,7 +695,7 @@ rmw_ret_t
 rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 {
   if (!node) {
-    rmw_set_error_string("node handle is null");
+    RMW_SET_ERROR_MSG("node handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -704,7 +704,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     return RMW_RET_ERROR)
 
   if (!subscription) {
-    rmw_set_error_string("subscription handle is null");
+    RMW_SET_ERROR_MSG("subscription handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -714,7 +714,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 
   DDSDomainParticipant * participant = (DDSDomainParticipant *)node->data;
   if (!participant) {
-    rmw_set_error_string("participant handle is null");
+    RMW_SET_ERROR_MSG("participant handle is null");
     return RMW_RET_ERROR;
   }
   // TODO(wjwwood): need to figure out when to unregister types with the participant.
@@ -726,18 +726,18 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       auto topic_reader = subscriber_info->topic_reader_;
       if (topic_reader) {
         if (dds_subscriber->delete_datareader(topic_reader) != DDS_RETCODE_OK) {
-          rmw_set_error_string("failed to delete datareader");
+          RMW_SET_ERROR_MSG("failed to delete datareader");
           return RMW_RET_ERROR;
         }
         subscriber_info->topic_reader_ = nullptr;
       }
       if (participant->delete_subscriber(dds_subscriber) != DDS_RETCODE_OK) {
-        rmw_set_error_string("failed to delete subscriber");
+        RMW_SET_ERROR_MSG("failed to delete subscriber");
         return RMW_RET_ERROR;
       }
       subscriber_info->dds_subscriber_ = nullptr;
     } else if (subscriber_info->topic_reader_) {
-      rmw_set_error_string("cannot delete datareader because the subscriber is null");
+      RMW_SET_ERROR_MSG("cannot delete datareader because the subscriber is null");
       return RMW_RET_ERROR;
     }
     RMW_TRY_DESTRUCTOR(
@@ -755,7 +755,7 @@ rmw_ret_t
 rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
 {
   if (!subscription) {
-    rmw_set_error_string("subscription handle is null");
+    RMW_SET_ERROR_MSG("subscription handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -764,28 +764,28 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     return RMW_RET_ERROR)
 
   if (!ros_message) {
-    rmw_set_error_string("ros message handle is null");
+    RMW_SET_ERROR_MSG("ros message handle is null");
     return RMW_RET_ERROR;
   }
   if (!taken) {
-    rmw_set_error_string("taken handle is null");
+    RMW_SET_ERROR_MSG("taken handle is null");
     return RMW_RET_ERROR;
   }
 
   ConnextStaticSubscriberInfo * subscriber_info =
     static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
   if (!subscriber_info) {
-    rmw_set_error_string("subscriber info handle is null");
+    RMW_SET_ERROR_MSG("subscriber info handle is null");
     return RMW_RET_ERROR;
   }
   DDSDataReader * topic_reader = subscriber_info->topic_reader_;
   if (!topic_reader) {
-    rmw_set_error_string("topic reader handle is null");
+    RMW_SET_ERROR_MSG("topic reader handle is null");
     return RMW_RET_ERROR;
   }
   const message_type_support_callbacks_t * callbacks = subscriber_info->callbacks_;
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
 
@@ -800,14 +800,14 @@ rmw_create_guard_condition()
 {
   rmw_guard_condition_t * guard_condition = rmw_guard_condition_allocate();
   if (!guard_condition) {
-    rmw_set_error_string("failed to allocate guard condition");
+    RMW_SET_ERROR_MSG("failed to allocate guard condition");
     return NULL;
   }
   // Allocate memory for the DDSGuardCondition object.
   DDSGuardCondition * dds_guard_condition = nullptr;
   void * buf = rmw_allocate(sizeof(DDSGuardCondition));
   if (!buf) {
-    rmw_set_error_string("failed to allocate memory");
+    RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
   // Use a placement new to construct the DDSGuardCondition in the preallocated buffer.
@@ -830,7 +830,7 @@ rmw_ret_t
 rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 {
   if (!guard_condition) {
-    rmw_set_error_string("guard condition handle is null");
+    RMW_SET_ERROR_MSG("guard condition handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -850,7 +850,7 @@ rmw_ret_t
 rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
 {
   if (!guard_condition_handle) {
-    rmw_set_error_string("guard condition handle is null");
+    RMW_SET_ERROR_MSG("guard condition handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -861,12 +861,12 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
   DDSGuardCondition * guard_condition =
     static_cast<DDSGuardCondition *>(guard_condition_handle->data);
   if (!guard_condition) {
-    rmw_set_error_string("guard condition is null");
+    RMW_SET_ERROR_MSG("guard condition is null");
     return RMW_RET_ERROR;
   }
   DDS_ReturnCode_t status = guard_condition->set_trigger_value(DDS_BOOLEAN_TRUE);
   if (status != DDS_RETCODE_OK) {
-    rmw_set_error_string("failed to set trigger value");
+    RMW_SET_ERROR_MSG("failed to set trigger value");
     return RMW_RET_ERROR;
   }
   return RMW_RET_OK;
@@ -886,27 +886,27 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     ConnextStaticSubscriberInfo * subscriber_info =
       static_cast<ConnextStaticSubscriberInfo *>(subscriptions->subscribers[i]);
     if (!subscriber_info) {
-      rmw_set_error_string("subscriber info handle is null");
+      RMW_SET_ERROR_MSG("subscriber info handle is null");
       return RMW_RET_ERROR;
     }
     DDSDataReader * topic_reader = subscriber_info->topic_reader_;
     if (!topic_reader) {
-      rmw_set_error_string("topic reader handle is null");
+      RMW_SET_ERROR_MSG("topic reader handle is null");
       return RMW_RET_ERROR;
     }
     DDSStatusCondition * condition = topic_reader->get_statuscondition();
     if (!condition) {
-      rmw_set_error_string("condition handle is null");
+      RMW_SET_ERROR_MSG("condition handle is null");
       return RMW_RET_ERROR;
     }
     DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to set enabled statuses");
+      RMW_SET_ERROR_MSG("failed to set enabled statuses");
       return RMW_RET_ERROR;
     }
     status = waitset.attach_condition(condition);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to attach condition");
+      RMW_SET_ERROR_MSG("failed to attach condition");
       return RMW_RET_ERROR;
     }
   }
@@ -916,12 +916,12 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     DDSGuardCondition * guard_condition =
       static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
     if (!guard_condition) {
-      rmw_set_error_string("guard condition handle is null");
+      RMW_SET_ERROR_MSG("guard condition handle is null");
       return RMW_RET_ERROR;
     }
     DDS_ReturnCode_t status = waitset.attach_condition(guard_condition);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to attach condition");
+      RMW_SET_ERROR_MSG("failed to attach condition");
       return RMW_RET_ERROR;
     }
   }
@@ -931,27 +931,27 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     ConnextStaticServiceInfo * service_info =
       static_cast<ConnextStaticServiceInfo *>(services->services[i]);
     if (!service_info) {
-      rmw_set_error_string("service info handle is null");
+      RMW_SET_ERROR_MSG("service info handle is null");
       return RMW_RET_ERROR;
     }
     DDSDataReader * request_datareader = service_info->request_datareader_;
     if (!request_datareader) {
-      rmw_set_error_string("request datareader handle is null");
+      RMW_SET_ERROR_MSG("request datareader handle is null");
       return RMW_RET_ERROR;
     }
     DDSStatusCondition * condition = request_datareader->get_statuscondition();
     if (!condition) {
-      rmw_set_error_string("condition handle is null");
+      RMW_SET_ERROR_MSG("condition handle is null");
       return RMW_RET_ERROR;
     }
     DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to set enabled statuses");
+      RMW_SET_ERROR_MSG("failed to set enabled statuses");
       return RMW_RET_ERROR;
     }
     status = waitset.attach_condition(condition);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to attach condition");
+      RMW_SET_ERROR_MSG("failed to attach condition");
       return RMW_RET_ERROR;
     }
   }
@@ -961,27 +961,27 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     ConnextStaticClientInfo * client_info =
       static_cast<ConnextStaticClientInfo *>(clients->clients[i]);
     if (!client_info) {
-      rmw_set_error_string("client info handle is null");
+      RMW_SET_ERROR_MSG("client info handle is null");
       return RMW_RET_ERROR;
     }
     DDSDataReader * response_datareader = client_info->response_datareader_;
     if (!response_datareader) {
-      rmw_set_error_string("response datareader handle is null");
+      RMW_SET_ERROR_MSG("response datareader handle is null");
       return RMW_RET_ERROR;
     }
     DDSStatusCondition * condition = response_datareader->get_statuscondition();
     if (!condition) {
-      rmw_set_error_string("condition handle is null");
+      RMW_SET_ERROR_MSG("condition handle is null");
       return RMW_RET_ERROR;
     }
     DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to set enabled statuses");
+      RMW_SET_ERROR_MSG("failed to set enabled statuses");
       return RMW_RET_ERROR;
     }
     status = waitset.attach_condition(condition);
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to attach condition");
+      RMW_SET_ERROR_MSG("failed to attach condition");
       return RMW_RET_ERROR;
     }
   }
@@ -999,7 +999,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
       continue;
     }
     if (status != DDS_RETCODE_OK) {
-      rmw_set_error_string("failed to wait on waitset");
+      RMW_SET_ERROR_MSG("failed to wait on waitset");
       return RMW_RET_ERROR;
     }
   }
@@ -1009,17 +1009,17 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     ConnextStaticSubscriberInfo * subscriber_info =
       static_cast<ConnextStaticSubscriberInfo *>(subscriptions->subscribers[i]);
     if (!subscriber_info) {
-      rmw_set_error_string("subscriber info handle is null");
+      RMW_SET_ERROR_MSG("subscriber info handle is null");
       return RMW_RET_ERROR;
     }
     DDSDataReader * topic_reader = subscriber_info->topic_reader_;
     if (!topic_reader) {
-      rmw_set_error_string("topic reader handle is null");
+      RMW_SET_ERROR_MSG("topic reader handle is null");
       return RMW_RET_ERROR;
     }
     DDSStatusCondition * condition = topic_reader->get_statuscondition();
     if (!condition) {
-      rmw_set_error_string("condition handle is null");
+      RMW_SET_ERROR_MSG("condition handle is null");
       return RMW_RET_ERROR;
     }
 
@@ -1042,7 +1042,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     DDSCondition * condition =
       static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
     if (!condition) {
-      rmw_set_error_string("condition handle is null");
+      RMW_SET_ERROR_MSG("condition handle is null");
       return RMW_RET_ERROR;
     }
 
@@ -1053,7 +1053,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
         DDSGuardCondition * guard = static_cast<DDSGuardCondition *>(condition);
         DDS_ReturnCode_t status = guard->set_trigger_value(DDS_BOOLEAN_FALSE);
         if (status != DDS_RETCODE_OK) {
-          rmw_set_error_string("failed to set trigger value");
+          RMW_SET_ERROR_MSG("failed to set trigger value");
           return RMW_RET_ERROR;
         }
         break;
@@ -1071,17 +1071,17 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     ConnextStaticServiceInfo * service_info =
       static_cast<ConnextStaticServiceInfo *>(services->services[i]);
     if (!service_info) {
-      rmw_set_error_string("service info handle is null");
+      RMW_SET_ERROR_MSG("service info handle is null");
       return RMW_RET_ERROR;
     }
     DDSDataReader * request_datareader = service_info->request_datareader_;
     if (!request_datareader) {
-      rmw_set_error_string("request datareader handle is null");
+      RMW_SET_ERROR_MSG("request datareader handle is null");
       return RMW_RET_ERROR;
     }
     DDSStatusCondition * condition = request_datareader->get_statuscondition();
     if (!condition) {
-      rmw_set_error_string("condition handle is null");
+      RMW_SET_ERROR_MSG("condition handle is null");
       return RMW_RET_ERROR;
     }
 
@@ -1104,17 +1104,17 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
     ConnextStaticClientInfo * client_info =
       static_cast<ConnextStaticClientInfo *>(clients->clients[i]);
     if (!client_info) {
-      rmw_set_error_string("client info handle is null");
+      RMW_SET_ERROR_MSG("client info handle is null");
       return RMW_RET_ERROR;
     }
     DDSDataReader * response_datareader = client_info->response_datareader_;
     if (!response_datareader) {
-      rmw_set_error_string("response datareader handle is null");
+      RMW_SET_ERROR_MSG("response datareader handle is null");
       return RMW_RET_ERROR;
     }
     DDSStatusCondition * condition = response_datareader->get_statuscondition();
     if (!condition) {
-      rmw_set_error_string("condition handle is null");
+      RMW_SET_ERROR_MSG("condition handle is null");
       return RMW_RET_ERROR;
     }
 
@@ -1141,7 +1141,7 @@ rmw_create_client(
   const char * service_name)
 {
   if (!node) {
-    rmw_set_error_string("node handle is null");
+    RMW_SET_ERROR_MSG("node handle is null");
     return NULL;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1150,7 +1150,7 @@ rmw_create_client(
     return NULL)
 
   if (!type_support) {
-    rmw_set_error_string("type support handle is null");
+    RMW_SET_ERROR_MSG("type support handle is null");
     return NULL;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1161,14 +1161,14 @@ rmw_create_client(
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
   if (!participant) {
-    rmw_set_error_string("participant handle is null");
+    RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
   }
 
   const service_type_support_callbacks_t * callbacks =
     static_cast<const service_type_support_callbacks_t *>(type_support->data);
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return NULL;
   }
   // Past this point, a failure results in unrolling code in the goto fail block.
@@ -1182,7 +1182,7 @@ rmw_create_client(
   // Begin inializing elements.
   client = rmw_client_allocate();
   if (!client) {
-    rmw_set_error_string("failed to allocate client");
+    RMW_SET_ERROR_MSG("failed to allocate client");
     goto fail;
   }
 
@@ -1199,17 +1199,17 @@ rmw_create_client(
     participant, service_name, &datareader_qos, &datawriter_qos,
     reinterpret_cast<void **>(&response_datareader));
   if (!requester) {
-    rmw_set_error_string("failed to create requester");
+    RMW_SET_ERROR_MSG("failed to create requester");
     goto fail;
   }
   if (!response_datareader) {
-    rmw_set_error_string("data reader handle is null");
+    RMW_SET_ERROR_MSG("data reader handle is null");
     goto fail;
   }
 
   buf = rmw_allocate(sizeof(ConnextStaticClientInfo));
   if (!buf) {
-    rmw_set_error_string("failed to allocate memory");
+    RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticClientInfo in the preallocated buffer.
@@ -1250,7 +1250,7 @@ rmw_ret_t
 rmw_destroy_client(rmw_client_t * client)
 {
   if (!client) {
-    rmw_set_error_string("client handle is null");
+    RMW_SET_ERROR_MSG("client handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1275,7 +1275,7 @@ rmw_send_request(
   int64_t * sequence_id)
 {
   if (!client) {
-    rmw_set_error_string("client handle is null");
+    RMW_SET_ERROR_MSG("client handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1284,23 +1284,23 @@ rmw_send_request(
     return RMW_RET_ERROR)
 
   if (!ros_request) {
-    rmw_set_error_string("ros request handle is null");
+    RMW_SET_ERROR_MSG("ros request handle is null");
     return RMW_RET_ERROR;
   }
 
   ConnextStaticClientInfo * client_info = static_cast<ConnextStaticClientInfo *>(client->data);
   if (!client_info) {
-    rmw_set_error_string("client info handle is null");
+    RMW_SET_ERROR_MSG("client info handle is null");
     return RMW_RET_ERROR;
   }
   const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
   void * requester = client_info->requester_;
   if (!requester) {
-    rmw_set_error_string("requester handle is null");
+    RMW_SET_ERROR_MSG("requester handle is null");
     return RMW_RET_ERROR;
   }
 
@@ -1315,7 +1315,7 @@ rmw_create_service(
   const char * service_name)
 {
   if (!node) {
-    rmw_set_error_string("node handle is null");
+    RMW_SET_ERROR_MSG("node handle is null");
     return NULL;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1324,7 +1324,7 @@ rmw_create_service(
     return NULL)
 
   if (!type_support) {
-    rmw_set_error_string("type support handle is null");
+    RMW_SET_ERROR_MSG("type support handle is null");
     return NULL;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1335,14 +1335,14 @@ rmw_create_service(
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
   if (!participant) {
-    rmw_set_error_string("participant handle is null");
+    RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
   }
 
   const service_type_support_callbacks_t * callbacks =
     static_cast<const service_type_support_callbacks_t *>(type_support->data);
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return NULL;
   }
   // Past this point, a failure results in unrolling code in the goto fail block.
@@ -1356,7 +1356,7 @@ rmw_create_service(
   // Begin initializing elements.
   service = rmw_service_allocate();
   if (!service) {
-    rmw_set_error_string("service handle is null");
+    RMW_SET_ERROR_MSG("service handle is null");
     goto fail;
   }
 
@@ -1373,17 +1373,17 @@ rmw_create_service(
     participant, service_name, &datareader_qos, &datawriter_qos,
     reinterpret_cast<void **>(&request_datareader));
   if (!replier) {
-    rmw_set_error_string("failed to create replier");
+    RMW_SET_ERROR_MSG("failed to create replier");
     goto fail;
   }
   if (!request_datareader) {
-    rmw_set_error_string("data reader handle is null");
+    RMW_SET_ERROR_MSG("data reader handle is null");
     goto fail;
   }
 
   buf = rmw_allocate(sizeof(ConnextStaticServiceInfo));
   if (!buf) {
-    rmw_set_error_string("failed to allocate memory");
+    RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticServiceInfo in the preallocated buffer.
@@ -1423,7 +1423,7 @@ rmw_ret_t
 rmw_destroy_service(rmw_service_t * service)
 {
   if (!service) {
-    rmw_set_error_string("service handle is null");
+    RMW_SET_ERROR_MSG("service handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1449,7 +1449,7 @@ rmw_take_request(
   bool * taken)
 {
   if (!service) {
-    rmw_set_error_string("service handle is null");
+    RMW_SET_ERROR_MSG("service handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1458,34 +1458,34 @@ rmw_take_request(
     return RMW_RET_ERROR)
 
   if (!ros_request_header) {
-    rmw_set_error_string("ros request header handle is null");
+    RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
   if (!ros_request) {
-    rmw_set_error_string("ros request handle is null");
+    RMW_SET_ERROR_MSG("ros request handle is null");
     return RMW_RET_ERROR;
   }
   if (!taken) {
-    rmw_set_error_string("taken handle is null");
+    RMW_SET_ERROR_MSG("taken handle is null");
     return RMW_RET_ERROR;
   }
 
   ConnextStaticServiceInfo * service_info =
     static_cast<ConnextStaticServiceInfo *>(service->data);
   if (!service_info) {
-    rmw_set_error_string("service info handle is null");
+    RMW_SET_ERROR_MSG("service info handle is null");
     return RMW_RET_ERROR;
   }
 
   void * replier = service_info->replier_;
   if (!replier) {
-    rmw_set_error_string("replier handle is null");
+    RMW_SET_ERROR_MSG("replier handle is null");
     return RMW_RET_ERROR;
   }
 
   const service_type_support_callbacks_t * callbacks = service_info->callbacks_;
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
 
@@ -1502,7 +1502,7 @@ rmw_take_response(
   bool * taken)
 {
   if (!client) {
-    rmw_set_error_string("client handle is null");
+    RMW_SET_ERROR_MSG("client handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1511,34 +1511,34 @@ rmw_take_response(
     return RMW_RET_ERROR)
 
   if (!ros_request_header) {
-    rmw_set_error_string("ros request header handle is null");
+    RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
   if (!ros_response) {
-    rmw_set_error_string("ros response handle is null");
+    RMW_SET_ERROR_MSG("ros response handle is null");
     return RMW_RET_ERROR;
   }
   if (!taken) {
-    rmw_set_error_string("taken handle is null");
+    RMW_SET_ERROR_MSG("taken handle is null");
     return RMW_RET_ERROR;
   }
 
   ConnextStaticClientInfo * client_info =
     static_cast<ConnextStaticClientInfo *>(client->data);
   if (!client_info) {
-    rmw_set_error_string("client info handle is null");
+    RMW_SET_ERROR_MSG("client info handle is null");
     return RMW_RET_ERROR;
   }
 
   void * requester = client_info->requester_;
   if (!requester) {
-    rmw_set_error_string("requester handle is null");
+    RMW_SET_ERROR_MSG("requester handle is null");
     return RMW_RET_ERROR;
   }
 
   const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
 
@@ -1554,7 +1554,7 @@ rmw_send_response(
   void * ros_response)
 {
   if (!service) {
-    rmw_set_error_string("service handle is null");
+    RMW_SET_ERROR_MSG("service handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -1563,30 +1563,30 @@ rmw_send_response(
     return RMW_RET_ERROR)
 
   if (!ros_request_header) {
-    rmw_set_error_string("ros request header handle is null");
+    RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
   if (!ros_response) {
-    rmw_set_error_string("ros response handle is null");
+    RMW_SET_ERROR_MSG("ros response handle is null");
     return RMW_RET_ERROR;
   }
 
   ConnextStaticServiceInfo * service_info =
     static_cast<ConnextStaticServiceInfo *>(service->data);
   if (!service_info) {
-    rmw_set_error_string("service info handle is null");
+    RMW_SET_ERROR_MSG("service info handle is null");
     return RMW_RET_ERROR;
   }
 
   void * replier = service_info->replier_;
   if (!replier) {
-    rmw_set_error_string("replier handle is null");
+    RMW_SET_ERROR_MSG("replier handle is null");
     return RMW_RET_ERROR;
   }
 
   const service_type_support_callbacks_t * callbacks = service_info->callbacks_;
   if (!callbacks) {
-    rmw_set_error_string("callbacks handle is null");
+    RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
 
