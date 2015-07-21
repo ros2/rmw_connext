@@ -166,6 +166,10 @@ if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "NDDS_USER_DLL_EXPORT")
 endif()
+set_target_properties(${rosidl_generate_interfaces_TARGET}${_target_suffix} PROPERTIES COMPILE_FLAGS
+  "-Wall"
+  "-Wextra"
+  "-Wno-unused-parameter")
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp

@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(rmw_connext_dynamic_cpp)
 
+if(NOT WIN32)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
+endif()
+
 find_package(ament_cmake REQUIRED)
 
 find_package(connext_cmake_module REQUIRED)
@@ -10,10 +14,6 @@ if(NOT Connext_FOUND)
   ament_package()
   message(WARNING "Could not find RTI Connext - skipping '${PROJECT_NAME}'")
   return()
-endif()
-
-if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 endif()
 
 find_package(rmw REQUIRED)

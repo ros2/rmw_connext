@@ -20,13 +20,13 @@
 
 #include "@(spec.base_type.pkg_name)/@(subfolder)/@(get_header_filename_from_msg_name(spec.base_type.type))__struct.hpp"
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 #ifdef __clang__
 # pragma clang diagnostic ignored "-Wdeprecated-register"
 #endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
-#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(get_header_filename_from_msg_name(spec.base_type.type))__type_support.hpp"
 #pragma GCC diagnostic pop
+#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(get_header_filename_from_msg_name(spec.base_type.type))__type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
@@ -82,6 +82,10 @@ convert_ros_message_to_dds(
   const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message,
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message)
 {
+@[if not spec.fields]@
+  (void)ros_message;
+  (void)dds_message;
+@[end if]@
 @[for field in spec.fields]@
   // field.name @(field.name)
 @[if field.type.is_array]@
@@ -174,6 +178,10 @@ convert_dds_message_to_ros(
   const @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message,
   @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message)
 {
+@[if not spec.fields]@
+  (void)ros_message;
+  (void)dds_message;
+@[end if]@
 @[for field in spec.fields]@
   // field.name @(field.name)
 @[if field.type.is_array]@
