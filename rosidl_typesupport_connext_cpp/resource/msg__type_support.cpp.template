@@ -252,7 +252,7 @@ take__@(spec.base_type.type)(
     dds_messages,
     sample_infos,
     1,
-    DDS_NOT_READ_SAMPLE_STATE,
+    DDS_ANY_SAMPLE_STATE,
     DDS_ANY_VIEW_STATE,
     DDS_ANY_INSTANCE_STATE);
   if (status == DDS_RETCODE_NO_DATA) {
