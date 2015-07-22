@@ -205,25 +205,27 @@ add_dependencies(
   ${rosidl_generate_interfaces_TARGET}${_target_suffix}
 )
 
-if(NOT "${_generated_msg_files}${_generated_external_msg_files} " STREQUAL " ")
-  install(
-    FILES ${_generated_msg_files} ${_generated_external_msg_files}
-    DESTINATION "include/${PROJECT_NAME}/msg/dds_connext"
-  )
-endif()
-if(NOT "${_generated_srv_files} " STREQUAL " ")
-  install(
-    FILES ${_generated_srv_files}
-    DESTINATION "include/${PROJECT_NAME}/srv/dds_connext"
-  )
-endif()
+if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
+  if(NOT "${_generated_msg_files}${_generated_external_msg_files} " STREQUAL " ")
+    install(
+      FILES ${_generated_msg_files} ${_generated_external_msg_files}
+      DESTINATION "include/${PROJECT_NAME}/msg/dds_connext"
+    )
+  endif()
+  if(NOT "${_generated_srv_files} " STREQUAL " ")
+    install(
+      FILES ${_generated_srv_files}
+      DESTINATION "include/${PROJECT_NAME}/srv/dds_connext"
+    )
+  endif()
 
-install(
-  TARGETS ${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
+  install(
+    TARGETS ${rosidl_generate_interfaces_TARGET}${_target_suffix}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+  )
+endif()
 
 ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${Connext_LIBRARIES})
 
