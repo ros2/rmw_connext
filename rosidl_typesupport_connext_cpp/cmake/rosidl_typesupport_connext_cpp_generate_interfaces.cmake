@@ -168,9 +168,10 @@ if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "NDDS_USER_DLL_EXPORT")
 endif()
-set(_target_compile_flags "-Wall")
 if(NOT WIN32)
-  set(_target_compile_flags "${_target_compile_flags} -Wextra")
+  set(_target_compile_flags "-Wall -Wextra")
+else()
+  set(_target_compile_flags "/W4")
 endif()
 set_target_properties(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PROPERTIES COMPILE_FLAGS "${_target_compile_flags}")
