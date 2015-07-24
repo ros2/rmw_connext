@@ -166,7 +166,7 @@ if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-    PRIVATE "NDDS_USER_DLL_EXPORT")
+    PRIVATE "NDDS_USER_DLL_EXPORT_${PROJECT_NAME}")
 endif()
 if(NOT WIN32)
   set(_target_compile_flags "-Wall -Wextra")
