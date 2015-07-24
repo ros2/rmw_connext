@@ -31,7 +31,9 @@
 # - Connext_LIBRARY_DIRS: Paths to the libraries
 # - Connext_LIBRARY_DIR: Path to libraries; guaranteed to be a single path
 # - Connext_DEFINITIONS: Definitions to be passed on
-# - Connext_DDSGEN2: Path to the idl2code generator
+# - Connext_DDSGEN: Path to the idl2code generator
+# - Connext_DDSGEN_SERVER: Path to the idl2code generator in server mode
+#   (if available)
 #
 # Example usage:
 #
@@ -208,17 +210,15 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
   if(WIN32)
     set(Connext_DEFINITIONS "RTI_WIN32" "NDDS_DLL_VARIABLE")
     # This will be a .bat file and it will be on the PATH.
-    set(Connext_DDSGEN2 "rtiddsgen.bat")
+    set(Connext_DDSGEN "rtiddsgen.bat")
   else()
     set(Connext_DEFINITIONS "RTI_LINUX" "RTI_UNIX")
-    if(EXISTS "${Connext_HOME}/bin/rtiddsgen2")
-      set(Connext_DDSGEN2 "${Connext_HOME}/bin/rtiddsgen2")
-    elseif(EXISTS "${Connext_HOME}/scripts/rtiddsgen2")
-      set(Connext_DDSGEN2 "${Connext_HOME}/scripts/rtiddsgen2")
-    elseif(EXISTS "${Connext_HOME}/bin/rtiddsgen")
-      set(Connext_DDSGEN2 "${Connext_HOME}/bin/rtiddsgen")
-    else()
-      message(FATAL_ERROR "Could not find executable 'rtiddsgen(2)'")
+    set(Connext_DDSGEN "${Connext_HOME}/bin/rtiddsgen")
+    if(NOT EXISTS "${Connext_DDSGEN}")
+      message(FATAL_ERROR "Could not find executable 'rtiddsgen'")
+    endif()
+    if(EXISTS "${Connext_HOME}/bin/rtiddsgen_server")
+      set(Connext_DDSGEN_SERVER "${Connext_HOME}/bin/rtiddsgen_server")
     endif()
   endif()
   set(Connext_FOUND TRUE)
@@ -235,12 +235,12 @@ else()
     set(Connext_LIBRARY_DIR "")
     set(Connext_DEFINITIONS
       ${nddscpp_DEFINITIONS} ${rticonnextmsgcpp_DEFINITIONS})
-    if(EXISTS "/usr/bin/rtiddsgen2")
-      set(Connext_DDSGEN2 "/usr/bin/rtiddsgen2")
-    elseif(EXISTS "/usr/bin/rtiddsgen")
-      set(Connext_DDSGEN2 "/usr/bin/rtiddsgen")
-    else()
-      message(FATAL_ERROR "Could not find executable 'rtiddsgen(2)'")
+    set(Connext_DDSGEN "/usr/bin/rtiddsgen")
+    if(NOT EXISTS "${Connext_DDSGEN}")
+      message(FATAL_ERROR "Could not find executable '${Connext_DDSGEN}'")
+    endif()
+    if(EXISTS "/usr/bin/rtiddsgen_server")
+      set(Connext_DDSGEN_SERVER "/usr/bin/rtiddsgen_server")
     endif()
     set(Connext_FOUND TRUE)
 
@@ -263,5 +263,5 @@ find_package_handle_standard_args(Connext
     Connext_INCLUDE_DIRS
     Connext_LIBRARIES
     Connext_DEFINITIONS
-    Connext_DDSGEN2
+    Connext_DDSGEN
 )

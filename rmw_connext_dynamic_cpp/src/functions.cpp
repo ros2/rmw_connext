@@ -473,8 +473,7 @@ DDS_TypeCode * create_type_code(
             }
             max_string_size = static_cast<DDS_UnsignedLong>(member->string_upper_bound_);
           } else {
-            // TODO use std::string().max_size() as soon as Connext supports dynamic allocation
-            max_string_size = 255;
+            max_string_size = RTI_INT32_MAX;
           }
           member_type_code_non_const = factory->create_string_tc(max_string_size, ex);
           member_type_code = member_type_code_non_const;
@@ -538,8 +537,8 @@ DDS_TypeCode * create_type_code(
           }
         }
       } else {
-        // TODO(dirk-thomas) the default bound of sequences is 100
-        member_type_code_non_const = factory->create_sequence_tc(100, member_type_code, ex);
+        member_type_code_non_const = factory->create_sequence_tc(
+          RTI_INT32_MAX, member_type_code, ex);
         member_type_code = member_type_code_non_const;
         if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
           RMW_SET_ERROR_MSG("failed to create sequence typecode");

@@ -13,13 +13,11 @@
 # limitations under the License.
 
 import os
-import re
 import subprocess
 
 from rosidl_cmake import convert_camel_case_to_lower_case_underscore
 from rosidl_cmake import expand_template
 from rosidl_cmake import get_newest_modification_time
-from rosidl_generator_dds_idl import MSG_TYPE_TO_IDL
 from rosidl_parser import parse_message_file
 from rosidl_parser import parse_service_file
 from rosidl_parser import validate_field_types
@@ -76,8 +74,8 @@ def generate_dds_connext_cpp(
             '-d', output_path,
             '-language', 'C++',
             '-namespace',
-            '-replace',
-            # TODO use -unboundedSupport when it becomes available
+            '-update', 'typefiles',
+            '-unboundedSupport',
             idl_file
         ]
         if os.name == 'nt':
@@ -88,30 +86,16 @@ def generate_dds_connext_cpp(
             # modify generated code to use declspec(dllimport)
             msg_name = os.path.splitext(os.path.basename(idl_file))[0]
             msg_filename = os.path.join(output_path, msg_name + '.h')
-            _modify(msg_filename, (pkg_name, msg_name), _inject_dllimport)
+            _modify(msg_filename, pkg_name, msg_name, _inject_dllimport)
             msg_plugin_filename = os.path.join(output_path, msg_name + 'Plugin.h')
-            _modify(msg_plugin_filename, (pkg_name, msg_name), _rework_declspec)
+            _modify(msg_plugin_filename, pkg_name, msg_name, _rework_declspec)
             msg_support_filename = os.path.join(output_path, msg_name + 'Support.h')
-            _modify(msg_support_filename, (pkg_name, msg_name), _inject_dllimport)
-
-        # modify generated code to support unbounded sequences and strings
-        # http://community.rti.com/content/forum-topic/changing-max-size-sequence
-        unbounded_fields = [f for f in message_specs[index][1].fields
-                            if f.type.is_array and
-                            f.type.array_size is None and
-                            not f.type.is_upper_bound]
-        if unbounded_fields:
-            msg_name = os.path.splitext(os.path.basename(idl_file))[0]
-            msg_cxx_filename = os.path.join(output_path, msg_name + '.cxx')
-            _modify(msg_cxx_filename, unbounded_fields, _step_2_2)
-            plugin_cxx_filename = os.path.join(output_path, msg_name + 'Plugin.cxx')
-            _modify(plugin_cxx_filename, unbounded_fields, _step_2_1_and_2_3_and_2_4)
+            _modify(msg_support_filename, pkg_name, msg_name, _inject_dllimport)
 
     return 0
 
 
-def _inject_dllimport(pkg_name_and_msg_name, lines):
-    (pkg_name, msg_name) = pkg_name_and_msg_name
+def _inject_dllimport(pkg_name, msg_name, lines):
     # make macro default to dllimport instead of being empty
     injections = []
     define = '#define NDDSUSERDllExport __declspec(dllexport)'
@@ -143,8 +127,7 @@ def _inject_dllimport(pkg_name_and_msg_name, lines):
     return True
 
 
-def _rework_declspec(pkg_name_and_msg_name, lines):
-    (pkg_name, msg_name) = pkg_name_and_msg_name
+def _rework_declspec(pkg_name, msg_name, lines):
     # make macro default to dllimport instead of being empty
     injections = []
     define = '#define NDDSUSERDllExport __declspec(dllexport)'
@@ -187,170 +170,13 @@ def _rework_declspec(pkg_name_and_msg_name, lines):
     return True
 
 
-def _modify(filename, unbounded_fields, callback):
+def _modify(filename, pkg_name, msg_name, callback):
     with open(filename, 'r') as h:
         lines = h.read().split('\n')
-    modified = callback(unbounded_fields, lines)
+    modified = callback(pkg_name, msg_name, lines)
     if modified:
         with open(filename, 'w') as h:
             h.write('\n'.join(lines))
-
-
-def _step_2_2(unbounded_fields, lines):
-    modified = _step_2_2_set_maximum(unbounded_fields, lines)
-    modified |= _step_2_2_init_string(unbounded_fields, lines)
-    return modified
-
-
-# disable default initialization of sequences with fixed upper bound
-def _step_2_2_set_maximum(unbounded_fields, lines):
-    pattern = re.compile(
-        '.*' +
-        re.escape('Seq_set_maximum(&sample->') +
-        '([A-Za-z0-9_]+)' +
-        re.escape(' , (100))') +
-        '.*')
-    modified = False
-    field_names = ['%s_' % f.name for f in unbounded_fields]
-    for index, line in enumerate(lines):
-        match = re.match(pattern, line)
-        if match and match.group(1) in field_names:
-            if 'DDS_StringSeq' in line:
-                lines[index] = line.replace('(100)', '(1)') + '  /* ROSIDL */'
-            else:
-                lines[index] = line.replace('(100)', '(0)') + '  /* ROSIDL */'
-            modified = True
-    return modified
-
-
-def _step_2_2_init_string(unbounded_fields, lines):
-    modified = False
-    index = 1
-    while index < len(lines):
-        previous_line = lines[index - 1]
-        if previous_line.strip() == 'if (!RTICdrType_initStringArray(buffer,':
-            next_line = lines[index]
-            if next_line.strip() == '(100),':
-                lines[index] = next_line.replace('(100)', '(1)') + \
-                    '  /* ROSIDL */'
-                modified = True
-        index += 1
-    return modified
-
-
-def _step_2_1_and_2_3_and_2_4(unbounded_fields, lines):
-    modified = _step_2_1(unbounded_fields, lines)
-    modified |= _step_2_3(unbounded_fields, lines)
-    modified |= _step_2_4(unbounded_fields, lines)
-    return modified
-
-
-# change upper bound in serialization to max int
-def _step_2_1(unbounded_fields, lines):
-    field_names = ['%s_' % f.name for f in unbounded_fields]
-    field_pattern = re.compile(
-        '.*' +
-        re.escape('Seq_get_length(&sample->') +
-        '(%s)' % '|'.join(field_names) +
-        re.escape('),'))
-    modified = False
-    index = 1
-    while index < len(lines):
-        previous_line = lines[index - 1]
-        if field_pattern.match(previous_line):
-            next_line = lines[index]
-            if next_line.strip() == '(100),':
-                lines[index] = '%s(%u),  /* ROSIDL */' % \
-                    (' ' * 33, 2 ** 32 - 1)
-                modified = True
-        index += 1
-    return modified
-
-
-# change maximum based on size of incoming sequence
-def _step_2_3(unbounded_fields, lines):
-    field_names = ['%s_' % f.name for f in unbounded_fields]
-    field_pattern = re.compile(
-        '.*' +
-        re.escape('Seq_get_contiguous_bufferI(&sample->') +
-        '(%s)' % '|'.join(field_names) +
-        re.escape(')'))
-    modified = False
-    index = 1
-    while index < len(lines):
-        previous_line = lines[index - 1]
-        next_line = lines[index]
-        if 'RTICdrUnsignedLong sequence_length;' in previous_line:
-            match = field_pattern.match(next_line)
-            if match:
-                field_name = match.group(1)
-                dds_type = _get_dds_type(unbounded_fields, field_name)
-                lines_inserted = [
-                    'RTICdrStream_deserializeLong(stream, &sequence_length);',
-                    'RTICdrStream_incrementCurrentPosition(stream, -4);',
-                    '%sSeq_set_maximum(&sample->%s, sequence_length);' %
-                    (dds_type, field_name)
-                ]
-                if dds_type == 'DDS_String':
-                    lines_inserted += [
-                        'void* buffer = DDS_StringSeq_get_contiguous_bufferI(&sample->%s);' %
-                        field_name,
-                        'if (buffer) {',
-                        '    if (!RTICdrType_initStringArray(buffer, (sequence_length), ' +
-                        '(255)+1, RTI_CDR_CHAR_TYPE)) {',
-                        '        goto fin;',
-                        '    }',
-                        '}',
-                    ]
-                lines[index:index] = ['%s%s  /* ROSIDL */' % (' ' * 20, l)
-                                      for l in lines_inserted]
-                modified = True
-        index += 1
-    return modified
-
-
-# change maximum back to zero when samples are returned
-def _step_2_4(unbounded_fields, lines):
-    field_names = ['%s_' % f.name for f in unbounded_fields]
-    modified = False
-    for index, line in enumerate(lines):
-        if '__finalize_optional_members(sample, RTI_TRUE);' in line:
-            for field_name in reversed(field_names):
-                lines[index:index] = [
-                    ' ' * 12 +
-                    '%sSeq_set_maximum(&sample->%s, 0);' %
-                    (_get_dds_type(unbounded_fields, field_name), field_name) +
-                    '  /* ROSIDL */']
-                if _get_dds_type(unbounded_fields, field_name) == 'DDS_String':
-                    lines[index] = lines[index].replace(', 0)', ', 1)')
-                modified = True
-            break
-    return modified
-
-
-IDL_TYPE_TO_DDS = {
-    'boolean': 'DDS_Boolean',
-    'char': 'DDS_Char',
-    'octet': 'DDS_Octet',
-    'short': 'DDS_Short',
-    'unsigned short': 'DDS_UnsignedShort',
-    'long': 'DDS_Long',
-    'unsigned long': 'DDS_UnsignedLong',
-    'long long': 'DDS_LongLong',
-    'unsigned long long': 'DDS_UnsignedLongLong',
-    'float': 'DDS_Float',
-    'double': 'DDS_Double',
-    'string': 'DDS_String',
-}
-
-
-def _get_dds_type(fields, field_name):
-    field = [f for f in fields if '%s_' % f.name == field_name][0]
-    if field.type.is_primitive_type():
-        idl_type = MSG_TYPE_TO_IDL[field.type.type]
-        return IDL_TYPE_TO_DDS[idl_type]
-    else:
-        return '%s::msg::dds_::%s_' % (field.type.pkg_name, field.type.type)
 
 
 def generate_cpp(args, message_specs, service_specs, known_msg_types):
