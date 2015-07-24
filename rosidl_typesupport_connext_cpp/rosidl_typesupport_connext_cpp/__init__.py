@@ -80,6 +80,8 @@ def generate_dds_connext_cpp(
             # TODO use -unboundedSupport when it becomes available
             idl_file
         ]
+        if os.name == 'nt':
+            cmd[-5:-5] = ['-dllExportMacroSuffix', pkg_name]
         subprocess.check_call(cmd)
 
         # modify generated code to support unbounded sequences and strings
