@@ -19,13 +19,19 @@
 #include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
 #include "@(spec.base_type.pkg_name)/@(subfolder)/@(get_header_filename_from_msg_name(spec.base_type.type))__struct.hpp"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#ifdef __clang__
-# pragma clang diagnostic ignored "-Wdeprecated-register"
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-parameter"
+# ifdef __clang__
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+# endif
 #endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
-#pragma GCC diagnostic pop
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#endif
+
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(get_header_filename_from_msg_name(spec.base_type.type))__type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
@@ -39,7 +45,7 @@ namespace msg
 {
 namespace dds_
 {
-struct @(field.type.type)_;
+class @(field.type.type)_;
 }  // namespace dds_
 namespace typesupport_connext_cpp
 {
@@ -195,7 +201,7 @@ convert_dds_message_to_ros(
     for (size_t i = 0; i < size; i++) {
 @[if field.type.is_primitive_type()]@
       ros_message.@(field.name)[i] =
-        dds_message.@(field.name)_[i];
+        dds_message.@(field.name)_[i]@(' == DDS_BOOLEAN_TRUE' if field.type.type == 'bool' else '');
 @[else]@
       if (
         !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_dds_message_to_ros(
@@ -209,7 +215,7 @@ convert_dds_message_to_ros(
   }
 @[elif field.type.is_primitive_type()]@
   ros_message.@(field.name) =
-    dds_message.@(field.name)_;
+    dds_message.@(field.name)_@(' == DDS_BOOLEAN_TRUE' if field.type.type == 'bool' else '');
 @[else]@
   if (
     !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_dds_message_to_ros(

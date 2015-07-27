@@ -171,10 +171,17 @@ endif()
 if(NOT WIN32)
   set(_target_compile_flags "-Wall -Wextra")
 else()
-  set(_target_compile_flags "/W4")
+  set(_target_compile_flags
+    "/W4"
+    "/wd4100"
+    "/wd4127"
+    "/wd4275"
+    "/wd4458"
+  )
 endif()
+string(REPLACE ";" " " _target_compile_flags "${_target_compile_flags}")
 set_target_properties(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  PROPERTIES COMPILE_FLAGS "${_target_compile_flags}")
+  PROPERTIES COMPILE_FLAGS ${_target_compile_flags})
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp

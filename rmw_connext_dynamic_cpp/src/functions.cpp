@@ -20,17 +20,21 @@
 #include <string>
 #include <vector>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#ifdef __clang__
-# pragma clang diagnostic ignored "-Wdeprecated-register"
-# pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-parameter"
+# ifdef __clang__
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+# endif
 #endif
 #include <ndds/connext_cpp/connext_cpp_replier_details.h>
 #include <ndds/connext_cpp/connext_cpp_requester_details.h>
 #include <ndds/ndds_cpp.h>
 #include <ndds/ndds_requestreply_cpp.h>
-#pragma GCC diagnostic pop
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#endif
 
 #include <rmw/allocators.h>
 #include <rmw/error_handling.h>
@@ -1684,14 +1688,14 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           auto ros_values = \
             reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
           for (size_t i = 0; i < array_size; ++i) { \
-            ros_values[i] = values[i]; \
+            ros_values[i] = values[i] == DDS_BOOLEAN_TRUE; \
           } \
         } else { \
           void * untyped_vector = static_cast<char *>(ros_message) + member->offset_; \
           auto vector = static_cast<std::vector<TYPE> *>(untyped_vector); \
           vector->resize(array_size); \
           for (size_t i = 0; i < array_size; ++i) { \
-            (*vector)[i] = values[i]; \
+            (*vector)[i] = values[i] == DDS_BOOLEAN_TRUE; \
           } \
         } \
         rmw_free(values); \
@@ -1707,7 +1711,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         return false; \
       } \
       auto ros_value = reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
-      *ros_value = value; \
+      *ros_value = value == DDS_BOOLEAN_TRUE; \
     } \
   }
 

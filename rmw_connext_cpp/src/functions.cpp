@@ -19,15 +19,19 @@
 #include <stdexcept>
 #include <string>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#ifdef __clang__
-# pragma clang diagnostic ignored "-Wdeprecated-register"
-# pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-parameter"
+# ifdef __clang__
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+# endif
 #endif
 #include <ndds/ndds_cpp.h>
 #include <ndds/ndds_requestreply_cpp.h>
-#pragma GCC diagnostic pop
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#endif
 
 #include <rmw/rmw.h>
 #include <rmw/allocators.h>
