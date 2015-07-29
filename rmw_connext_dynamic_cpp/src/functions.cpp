@@ -1211,6 +1211,7 @@ struct CustomSubscriberInfo
   DDSDynamicDataTypeSupport * dynamic_data_type_support_;
   DDSDynamicDataReader * dynamic_reader_;
   DDSDataReader * data_reader_;
+  DDSReadCondition * read_condition_;
   DDSSubscriber * dds_subscriber_;
   bool ignore_local_publications;
   DDS_TypeCode * type_code_;
@@ -1275,6 +1276,7 @@ rmw_create_subscription(
   DDSTopic * topic;
   DDSTopicDescription * topic_description = nullptr;
   DDSDataReader * topic_reader = nullptr;
+  DDSReadCondition * read_condition = nullptr;
   DDSDynamicDataReader * dynamic_reader = nullptr;
   DDS_DataReaderQos datareader_qos;
   DDS_DynamicData * dynamic_data = nullptr;
@@ -1378,6 +1380,13 @@ rmw_create_subscription(
     goto fail;
   }
 
+  read_condition = topic_reader->create_readcondition(
+    DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
+  if (!read_condition) {
+    RMW_SET_ERROR_MSG("failed to create read condition");
+    goto fail;
+  }
+
   dynamic_reader = DDSDynamicDataReader::narrow(topic_reader);
   if (!dynamic_reader) {
     RMW_SET_ERROR_MSG("failed to narrow datareader");
@@ -1402,6 +1411,7 @@ rmw_create_subscription(
   custom_subscriber_info->dynamic_data_type_support_ = ddts;
   custom_subscriber_info->dynamic_reader_ = dynamic_reader;
   custom_subscriber_info->data_reader_ = topic_reader;
+  custom_subscriber_info->read_condition_ = read_condition;
   custom_subscriber_info->dds_subscriber_ = dds_subscriber;
   custom_subscriber_info->ignore_local_publications = ignore_local_publications;
   custom_subscriber_info->type_code_ = type_code;
@@ -1432,6 +1442,14 @@ fail:
     }
   }
   if (topic_reader) {
+    if (read_condition) {
+      if (topic_reader->delete_readcondition(read_condition) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "leaking readcondition while handling failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    }
     if (dds_subscriber) {
       if (dds_subscriber->delete_datareader(topic_reader) != DDS_RETCODE_OK) {
         std::stringstream ss;
@@ -1555,6 +1573,14 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     if (dds_subscriber) {
       auto data_reader = custom_subscription_info->data_reader_;
       if (data_reader) {
+        auto read_condition = custom_subscription_info->read_condition_;
+        if (read_condition) {
+          if (data_reader->delete_readcondition(read_condition) != DDS_RETCODE_OK) {
+            RMW_SET_ERROR_MSG("failed to delete readcondition");
+            return RMW_RET_ERROR;
+          }
+          custom_subscription_info->read_condition_ = nullptr;
+        }
         if (dds_subscriber->delete_datareader(data_reader) != DDS_RETCODE_OK) {
           RMW_SET_ERROR_MSG("failed to delete datareader");
           return RMW_RET_ERROR;
@@ -2161,22 +2187,12 @@ rmw_wait(
       RMW_SET_ERROR_MSG("subscriber info handle is null");
       return RMW_RET_ERROR;
     }
-    DDSDynamicDataReader * dynamic_reader = subscriber_info->dynamic_reader_;
-    if (!dynamic_reader) {
-      RMW_SET_ERROR_MSG("data reader handle is null");
+    DDSReadCondition * read_condition = subscriber_info->read_condition_;
+    if (!read_condition) {
+      RMW_SET_ERROR_MSG("read condition handle is null");
       return RMW_RET_ERROR;
     }
-    DDSStatusCondition * condition = dynamic_reader->get_statuscondition();
-    if (!condition) {
-      RMW_SET_ERROR_MSG("condition handle is null");
-      return RMW_RET_ERROR;
-    }
-    DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to set enabled statuses");
-      return RMW_RET_ERROR;
-    }
-    status = waitset.attach_condition(condition);
+    DDS_ReturnCode_t status = waitset.attach_condition(read_condition);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to attach condition");
       return RMW_RET_ERROR;
@@ -2284,21 +2300,16 @@ rmw_wait(
       RMW_SET_ERROR_MSG("subscriber info handle is null");
       return RMW_RET_ERROR;
     }
-    DDSDynamicDataReader * dynamic_reader = subscriber_info->dynamic_reader_;
-    if (!dynamic_reader) {
-      RMW_SET_ERROR_MSG("topic reader handle is null");
-      return RMW_RET_ERROR;
-    }
-    DDSCondition * condition = dynamic_reader->get_statuscondition();
-    if (!condition) {
-      RMW_SET_ERROR_MSG("condition handle is null");
+    DDSReadCondition * read_condition = subscriber_info->read_condition_;
+    if (!read_condition) {
+      RMW_SET_ERROR_MSG("read condition handle is null");
       return RMW_RET_ERROR;
     }
 
     // search for subscriber condition in active set
     DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
-      if (active_conditions[j] == condition) {
+      if (active_conditions[j] == read_condition) {
         break;
       }
     }
