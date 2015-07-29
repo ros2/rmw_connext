@@ -15,22 +15,27 @@
 #include <cassert>
 #include <exception>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#ifdef __clang__
-# pragma clang diagnostic ignored "-Wdeprecated-register"
-# pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-parameter"
+# ifdef __clang__
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+# endif
 #endif
 #include <ndds/connext_cpp/connext_cpp_replier_details.h>
 #include <ndds/connext_cpp/connext_cpp_requester_details.h>
 #include <ndds/ndds_cpp.h>
 #include <ndds/ndds_requestreply_cpp.h>
-#pragma GCC diagnostic pop
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#endif
 
 #include <rmw/allocators.h>
 #include <rmw/error_handling.h>
@@ -257,7 +262,12 @@ DDS_TypeCode * create_type_code(
         {
           DDS_UnsignedLong max_string_size;
           if (member->string_upper_bound_) {
-            max_string_size = member->string_upper_bound_;
+            if (member->string_upper_bound_ > (std::numeric_limits<DDS_UnsignedLong>::max)()) {
+              RMW_SET_ERROR_MSG(
+                "failed to create string typecode since the upper bound exceeds the DDS type");
+              goto fail;
+            }
+            max_string_size = static_cast<DDS_UnsignedLong>(member->string_upper_bound_);
           } else {
             // TODO use std::string().max_size() as soon as Connext supports dynamic allocation
             max_string_size = 255;
@@ -302,9 +312,13 @@ DDS_TypeCode * create_type_code(
     }
     if (member->is_array_) {
       if (member->array_size_) {
+        if (member->array_size_ > (std::numeric_limits<DDS_UnsignedLong>::max)()) {
+          RMW_SET_ERROR_MSG("failed to create array typecode since the size exceeds the DDS type");
+          goto fail;
+        }
+        DDS_UnsignedLong array_size = static_cast<DDS_UnsignedLong>(member->array_size_);
         if (!member->is_upper_bound_) {
-          member_type_code_non_const =
-            factory->create_array_tc(member->array_size_, member_type_code, ex);
+          member_type_code_non_const = factory->create_array_tc(array_size, member_type_code, ex);
           member_type_code = member_type_code_non_const;
           if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
             RMW_SET_ERROR_MSG("failed to create array typecode");
@@ -312,7 +326,7 @@ DDS_TypeCode * create_type_code(
           }
         } else {
           member_type_code_non_const =
-            factory->create_sequence_tc(member->array_size_, member_type_code, ex);
+            factory->create_sequence_tc(array_size, member_type_code, ex);
           member_type_code = member_type_code_non_const;
           if (!member_type_code || ex != DDS_NO_EXCEPTION_CODE) {
             RMW_SET_ERROR_MSG("failed to create sequence typecode");
@@ -590,7 +604,11 @@ rmw_create_publisher(
     static_cast<size_t>(datawriter_qos.history.depth) < queue_size
   )
   {
-    datawriter_qos.history.depth = queue_size;
+    if (queue_size > (std::numeric_limits<DDS_Long>::max)()) {
+      RMW_SET_ERROR_MSG("requested queue size exceeds maximum DDS history depth");
+      goto fail;
+    }
+    datawriter_qos.history.depth = static_cast<DDS_Long>(queue_size);
   }
 
   topic_writer = dds_publisher->create_datawriter(
@@ -840,7 +858,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
         NULL, \
         i + 1, \
-        array_size, \
+        static_cast<DDS_UnsignedLong>(array_size), \
         ros_values); \
       if (status != DDS_RETCODE_OK) { \
         RMW_SET_ERROR_MSG("failed to set array value using " #ARRAY_METHOD_NAME); \
@@ -869,7 +887,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
         NULL, \
         i + 1, \
-        array_size, \
+        static_cast<DDS_UnsignedLong>(array_size), \
         values); \
       rmw_free(values); \
       if (status != DDS_RETCODE_OK) { \
@@ -902,6 +920,11 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_; \
         auto vector = static_cast<const std::vector<TYPE> *>(untyped_vector); \
         array_size = vector->size(); \
+        if (array_size > (std::numeric_limits<DDS_UnsignedLong>::max)()) { \
+          RMW_SET_ERROR_MSG( \
+            "failed to set values since the requested array size exceeds the DDS type"); \
+          return false; \
+        } \
         if (array_size > 0) { \
           values = static_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
           if (!values) { \
@@ -916,7 +939,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
         NULL, \
         i + 1, \
-        array_size, \
+        static_cast<DDS_UnsignedLong>(array_size), \
         values); \
       rmw_free(values); \
       if (status != DDS_RETCODE_OK) { \
@@ -935,7 +958,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
         dynamic_data_member, \
         NULL, \
-        i + 1); \
+        static_cast<DDS_DynamicDataMemberId>(i + 1)); \
       if (status != DDS_RETCODE_OK) { \
         RMW_SET_ERROR_MSG("failed to bind complex member"); \
         return false; \
@@ -961,7 +984,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         NULL, \
-        i + 1, \
+        static_cast<DDS_DynamicDataMemberId>(i + 1), \
         value->c_str()); \
       if (status != DDS_RETCODE_OK) { \
         RMW_SET_ERROR_MSG("failed to set value using " #METHOD_NAME); \
@@ -975,7 +998,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
     sub_dynamic_data, \
     NULL, \
-    i + 1); \
+    static_cast<DDS_DynamicDataMemberId>(i + 1)); \
   if (status != DDS_RETCODE_OK) { \
     RMW_SET_ERROR_MSG("failed to bind complex member"); \
     return false; \
@@ -1341,7 +1364,11 @@ rmw_create_subscription(
     static_cast<size_t>(datareader_qos.history.depth) < queue_size
   )
   {
-    datareader_qos.history.depth = queue_size;
+    if (queue_size > (std::numeric_limits<DDS_Long>::max)()) {
+      RMW_SET_ERROR_MSG("requested queue size exceeds maximum DDS history depth");
+      goto fail;
+    }
+    datareader_qos.history.depth = static_cast<DDS_Long>(queue_size);
   }
 
   topic_reader = dds_subscriber->create_datareader(
@@ -1592,7 +1619,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     if (member->is_array_) { \
       ARRAY_SIZE() \
       ARRAY_RESIZE_AND_VALUES(TYPE) \
-      DDS_UnsignedLong length = array_size; \
+      DDS_UnsignedLong length = static_cast<DDS_UnsignedLong>(array_size); \
       DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
         ros_values, \
         &length, \
@@ -1627,7 +1654,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           RMW_SET_ERROR_MSG("failed to allocate memory"); \
           return false; \
         } \
-        DDS_UnsignedLong length = array_size; \
+        DDS_UnsignedLong length = static_cast<DDS_UnsignedLong>(array_size); \
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
           values, \
           &length, \
@@ -1669,7 +1696,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           RMW_SET_ERROR_MSG("failed to allocate memory"); \
           return false; \
         } \
-        DDS_UnsignedLong length = array_size; \
+        DDS_UnsignedLong length = static_cast<DDS_UnsignedLong>(array_size); \
         DDS_ReturnCode_t status = dynamic_data->ARRAY_METHOD_NAME( \
           values, \
           &length, \
@@ -1684,14 +1711,14 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           auto ros_values = \
             reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
           for (size_t i = 0; i < array_size; ++i) { \
-            ros_values[i] = values[i]; \
+            ros_values[i] = values[i] == DDS_BOOLEAN_TRUE; \
           } \
         } else { \
           void * untyped_vector = static_cast<char *>(ros_message) + member->offset_; \
           auto vector = static_cast<std::vector<TYPE> *>(untyped_vector); \
           vector->resize(array_size); \
           for (size_t i = 0; i < array_size; ++i) { \
-            (*vector)[i] = values[i]; \
+            (*vector)[i] = values[i] == DDS_BOOLEAN_TRUE; \
           } \
         } \
         rmw_free(values); \
@@ -1707,7 +1734,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         return false; \
       } \
       auto ros_value = reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
-      *ros_value = value; \
+      *ros_value = value == DDS_BOOLEAN_TRUE; \
     } \
   }
 
@@ -1720,7 +1747,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
         dynamic_data_member, \
         NULL, \
-        i + 1); \
+        static_cast<DDS_DynamicDataMemberId>(i + 1)); \
       if (status != DDS_RETCODE_OK) { \
         RMW_SET_ERROR_MSG("failed to bind complex member"); \
         return false; \
@@ -1758,7 +1785,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         value, \
         &size, \
         NULL, \
-        i + 1); \
+        static_cast<DDS_DynamicDataMemberId>(i + 1)); \
       if (status != DDS_RETCODE_OK) { \
         if (value) { \
           delete[] value; \
@@ -1779,7 +1806,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
     sub_dynamic_data, \
     NULL, \
-    i + 1); \
+    static_cast<DDS_DynamicDataMemberId>(i + 1)); \
   if (status != DDS_RETCODE_OK) { \
     RMW_SET_ERROR_MSG("failed to bind complex member"); \
     return false; \
@@ -2127,7 +2154,7 @@ rmw_wait(
   DDSWaitSet waitset;
 
   // add a condition for each subscriber
-  for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i) {
+  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     CustomSubscriberInfo * subscriber_info =
       static_cast<CustomSubscriberInfo *>(subscriptions->subscribers[i]);
     if (!subscriber_info) {
@@ -2157,7 +2184,7 @@ rmw_wait(
   }
 
   // add a condition for each guard condition
-  for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i) {
+  for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
     DDSGuardCondition * guard_condition =
       static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
     if (!guard_condition) {
@@ -2172,7 +2199,7 @@ rmw_wait(
   }
 
   // add a condition for each service
-  for (unsigned long i = 0; i < services->service_count; ++i) {
+  for (size_t i = 0; i < services->service_count; ++i) {
     ConnextDynamicServiceInfo * service_info =
       static_cast<ConnextDynamicServiceInfo *>(services->services[i]);
     if (!service_info) {
@@ -2202,7 +2229,7 @@ rmw_wait(
   }
 
   // add a condition for each client
-  for (unsigned long i = 0; i < clients->client_count; ++i) {
+  for (size_t i = 0; i < clients->client_count; ++i) {
     ConnextDynamicClientInfo * client_info =
       static_cast<ConnextDynamicClientInfo *>(clients->clients[i]);
     if (!client_info) {
@@ -2250,7 +2277,7 @@ rmw_wait(
   }
 
   // set subscriber handles to zero for all not triggered conditions
-  for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i) {
+  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     CustomSubscriberInfo * subscriber_info =
       static_cast<CustomSubscriberInfo *>(subscriptions->subscribers[i]);
     if (!subscriber_info) {

@@ -15,19 +15,24 @@
 #include <cassert>
 #include <exception>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#ifdef __clang__
-# pragma clang diagnostic ignored "-Wdeprecated-register"
-# pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-parameter"
+# ifdef __clang__
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+# endif
 #endif
 #include <ndds/ndds_cpp.h>
 #include <ndds/ndds_requestreply_cpp.h>
-#pragma GCC diagnostic pop
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#endif
 
 #include <rmw/rmw.h>
 #include <rmw/allocators.h>
@@ -368,7 +373,12 @@ rmw_create_publisher(
     static_cast<size_t>(datawriter_qos.history.depth) < queue_size
   )
   {
-    datawriter_qos.history.depth = queue_size;
+    if (queue_size > (std::numeric_limits<DDS_Long>::max)()) {
+      RMW_SET_ERROR_MSG(
+        "failed to set history depth since the requested queue size exceeds the DDS type");
+      goto fail;
+    }
+    datawriter_qos.history.depth = static_cast<DDS_Long>(queue_size);
   }
 
   topic_writer = dds_publisher->create_datawriter(
@@ -637,7 +647,12 @@ rmw_create_subscription(const rmw_node_t * node,
     static_cast<size_t>(datareader_qos.history.depth) < queue_size
   )
   {
-    datareader_qos.history.depth = queue_size;
+    if (queue_size > (std::numeric_limits<DDS_Long>::max)()) {
+      RMW_SET_ERROR_MSG(
+        "failed to set history depth since the requested queue size exceeds the DDS type");
+      goto fail;
+    }
+    datareader_qos.history.depth = static_cast<DDS_Long>(queue_size);
   }
 
   topic_reader = dds_subscriber->create_datareader(
@@ -888,7 +903,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   DDSWaitSet waitset;
 
   // add a condition for each subscriber
-  for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i) {
+  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     ConnextStaticSubscriberInfo * subscriber_info =
       static_cast<ConnextStaticSubscriberInfo *>(subscriptions->subscribers[i]);
     if (!subscriber_info) {
@@ -918,7 +933,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   }
 
   // add a condition for each guard condition
-  for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i) {
+  for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
     DDSGuardCondition * guard_condition =
       static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
     if (!guard_condition) {
@@ -933,7 +948,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   }
 
   // add a condition for each service
-  for (unsigned long i = 0; i < services->service_count; ++i) {
+  for (size_t i = 0; i < services->service_count; ++i) {
     ConnextStaticServiceInfo * service_info =
       static_cast<ConnextStaticServiceInfo *>(services->services[i]);
     if (!service_info) {
@@ -963,7 +978,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   }
 
   // add a condition for each client
-  for (unsigned long i = 0; i < clients->client_count; ++i) {
+  for (size_t i = 0; i < clients->client_count; ++i) {
     ConnextStaticClientInfo * client_info =
       static_cast<ConnextStaticClientInfo *>(clients->clients[i]);
     if (!client_info) {
@@ -1011,7 +1026,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   }
 
   // set subscriber handles to zero for all not triggered conditions
-  for (unsigned long i = 0; i < subscriptions->subscriber_count; ++i) {
+  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     ConnextStaticSubscriberInfo * subscriber_info =
       static_cast<ConnextStaticSubscriberInfo *>(subscriptions->subscribers[i]);
     if (!subscriber_info) {
@@ -1044,7 +1059,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   }
 
   // set guard condition handles to zero for all not triggered conditions
-  for (unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i) {
+  for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
     DDSCondition * condition =
       static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
     if (!condition) {
@@ -1073,7 +1088,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   }
 
   // set service handles to zero for all not triggered conditions
-  for (unsigned long i = 0; i < services->service_count; ++i) {
+  for (size_t i = 0; i < services->service_count; ++i) {
     ConnextStaticServiceInfo * service_info =
       static_cast<ConnextStaticServiceInfo *>(services->services[i]);
     if (!service_info) {
@@ -1106,7 +1121,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   }
 
   // set client handles to zero for all not triggered conditions
-  for (unsigned long i = 0; i < clients->client_count; ++i) {
+  for (size_t i = 0; i < clients->client_count; ++i) {
     ConnextStaticClientInfo * client_info =
       static_cast<ConnextStaticClientInfo *>(clients->clients[i]);
     if (!client_info) {

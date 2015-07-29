@@ -12,6 +12,9 @@
 @#  - get_header_filename_from_msg_name (function)
 @#######################################################################
 @
+#include <limits>
+#include <stdexcept>
+
 #include <rosidl_generator_c/message_type_support.h>
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
@@ -19,13 +22,19 @@
 #include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
 #include "@(spec.base_type.pkg_name)/@(subfolder)/@(get_header_filename_from_msg_name(spec.base_type.type))__struct.hpp"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#ifdef __clang__
-# pragma clang diagnostic ignored "-Wdeprecated-register"
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-parameter"
+# ifdef __clang__
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+# endif
 #endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
-#pragma GCC diagnostic pop
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#endif
+
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(get_header_filename_from_msg_name(spec.base_type.type))__type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
@@ -39,7 +48,7 @@ namespace msg
 {
 namespace dds_
 {
-struct @(field.type.type)_;
+class @(field.type.type)_;
 }  // namespace dds_
 namespace typesupport_connext_cpp
 {
@@ -94,28 +103,32 @@ convert_ros_message_to_dds(
     size_t size = @(field.type.array_size);
 @[else]@
     size_t size = ros_message.@(field.name).size();
+    if (size > (std::numeric_limits<DDS_Long>::max)()) {
+      throw std::runtime_error("array size exceeds maximum DDS sequence size");
+    }
+    DDS_Long length = static_cast<DDS_Long>(size);
 @[if not field.type.is_upper_bound]@
-    if (!dds_message.@(field.name)_.maximum(size)) {
+    if (!dds_message.@(field.name)_.maximum(length)) {
       throw std::runtime_error("failed to set maximum of sequence");
     }
 @[end if]@
-    if (!dds_message.@(field.name)_.length(size)) {
+    if (!dds_message.@(field.name)_.length(length)) {
       throw std::runtime_error("failed to set length of sequence");
     }
 @[end if]@
     for (size_t i = 0; i < size; i++) {
 @[if field.type.type == 'string']@
-      DDS_String_free(dds_message.@(field.name)_[i]);
-      dds_message.@(field.name)_[i] =
+      DDS_String_free(dds_message.@(field.name)_[static_cast<DDS_Long>(i)]);
+      dds_message.@(field.name)_[static_cast<DDS_Long>(i)] =
         DDS_String_dup(ros_message.@(field.name)[i].c_str());
 @[elif field.type.is_primitive_type()]@
-      dds_message.@(field.name)_[i] =
+      dds_message.@(field.name)_[static_cast<DDS_Long>(i)] =
         ros_message.@(field.name)[i];
 @[else]@
       if (
         !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_ros_message_to_dds(
           ros_message.@(field.name)[i],
-          dds_message.@(field.name)_[i]))
+          dds_message.@(field.name)_[static_cast<DDS_Long>(i)]))
       {
         return false;
       }
@@ -195,11 +208,11 @@ convert_dds_message_to_ros(
     for (size_t i = 0; i < size; i++) {
 @[if field.type.is_primitive_type()]@
       ros_message.@(field.name)[i] =
-        dds_message.@(field.name)_[i];
+        dds_message.@(field.name)_[static_cast<DDS_Long>(i)]@(' == DDS_BOOLEAN_TRUE' if field.type.type == 'bool' else '');
 @[else]@
       if (
         !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_dds_message_to_ros(
-          dds_message.@(field.name)_[i],
+          dds_message.@(field.name)_[static_cast<DDS_Long>(i)],
           ros_message.@(field.name)[i]))
       {
         return false;
@@ -209,7 +222,7 @@ convert_dds_message_to_ros(
   }
 @[elif field.type.is_primitive_type()]@
   ros_message.@(field.name) =
-    dds_message.@(field.name)_;
+    dds_message.@(field.name)_@(' == DDS_BOOLEAN_TRUE' if field.type.type == 'bool' else '');
 @[else]@
   if (
     !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_dds_message_to_ros(
