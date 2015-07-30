@@ -964,10 +964,15 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         return false; \
       } \
       ARRAY_SIZE_AND_VALUES(TYPE) \
+      if (array_size > (std::numeric_limits<DDS_DynamicDataMemberId>::max)()) { \
+        RMW_SET_ERROR_MSG( \
+          "failed to set string since the requested string length exceeds the DDS type"); \
+        return false; \
+      } \
       for (size_t j = 0; j < array_size; ++j) { \
         status = dynamic_data_member.METHOD_NAME( \
           NULL, \
-          j + 1, \
+          static_cast<DDS_DynamicDataMemberId>(j + 1), \
           ros_values[j].c_str()); \
         if (status != DDS_RETCODE_OK) { \
           RMW_SET_ERROR_MSG("failed to set array value using " #METHOD_NAME); \
@@ -1768,6 +1773,11 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   { \
     if (member->is_array_) { \
       ARRAY_SIZE() \
+      if (array_size > (std::numeric_limits<DDS_DynamicDataMemberId>::max)()) { \
+        RMW_SET_ERROR_MSG( \
+          "failed to get string since the requested string length exceeds the DDS type"); \
+        return false; \
+      } \
       ARRAY_RESIZE_AND_VALUES(TYPE) \
       DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
       DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
@@ -1778,7 +1788,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         RMW_SET_ERROR_MSG("failed to bind complex member"); \
         return false; \
       } \
-      for (size_t i = 0; i < array_size; ++i) { \
+      for (size_t j = 0; j < array_size; ++j) { \
         char * value = 0; \
         DDS_UnsignedLong size; \
         /* TODO(wjwwood): Figure out how value is allocated. Why are we freeing it? */ \
@@ -1786,7 +1796,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           value, \
           &size, \
           NULL, \
-          i + 1); \
+          static_cast<DDS_DynamicDataMemberId>(j + 1)); \
         if (status != DDS_RETCODE_OK) { \
           if (value) { \
             delete[] value; \
@@ -1794,7 +1804,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           RMW_SET_ERROR_MSG("failed to get array value using " #METHOD_NAME); \
           return false; \
         } \
-        ros_values[i] = value; \
+        ros_values[j] = value; \
         if (value) { \
           delete[] value; \
         } \
