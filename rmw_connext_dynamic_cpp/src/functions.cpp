@@ -16,6 +16,8 @@
 #include <exception>
 #include <iostream>
 #include <limits>
+#include <map>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -71,6 +73,80 @@ extern "C"
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
 const char * rti_connext_dynamic_identifier = "connext_dynamic";
 
+class CustomPublisherListener
+  : public DDSDataReaderListener
+{
+public:
+  virtual void on_data_available(DDSDataReader * reader)
+  {
+    DDSPublicationBuiltinTopicDataDataReader * builtin_reader =
+      static_cast<DDSPublicationBuiltinTopicDataDataReader *>(reader);
+
+    DDS_PublicationBuiltinTopicDataSeq data_seq;
+    DDS_SampleInfoSeq info_seq;
+    DDS_ReturnCode_t retcode = builtin_reader->take(
+      data_seq, info_seq, DDS_LENGTH_UNLIMITED,
+      DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
+
+    if (retcode == DDS_RETCODE_NO_DATA) {
+      return;
+    }
+    if (retcode != DDS_RETCODE_OK) {
+      fprintf(stderr, "failed to access data from the built-in reader\n");
+      return;
+    }
+
+    for (auto i = 0; i < data_seq.length(); ++i) {
+      if (info_seq[i].valid_data) {
+        auto & topic_types = topic_names_and_types[data_seq[i].topic_name];
+        topic_types.push_back(data_seq[i].type_name);
+      } else {
+        // TODO(dirk-thomas) remove related topic name / type
+      }
+    }
+
+    builtin_reader->return_loan(data_seq, info_seq);
+  }
+  std::map<std::string, std::vector<std::string>> topic_names_and_types;
+};
+
+class CustomSubscriberListener
+  : public DDSDataReaderListener
+{
+public:
+  virtual void on_data_available(DDSDataReader * reader)
+  {
+    DDSSubscriptionBuiltinTopicDataDataReader * builtin_reader =
+      static_cast<DDSSubscriptionBuiltinTopicDataDataReader *>(reader);
+
+    DDS_SubscriptionBuiltinTopicDataSeq data_seq;
+    DDS_SampleInfoSeq info_seq;
+    DDS_ReturnCode_t retcode = builtin_reader->take(
+      data_seq, info_seq, DDS_LENGTH_UNLIMITED,
+      DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
+
+    if (retcode == DDS_RETCODE_NO_DATA) {
+      return;
+    }
+    if (retcode != DDS_RETCODE_OK) {
+      fprintf(stderr, "failed to access data from the built-in reader\n");
+      return;
+    }
+
+    for (auto i = 0; i < data_seq.length(); ++i) {
+      if (info_seq[i].valid_data) {
+        auto & topic_types = topic_names_and_types[data_seq[i].topic_name];
+        topic_types.push_back(data_seq[i].type_name);
+      } else {
+        // TODO(dirk-thomas) remove related topic name / type
+      }
+    }
+
+    builtin_reader->return_loan(data_seq, info_seq);
+  }
+  std::map<std::string, std::vector<std::string>> topic_names_and_types;
+};
+
 const char *
 rmw_get_implementation_identifier()
 {
@@ -87,6 +163,13 @@ rmw_init()
   }
   return RMW_RET_OK;
 }
+
+struct CustomNodeInfo
+{
+  DDSDomainParticipant * participant;
+  CustomPublisherListener * publisher_listener;
+  CustomSubscriberListener * subscriber_listener;
+};
 
 rmw_node_t *
 rmw_create_node(const char * name, size_t domain_id)
@@ -135,10 +218,110 @@ rmw_create_node(const char * name, size_t domain_id)
     return NULL;
   }
 
-  rmw_node_t * node = rmw_node_allocate();
+  rmw_node_t * node = nullptr;
+  CustomNodeInfo * node_info = nullptr;
+  CustomPublisherListener * publisher_listener = nullptr;
+  CustomSubscriberListener * subscriber_listener = nullptr;
+  void * buf = nullptr;
+
+  DDSDataReader * data_reader = nullptr;
+  DDSPublicationBuiltinTopicDataDataReader * builtin_publication_datareader = nullptr;
+  DDSSubscriptionBuiltinTopicDataDataReader * builtin_subscription_datareader = nullptr;
+  DDSSubscriber * builtin_subscriber = participant->get_builtin_subscriber();
+  if (!builtin_subscriber) {
+    RMW_SET_ERROR_MSG("builtin subscriber handle is null");
+    goto fail;
+  }
+
+  // setup publisher listener
+  data_reader = builtin_subscriber->lookup_datareader(DDS_PUBLICATION_TOPIC_NAME);
+  builtin_publication_datareader =
+    static_cast<DDSPublicationBuiltinTopicDataDataReader *>(data_reader);
+  if (!builtin_publication_datareader) {
+    RMW_SET_ERROR_MSG("builtin publication datareader handle is null");
+    goto fail;
+  }
+
+  buf = rmw_allocate(sizeof(CustomPublisherListener));
+  if (!buf) {
+    RMW_SET_ERROR_MSG("failed to allocate memory");
+    goto fail;
+  }
+  RMW_TRY_PLACEMENT_NEW(publisher_listener, buf, goto fail, CustomPublisherListener)
+  buf = nullptr;
+  builtin_publication_datareader->set_listener(publisher_listener, DDS_DATA_AVAILABLE_STATUS);
+
+  data_reader = builtin_subscriber->lookup_datareader(DDS_SUBSCRIPTION_TOPIC_NAME);
+  builtin_subscription_datareader =
+    static_cast<DDSSubscriptionBuiltinTopicDataDataReader *>(data_reader);
+  if (!builtin_subscription_datareader) {
+    RMW_SET_ERROR_MSG("builtin subscription datareader handle is null");
+    goto fail;
+  }
+
+  // setup subscriber listener
+  buf = rmw_allocate(sizeof(CustomSubscriberListener));
+  if (!buf) {
+    RMW_SET_ERROR_MSG("failed to allocate memory");
+    goto fail;
+  }
+  RMW_TRY_PLACEMENT_NEW(subscriber_listener, buf, goto fail, CustomSubscriberListener)
+  buf = nullptr;
+  builtin_subscription_datareader->set_listener(subscriber_listener, DDS_DATA_AVAILABLE_STATUS);
+
+  node = rmw_node_allocate();
+  if (!node) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node handle");
+    goto fail;
+  }
   node->implementation_identifier = rti_connext_dynamic_identifier;
   node->data = participant;
+
+
+  buf = rmw_allocate(sizeof(CustomNodeInfo));
+  if (!buf) {
+    RMW_SET_ERROR_MSG("failed to allocate memory");
+    goto fail;
+  }
+  RMW_TRY_PLACEMENT_NEW(node_info, buf, goto fail, CustomNodeInfo)
+  buf = nullptr;
+  node_info->participant = participant;
+  node_info->publisher_listener = publisher_listener;
+  node_info->subscriber_listener = subscriber_listener;
+
+  node->implementation_identifier = rti_connext_dynamic_identifier;
+  node->data = node_info;
   return node;
+fail:
+  status = dpf_->delete_participant(participant);
+  if (status != DDS_RETCODE_OK) {
+    std::stringstream ss;
+    ss << "leaking participant while handling failure at " <<
+      __FILE__ << ":" << __LINE__;
+    (std::cerr << ss.str()).flush();
+  }
+  if (publisher_listener) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      publisher_listener->~CustomPublisherListener(), CustomPublisherListener)
+    rmw_free(publisher_listener);
+  }
+  if (subscriber_listener) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      subscriber_listener->~CustomSubscriberListener(), CustomSubscriberListener)
+    rmw_free(subscriber_listener);
+  }
+  if (node) {
+    rmw_free(node);
+  }
+  if (node_info) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      node_info->~CustomNodeInfo(), CustomNodeInfo)
+    rmw_free(node_info);
+  }
+  if (buf) {
+    rmw_free(buf);
+  }
+  return NULL;
 }
 
 rmw_ret_t
@@ -159,7 +342,12 @@ rmw_destroy_node(rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
-  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return RMW_RET_ERROR;
+  }
+  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
   }
@@ -172,8 +360,24 @@ rmw_destroy_node(rmw_node_t * node)
     RMW_SET_ERROR_MSG("failed to delete participant");
     return RMW_RET_ERROR;
   }
+
+  if (node_info->publisher_listener) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      node_info->publisher_listener->~CustomPublisherListener(), CustomPublisherListener)
+    rmw_free(node_info->publisher_listener);
+    node_info->publisher_listener = nullptr;
+  }
+  if (node_info->subscriber_listener) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      node_info->subscriber_listener->~CustomSubscriberListener(), CustomSubscriberListener)
+    rmw_free(node_info->subscriber_listener);
+    node_info->subscriber_listener = nullptr;
+  }
+
+  rmw_free(node_info);
+  node->data = nullptr;
   rmw_node_free(node);
-  node = nullptr;
+
   return RMW_RET_OK;
 }
 
@@ -485,7 +689,12 @@ rmw_create_publisher(
     rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
     return NULL)
 
-  auto participant = static_cast<DDSDomainParticipant *>(node->data);
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return NULL;
+  }
+  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -783,7 +992,12 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     publisher->implementation_identifier, rti_connext_dynamic_identifier,
     return RMW_RET_ERROR)
 
-  auto participant = static_cast<DDSDomainParticipant *>(node->data);
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return RMW_RET_ERROR;
+  }
+  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return RMW_RET_ERROR;
@@ -1275,7 +1489,12 @@ rmw_create_subscription(
     rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
     return NULL)
 
-  auto participant = static_cast<DDSDomainParticipant *>(node->data);
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return NULL;
+  }
+  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -1590,7 +1809,12 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     subscription->implementation_identifier, rti_connext_dynamic_identifier,
     return RMW_RET_ERROR)
 
-  auto participant = static_cast<DDSDomainParticipant *>(node->data);
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return RMW_RET_ERROR;
+  }
+  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return RMW_RET_ERROR;
@@ -2503,7 +2727,12 @@ rmw_create_client(
     rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
     return NULL)
 
-  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return NULL;
+  }
+  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -3060,7 +3289,12 @@ rmw_create_service(
     rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier,
     return NULL)
 
-  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(node->data);
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return NULL;
+  }
+  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -3311,6 +3545,244 @@ rmw_destroy_service(rmw_service_t * service)
 
   // TODO(wjwwood): if the function returns early some memory leaks will occur.
   return result;
+}
+
+void
+destroy_topic_names_and_types(
+  rmw_topic_names_and_types_t * topic_names_and_types)
+{
+  if (topic_names_and_types->topic_count) {
+    for (size_t i = 0; i < topic_names_and_types->topic_count; ++i) {
+      delete topic_names_and_types->topic_names[i];
+      delete topic_names_and_types->type_names[i];
+      topic_names_and_types->topic_names[i] = nullptr;
+      topic_names_and_types->type_names[i] = nullptr;
+    }
+    if (topic_names_and_types->topic_names) {
+      rmw_free(topic_names_and_types->topic_names);
+      topic_names_and_types->topic_names = nullptr;
+    }
+    if (topic_names_and_types->type_names) {
+      rmw_free(topic_names_and_types->type_names);
+      topic_names_and_types->type_names = nullptr;
+    }
+    topic_names_and_types->topic_count = 0;
+  }
+}
+
+rmw_ret_t
+rmw_get_topic_names_and_types(
+  const rmw_node_t * node,
+  rmw_topic_names_and_types_t * topic_names_and_types)
+{
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (node->implementation_identifier != rti_connext_dynamic_identifier) {
+    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!topic_names_and_types) {
+    RMW_SET_ERROR_MSG("topics handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (topic_names_and_types->topic_count) {
+    RMW_SET_ERROR_MSG("topic count is not zero");
+    return RMW_RET_ERROR;
+  }
+  if (topic_names_and_types->topic_names) {
+    RMW_SET_ERROR_MSG("topic names is not null");
+    return RMW_RET_ERROR;
+  }
+  if (topic_names_and_types->type_names) {
+    RMW_SET_ERROR_MSG("type names is not null");
+    return RMW_RET_ERROR;
+  }
+
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!node_info->publisher_listener) {
+    RMW_SET_ERROR_MSG("publisher listener handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!node_info->subscriber_listener) {
+    RMW_SET_ERROR_MSG("subscriber listener handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  // combine publisher and subscriber information
+  std::map<std::string, std::set<std::string>> topics_with_multiple_types;
+  for (auto it : node_info->publisher_listener->topic_names_and_types) {
+    for (auto & jt : it.second) {
+      topics_with_multiple_types[it.first].insert(jt);
+    }
+  }
+  for (auto it : node_info->subscriber_listener->topic_names_and_types) {
+    for (auto & jt : it.second) {
+      topics_with_multiple_types[it.first].insert(jt);
+    }
+  }
+
+  // ignore inconsistent types
+  std::map<std::string, std::string> topics;
+  for (auto & it : topics_with_multiple_types) {
+    if (it.second.size() != 1) {
+      fprintf(stderr, "topic type mismatch - ignoring topic '%s'\n", it.first.c_str());
+      continue;
+    }
+    topics[it.first] = *it.second.begin();
+  }
+
+  // reformat type name
+  std::string substr = "::msg::dds_::";
+  for (auto & it : topics) {
+    size_t substr_pos = it.second.find(substr);
+    if (it.second[it.second.size() - 1] == '_' && substr_pos != std::string::npos) {
+      it.second = it.second.substr(0, substr_pos) + "/" + it.second.substr(
+        substr_pos + substr.size(), it.second.size() - substr_pos - substr.size() - 1);
+    }
+  }
+
+  // copy data into result handle
+  if (topics.size() > 0) {
+    topic_names_and_types->topic_names = static_cast<char **>(
+      rmw_allocate(sizeof(char *) * topics.size()));
+    if (!topic_names_and_types->topic_names) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for topic names")
+      return RMW_RET_ERROR;
+    }
+    topic_names_and_types->type_names = static_cast<char **>(
+      rmw_allocate(sizeof(char *) * topics.size()));
+    if (!topic_names_and_types->type_names) {
+      rmw_free(topic_names_and_types->topic_names);
+      RMW_SET_ERROR_MSG("failed to allocate memory for type names")
+      return RMW_RET_ERROR;
+    }
+    for (auto it : topics) {
+      char * topic_name = strdup(it.first.c_str());
+      if (!topic_name) {
+        RMW_SET_ERROR_MSG("failed to allocate memory for topic name")
+        goto fail;
+      }
+      char * type_name = strdup(it.second.c_str());
+      if (!type_name) {
+        rmw_free(topic_name);
+        RMW_SET_ERROR_MSG("failed to allocate memory for type name")
+        goto fail;
+      }
+      size_t i = topic_names_and_types->topic_count;
+      topic_names_and_types->topic_names[i] = topic_name;
+      topic_names_and_types->type_names[i] = type_name;
+      ++topic_names_and_types->topic_count;
+    }
+  }
+
+  return RMW_RET_OK;
+fail:
+  destroy_topic_names_and_types(topic_names_and_types);
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_destroy_topic_names_and_types(
+  rmw_topic_names_and_types_t * topic_names_and_types)
+{
+  if (!topic_names_and_types) {
+    RMW_SET_ERROR_MSG("topics handle is null");
+    return RMW_RET_ERROR;
+  }
+  destroy_topic_names_and_types(topic_names_and_types);
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_count_publishers(
+  const rmw_node_t * node,
+  const char * topic_name,
+  size_t * count)
+{
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (node->implementation_identifier != rti_connext_dynamic_identifier) {
+    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!topic_name) {
+    RMW_SET_ERROR_MSG("topic name is null");
+    return RMW_RET_ERROR;
+  }
+  if (!count) {
+    RMW_SET_ERROR_MSG("count handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!node_info->publisher_listener) {
+    RMW_SET_ERROR_MSG("publisher listener handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  const auto & topic_names_and_types = node_info->publisher_listener->topic_names_and_types;
+  auto it = topic_names_and_types.find(topic_name);
+  if (it == topic_names_and_types.end()) {
+    *count = 0;
+  } else {
+    *count = it->second.size();
+  }
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_count_subscribers(
+  const rmw_node_t * node,
+  const char * topic_name,
+  size_t * count)
+{
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (node->implementation_identifier != rti_connext_dynamic_identifier) {
+    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (!topic_name) {
+    RMW_SET_ERROR_MSG("topic name is null");
+    return RMW_RET_ERROR;
+  }
+  if (!count) {
+    RMW_SET_ERROR_MSG("count handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  auto node_info = static_cast<CustomNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (!node_info->subscriber_listener) {
+    RMW_SET_ERROR_MSG("subscriber listener handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  const auto & topic_names_and_types = node_info->subscriber_listener->topic_names_and_types;
+  auto it = topic_names_and_types.find(topic_name);
+  if (it == topic_names_and_types.end()) {
+    *count = 0;
+  } else {
+    *count = it->second.size();
+  }
+  return RMW_RET_OK;
 }
 
 }  // extern "C"
