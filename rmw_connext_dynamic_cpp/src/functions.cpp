@@ -89,7 +89,7 @@ rmw_init()
 }
 
 rmw_node_t *
-rmw_create_node(const char * name)
+rmw_create_node(const char * name, size_t domain_id)
 {
   (void)name;
 
@@ -125,7 +125,7 @@ rmw_create_node(const char * name)
     return NULL;
   }
 
-  DDS_DomainId_t domain = 0;
+  DDS_DomainId_t domain = static_cast<DDS_DomainId_t>(domain_id);
 
   DDSDomainParticipant * participant = dpf_->create_participant(
     domain, participant_qos, NULL,
