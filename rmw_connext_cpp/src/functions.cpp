@@ -108,7 +108,7 @@ rmw_init()
 }
 
 rmw_node_t *
-rmw_create_node(const char * name)
+rmw_create_node(const char * name, size_t domain_id)
 {
   (void)name;
 
@@ -125,6 +125,9 @@ rmw_create_node(const char * name)
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
   }
+  // forces local traffic to be sent over loopback,
+  // even if a more efficient transport (such as shared memory) is installed
+  // (in which case traffic will be sent over both transports)
   status = DDSPropertyQosPolicyHelper::add_property(
     participant_qos.property,
     "dds.transport.UDPv4.builtin.ignore_loopback_interface",
@@ -144,7 +147,7 @@ rmw_create_node(const char * name)
     return NULL;
   }
 
-  DDS_DomainId_t domain = 0;
+  DDS_DomainId_t domain = static_cast<DDS_DomainId_t>(domain_id);
 
   DDSDomainParticipant * participant = dpf_->create_participant(
     domain, participant_qos, NULL,
