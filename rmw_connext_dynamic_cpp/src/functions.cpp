@@ -801,11 +801,11 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       }
       custom_publisher_info->data_writer_ = nullptr;
       custom_publisher_info->dynamic_writer_ = nullptr;
-      if (dds_publisher->delete_contained_entities() != DDS_RETCODE_ERROR) {
+      if (dds_publisher->delete_contained_entities() != DDS_RETCODE_OK) {
         RMW_SET_ERROR_MSG("failed to delete contained entities for publisher");
         return RMW_RET_ERROR;
       }
-      if (participant->delete_publisher(dds_publisher) != DDS_RETCODE_ERROR) {
+      if (participant->delete_publisher(dds_publisher) != DDS_RETCODE_OK) {
         RMW_SET_ERROR_MSG("failed to delete publisher");
         return RMW_RET_ERROR;
       }
@@ -1593,7 +1593,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       }
       custom_subscription_info->data_reader_ = nullptr;
       custom_subscription_info->dynamic_reader_ = nullptr;
-      if (participant->delete_subscriber(dds_subscriber) != DDS_RETCODE_ERROR) {
+      if (participant->delete_subscriber(dds_subscriber) != DDS_RETCODE_OK) {
         RMW_SET_ERROR_MSG("failed to delete subscriber");
         return RMW_RET_ERROR;
       }
