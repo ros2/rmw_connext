@@ -930,7 +930,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
-  bool non_blocking)
+  rmw_time_t * wait_timeout)
 {
   DDSWaitSet waitset;
 
@@ -1031,20 +1031,22 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
 
   // invoke wait until one of the conditions triggers
   DDSConditionSeq active_conditions;
-  DDS_Duration_t timeout = DDS_Duration_t::from_seconds(non_blocking ? 0 : 1);
-  DDS_ReturnCode_t status = DDS_RETCODE_TIMEOUT;
-  while (DDS_RETCODE_TIMEOUT == status) {
-    status = waitset.wait(active_conditions, timeout);
-    if (DDS_RETCODE_TIMEOUT == status) {
-      if (non_blocking) {
-        break;
-      }
-      continue;
-    }
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to wait on waitset");
-      return RMW_RET_ERROR;
-    }
+  DDS_Duration_t timeout;
+  if (!wait_timeout) {
+    timeout = DDS_DURATION_INFINITE;
+  } else {
+    timeout.sec = static_cast<DDS_Long>(wait_timeout->sec);
+    timeout.nanosec = static_cast<DDS_Long>(wait_timeout->nsec);
+  }
+  DDS_ReturnCode_t status = waitset.wait(active_conditions, timeout);
+
+  if (status == DDS_RETCODE_TIMEOUT) {
+    return RMW_RET_TIMEOUT;
+  }
+
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to wait on waitset");
+    return RMW_RET_ERROR;
   }
 
   // set subscriber handles to zero for all not triggered conditions
