@@ -269,7 +269,7 @@ rmw_create_publisher(
   const rmw_node_t * node,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
-  size_t queue_size)
+  const rmw_qos_profile_t & qos_profile)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -370,19 +370,43 @@ rmw_create_publisher(
     goto fail;
   }
 
+  switch (qos_profile.history) {
+    case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
+      datawriter_qos.history.kind = DDS_KEEP_LAST_HISTORY_QOS;
+      break;
+    case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
+      datawriter_qos.history.kind = DDS_KEEP_ALL_HISTORY_QOS;
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS history policy");
+      goto fail;
+  }
+
+  switch (qos_profile.reliability) {
+    case RMW_QOS_POLICY_BEST_EFFORT:
+      datawriter_qos.reliability.kind = DDS_BEST_EFFORT_RELIABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_RELIABLE:
+      datawriter_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
+      goto fail;
+  }
+
   // ensure the history depth is at least the requested queue size
   assert(datawriter_qos.history.depth >= 0);
   if (
     datawriter_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    static_cast<size_t>(datawriter_qos.history.depth) < queue_size
+    static_cast<size_t>(datawriter_qos.history.depth) < qos_profile.depth
   )
   {
-    if (queue_size > (std::numeric_limits<DDS_Long>::max)()) {
+    if (qos_profile.depth > (std::numeric_limits<DDS_Long>::max)()) {
       RMW_SET_ERROR_MSG(
         "failed to set history depth since the requested queue size exceeds the DDS type");
       goto fail;
     }
-    datawriter_qos.history.depth = static_cast<DDS_Long>(queue_size);
+    datawriter_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
   }
 
   topic_writer = dds_publisher->create_datawriter(
@@ -543,7 +567,7 @@ rmw_subscription_t *
 rmw_create_subscription(const rmw_node_t * node,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
-  size_t queue_size,
+  const rmw_qos_profile_t & qos_profile,
   bool ignore_local_publications)
 {
   if (!node) {
@@ -645,19 +669,43 @@ rmw_create_subscription(const rmw_node_t * node,
     goto fail;
   }
 
+  switch (qos_profile.history) {
+    case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
+      datareader_qos.history.kind = DDS_KEEP_LAST_HISTORY_QOS;
+      break;
+    case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
+      datareader_qos.history.kind = DDS_KEEP_ALL_HISTORY_QOS;
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS history policy");
+      goto fail;
+  }
+
+  switch (qos_profile.reliability) {
+    case RMW_QOS_POLICY_BEST_EFFORT:
+      datareader_qos.reliability.kind = DDS_BEST_EFFORT_RELIABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_RELIABLE:
+      datareader_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
+      goto fail;
+  }
+
   // ensure the history depth is at least the requested queue size
   assert(datareader_qos.history.depth >= 0);
   if (
     datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    static_cast<size_t>(datareader_qos.history.depth) < queue_size
+    static_cast<size_t>(datareader_qos.history.depth) < qos_profile.depth
   )
   {
-    if (queue_size > (std::numeric_limits<DDS_Long>::max)()) {
+    if (qos_profile.depth > (std::numeric_limits<DDS_Long>::max)()) {
       RMW_SET_ERROR_MSG(
         "failed to set history depth since the requested queue size exceeds the DDS type");
       goto fail;
     }
-    datareader_qos.history.depth = static_cast<DDS_Long>(queue_size);
+    datareader_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
   }
 
   topic_reader = dds_subscriber->create_datareader(
