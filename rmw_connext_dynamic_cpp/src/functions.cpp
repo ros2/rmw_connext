@@ -2313,12 +2313,14 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     return RMW_RET_ERROR;
   }
 
-  bool success = true;
   bool ignore_sample = false;
-  if (subscriber_info->ignore_local_publications) {
+  DDS_SampleInfo & sample_info = sample_infos[0];
+  if (!sample_info.valid_data) {
+    // skip sample without data
+    ignore_sample = true;
+  } else if (subscriber_info->ignore_local_publications) {
     // compare the lower 12 octets of the guids from the sender and this receiver
     // if they are equal the sample has been sent from this process and should be ignored
-    DDS_SampleInfo & sample_info = sample_infos[0];
     DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
     DDS_InstanceHandle_t receiver_instance_handle = dynamic_reader->get_instance_handle();
     ignore_sample = true;
@@ -2332,6 +2334,7 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     }
   }
 
+  bool success = true;
   if (!ignore_sample) {
     success = _take(&dynamic_data_sequence[0], ros_message, members);
     if (success) {
