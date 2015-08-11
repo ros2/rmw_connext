@@ -277,12 +277,14 @@ take__@(spec.base_type.type)(
     return false;
   }
 
-  bool success = true;
   bool ignore_sample = false;
-  if (ignore_local_publications) {
+  DDS_SampleInfo & sample_info = sample_infos[0];
+  if (!sample_info.valid_data) {
+    // skip sample without data
+    ignore_sample = true;
+  } else if (ignore_local_publications) {
     // compare the lower 12 octets of the guids from the sender and this receiver
     // if they are equal the sample has been sent from this process and should be ignored
-    DDS_SampleInfo & sample_info = sample_infos[0];
     DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
     DDS_InstanceHandle_t receiver_instance_handle = topic_reader->get_instance_handle();
     ignore_sample = true;
@@ -296,6 +298,7 @@ take__@(spec.base_type.type)(
     }
   }
 
+  bool success = true;
   if (!ignore_sample) {
     @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
       *(@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
