@@ -2842,7 +2842,7 @@ rmw_create_client(
     requester_params.datawriter_qos(datawriter_qos);
 
     // Allocate memory for the Requester object.
-    typedef connext::Requester<DDS_DynamicData, DDS_DynamicData> Requester;
+    using Requester = connext::Requester<DDS_DynamicData, DDS_DynamicData>;
     buf = rmw_allocate(sizeof(connext::Requester<DDS_DynamicData, DDS_DynamicData>));
     if (!buf) {
       RMW_SET_ERROR_MSG("failed to allocate memory");
@@ -3404,7 +3404,7 @@ rmw_create_service(
     replier_params.datawriter_qos(datawriter_qos);
 
     // Allocate memory for the Replier object.
-    typedef connext::Replier<DDS_DynamicData, DDS_DynamicData> Replier;
+    using Replier = connext::Replier<DDS_DynamicData, DDS_DynamicData>;
     buf = rmw_allocate(sizeof(Replier));
     if (!buf) {
       RMW_SET_ERROR_MSG("failed to allocate memory");
