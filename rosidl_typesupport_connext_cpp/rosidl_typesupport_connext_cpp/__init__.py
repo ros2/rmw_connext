@@ -84,6 +84,16 @@ def generate_dds_connext_cpp(
             cmd[-5:-5] = ['-dllExportMacroSuffix', pkg_name]
         subprocess.check_call(cmd)
 
+        if os.name == 'nt':
+            # modify generated code to use declspec(dllimport)
+            msg_name = os.path.splitext(os.path.basename(idl_file))[0]
+            msg_filename = os.path.join(output_path, msg_name + '.h')
+            _modify(msg_filename, (pkg_name, msg_name), _inject_dllimport)
+            msg_plugin_filename = os.path.join(output_path, msg_name + 'Plugin.h')
+            _modify(msg_plugin_filename, (pkg_name, msg_name), _rework_declspec)
+            msg_support_filename = os.path.join(output_path, msg_name + 'Support.h')
+            _modify(msg_support_filename, (pkg_name, msg_name), _inject_dllimport)
+
         # modify generated code to support unbounded sequences and strings
         # http://community.rti.com/content/forum-topic/changing-max-size-sequence
         unbounded_fields = [f for f in message_specs[index][1].fields
@@ -98,6 +108,83 @@ def generate_dds_connext_cpp(
             _modify(plugin_cxx_filename, unbounded_fields, _step_2_1_and_2_3_and_2_4)
 
     return 0
+
+
+def _inject_dllimport(pkg_name_and_msg_name, lines):
+    (pkg_name, msg_name) = pkg_name_and_msg_name
+    # make macro default to dllimport instead of being empty
+    injections = []
+    define = '#define NDDSUSERDllExport __declspec(dllexport)'
+    define_empty = '#define NDDSUSERDllExport'
+    endif = '#endif'
+    inside = False
+    for index, line in enumerate(lines):
+        if define in line:
+            inside = define
+        elif define_empty in line:
+            inside = define_empty
+        elif inside and endif in line:
+            injected_lines = [
+                '#if (defined(RTI_WIN32) || defined (RTI_WINCE)) && '
+                '!defined(NDDS_USER_DLL_EXPORT_%s)' % pkg_name,
+                '#undef NDDSUSERDllExport',
+            ]
+            if inside == define:
+                injected_lines += [define.replace('dllexport', 'dllimport')]
+            else:
+                injected_lines += [define_empty]
+            injected_lines += [endif]
+            injections.append((index + 1, injected_lines))
+            inside = False
+    assert injections
+    for index, injected_lines in reversed(injections):
+        lines[index:index] = injected_lines
+
+    return True
+
+
+def _rework_declspec(pkg_name_and_msg_name, lines):
+    (pkg_name, msg_name) = pkg_name_and_msg_name
+    # make macro default to dllimport instead of being empty
+    injections = []
+    define = '#define NDDSUSERDllExport __declspec(dllexport)'
+    define_empty = '#define NDDSUSERDllExport'
+    endif = '#endif'
+    inside = False
+    for index, line in enumerate(lines):
+        if define in line:
+            inside = define
+        elif define_empty in line:
+            inside = define_empty
+        elif inside and endif in line:
+            if inside == define:
+                injected_lines = [
+                    '#if (defined(RTI_WIN32) || defined (RTI_WINCE)) && '
+                    '!defined(NDDS_USER_DLL_EXPORT_%s)' % pkg_name,
+                    '#undef NDDSUSERDllExport',
+                    define.replace('dllexport', 'dllimport'),
+                    endif,
+                ]
+                injections.append((index + 1, injected_lines))
+            inside = False
+    assert injections
+    for index, injected_lines in reversed(injections):
+        lines[index:index] = injected_lines
+
+    # do not unset the macro at the end of the file
+    # since it might be a nested header
+    for index, line in enumerate(lines):
+        if '#define NDDSUSERDllExport' == line:
+            lines[index - 1] = '// ' + lines[index - 1]
+            lines[index] = '// ' + line
+
+    # make macro package specific to avoid cross package effects
+    for index, line in enumerate(lines):
+        if 'NDDSUSERDllExport' in line:
+            lines[index] = line.replace(
+                'NDDSUSERDllExport', 'NDDSUSERDllExport_' + pkg_name)
+
+    return True
 
 
 def _modify(filename, unbounded_fields, callback):

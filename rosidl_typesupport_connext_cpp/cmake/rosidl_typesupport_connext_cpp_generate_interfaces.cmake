@@ -177,6 +177,7 @@ else()
     "/wd4127"
     "/wd4275"
     "/wd4458"
+    "/wd4701"
   )
 endif()
 string(REPLACE ";" " " _target_compile_flags "${_target_compile_flags}")
