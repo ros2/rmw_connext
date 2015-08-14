@@ -45,6 +45,11 @@
 
 set(Connext_FOUND FALSE)
 
+set (_lib_postfix "")
+if (CMAKE_BUILD_TYPE_INIT STREQUAL "Debug")
+    set(_lib_postfix "d")
+endif()
+
 # check if all libraries with an expected name have been found
 function(_find_connext_ensure_libraries var expected_library_names library_paths)
   foreach(expected_library_name ${expected_library_names})
@@ -65,10 +70,10 @@ function(_find_connext_ensure_libraries var expected_library_names library_paths
 endfunction()
 
 set(_expected_library_base_names
-  "nddsc"
-  "nddscore"
-  "nddscpp"
-  "rticonnextmsgcpp"
+  "nddsc${_lib_postfix}"
+  "nddscore${_lib_postfix}"
+  "nddscpp${_lib_postfix}"
+  "rticonnextmsgcpp${_lib_postfix}"
 )
 
 set(_expected_library_names "")
