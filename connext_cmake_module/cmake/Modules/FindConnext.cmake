@@ -33,7 +33,7 @@
 # - Connext_DEFINITIONS: Definitions to be passed on
 # - Connext_DDSGEN: Path to the idl2code generator
 # - Connext_DDSGEN_SERVER: Path to the idl2code generator in server mode
-#   (if available)
+#   (if available and runnable)
 #
 # Example usage:
 #
@@ -253,6 +253,16 @@ endif()
 
 if(Connext_FOUND AND NOT WIN32)
   list(APPEND Connext_LIBRARIES "pthread" "dl")
+endif()
+
+if(Connext_DDSGEN_SERVER)
+  # check that the generator is invocable / finds a Java runtime environment
+  execute_process(
+    COMMAND "/usr/bin/rtiddsgen_server"
+    RESULT_VARIABLE _retcode)
+  if(NOT _retcode EQUAL 0)
+    set(Connext_DDSGEN_SERVER)
+  endif()
 endif()
 
 include(FindPackageHandleStandardArgs)
