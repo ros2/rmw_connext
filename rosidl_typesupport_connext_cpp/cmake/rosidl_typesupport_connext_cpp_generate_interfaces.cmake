@@ -140,12 +140,18 @@ rosidl_write_generator_arguments(
   ADDITIONAL_FILES ${_dds_idl_files}
 )
 
+set(_idl_pp "${Connext_DDSGEN}")
+if(NOT "${Connext_DDSGEN_SERVER} " STREQUAL " ")
+  # use the code generator in server mode when available
+  # because it speeds up the code generation step significantly
+  set(_idl_pp "${Connext_DDSGEN_SERVER}")
+endif()
 add_custom_command(
   OUTPUT ${_generated_msg_files} ${_generated_external_msg_files} ${_generated_srv_files}
   COMMAND ${PYTHON_EXECUTABLE} ${rosidl_typesupport_connext_cpp_BIN}
   --generator-arguments-file "${generator_arguments_file}"
   --dds-interface-base-path "${_dds_idl_base_path}"
-  --idl-pp "${Connext_DDSGEN2}"
+  --idl-pp "${_idl_pp}"
   DEPENDS ${target_dependencies} ${_dds_idl_files}
   COMMENT "Generating C++ type support for RTI Connext"
   VERBATIM
