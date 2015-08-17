@@ -174,6 +174,21 @@ struct ConnextStaticServiceInfo
   const service_type_support_callbacks_t * callbacks_;
 };
 
+rmw_ret_t check_attach_condition_error(DDS::ReturnCode_t retcode)
+{
+  if (retcode == DDS_RETCODE_OK) {
+    return RMW_RET_OK;
+  }
+  if (retcode == DDS_RETCODE_OUT_OF_RESOURCES) {
+    RMW_SET_ERROR_MSG("failed to attach condition to waitset: out of resources");
+  } else if (retcode == DDS_RETCODE_BAD_PARAMETER) {
+    RMW_SET_ERROR_MSG("failed to attach condition to waitset: condition pointer was invalid");
+  } else {
+    RMW_SET_ERROR_MSG("failed to attach condition to waitset");
+  }
+  return RMW_RET_ERROR;
+}
+
 const char *
 rmw_get_implementation_identifier()
 {
@@ -1207,10 +1222,10 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
       RMW_SET_ERROR_MSG("read condition handle is null");
       return RMW_RET_ERROR;
     }
-    DDS_ReturnCode_t status = waitset.attach_condition(read_condition);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to attach condition");
-      return RMW_RET_ERROR;
+    rmw_ret_t status = check_attach_condition_error(
+      waitset.attach_condition(read_condition));
+    if (status != RMW_RET_OK) {
+      return status;
     }
   }
 
@@ -1222,10 +1237,10 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
       RMW_SET_ERROR_MSG("guard condition handle is null");
       return RMW_RET_ERROR;
     }
-    DDS_ReturnCode_t status = waitset.attach_condition(guard_condition);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to attach condition");
-      return RMW_RET_ERROR;
+    rmw_ret_t status = check_attach_condition_error(
+      waitset.attach_condition(guard_condition));
+    if (status != RMW_RET_OK) {
+      return status;
     }
   }
 
@@ -1252,10 +1267,10 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
       RMW_SET_ERROR_MSG("failed to set enabled statuses");
       return RMW_RET_ERROR;
     }
-    status = waitset.attach_condition(condition);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to attach condition");
-      return RMW_RET_ERROR;
+    rmw_ret_t status = check_attach_condition_error(
+      waitset.attach_condition(condition));
+    if (status != RMW_RET_OK) {
+      return status;
     }
   }
 
@@ -1282,10 +1297,10 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
       RMW_SET_ERROR_MSG("failed to set enabled statuses");
       return RMW_RET_ERROR;
     }
-    status = waitset.attach_condition(condition);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to attach condition");
-      return RMW_RET_ERROR;
+    rmw_ret_t status = check_attach_condition_error(
+      waitset.attach_condition(condition));
+    if (status != RMW_RET_OK) {
+      return status;
     }
   }
 
