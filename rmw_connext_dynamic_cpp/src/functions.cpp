@@ -223,23 +223,26 @@ rmw_init(const char * qos_xml_filename)
     return RMW_RET_ERROR;
   }
 
-  DDS_DomainParticipantFactoryQos factory_qos;
-  DDS_ReturnCode_t status = dpf_->get_qos(factory_qos);
-  if (status != DDS_RETCODE_OK) {
-    RMW_SET_ERROR_MSG(
-      "failed to obtain the QoS factory for the global domain participant factory");
-    return RMW_RET_ERROR;
-  }
+  std::string qos_xml_filename_str(qos_xml_filename);
+  if (!qos_xml_filename_str.empty()) {
+    DDS_DomainParticipantFactoryQos factory_qos;
+    DDS_ReturnCode_t status = dpf_->get_qos(factory_qos);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG(
+        "failed to obtain the QoS factory for the global domain participant factory");
+      return RMW_RET_ERROR;
+    }
 
-  factory_qos.profile.url_profile.ensure_length(1, 1);
-  factory_qos.profile.url_profile[0] = DDS_String_dup(qos_xml_filename);
+    factory_qos.profile.url_profile.ensure_length(1, 1);
+    factory_qos.profile.url_profile[0] = DDS_String_dup(qos_xml_filename);
 
-  status = dpf_->set_qos(factory_qos);
+    status = dpf_->set_qos(factory_qos);
 
-  if (status != DDS_RETCODE_OK) {
-    RMW_SET_ERROR_MSG(
-      "failed to set the QoS factory for the global domain participant factory");
-    return RMW_RET_ERROR;
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG(
+        "failed to set the QoS factory for the global domain participant factory");
+      return RMW_RET_ERROR;
+    }
   }
 
   return RMW_RET_OK;
