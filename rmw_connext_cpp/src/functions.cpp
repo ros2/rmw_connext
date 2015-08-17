@@ -16,12 +16,12 @@
 #include <exception>
 #include <iostream>
 #include <limits>
+#include <list>
 #include <map>
 #include <set>
 #include <sstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #ifndef _WIN32
 # pragma GCC diagnostic push
@@ -63,8 +63,55 @@ extern "C"
 
 const char * rti_connext_identifier = "connext_static";
 
-class CustomPublisherListener
+class CustomDataReaderListener
   : public DDSDataReaderListener
+{
+public:
+  std::map<std::string, std::multiset<std::string>> topic_names_and_types;
+protected:
+  virtual void add_information(
+    const DDS_SampleInfo & sample_info,
+    const std::string & topic_name,
+    const std::string & type_name)
+  {
+    // store topic name and type name
+    auto & topic_types = topic_names_and_types[topic_name];
+    topic_types.insert(type_name);
+    // store mapping to instance handle
+    TopicDescriptor topic_descriptor;
+    topic_descriptor.instance_handle = sample_info.instance_handle;
+    topic_descriptor.name = topic_name;
+    topic_descriptor.type = type_name;
+    topic_descriptors.push_back(topic_descriptor);
+  }
+  virtual void remove_information(const DDS_SampleInfo & sample_info)
+  {
+    // find entry by instance handle
+    for (auto it = topic_descriptors.begin(); it != topic_descriptors.end(); ++it) {
+      if (DDS_InstanceHandle_equals(&it->instance_handle, &sample_info.instance_handle)) {
+        // remove entries
+        auto & topic_types = topic_names_and_types[it->name];
+        topic_types.erase(topic_types.find(it->type));
+        if (topic_types.empty()) {
+          topic_names_and_types.erase(it->name);
+        }
+        topic_descriptors.erase(it);
+        break;
+      }
+    }
+  }
+private:
+  struct TopicDescriptor
+  {
+    DDS_InstanceHandle_t instance_handle;
+    std::string name;
+    std::string type;
+  };
+  std::list<TopicDescriptor> topic_descriptors;
+};
+
+class CustomPublisherListener
+  : public CustomDataReaderListener
 {
 public:
   virtual void on_data_available(DDSDataReader * reader)
@@ -88,20 +135,18 @@ public:
 
     for (auto i = 0; i < data_seq.length(); ++i) {
       if (info_seq[i].valid_data) {
-        auto & topic_types = topic_names_and_types[data_seq[i].topic_name];
-        topic_types.push_back(data_seq[i].type_name);
+        add_information(info_seq[i], data_seq[i].topic_name, data_seq[i].type_name);
       } else {
-        // TODO(dirk-thomas) remove related topic name / type
+        remove_information(info_seq[i]);
       }
     }
 
     builtin_reader->return_loan(data_seq, info_seq);
   }
-  std::map<std::string, std::vector<std::string>> topic_names_and_types;
 };
 
 class CustomSubscriberListener
-  : public DDSDataReaderListener
+  : public CustomDataReaderListener
 {
 public:
   virtual void on_data_available(DDSDataReader * reader)
@@ -125,16 +170,14 @@ public:
 
     for (auto i = 0; i < data_seq.length(); ++i) {
       if (info_seq[i].valid_data) {
-        auto & topic_types = topic_names_and_types[data_seq[i].topic_name];
-        topic_types.push_back(data_seq[i].type_name);
+        add_information(info_seq[i], data_seq[i].topic_name, data_seq[i].type_name);
       } else {
-        // TODO(dirk-thomas) remove related topic name / type
+        remove_information(info_seq[i]);
       }
     }
 
     builtin_reader->return_loan(data_seq, info_seq);
   }
-  std::map<std::string, std::vector<std::string>> topic_names_and_types;
 };
 
 struct ConnextStaticNodeInfo
