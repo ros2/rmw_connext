@@ -39,7 +39,9 @@ configure_rmw_library(rmw_connext_dynamic_cpp)
 # Additionally, on Windows, add the ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_BUILDING_DLL definition.
 if(WIN32)
   target_compile_definitions(rmw_connext_dynamic_cpp
-      PRIVATE "ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_BUILDING_DLL")
+    PRIVATE "_CRT_NONSTDC_NO_DEPRECATE")
+  target_compile_definitions(rmw_connext_dynamic_cpp
+    PRIVATE "ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_BUILDING_DLL")
 endif()
 
 if(NOT WIN32)
