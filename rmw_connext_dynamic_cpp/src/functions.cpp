@@ -2490,10 +2490,10 @@ rmw_wait(
       RMW_SET_ERROR_MSG("read condition handle is null");
       return RMW_RET_ERROR;
     }
-    rmw_ret_t status = check_attach_condition_error(
+    rmw_ret_t rmw_status = check_attach_condition_error(
       waitset.attach_condition(read_condition));
-    if (status != RMW_RET_OK) {
-      return status;
+    if (rmw_status != RMW_RET_OK) {
+      return rmw_status;
     }
   }
 
@@ -2505,10 +2505,10 @@ rmw_wait(
       RMW_SET_ERROR_MSG("guard condition handle is null");
       return RMW_RET_ERROR;
     }
-    rmw_ret_t status = check_attach_condition_error(
+    rmw_ret_t rmw_status = check_attach_condition_error(
       waitset.attach_condition(guard_condition));
-    if (status != RMW_RET_OK) {
-      return status;
+    if (rmw_status != RMW_RET_OK) {
+      return rmw_status;
     }
   }
 
@@ -2535,10 +2535,10 @@ rmw_wait(
       RMW_SET_ERROR_MSG("failed to set enabled statuses");
       return RMW_RET_ERROR;
     }
-    rmw_ret_t status = check_attach_condition_error(
+    rmw_ret_t rmw_status = check_attach_condition_error(
       waitset.attach_condition(condition));
-    if (status != RMW_RET_OK) {
-      return status;
+    if (rmw_status != RMW_RET_OK) {
+      return rmw_status;
     }
   }
 
@@ -2565,10 +2565,10 @@ rmw_wait(
       RMW_SET_ERROR_MSG("failed to set enabled statuses");
       return RMW_RET_ERROR;
     }
-    rmw_ret_t status = check_attach_condition_error(
+    rmw_ret_t rmw_status = check_attach_condition_error(
       waitset.attach_condition(condition));
-    if (status != RMW_RET_OK) {
-      return status;
+    if (rmw_status != RMW_RET_OK) {
+      return rmw_status;
     }
   }
 
