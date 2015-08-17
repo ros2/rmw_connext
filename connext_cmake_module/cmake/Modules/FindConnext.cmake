@@ -259,7 +259,8 @@ if(Connext_DDSGEN_SERVER)
   # check that the generator is invocable / finds a Java runtime environment
   execute_process(
     COMMAND "/usr/bin/rtiddsgen_server"
-    RESULT_VARIABLE _retcode)
+    RESULT_VARIABLE _retcode
+    OUTPUT_QUIET ERROR_QUIET)
   if(NOT _retcode EQUAL 0)
     set(Connext_DDSGEN_SERVER)
   endif()
