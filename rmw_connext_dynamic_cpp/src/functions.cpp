@@ -79,6 +79,7 @@ class CustomDataReaderListener
 {
 public:
   std::map<std::string, std::multiset<std::string>> topic_names_and_types;
+
 protected:
   virtual void add_information(
     const DDS_SampleInfo & sample_info,
@@ -111,6 +112,7 @@ protected:
       }
     }
   }
+
 private:
   struct TopicDescriptor
   {
