@@ -1,7 +1,7 @@
 set "Connext_HOME=@Connext_HOME@"
 
 :: Call RTI's env setup script, piping stdout to nul, since they have echo on.
-call "%Connext_HOME:/=\%\..\rti_set_env_5.1.0.bat" 1> nul
+call "%Connext_HOME:/=\%\..\rtisetenv_x64Win64VS2015.bat" 1> nul
 
 :: Add the Connext_LIBRARY_DIR to the Path so .dll's can be found at runtime.
 set "Connext_LIBRARY_DIR=@Connext_LIBRARY_DIR@"
