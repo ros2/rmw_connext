@@ -47,6 +47,11 @@
 
 set(Connext_FOUND FALSE)
 
+set (_lib_postfix "")
+if (CMAKE_BUILD_TYPE_INIT STREQUAL "Debug")
+    set(_lib_postfix "d")
+endif()
+
 # check if all libraries with an expected name have been found
 function(_find_connext_ensure_libraries var expected_library_names library_paths)
   foreach(expected_library_name ${expected_library_names})
@@ -67,10 +72,10 @@ function(_find_connext_ensure_libraries var expected_library_names library_paths
 endfunction()
 
 set(_expected_library_base_names
-  "nddsc"
-  "nddscore"
-  "nddscpp"
-  "rticonnextmsgcpp"
+  "nddsc${_lib_postfix}"
+  "nddscore${_lib_postfix}"
+  "nddscpp${_lib_postfix}"
+  "rticonnextmsgcpp${_lib_postfix}"
 )
 
 set(_expected_library_names "")
@@ -107,7 +112,6 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
 
   # remove libraries from non-matching platforms
   set(_i 0)
-  set(_matched_VS2015 FALSE)
   while(TRUE)
     list(LENGTH _libs _length)
     if(NOT ${_i} LESS ${_length})
@@ -153,7 +157,6 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
       string(FIND "${_lib}" "VS2015/" _found)
       if(NOT ${_found} EQUAL -1)
         set(_match TRUE)
-        set(_matched_VS2015 TRUE)
       endif()
       string(FIND "${_lib}" "VS2013/" _found)
       if(NOT ${_found} EQUAL -1)
@@ -167,27 +170,6 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
       list(REMOVE_AT _libs ${_i})
     endif()
   endwhile()
-
-  if(_matched_VS2015)
-    set(_i 0)
-    while(TRUE)
-      list(LENGTH _libs _length)
-      if(NOT ${_i} LESS ${_length})
-        break()
-      endif()
-      list(GET _libs ${_i} _lib)
-      set(_match TRUE)
-      string(FIND "${_lib}" "VS2015" _found)
-      if(NOT ${_found} EQUAL -1)
-        set(_match FALSE)
-      endif()
-      if(_match)
-        math(EXPR _i "${_i} + 1")
-      else()
-        list(REMOVE_AT _libs ${_i})
-      endif()
-    endwhile()
-  endif()
 
   _find_connext_ensure_libraries(_found_all_libraries "${_expected_library_names}" "${_libs}")
   if(NOT _found_all_libraries)
