@@ -895,7 +895,7 @@ rmw_create_publisher(
   }
 
   if (qos_profile.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
-    datawriter_qos.history.depth = qos_profile.depth;
+    datawriter_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
   }
 
   // ensure the history depth is at least the requested queue size
@@ -1704,7 +1704,7 @@ rmw_create_subscription(
   }
 
   if (qos_profile.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
-    datareader_qos.history.depth = qos_profile.depth;
+    datareader_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
   }
 
   // ensure the history depth is at least the requested queue size
