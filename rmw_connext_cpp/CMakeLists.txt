@@ -17,20 +17,23 @@ if(NOT Connext_FOUND)
 endif()
 
 find_package(rmw REQUIRED)
+find_package(rmw_connext_shared_cpp REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 find_package(rosidl_typesupport_connext_cpp REQUIRED)
 
-ament_export_definitions(${Connext_DEFINITIONS})
-ament_export_dependencies(rmw rosidl_generator_cpp rosidl_typesupport_connext_cpp)
-ament_export_include_directories("${Connext_INCLUDE_DIRS}")
+ament_export_dependencies(
+  rmw rmw_connext_shared_cpp
+  rosidl_generator_cpp
+  rosidl_typesupport_connext_cpp)
 
-link_directories(${Connext_LIBRARY_DIRS})
 add_library(rmw_connext_cpp SHARED src/functions.cpp)
 ament_target_dependencies(rmw_connext_cpp
   "rmw"
+  "rmw_connext_shared_cpp"
   "rosidl_generator_cpp"
   "rosidl_typesupport_connext_cpp"
   "Connext")
+ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
 # On Windows this adds the RMW_BUILDING_DLL definition.
 # On Unix (GCC or Clang) it hides the symbols with -fvisibility=hidden.
 configure_rmw_library(rmw_connext_cpp)
@@ -39,10 +42,9 @@ if(WIN32)
   target_compile_definitions(rmw_connext_cpp
     PRIVATE "_CRT_NONSTDC_NO_DEPRECATE")
   target_compile_definitions(rmw_connext_cpp
-    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
+    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL"
+            "RMW_CONNEXT_SHARED_BUILDING_DLL")
 endif()
-
-ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
 
 register_rmw_implementation("rosidl_typesupport_connext_cpp")
 
