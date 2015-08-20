@@ -42,7 +42,7 @@ if(WIN32)
     PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
 endif()
 
-ament_export_libraries(rmw_connext_cpp "${Connext_LIBRARIES}")
+ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
 
 register_rmw_implementation("rosidl_typesupport_connext_cpp")
 
