@@ -996,22 +996,22 @@ fail:
       }
     }
     if (ddts) {
-      // Cannot unregister type here, in case another topic is using the same type.
+      // TODO Cannot unregister and free type here, in case another topic is using the same type.
       // Should be cleaned up when the node is destroyed.
       // If we figure out a way to unregister types when they are not being used, then we can
       // add this code back in:
       /*
-         if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
-         std::stringstream ss;
-         ss << "failed to unregister type during handling of failure at " <<
+      if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "failed to unregister type during handling of failure at " <<
           __FILE__ << ":" << __LINE__ << '\n';
-         (std::cerr << ss.str()).flush();
-         }
-       */
+        (std::cerr << ss.str()).flush();
+      }
       // Call destructor directly since we used a placement new to construct it.
       RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
         ddts->~DDSDynamicDataTypeSupport(), DDSDynamicDataTypeSupport)
       rmw_free(ddts);
+      */
     }
   } else if (dds_publisher || ddts) {
     std::stringstream ss;
@@ -1075,25 +1075,25 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   if (custom_publisher_info) {
     DDSDynamicDataTypeSupport * ddts = custom_publisher_info->dynamic_data_type_support_;
     if (ddts) {
-      std::string type_name = _create_type_name(custom_publisher_info->members_, "msg");
-      // Cannot unregister type here, in case another topic is using the same type.
-      // Should be cleaned up when the node is destroyed.
-      // If we figure out a way to unregister types when they are not being used, then we can
-      // add this code back in:
-      /*
-         if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
-         RMW_SET_ERROR_MSG(("failed to unregister type: " + type_name).c_str());
-         return RMW_RET_ERROR;
-         }
-       */
       if (custom_publisher_info->dynamic_data) {
         if (ddts->delete_data(custom_publisher_info->dynamic_data) != DDS_RETCODE_OK) {
           RMW_SET_ERROR_MSG("failed to delete dynamic data");
           return RMW_RET_ERROR;
         }
+        custom_publisher_info->dynamic_data = nullptr;
       }
-      custom_publisher_info->dynamic_data = nullptr;
+      std::string type_name = _create_type_name(custom_publisher_info->members_, "msg");
+      // TODO Cannot unregister and free type here, in case another topic is using the same type.
+      // Should be cleaned up when the node is destroyed.
+      // If we figure out a way to unregister types when they are not being used, then we can
+      // add this code back in:
+      /*
+      if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
+        RMW_SET_ERROR_MSG(("failed to unregister type: " + type_name).c_str());
+        return RMW_RET_ERROR;
+      }
       rmw_free(ddts);
+      */
     }
     custom_publisher_info->dynamic_data_type_support_ = nullptr;
     DDSPublisher * dds_publisher = custom_publisher_info->dds_publisher_;
@@ -1821,22 +1821,22 @@ fail:
       }
     }
     if (ddts) {
-      // Cannot unregister type here, in case another topic is using the same type.
+      // TODO Cannot unregister and free type here, in case another topic is using the same type.
       // Should be cleaned up when the node is destroyed.
       // If we figure out a way to unregister types when they are not being used, then we can
       // add this code back in:
       /*
-         if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
-         std::stringstream ss;
-         ss << "failed to unregister type during handling of failure at " <<
+      if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
+        std::stringstream ss;
+        ss << "failed to unregister type during handling of failure at " <<
           __FILE__ << ":" << __LINE__ << '\n';
-         (std::cerr << ss.str()).flush();
-         }
-       */
+        (std::cerr << ss.str()).flush();
+      }
       // Call destructor directly since we used a placement new to construct it.
       RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
         ddts->~DDSDynamicDataTypeSupport(), DDSDynamicDataTypeSupport)
       rmw_free(ddts);
+      */
     }
   } else if (dds_subscriber || ddts) {
     std::stringstream ss;
@@ -1900,25 +1900,25 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   if (custom_subscription_info) {
     DDSDynamicDataTypeSupport * ddts = custom_subscription_info->dynamic_data_type_support_;
     if (ddts) {
-      std::string type_name = _create_type_name(custom_subscription_info->members_, "msg");
-      // Cannot unregister type here, in case another topic is using the same type.
-      // Should be cleaned up when the node is destroyed.
-      // If we figure out a way to unregister types when they are not being used, then we can
-      // add this code back in:
-      /*
-         if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
-         RMW_SET_ERROR_MSG(("failed to unregister type: " + type_name).c_str());
-         return RMW_RET_ERROR;
-         }
-       */
       if (custom_subscription_info->dynamic_data) {
         if (ddts->delete_data(custom_subscription_info->dynamic_data) != DDS_RETCODE_OK) {
           RMW_SET_ERROR_MSG("failed to delete dynamic data");
           return RMW_RET_ERROR;
         }
+        custom_subscription_info->dynamic_data = nullptr;
       }
-      custom_subscription_info->dynamic_data = nullptr;
+      std::string type_name = _create_type_name(custom_subscription_info->members_, "msg");
+      // TODO Cannot unregister and free type here, in case another topic is using the same type.
+      // Should be cleaned up when the node is destroyed.
+      // If we figure out a way to unregister types when they are not being used, then we can
+      // add this code back in:
+      /*
+      if (ddts->unregister_type(participant, type_name.c_str()) != DDS_RETCODE_OK) {
+        RMW_SET_ERROR_MSG(("failed to unregister type: " + type_name).c_str());
+        return RMW_RET_ERROR;
+      }
       rmw_free(ddts);
+      */
     }
     custom_subscription_info->dynamic_data_type_support_ = nullptr;
     DDSSubscriber * dds_subscriber = custom_subscription_info->dds_subscriber_;
