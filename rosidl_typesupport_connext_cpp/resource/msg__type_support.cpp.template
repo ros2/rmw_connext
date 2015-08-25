@@ -242,7 +242,8 @@ take__@(spec.base_type.type)(
   void * untyped_topic_reader,
   bool ignore_local_publications,
   void * untyped_ros_message,
-  bool * taken)
+  bool * taken,
+  void * sending_publication_handle)
 {
   if (!untyped_topic_reader) {
     throw std::runtime_error("topic reader handle is null");
@@ -296,6 +297,10 @@ take__@(spec.base_type.type)(
         break;
       }
     }
+  }
+  if (sample_info.valid_data && sending_publication_handle) {
+    *static_cast<DDS_InstanceHandle_t *>(sending_publication_handle) =
+      sample_info.publication_handle;
   }
 
   bool success = true;

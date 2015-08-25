@@ -713,6 +713,11 @@ get_datawriter_qos(DDSDomainParticipant * participant, DDS_DataWriterQos & dataw
   return true;
 }
 
+typedef struct CustomPublisherGID
+{
+  DDS_InstanceHandle_t publication_handle;
+} CustomPublisherGID;
+
 struct CustomPublisherInfo
 {
   DDSDynamicDataTypeSupport * dynamic_data_type_support_;
@@ -722,6 +727,7 @@ struct CustomPublisherInfo
   DDS_TypeCode * type_code_;
   const rosidl_typesupport_introspection_cpp::MessageMembers * members_;
   DDS_DynamicData * dynamic_data;
+  rmw_gid_t publisher_gid;
 };
 
 rmw_publisher_t *
@@ -947,6 +953,19 @@ rmw_create_publisher(
   custom_publisher_info->type_code_ = type_code;
   custom_publisher_info->members_ = members;
   custom_publisher_info->dynamic_data = dynamic_data;
+  custom_publisher_info->publisher_gid.implementation_identifier = rti_connext_dynamic_identifier;
+  static_assert(
+    sizeof(CustomPublisherGID) <= RMW_GID_STORAGE_SIZE,
+    "RMW_GID_STORAGE_SIZE insufficient to store the rmw_connext_dynamic_cpp GID implemenation."
+  );
+  // Zero the gid memory before using it.
+  memset(custom_publisher_info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
+  {
+    auto publisher_gid =
+      reinterpret_cast<CustomPublisherGID *>(custom_publisher_info->publisher_gid.data);
+    publisher_gid->publication_handle = topic_writer->get_instance_handle();
+  }
+  custom_publisher_info->publisher_gid.implementation_identifier = rti_connext_dynamic_identifier;
 
   publisher->implementation_identifier = rti_connext_dynamic_identifier;
   publisher->data = custom_publisher_info;
@@ -2323,7 +2342,8 @@ bool _take(DDS_DynamicData * dynamic_data, void * ros_message,
 }
 
 rmw_ret_t
-rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
+_take_impl(const rmw_subscription_t * subscription, void * ros_message, bool * taken,
+  DDS_InstanceHandle_t * sending_publication_handle)
 {
   if (!subscription) {
     RMW_SET_ERROR_MSG("subscription handle is null");
@@ -2409,6 +2429,9 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
       }
     }
   }
+  if (sample_info.valid_data && sending_publication_handle != nullptr) {
+    *sending_publication_handle = sample_info.publication_handle;
+  }
 
   bool success = true;
   if (!ignore_sample) {
@@ -2424,6 +2447,39 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     // error string was set within the function
     return RMW_RET_ERROR;
   }
+
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
+{
+  return _take_impl(subscription, ros_message, taken, nullptr);
+}
+
+rmw_ret_t
+rmw_take_with_info(
+  const rmw_subscription_t * subscription,
+  void * ros_message,
+  bool * taken,
+  rmw_message_info_t * message_info)
+{
+  if (!message_info) {
+    RMW_SET_ERROR_MSG("message info is null");
+    return RMW_RET_ERROR;
+  }
+  DDS_InstanceHandle_t sending_publication_handle;
+  auto ret = _take_impl(subscription, ros_message, taken, &sending_publication_handle);
+  if (ret != RMW_RET_OK) {
+    // Error string is already set.
+    return RMW_RET_ERROR;
+  }
+
+  rmw_gid_t * sender_gid = &message_info->publisher_gid;
+  sender_gid->implementation_identifier = rti_connext_dynamic_identifier;
+  memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
+  auto detail = reinterpret_cast<CustomPublisherGID *>(sender_gid->data);
+  detail->publication_handle = sending_publication_handle;
 
   return RMW_RET_OK;
 }
@@ -3861,6 +3917,75 @@ rmw_count_subscribers(
   } else {
     *count = it->second.size();
   }
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
+{
+  if (!publisher) {
+    RMW_SET_ERROR_MSG("publisher is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher handle,
+    publisher->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+  if (!gid) {
+    RMW_SET_ERROR_MSG("gid is null");
+    return RMW_RET_ERROR;
+  }
+
+  const CustomPublisherInfo * publisher_info =
+    static_cast<const CustomPublisherInfo *>(publisher->data);
+  if (!publisher_info) {
+    RMW_SET_ERROR_MSG("publisher info handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  *gid = publisher_info->publisher_gid;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * result)
+{
+  if (!gid1) {
+    RMW_SET_ERROR_MSG("gid1 is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    gid1,
+    gid1->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+  if (!gid2) {
+    RMW_SET_ERROR_MSG("gid2 is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    gid2,
+    gid2->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_ERROR)
+  if (!result) {
+    RMW_SET_ERROR_MSG("result is null");
+    return RMW_RET_ERROR;
+  }
+  auto detail1 = reinterpret_cast<const CustomPublisherGID *>(gid1->data);
+  if (!detail1) {
+    RMW_SET_ERROR_MSG("gid1 is invalid");
+    return RMW_RET_ERROR;
+  }
+  auto detail2 = reinterpret_cast<const CustomPublisherGID *>(gid2->data);
+  if (!detail2) {
+    RMW_SET_ERROR_MSG("gid2 is invalid");
+    return RMW_RET_ERROR;
+  }
+  auto matches =
+    DDS_InstanceHandle_equals(&detail1->publication_handle, &detail2->publication_handle);
+  *result = (matches == DDS_BOOLEAN_TRUE);
   return RMW_RET_OK;
 }
 
