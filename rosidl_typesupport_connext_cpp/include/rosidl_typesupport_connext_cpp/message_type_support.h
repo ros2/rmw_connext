@@ -27,7 +27,8 @@ typedef struct message_type_support_callbacks_t
   bool (* publish)(void * dds_data_writer, const void * ros_message);
   // Function to take a ROS message from a dds data reader
   bool (* take)(
-    void * dds_data_reader, bool ignore_local_publications, void * ros_message, bool * taken);
+    void * dds_data_reader, bool ignore_local_publications, void * ros_message, bool * taken,
+    void * sending_publication_handle);
 } message_type_support_callbacks_t;
 
 #endif  /* ROSIDL_TYPESUPPORT_CONNEXT_CPP_ROSIDL_TYPESUPPORT_CONNEXT_CPP_MESSAGE_TYPE_SUPPORT_H_ */
