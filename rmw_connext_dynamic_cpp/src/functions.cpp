@@ -414,8 +414,10 @@ rmw_destroy_node(rmw_node_t * node)
   }
   // This unregisters types and destroys topics which were shared between
   // publishers and subscribers and could not be cleaned up in the delete functions.
-  participant->delete_contained_entities();
-
+  if (participant->delete_contained_entities() != DDS::RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to delete contained entities of participant");
+    return RMW_RET_ERROR;
+  }
   DDS_ReturnCode_t ret = dpf_->delete_participant(participant);
   if (ret != DDS_RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to delete participant");
