@@ -18,6 +18,7 @@ endif()
 
 find_package(ament_cmake_python REQUIRED)
 
+ament_export_dependencies(rmw)
 ament_export_dependencies(rosidl_cmake)
 ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rosidl_generator_cpp)
