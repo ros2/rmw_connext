@@ -229,56 +229,9 @@ rmw_create_publisher(
     }
   }
 
-  if (!get_datawriter_qos(participant, datawriter_qos)) {
+  if (!get_datawriter_qos(participant, qos_profile, datawriter_qos)) {
     // error string was set within the function
     goto fail;
-  }
-
-  switch (qos_profile.history) {
-    case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
-      datawriter_qos.history.kind = DDS_KEEP_LAST_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
-      datawriter_qos.history.kind = DDS_KEEP_ALL_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS history policy");
-      goto fail;
-  }
-
-  switch (qos_profile.reliability) {
-    case RMW_QOS_POLICY_BEST_EFFORT:
-      datawriter_qos.reliability.kind = DDS_BEST_EFFORT_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABLE:
-      datawriter_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
-      goto fail;
-  }
-
-  if (qos_profile.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
-    datawriter_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
-  }
-
-  // ensure the history depth is at least the requested queue size
-  assert(datawriter_qos.history.depth >= 0);
-  if (
-    datawriter_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    static_cast<size_t>(datawriter_qos.history.depth) < qos_profile.depth
-  )
-  {
-    if (qos_profile.depth > (std::numeric_limits<DDS_Long>::max)()) {
-      RMW_SET_ERROR_MSG(
-        "failed to set history depth since the requested queue size exceeds the DDS type");
-      goto fail;
-    }
-    datawriter_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
   }
 
   topic_writer = dds_publisher->create_datawriter(
@@ -559,56 +512,9 @@ rmw_create_subscription(const rmw_node_t * node,
     }
   }
 
-  if (!get_datareader_qos(participant, datareader_qos)) {
+  if (!get_datareader_qos(participant, qos_profile, datareader_qos)) {
     // error string was set within the function
     goto fail;
-  }
-
-  switch (qos_profile.history) {
-    case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
-      datareader_qos.history.kind = DDS_KEEP_LAST_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
-      datareader_qos.history.kind = DDS_KEEP_ALL_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS history policy");
-      goto fail;
-  }
-
-  switch (qos_profile.reliability) {
-    case RMW_QOS_POLICY_BEST_EFFORT:
-      datareader_qos.reliability.kind = DDS_BEST_EFFORT_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABLE:
-      datareader_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
-      goto fail;
-  }
-
-  if (qos_profile.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
-    datareader_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
-  }
-
-  // ensure the history depth is at least the requested queue size
-  assert(datareader_qos.history.depth >= 0);
-  if (
-    datareader_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    static_cast<size_t>(datareader_qos.history.depth) < qos_profile.depth
-  )
-  {
-    if (qos_profile.depth > (std::numeric_limits<DDS_Long>::max)()) {
-      RMW_SET_ERROR_MSG(
-        "failed to set history depth since the requested queue size exceeds the DDS type");
-      goto fail;
-    }
-    datareader_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
   }
 
   topic_reader = dds_subscriber->create_datareader(
@@ -872,7 +778,8 @@ rmw_client_t *
 rmw_create_client(
   const rmw_node_t * node,
   const rosidl_service_type_support_t * type_support,
-  const char * service_name)
+  const char * service_name,
+  const rmw_qos_profile_t & qos_profile)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -918,6 +825,7 @@ rmw_create_client(
   void * requester = nullptr;
   void * buf = nullptr;
   ConnextStaticClientInfo * client_info = nullptr;
+
   // Begin inializing elements.
   client = rmw_client_allocate();
   if (!client) {
@@ -925,11 +833,12 @@ rmw_create_client(
     goto fail;
   }
 
-  if (!get_datareader_qos(participant, datareader_qos)) {
+  if (!get_datareader_qos(participant, qos_profile, datareader_qos)) {
     // error string was set within the function
     goto fail;
   }
-  if (!get_datawriter_qos(participant, datawriter_qos)) {
+
+  if (!get_datawriter_qos(participant, qos_profile, datawriter_qos)) {
     // error string was set within the function
     goto fail;
   }
@@ -1051,7 +960,8 @@ rmw_service_t *
 rmw_create_service(
   const rmw_node_t * node,
   const rosidl_service_type_support_t * type_support,
-  const char * service_name)
+  const char * service_name,
+  const rmw_qos_profile_t & qos_profile)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -1089,6 +999,7 @@ rmw_create_service(
     RMW_SET_ERROR_MSG("callbacks handle is null");
     return NULL;
   }
+
   // Past this point, a failure results in unrolling code in the goto fail block.
   DDSDataReader * request_datareader = nullptr;
   DDS_DataReaderQos datareader_qos;
@@ -1104,11 +1015,12 @@ rmw_create_service(
     goto fail;
   }
 
-  if (!get_datareader_qos(participant, datareader_qos)) {
+  if (!get_datareader_qos(participant, qos_profile, datareader_qos)) {
     // error string was set within the function
     goto fail;
   }
-  if (!get_datawriter_qos(participant, datawriter_qos)) {
+
+  if (!get_datawriter_qos(participant, qos_profile, datawriter_qos)) {
     // error string was set within the function
     goto fail;
   }
