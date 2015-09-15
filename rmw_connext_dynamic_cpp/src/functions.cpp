@@ -513,13 +513,13 @@ rmw_create_publisher(
   }
 
   switch (qos_profile.history) {
+    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
+      break;
     case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
       datawriter_qos.history.kind = DDS_KEEP_LAST_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
       datawriter_qos.history.kind = DDS_KEEP_ALL_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
       break;
     default:
       RMW_SET_ERROR_MSG("Unknown QoS history policy");
@@ -527,13 +527,13 @@ rmw_create_publisher(
   }
 
   switch (qos_profile.reliability) {
+    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
+      break;
     case RMW_QOS_POLICY_BEST_EFFORT:
       datawriter_qos.reliability.kind = DDS_BEST_EFFORT_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABLE:
       datawriter_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
       break;
     default:
       RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
@@ -542,6 +542,20 @@ rmw_create_publisher(
 
   if (qos_profile.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
     datawriter_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
+  }
+
+  switch (qos_profile.durability) {
+    case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
+      break;
+    case RMW_QOS_POLICY_DURABILITY_TRANSIENT:
+      datawriter_qos.durability.kind = DDS_TRANSIENT_DURABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_DURABILITY_PERSISTENT:
+      datawriter_qos.durability.kind = DDS_PERSISTENT_DURABILITY_QOS;
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS durability policy");
+      goto fail;
   }
 
   // ensure the history depth is at least the requested queue size
@@ -1322,13 +1336,13 @@ rmw_create_subscription(
   }
 
   switch (qos_profile.history) {
+    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
+      break;
     case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
       datareader_qos.history.kind = DDS_KEEP_LAST_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
       datareader_qos.history.kind = DDS_KEEP_ALL_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
       break;
     default:
       RMW_SET_ERROR_MSG("Unknown QoS history policy");
@@ -1336,13 +1350,13 @@ rmw_create_subscription(
   }
 
   switch (qos_profile.reliability) {
+    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
+      break;
     case RMW_QOS_POLICY_BEST_EFFORT:
       datareader_qos.reliability.kind = DDS_BEST_EFFORT_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABLE:
       datareader_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
       break;
     default:
       RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
@@ -1351,6 +1365,20 @@ rmw_create_subscription(
 
   if (qos_profile.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
     datareader_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
+  }
+
+  switch (qos_profile.durability) {
+    case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
+      break;
+    case RMW_QOS_POLICY_DURABILITY_TRANSIENT:
+      datareader_qos.durability.kind = DDS_TRANSIENT_DURABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_DURABILITY_PERSISTENT:
+      datareader_qos.durability.kind = DDS_PERSISTENT_DURABILITY_QOS;
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS durability policy");
+      goto fail;
   }
 
   // ensure the history depth is at least the requested queue size
