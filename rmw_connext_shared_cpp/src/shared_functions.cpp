@@ -138,7 +138,10 @@ rmw_ret_t check_attach_condition_error(DDS::ReturnCode_t retcode)
 }
 
 bool
-get_datareader_qos(DDSDomainParticipant * participant, DDS_DataReaderQos & datareader_qos)
+get_datareader_qos(
+  DDSDomainParticipant * participant,
+  const rmw_qos_profile_t & qos_profile,
+  DDS_DataReaderQos & datareader_qos)
 {
   DDS_ReturnCode_t status = participant->get_default_datareader_qos(datareader_qos);
   if (status != DDS_RETCODE_OK) {
@@ -165,11 +168,19 @@ get_datareader_qos(DDSDomainParticipant * participant, DDS_DataReaderQos & datar
     RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
   }
+
+  if (!set_entity_qos_from_profile(qos_profile, datareader_qos)) {
+    return false;
+  }
+
   return true;
 }
 
 bool
-get_datawriter_qos(DDSDomainParticipant * participant, DDS_DataWriterQos & datawriter_qos)
+get_datawriter_qos(
+  DDSDomainParticipant * participant,
+  const rmw_qos_profile_t & qos_profile,
+  DDS_DataWriterQos & datawriter_qos)
 {
   DDS_ReturnCode_t status = participant->get_default_datawriter_qos(datawriter_qos);
   if (status != DDS_RETCODE_OK) {
@@ -186,6 +197,11 @@ get_datawriter_qos(DDSDomainParticipant * participant, DDS_DataWriterQos & dataw
     RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
   }
+
+  if (!set_entity_qos_from_profile(qos_profile, datawriter_qos)) {
+    return false;
+  }
+
   return true;
 }
 
