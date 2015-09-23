@@ -97,6 +97,9 @@ bool set_entity_qos_from_profile(const rmw_qos_profile_t & qos_profile,
     case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
       entity_qos.durability.kind = DDS_TRANSIENT_LOCAL_DURABILITY_QOS;
       break;
+    case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+      entity_qos.durability.kind = DDS_VOLATILE_DURABILITY_QOS;
+      break;
     case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
       break;
     default:
