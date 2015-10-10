@@ -93,6 +93,20 @@ bool set_entity_qos_from_profile(const rmw_qos_profile_t & qos_profile,
       return false;
   }
 
+  switch (qos_profile.durability) {
+    case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
+      entity_qos.durability.kind = DDS_TRANSIENT_LOCAL_DURABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+      entity_qos.durability.kind = DDS_VOLATILE_DURABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS durability policy");
+      return false;
+  }
+
   if (qos_profile.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
     entity_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
   }
