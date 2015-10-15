@@ -208,23 +208,13 @@ wait(rmw_subscriptions_t * subscriptions,
       RMW_SET_ERROR_MSG("service info handle is null");
       return RMW_RET_ERROR;
     }
-    DDSDataReader * request_datareader = service_info->request_datareader_;
-    if (!request_datareader) {
-      RMW_SET_ERROR_MSG("request datareader handle is null");
-      return RMW_RET_ERROR;
-    }
-    DDSStatusCondition * condition = request_datareader->get_statuscondition();
-    if (!condition) {
-      RMW_SET_ERROR_MSG("condition handle is null");
-      return RMW_RET_ERROR;
-    }
-    DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to set enabled statuses");
+    DDSReadCondition * read_condition = service_info->read_condition_;
+    if (!read_condition) {
+      RMW_SET_ERROR_MSG("read condition handle is null");
       return RMW_RET_ERROR;
     }
     rmw_ret_t rmw_status = check_attach_condition_error(
-      waitset.attach_condition(condition));
+      waitset.attach_condition(read_condition));
     if (rmw_status != RMW_RET_OK) {
       return rmw_status;
     }
@@ -243,18 +233,14 @@ wait(rmw_subscriptions_t * subscriptions,
       RMW_SET_ERROR_MSG("response datareader handle is null");
       return RMW_RET_ERROR;
     }
-    DDSStatusCondition * condition = response_datareader->get_statuscondition();
-    if (!condition) {
-      RMW_SET_ERROR_MSG("condition handle is null");
-      return RMW_RET_ERROR;
-    }
-    DDS_ReturnCode_t status = condition->set_enabled_statuses(DDS_DATA_AVAILABLE_STATUS);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to set enabled statuses");
+
+    DDSReadCondition * read_condition = client_info->read_condition_;
+    if (!read_condition) {
+      RMW_SET_ERROR_MSG("read condition handle is null");
       return RMW_RET_ERROR;
     }
     rmw_ret_t rmw_status = check_attach_condition_error(
-      waitset.attach_condition(condition));
+      waitset.attach_condition(read_condition));
     if (rmw_status != RMW_RET_OK) {
       return rmw_status;
     }
@@ -345,21 +331,16 @@ wait(rmw_subscriptions_t * subscriptions,
       RMW_SET_ERROR_MSG("service info handle is null");
       return RMW_RET_ERROR;
     }
-    DDSDataReader * request_datareader = service_info->request_datareader_;
-    if (!request_datareader) {
-      RMW_SET_ERROR_MSG("request datareader handle is null");
-      return RMW_RET_ERROR;
-    }
-    DDSStatusCondition * condition = request_datareader->get_statuscondition();
-    if (!condition) {
-      RMW_SET_ERROR_MSG("condition handle is null");
+    DDSReadCondition * read_condition = service_info->read_condition_;
+    if (!read_condition) {
+      RMW_SET_ERROR_MSG("read condition handle is null");
       return RMW_RET_ERROR;
     }
 
     // search for service condition in active set
     DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
-      if (active_conditions[j] == condition) {
+      if (active_conditions[j] == read_condition) {
         break;
       }
     }
@@ -378,21 +359,16 @@ wait(rmw_subscriptions_t * subscriptions,
       RMW_SET_ERROR_MSG("client info handle is null");
       return RMW_RET_ERROR;
     }
-    DDSDataReader * response_datareader = client_info->response_datareader_;
-    if (!response_datareader) {
-      RMW_SET_ERROR_MSG("response datareader handle is null");
-      return RMW_RET_ERROR;
-    }
-    DDSStatusCondition * condition = response_datareader->get_statuscondition();
-    if (!condition) {
-      RMW_SET_ERROR_MSG("condition handle is null");
+    DDSReadCondition * read_condition = client_info->read_condition_;
+    if (!read_condition) {
+      RMW_SET_ERROR_MSG("read condition handle is null");
       return RMW_RET_ERROR;
     }
 
     // search for service condition in active set
     DDS_Long j = 0;
     for (; j < active_conditions.length(); ++j) {
-      if (active_conditions[j] == condition) {
+      if (active_conditions[j] == read_condition) {
         break;
       }
     }
