@@ -12,9 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rmw/allocators.h>
+#include <map>
+#include <set>
+#include <string>
 
-#include <rmw_connext_shared_cpp/shared_functions.hpp>
+#include "rmw/allocators.h"
+
+#include "rmw_connext_shared_cpp/shared_functions.hpp"
 
 void CustomDataReaderListener::add_information(
   const DDS_SampleInfo & sample_info,
@@ -490,7 +494,7 @@ destroy_guard_condition(const char * implementation_identifier,
 
   auto result = RMW_RET_OK;
   RMW_TRY_DESTRUCTOR(
-    ((DDSGuardCondition *)guard_condition->data)->~DDSGuardCondition(),
+    static_cast<DDSGuardCondition *>(guard_condition->data)->~DDSGuardCondition(),
     DDSGuardCondition, result = RMW_RET_ERROR)
   rmw_guard_condition_free(guard_condition);
   return result;

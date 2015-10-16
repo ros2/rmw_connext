@@ -37,19 +37,19 @@
 # pragma GCC diagnostic pop
 #endif
 
-#include <rmw/rmw.h>
-#include <rmw/allocators.h>
-#include <rmw/error_handling.h>
-#include <rmw/types.h>
+#include "rmw/rmw.h"
+#include "rmw/allocators.h"
+#include "rmw/error_handling.h"
+#include "rmw/types.h"
 
-#include <rmw/impl/cpp/macros.hpp>
+#include "rmw/impl/cpp/macros.hpp"
 
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
-#include <rosidl_typesupport_connext_cpp/message_type_support.h>
-#include <rosidl_typesupport_connext_cpp/service_type_support.h>
+#include "rosidl_typesupport_connext_cpp/message_type_support.h"
+#include "rosidl_typesupport_connext_cpp/service_type_support.h"
 
-#include <rmw_connext_shared_cpp/shared_functions.hpp>
-#include <rmw_connext_shared_cpp/types.hpp>
+#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 inline std::string
 _create_type_name(
@@ -63,7 +63,6 @@ _create_type_name(
 
 extern "C"
 {
-
 const char * rti_connext_identifier = "connext_static";
 
 
@@ -336,7 +335,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     return RMW_RET_ERROR;
   }
   // TODO(wjwwood): need to figure out when to unregister types with the participant.
-  ConnextStaticPublisherInfo * publisher_info = (ConnextStaticPublisherInfo *)publisher->data;
+  ConnextStaticPublisherInfo * publisher_info =
+    static_cast<ConnextStaticPublisherInfo *>(publisher->data);
   if (publisher_info) {
     DDSPublisher * dds_publisher = publisher_info->dds_publisher_;
     if (dds_publisher) {
@@ -626,7 +626,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   // TODO(wjwwood): need to figure out when to unregister types with the participant.
   auto result = RMW_RET_OK;
   ConnextStaticSubscriberInfo * subscriber_info =
-    (ConnextStaticSubscriberInfo *)subscription->data;
+    static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
   if (subscriber_info) {
     auto dds_subscriber = subscriber_info->dds_subscriber_;
     if (dds_subscriber) {
@@ -1428,5 +1428,4 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
   *result = (matches == DDS_BOOLEAN_TRUE);
   return RMW_RET_OK;
 }
-
-}
+}  // extern "C"

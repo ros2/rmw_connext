@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP_ROSIDL_TYPESUPPORT_CONNEXT_CPP_MESSAGE_TYPE_SUPPORT_H_
-#define ROSIDL_TYPESUPPORT_CONNEXT_CPP_ROSIDL_TYPESUPPORT_CONNEXT_CPP_MESSAGE_TYPE_SUPPORT_H_
+#ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP__MESSAGE_TYPE_SUPPORT_H_
+#define ROSIDL_TYPESUPPORT_CONNEXT_CPP__MESSAGE_TYPE_SUPPORT_H_
 
 #include "rosidl_generator_c/message_type_support.h"
 
@@ -31,4 +31,4 @@ typedef struct message_type_support_callbacks_t
     void * sending_publication_handle);
 } message_type_support_callbacks_t;
 
-#endif  /* ROSIDL_TYPESUPPORT_CONNEXT_CPP_ROSIDL_TYPESUPPORT_CONNEXT_CPP_MESSAGE_TYPE_SUPPORT_H_ */
+#endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__MESSAGE_TYPE_SUPPORT_H_
