@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP_IDENTIFIER_HPP_
-#define ROSIDL_TYPESUPPORT_CONNEXT_CPP_IDENTIFIER_HPP_
+#ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP__IDENTIFIER_HPP_
+#define ROSIDL_TYPESUPPORT_CONNEXT_CPP__IDENTIFIER_HPP_
 
 #include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
@@ -25,4 +25,4 @@ extern const char * typesupport_connext_identifier;
 
 }  // namespace rosidl_typesupport_connext_cpp
 
-#endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP_IDENTIFIER_HPP_
+#endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__IDENTIFIER_HPP_

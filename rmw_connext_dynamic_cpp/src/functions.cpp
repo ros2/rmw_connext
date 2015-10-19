@@ -40,15 +40,15 @@
 # pragma GCC diagnostic pop
 #endif
 
-#include <rmw/allocators.h>
-#include <rmw/error_handling.h>
-#include <rmw/rmw.h>
-#include <rmw/types.h>
+#include "rmw/allocators.h"
+#include "rmw/error_handling.h"
+#include "rmw/rmw.h"
+#include "rmw/types.h"
 // This header is in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder.
-#include <rosidl_generator_cpp/message_type_support.hpp>
+#include "rosidl_generator_cpp/message_type_support.hpp"
 
-#include <rmw/impl/cpp/macros.hpp>
+#include "rmw/impl/cpp/macros.hpp"
 
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
@@ -56,8 +56,8 @@
 #include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
 #include "rosidl_typesupport_introspection_cpp/visibility_control.h"
 
-#include <rmw_connext_shared_cpp/shared_functions.hpp>
-#include <rmw_connext_shared_cpp/types.hpp>
+#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
 inline std::string
@@ -73,7 +73,6 @@ _create_type_name(
 // place, overloading produces an error rather than a new C++ symbol.
 extern "C"
 {
-
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
 const char * rti_connext_dynamic_identifier = "connext_dynamic";
 
@@ -828,7 +827,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       if (member->array_size_ && !member->is_upper_bound_) { \
         array_size = member->array_size_; \
         auto ros_values = \
-          reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
+          reinterpret_cast<const TYPE *>( \
+          static_cast<const char *>(ros_message) + member->offset_); \
         values = static_cast<DDS_TYPE *>(rmw_allocate(sizeof(DDS_TYPE) * array_size)); \
         if (!values) { \
           RMW_SET_ERROR_MSG("failed to allocate memory"); \
@@ -1615,7 +1615,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         RMW_SET_ERROR_MSG("failed to get primitive value using " #METHOD_NAME); \
         return false; \
       } \
-      auto ros_value = reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
+      auto ros_value = \
+        reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
       *ros_value = value; \
     } \
   }
@@ -1668,7 +1669,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         RMW_SET_ERROR_MSG("failed to get primitive value using " #METHOD_NAME); \
         return false; \
       } \
-      auto ros_value = reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
+      auto ros_value = \
+        reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
       *ros_value = value == DDS_BOOLEAN_TRUE; \
     } \
   }
@@ -1733,7 +1735,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         RMW_SET_ERROR_MSG("failed to get primitive value using " #METHOD_NAME); \
         return false; \
       } \
-      auto ros_value = reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
+      auto ros_value = \
+        reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
       *ros_value = value; \
       if (value) { \
         delete[] value; \
@@ -3059,5 +3062,4 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
   *result = (matches == DDS_BOOLEAN_TRUE);
   return RMW_RET_OK;
 }
-
 }  // extern "C"

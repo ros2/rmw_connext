@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__TYPES__CPP
-#define RMW_CONNEXT_SHARED_CPP__TYPES__CPP
+#ifndef RMW_CONNEXT_SHARED_CPP__TYPES_HPP_
+#define RMW_CONNEXT_SHARED_CPP__TYPES_HPP_
 
 #include <cassert>
 #include <exception>
@@ -40,7 +40,7 @@
 # pragma GCC diagnostic pop
 #endif
 
-#include <rmw/rmw.h>
+#include "rmw/rmw.h"
 
 class CustomDataReaderListener
   : public DDSDataReaderListener
@@ -92,4 +92,4 @@ struct ConnextPublisherGID
   DDS_InstanceHandle_t publication_handle;
 };
 
-#endif
+#endif  // RMW_CONNEXT_SHARED_CPP__TYPES_HPP_

@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS__CPP
-#define RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS__CPP
+#ifndef RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+#define RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
 
+#include <limits>
 #include <list>
 #include <map>
 #include <set>
@@ -36,13 +37,13 @@
 # pragma GCC diagnostic pop
 #endif
 
-#include <rmw/rmw.h>
-#include <rmw/types.h>
+#include "rmw/rmw.h"
+#include "rmw/types.h"
 
-#include <rmw/impl/cpp/macros.hpp>
+#include "rmw/impl/cpp/macros.hpp"
 
-#include <rmw_connext_shared_cpp/visibility_control.h>
-#include <rmw_connext_shared_cpp/types.hpp>
+#include "rmw_connext_shared_cpp/visibility_control.h"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t init();
@@ -402,4 +403,4 @@ count_subscribers(const char * implementation_identifier,
   const char * topic_name,
   size_t * count);
 
-#endif
+#endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_

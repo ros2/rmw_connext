@@ -15,8 +15,8 @@
 // This header contains the connext specific implementation
 // of the <rosidl_generator_cpp/message_type_support_decl.hpp> header.
 
-#ifndef __rosidl_generator_cpp__message_type_support__hpp__
-#define __rosidl_generator_cpp__message_type_support__hpp__
+#ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP__IMPL__ROSIDL_GENERATOR_CPP__MESSAGE_TYPE_SUPPORT_HPP_
+#define ROSIDL_TYPESUPPORT_CONNEXT_CPP__IMPL__ROSIDL_GENERATOR_CPP__MESSAGE_TYPE_SUPPORT_HPP_
 
 // Provides the definition of the rosidl_message_type_support_t struct.
 #include <rosidl_generator_c/message_type_support.h>
@@ -54,4 +54,4 @@ const rosidl_message_type_support_t * get_message_type_support_handle()
 
 }  // namespace rosidl_generator_cpp
 
-#endif  // __rosidl_generator_cpp__message_type_support__hpp__
+#endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__IMPL__ROSIDL_GENERATOR_CPP__MESSAGE_TYPE_SUPPORT_HPP_
