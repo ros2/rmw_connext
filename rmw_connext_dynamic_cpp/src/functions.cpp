@@ -610,7 +610,8 @@ fail:
       }
     }
     if (ddts) {
-      // TODO Cannot unregister and free type here, in case another topic is using the same type.
+      // TODO(wjwwood) Cannot unregister and free type here, in case another topic is using the
+      // same type.
       // Should be cleaned up when the node is destroyed.
       // If we figure out a way to unregister types when they are not being used, then we can
       // add this code back in:
@@ -697,7 +698,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         custom_publisher_info->dynamic_data = nullptr;
       }
       std::string type_name = _create_type_name(custom_publisher_info->members_, "msg");
-      // TODO Cannot unregister and free type here, in case another topic is using the same type.
+      // TODO(wjwwood) Cannot unregister and free type here, in case another topic is using the
+      // same type.
       // Should be cleaned up when the node is destroyed.
       // If we figure out a way to unregister types when they are not being used, then we can
       // add this code back in:
@@ -1378,7 +1380,8 @@ fail:
       }
     }
     if (ddts) {
-      // TODO Cannot unregister and free type here, in case another topic is using the same type.
+      // TODO(wjwwood) Cannot unregister and free type here, in case another topic is using the
+      // same type.
       // Should be cleaned up when the node is destroyed.
       // If we figure out a way to unregister types when they are not being used, then we can
       // add this code back in:
@@ -1465,7 +1468,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         custom_subscription_info->dynamic_data = nullptr;
       }
       std::string type_name = _create_type_name(custom_subscription_info->members_, "msg");
-      // TODO Cannot unregister and free type here, in case another topic is using the same type.
+      // TODO(wjwwood) Cannot unregister and free type here, in case another topic is using the
+      // same type.
       // Should be cleaned up when the node is destroyed.
       // If we figure out a way to unregister types when they are not being used, then we can
       // add this code back in:
