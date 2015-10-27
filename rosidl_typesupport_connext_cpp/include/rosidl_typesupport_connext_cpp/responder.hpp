@@ -175,9 +175,13 @@ fail:
   noexcept
   {
     response.sequence_number_ = request_header.sequence_number;
-    response.client_guid_0_ = *(reinterpret_cast<const uint64_t *>(&request_header.writer_guid[0]));
-    response.client_guid_1_ = *(reinterpret_cast<const uint64_t *>(
+    response.client_guid_0_ = *(reinterpret_cast<const int32_t *>(&request_header.writer_guid[0]));
+    response.client_guid_1_ = *(reinterpret_cast<const int32_t *>(
         &request_header.writer_guid[0] + sizeof(response.client_guid_0_)));
+    response.client_guid_2_ = *(reinterpret_cast<const int32_t *>(
+        &request_header.writer_guid[0] + 2 * sizeof(response.client_guid_0_)));
+    response.client_guid_3_ = *(reinterpret_cast<const int32_t *>(
+        &request_header.writer_guid[0] + 3 * sizeof(response.client_guid_0_)));
 
     return TemplateDataWriter<Sample<ResponseT>>::write_sample(response_datawriter_, response);
   }

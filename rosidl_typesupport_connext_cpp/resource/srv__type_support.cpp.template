@@ -455,9 +455,13 @@ take_request__@(spec.srv_name)(
     @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_dds_message_to_ros(request.data(), *ros_request);
 
     request_header->sequence_number = request.sequence_number_;
-    *(reinterpret_cast<uint64_t *>(&request_header->writer_guid[0])) = request.client_guid_0_;
-    *(reinterpret_cast<uint64_t *>(
+    *(reinterpret_cast<int32_t *>(&request_header->writer_guid[0])) = request.client_guid_0_;
+    *(reinterpret_cast<int32_t *>(
       &request_header->writer_guid[0] + sizeof(request.client_guid_0_))) = request.client_guid_1_;
+    *(reinterpret_cast<int32_t *>(
+      &request_header->writer_guid[0] + 2 * sizeof(request.client_guid_0_))) = request.client_guid_2_;
+    *(reinterpret_cast<int32_t *>(
+      &request_header->writer_guid[0] + 3 * sizeof(request.client_guid_0_))) = request.client_guid_3_;
 
     *taken = true;
     return nullptr;
