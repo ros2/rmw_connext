@@ -17,30 +17,220 @@
 #  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 # endif
 #endif
-#include <ndds/connext_cpp/connext_cpp_requester_details.h>
 #include <ndds/ndds_cpp.h>
-#include <ndds/ndds_requestreply_cpp.h>
 #ifndef _WIN32
 # pragma GCC diagnostic pop
 #endif
 
-#include <rmw/rmw.h>
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
+#include <rosidl_generator_cpp/message_type_support.hpp>
 #include <rosidl_generator_cpp/service_type_support.hpp>
+#include <rosidl_typesupport_connext_cpp/visibility_control.h>
+#include <rmw/rmw.h>
+
+@{header_file_name = get_header_filename_from_msg_name(spec.srv_name)}@
+#include "@(spec.pkg_name)/srv/@(header_file_name)__struct.hpp"
+@{req_header_file_name = get_header_filename_from_msg_name(spec.srv_name + '_Request')}@
+@{res_header_file_name = get_header_filename_from_msg_name(spec.srv_name + '_Response')}@
+#include "@(spec.pkg_name)/srv/dds_connext/@(req_header_file_name)__type_support.hpp"
+#include "@(spec.pkg_name)/srv/dds_connext/@(res_header_file_name)__type_support.hpp"
+#include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_.h"
+#include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Response_.h"
+#include "@(spec.pkg_name)/srv/dds_connext/Sample_@(spec.srv_name)_Request_.h"
+#include "@(spec.pkg_name)/srv/dds_connext/Sample_@(spec.srv_name)_Request_Support.h"
+#include "@(spec.pkg_name)/srv/dds_connext/Sample_@(spec.srv_name)_Response_.h"
+#include "@(spec.pkg_name)/srv/dds_connext/Sample_@(spec.srv_name)_Response_Support.h"
+
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
-#include <rosidl_typesupport_connext_cpp/visibility_control.h>
+#include "rosidl_typesupport_connext_cpp/requester.hpp"
+#include "rosidl_typesupport_connext_cpp/responder.hpp"
 
-#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__struct.hpp"
-#include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_Support.h"
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__type_support.hpp"
-#include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Response_Support.h"
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Response'))__type_support.hpp"
+@{
+# Same as @(spec.pkg_name)::srv::dds_::@(spec.srv_name)
+__dds_msg_type_prefix = "{spec.pkg_name}::srv::dds_::{spec.srv_name}".format(spec=spec)
+# Same as @(spec.pkg_name)::srv::dds_::Sample_@(spec.srv_name)
+__dds_sample_type_prefix = "{spec.pkg_name}::srv::dds_::Sample_{spec.srv_name}".format(spec=spec)
+}@
 
 class DDSDomainParticipant;
 class DDSDataReader;
 struct DDS_SampleIdentity_t;
+
+namespace rosidl_typesupport_connext_cpp
+{
+
+@[for suffix in ['_Request', '_Response']]
+template <>
+class Sample<@(__dds_msg_type_prefix)@(suffix)_> :
+public @(__dds_sample_type_prefix)@(suffix)_
+{
+public:
+
+  @(__dds_msg_type_prefix)@(suffix)_ & data() {
+    @[if suffix == '_Request']
+    return request_;
+    @[else]
+    return response_;
+    @[end if]
+  }
+
+  operator @(__dds_msg_type_prefix)@(suffix)_() {
+    return reinterpret_cast<@(__dds_msg_type_prefix)@(suffix)_ &>(*this);
+  }
+};
+
+
+template <>
+class TemplateDataReader<@(__dds_sample_type_prefix)@(suffix)_>
+{
+public:
+
+  static const char * take_sample(
+    DDSDataReader* datareader,
+    Sample<@(__dds_msg_type_prefix)@(suffix)_> & sample,
+    bool * taken)
+  noexcept
+  {
+
+    @(__dds_sample_type_prefix)@(suffix)_DataReader * typed_datareader =
+      @(__dds_sample_type_prefix)@(suffix)_DataReader::narrow(datareader);
+
+    @(__dds_sample_type_prefix)@(suffix)_Seq dds_messages;
+    DDS_SampleInfoSeq sample_infos;
+    DDS_ReturnCode_t status = typed_datareader->take(
+      dds_messages,
+      sample_infos,
+      1,
+      DDS_ANY_SAMPLE_STATE,
+      DDS_ANY_VIEW_STATE,
+      DDS_ALIVE_INSTANCE_STATE);
+
+    switch (status) {
+      case DDS_RETCODE_ERROR:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataReader.take failed with: "
+               "an internal error has occurred";
+      case DDS_RETCODE_ALREADY_DELETED:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataReader.take failed with: "
+               "this @(__dds_sample_type_prefix)@(suffix)_DataReader has already been deleted";
+      case DDS_RETCODE_OUT_OF_RESOURCES:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataReader.take failed with: "
+               "out of resources";
+      case DDS_RETCODE_NOT_ENABLED:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataReader.take failed with: "
+               "this @(__dds_sample_type_prefix)@(suffix)_DataReader is not enabled";
+      case DDS_RETCODE_PRECONDITION_NOT_MET:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataReader.take failed with: "
+               "a precondition is not met, one of: "
+               "max_samples > maximum and max_samples != LENGTH_UNLIMITED, or "
+               "the two sequences do not have matching parameters (length, maximum, release), or "
+               "maximum > 0 and release is false.";
+      case DDS_RETCODE_NO_DATA:
+        *taken = false;
+        return nullptr;
+      case DDS_RETCODE_OK:
+        break;
+      default:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataReader.take failed with "
+               "unknown return code";
+    }
+
+    if (sample_infos.length() > 0 && sample_infos[0].valid_data) {
+      sample = reinterpret_cast<Sample<@(__dds_msg_type_prefix)@(suffix)_> &>(dds_messages[0]);
+      status = typed_datareader->return_loan(dds_messages, sample_infos);
+      switch (status) {
+        case DDS_RETCODE_ERROR:
+          return "@(__dds_sample_type_prefix)@(suffix)_DataReader.return_loan failed with: "
+                 "an internal error has occurred";
+        case DDS_RETCODE_ALREADY_DELETED:
+          return "@(__dds_sample_type_prefix)@(suffix)_DataReader.return_loan failed with: "
+                 "this @(__dds_sample_type_prefix)@(suffix)_DataReader has already been deleted";
+        case DDS_RETCODE_OUT_OF_RESOURCES:
+          return "@(__dds_sample_type_prefix)@(suffix)_DataReader.return_loan failed with: "
+                 "out of resources";
+        case DDS_RETCODE_NOT_ENABLED:
+          return "@(__dds_sample_type_prefix)@(suffix)_DataReader.return_loan failed with: "
+                 "this @(__dds_sample_type_prefix)@(suffix)_DataReader is not enabled";
+        case DDS_RETCODE_PRECONDITION_NOT_MET:
+          return "@(__dds_sample_type_prefix)@(suffix)_DataReader.return_loan failed with: "
+                 "a precondition is not met, one of: "
+                 "the data_values and info_seq do not belong to a single related pair, or "
+                 "the data_values and info_seq were not obtained from this "
+                 "@(__dds_sample_type_prefix)@(suffix)_DataReader";
+        case DDS_RETCODE_OK:
+          *taken = true;
+          return nullptr;
+        default:
+          return "@(__dds_sample_type_prefix)@(suffix)_DataReader.return_loan failed with "
+                 "unknown return code";
+      }
+    }
+
+    *taken = false;
+    return nullptr;
+  }
+};
+
+template <>
+class TemplateDataReader<Sample<@(__dds_msg_type_prefix)@(suffix)_>>
+: public TemplateDataReader<@(__dds_sample_type_prefix)@(suffix)_>
+{};
+
+template <>
+class TemplateDataWriter<@(__dds_sample_type_prefix)@(suffix)_>
+{
+public:
+
+  static const char * write_sample(
+    DDSDataWriter* datawriter,
+    Sample<@(__dds_msg_type_prefix)@(suffix)_>& sample)
+  noexcept
+  {
+    @(__dds_sample_type_prefix)@(suffix)_DataWriter* typed_datawriter =
+      @(__dds_sample_type_prefix)@(suffix)_DataWriter::narrow(datawriter);
+
+    DDS_ReturnCode_t status = typed_datawriter->write(sample, DDS_HANDLE_NIL);
+    switch (status) {
+      case DDS_RETCODE_ERROR:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataWriter.write: "
+               "an internal error has occurred";
+      case DDS_RETCODE_BAD_PARAMETER:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataWriter.write: "
+               "bad handle or instance_data parameter";
+      case DDS_RETCODE_ALREADY_DELETED:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataWriter.write: "
+               "this @(__dds_sample_type_prefix)@(suffix)_DataWriter has already been deleted";
+      case DDS_RETCODE_OUT_OF_RESOURCES:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataWriter.write: "
+               "out of resources";
+      case DDS_RETCODE_NOT_ENABLED:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataWriter.write: "
+               "this @(__dds_sample_type_prefix)@(suffix)_DataWriter is not enabled";
+      case DDS_RETCODE_PRECONDITION_NOT_MET:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataWriter.write: "
+               "the handle has not been registered with this "
+               "@(__dds_sample_type_prefix)@(suffix)_DataWriter";
+      case DDS_RETCODE_TIMEOUT:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataWriter.write: "
+               "writing resulted in blocking and then exceeded the timeout set by the "
+               "max_blocking_time of the ReliabilityQosPolicy";
+      case DDS_RETCODE_OK:
+        return nullptr;
+      default:
+        return "@(__dds_sample_type_prefix)@(suffix)_DataWriter.write: unknown return code";
+    }
+  }
+};
+
+template <>
+class TemplateDataWriter<Sample<@(__dds_msg_type_prefix)@(suffix)_>>
+: public TemplateDataWriter<@(__dds_sample_type_prefix)@(suffix)_>
+{};
+
+@[end for]
+
+}
 
 namespace @(spec.pkg_name)
 {
@@ -51,180 +241,342 @@ namespace srv
 namespace typesupport_connext_cpp
 {
 
-void * create_requester__@(spec.srv_name)(
-  void * untyped_participant,
-  const char * service_name,
+const char *
+register_types__@(spec.srv_name)(
+  void * untyped_participant, const char * request_type_name, const char * response_type_name)
+{
+  DDSDomainParticipant* participant = static_cast<DDSDomainParticipant*>(untyped_participant);
+
+  DDS_ReturnCode_t status = @(__dds_sample_type_prefix)_Request_TypeSupport::register_type(participant, request_type_name);
+  switch (status) {
+    case DDS_RETCODE_ERROR:
+      return "@(__dds_sample_type_prefix)_Request_TypeSupport.register_type: "
+             "an internal error has occurred";
+    case DDS_RETCODE_BAD_PARAMETER:
+      return "@(__dds_sample_type_prefix)_Request_TypeSupport.register_type: "
+             "bad domain participant or type name parameter";
+    case DDS_RETCODE_OUT_OF_RESOURCES:
+      return "@(__dds_sample_type_prefix)_Request_TypeSupport.register_type: "
+             "out of resources";
+    case DDS_RETCODE_PRECONDITION_NOT_MET:
+      return "@(__dds_sample_type_prefix)_Request_TypeSupport.register_type: "
+             "already registered with a different TypeSupport class";
+    case DDS_RETCODE_OK:
+      break;
+    default:
+      return "@(__dds_sample_type_prefix)_Request_TypeSupport.register_type: unkown return code";
+  }
+
+  status = @(__dds_sample_type_prefix)_Response_TypeSupport::register_type(participant, response_type_name);
+  switch (status) {
+    case DDS_RETCODE_ERROR:
+      return "@(__dds_sample_type_prefix)_Response_TypeSupport.register_type: "
+             "an internal error has occurred";
+    case DDS_RETCODE_BAD_PARAMETER:
+      return "@(__dds_sample_type_prefix)_Response_TypeSupport.register_type: "
+             "bad domain participant or type name parameter";
+    case DDS_RETCODE_OUT_OF_RESOURCES:
+      return "@(__dds_sample_type_prefix)_Response_TypeSupport.register_type: "
+             "out of resources";
+    case DDS_RETCODE_PRECONDITION_NOT_MET:
+      return "@(__dds_sample_type_prefix)_Response_TypeSupport.register_type: "
+             "precondition not met, already registered with a different TypeSupport class";
+    case DDS_RETCODE_OK:
+      break;
+    default:
+      return "@(__dds_sample_type_prefix)_Response_TypeSupport.register_type: unkown return code";
+  }
+  return nullptr;
+}
+
+const char *
+create_requester__@(spec.srv_name)(
+  void * untyped_participant, const char * service_name,
+  void **untyped_requester, void ** untyped_reader,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
-  void ** untyped_reader)
+  void * (* allocator)(size_t))
 {
-  if (!untyped_participant || !service_name || !untyped_reader) {
-    return NULL;
-  }
+  auto _allocator = allocator ? allocator : &malloc;
+  const std::string service_type_name("@(__dds_sample_type_prefix)");
+  const std::string request_type_name("@(__dds_sample_type_prefix)_Request_");
+  const std::string response_type_name("@(__dds_sample_type_prefix)_Response_");
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
+
   const DDS_DataReaderQos * datareader_qos = static_cast<const DDS_DataReaderQos *>(untyped_datareader_qos);
   const DDS_DataWriterQos * datawriter_qos = static_cast<const DDS_DataWriterQos *>(untyped_datawriter_qos);
-  connext::RequesterParams requester_params(participant);
-  requester_params.service_name(service_name);
-  requester_params.datareader_qos(*datareader_qos);
-  requester_params.datawriter_qos(*datawriter_qos);
 
-  // TODO(wjwwood): use rmw allocators for this.
-  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester(new connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(requester_params));
+  const char * error_string = register_types__@(spec.srv_name)(
+    participant, request_type_name.c_str(), response_type_name.c_str());
+  if (error_string) {
+    return error_string;
+  }
 
-  *untyped_reader = requester->get_reply_datareader();
-  return requester;
+  using RequesterT = rosidl_typesupport_connext_cpp::Requester<
+    @(__dds_msg_type_prefix)_Request_,
+    @(__dds_msg_type_prefix)_Response_
+  >;
+
+  RequesterT * requester = static_cast<RequesterT *>(_allocator(sizeof(RequesterT)));
+  if (!requester) {
+    return "failed to allocate memory for requester";
+  }
+  // Assumption: this constructor will not throw. This is a reasonable assumption
+  // since we do all things which usually can cause problem in init().
+  // However, it could still throw a bad_alloc or something like that.
+  try {
+    new (requester) RequesterT(participant, service_name, service_type_name);
+  } catch(...) {
+    // TODO(wjwwood): catch errors and add their type and what() to the error.
+    // This cannot be done when we just return const char *, so a more complex
+    // error reporting will be required for this function if we continue to
+    // throw exceptions below.
+    return "C++ exception caught during construction of RequesterT";
+  }
+  error_string = requester->init(datareader_qos, datawriter_qos);
+  if (error_string) {
+    return error_string;
+  }
+
+  *untyped_requester = requester;
+  *untyped_reader = requester->get_response_datareader();
+
+  return nullptr;
 }
 
-int64_t send_request__@(spec.srv_name)(
-  void * untyped_requester,
-  const void * untyped_ros_request)
+const char *
+send_request__@(spec.srv_name)(
+  void * untyped_requester, const void * untyped_ros_request, int64_t * sequence_number)
 {
-  connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
-  const @(spec.pkg_name)::srv::@(spec.srv_name)_Request & ros_request = *(reinterpret_cast<const @(spec.pkg_name)::srv::@(spec.srv_name)_Request *>(untyped_ros_request));
-  @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(ros_request, request.data());
+  using SampleT = rosidl_typesupport_connext_cpp::Sample<@(__dds_msg_type_prefix)_Request_>;
+  using ROSRequestT = @(spec.pkg_name)::srv::@(spec.srv_name)_Request;
 
-  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_requester);
+  SampleT request;
+  auto ros_request = reinterpret_cast<const ROSRequestT *>(untyped_ros_request);
+  @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(*ros_request, request.data());
 
-  requester->send_request(request);
-  int64_t sequence_number = ((int64_t)request.identity().sequence_number.high) << 32 | request.identity().sequence_number.low;
-  return sequence_number;
+  using RequesterT = rosidl_typesupport_connext_cpp::Requester<
+    @(__dds_msg_type_prefix)_Request_,
+    @(__dds_msg_type_prefix)_Response_
+  >;
+
+  auto requester = reinterpret_cast<RequesterT *>(untyped_requester);
+
+  const char * error_string = requester->send_request(request);
+  if (error_string) {
+    return error_string;
+  }
+  *sequence_number = request.sequence_number_;
+
+  return nullptr;
 }
 
-void * create_replier__@(spec.srv_name)(
-  void * untyped_participant,
-  const char * service_name,
+const char *
+create_responder__@(spec.srv_name)(
+  void * untyped_participant, const char * service_name,
+  void **untyped_responder, void **untyped_reader,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
-  void ** untyped_reader)
+  void * (* allocator)(size_t))
 {
-  if (!untyped_participant || !service_name || !untyped_reader) {
-    return NULL;
-  }
+  auto _allocator = allocator ? allocator : &malloc;
+  const std::string service_type_name("@(__dds_sample_type_prefix)");
+  const std::string request_type_name("@(__dds_sample_type_prefix)_Request_");
+  const std::string response_type_name("@(__dds_sample_type_prefix)_Response_");
 
-  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
+  DDSDomainParticipant * participant =
+    static_cast<DDSDomainParticipant *>(untyped_participant);
+
   const DDS_DataReaderQos * datareader_qos = static_cast<const DDS_DataReaderQos *>(untyped_datareader_qos);
   const DDS_DataWriterQos * datawriter_qos = static_cast<const DDS_DataWriterQos *>(untyped_datawriter_qos);
-  connext::ReplierParams<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> replier_params(participant);
-  replier_params.service_name(service_name);
-  replier_params.datareader_qos(*datareader_qos);
-  replier_params.datawriter_qos(*datawriter_qos);
 
-  // TODO(wjwwood): use rmw allocators for this.
-  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier(new connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(replier_params));
+   const char * error_string = register_types__@(spec.srv_name)(
+    participant, request_type_name.c_str(), response_type_name.c_str());
+  if (error_string) {
+    return error_string;
+  }
 
-  *untyped_reader = replier->get_request_datareader();
-  return replier;
+  using ResponderT = rosidl_typesupport_connext_cpp::Responder<
+    @(__dds_msg_type_prefix)_Request_,
+    @(__dds_msg_type_prefix)_Response_
+  >;
+
+  ResponderT * responder = static_cast<ResponderT *>(_allocator(sizeof(ResponderT)));
+  if (!responder) {
+    return "failed to allocate memory for responder";
+  }
+  // Assumption: this constructor will not throw. This is a reasonable assumption
+  // since we do all things which usually can cause problem in init().
+  // However, it could still throw a bad_alloc or something like that.
+  try {
+    new (responder) ResponderT(participant, service_name, service_type_name);
+  } catch(...) {
+    // TODO(wjwwood): catch errors and add their type and what() to the error.
+    // This cannot be done when we just return const char *, so a more complex
+    // error reporting will be required for this function if we continue to
+    // throw exceptions below.
+    return "C++ exception caught during construction of ResponderT";
+  }
+  error_string = responder->init(datareader_qos, datawriter_qos);
+  if (error_string) {
+    return error_string;
+  }
+
+  *untyped_responder = responder;
+  *untyped_reader = responder->get_request_datareader();
+
+  return nullptr;
 }
 
-bool take_request__@(spec.srv_name)(
-  void * untyped_replier,
-  void * untyped_ros_request_header,
-  void * untyped_ros_request)
+const char *
+take_request__@(spec.srv_name)(
+  void * untyped_responder, void * untyped_ros_request_header, void * untyped_ros_request,
+  bool * taken)
 {
-  if (!untyped_replier || !untyped_ros_request_header || !untyped_ros_request) {
-    return false;
+  using ResponderT = rosidl_typesupport_connext_cpp::Responder<
+    @(__dds_msg_type_prefix)_Request_,
+    @(__dds_msg_type_prefix)_Response_
+  >;
+  using ROSRequestT = @(spec.pkg_name)::srv::@(spec.srv_name)_Request;
+
+  auto ros_request = static_cast<ROSRequestT *>(untyped_ros_request);
+  auto request_header = static_cast<rmw_request_id_t *>(untyped_ros_request_header);
+
+  auto responder = reinterpret_cast<ResponderT *>(untyped_responder);
+
+  rosidl_typesupport_connext_cpp::Sample<@(__dds_msg_type_prefix)_Request_> request;
+  const char * error_string = responder->take_request(request, taken);
+  if (error_string) {
+    return error_string;
   }
 
-  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_replier);
+  if (*taken) {
+    @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_dds_message_to_ros(request.data(), *ros_request);
 
-  @(spec.pkg_name)::srv::@(spec.srv_name)_Request & ros_request = *(@(spec.pkg_name)::srv::@(spec.srv_name)_Request *)untyped_ros_request;
-  rmw_request_id_t & req_id = *(static_cast<rmw_request_id_t *>(untyped_ros_request_header));
+    request_header->sequence_number = request.sequence_number_;
+    *(reinterpret_cast<uint64_t *>(&request_header->writer_guid[0])) = request.client_guid_0_;
+    *(reinterpret_cast<uint64_t *>(
+      &request_header->writer_guid[0] + sizeof(request.client_guid_0_))) = request.client_guid_1_;
 
-  connext::Sample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
-  bool taken = replier->take_request(request);
-  if (!taken) {
-    return false;
+    *taken = true;
+    return nullptr;
   }
-  if (!request.info().valid_data) {
-    return false;
-  }
-
-  bool converted =
-    @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_dds_message_to_ros(request.data(), ros_request);
-  if (!converted) {
-    return false;
-  }
-
-  size_t SAMPLE_IDENTITY_SIZE = 16;
-  memcpy(&req_id.writer_guid[0], request.identity().writer_guid.value, SAMPLE_IDENTITY_SIZE);
-
-  req_id.sequence_number = ((int64_t)request.identity().sequence_number.high) << 32 | request.identity().sequence_number.low;
-  return true;
+  *taken = false;
+  return nullptr;
 }
 
-bool take_response__@(spec.srv_name)(
-  void * untyped_requester,
-  void * untyped_ros_request_header,
-  void * untyped_ros_response)
+const char *
+take_response__@(spec.srv_name)(
+  void * untyped_requester, void * untyped_ros_request_header, void * untyped_ros_response,
+  bool * taken)
 {
-  if (!untyped_requester || !untyped_ros_request_header || !untyped_ros_response) {
-    return false;
+  using ROSResponseT = @(spec.pkg_name)::srv::@(spec.srv_name)_Response;
+  auto ros_response = static_cast<ROSResponseT *>(untyped_ros_response);
+
+  using RequesterT = rosidl_typesupport_connext_cpp::Requester<
+    @(__dds_msg_type_prefix)_Request_,
+    @(__dds_msg_type_prefix)_Response_
+  >;
+  auto requester = reinterpret_cast<RequesterT *>(untyped_requester);
+
+  rosidl_typesupport_connext_cpp::Sample<@(__dds_msg_type_prefix)_Response_> response;
+  const char * error_string = requester->take_response(response, taken);
+  if (error_string) {
+    return error_string;
+  }
+  if (*taken) {
+    auto req_id = reinterpret_cast<rmw_request_id_t *>(untyped_ros_request_header);
+
+    req_id->sequence_number = response.sequence_number_;
+
+    @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_dds_message_to_ros(
+      response.data(), *ros_response);
+    return nullptr;
   }
 
-  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_requester);
-
-  @(spec.pkg_name)::srv::@(spec.srv_name)_Response & ros_response = *(@(spec.pkg_name)::srv::@(spec.srv_name)_Response *)untyped_ros_response;
-
-  connext::Sample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
-  bool received = requester->take_reply(response);
-  if (!received) {
-    return false;
-  }
-  if (!response.info().valid_data) {
-    return false;
-  }
-  rmw_request_id_t & req_id = *(reinterpret_cast<rmw_request_id_t *>(untyped_ros_request_header));
-
-  int64_t sequence_number =
-    (((int64_t)response.related_identity().sequence_number.high) << 32) |
-    response.related_identity().sequence_number.low;
-  req_id.sequence_number = sequence_number;
-
-  bool converted =
-    @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_dds_message_to_ros(response.data(), ros_response);
-  return converted;
+  return nullptr;
 }
 
-bool send_response__@(spec.srv_name)(
-  void * untyped_replier,
-  const void * untyped_ros_request_header,
+const char *
+send_response__@(spec.srv_name)(
+  void * untyped_responder, const void * untyped_ros_request_header,
   const void * untyped_ros_response)
 {
-  if (!untyped_replier || !untyped_ros_request_header || !untyped_ros_response) {
-    return false;
+  using ROSResponseT = @(spec.pkg_name)::srv::@(spec.srv_name)_Response;
+  rosidl_typesupport_connext_cpp::Sample<@(__dds_msg_type_prefix)_Response_> response;
+  auto ros_response = reinterpret_cast<const ROSResponseT *>(untyped_ros_response);
+  @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(*ros_response, response.data());
+
+  auto request_header = reinterpret_cast<const rmw_request_id_t *>(untyped_ros_request_header);
+
+  using ResponderT = rosidl_typesupport_connext_cpp::Responder<
+    @(__dds_msg_type_prefix)_Request_,
+    @(__dds_msg_type_prefix)_Response_
+  >;
+  auto responder = reinterpret_cast<ResponderT *>(untyped_responder);
+
+  const char * error_string = responder->send_response(*request_header, response);
+  if (error_string) {
+    return error_string;
   }
+  return nullptr;
+}
 
-  connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
-  const @(spec.pkg_name)::srv::@(spec.srv_name)_Response & ros_response = *(reinterpret_cast<const @(spec.pkg_name)::srv::@(spec.srv_name)_Response *>(untyped_ros_response));
-  bool converted =
-    @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(ros_response, response.data());
-  if (!converted) {
-    return false;
+const char *
+destroy_requester__@(spec.srv_name)(void * untyped_requester, void (* deallocator)(void *))
+{
+  using RequesterT = rosidl_typesupport_connext_cpp::Requester<
+    @(__dds_msg_type_prefix)_Request_,
+    @(__dds_msg_type_prefix)_Response_
+  >;
+
+  auto requester = static_cast<RequesterT *>(untyped_requester);
+  try {
+    requester->~RequesterT();
+  } catch(...) {
+    // TODO(wjwwood): catch errors and add their type and what() to the error.
+    // This cannot be done when we just return const char *, so a more complex
+    // error reporting will be required for this function if we continue to
+    // throw exceptions below.
+    return "C++ exception caught during destruction of RequesterT";
   }
+  // TODO(wjwwood): we need a "deinit" function on the class to undo anything done in the init().
+  auto _deallocator = deallocator ? deallocator : &free;
+  _deallocator(requester);
+  return nullptr;
+}
 
-  const rmw_request_id_t & req_id = *(reinterpret_cast<const rmw_request_id_t *>(untyped_ros_request_header));
-
-  DDS_SampleIdentity_t request_identity;
-
-  size_t SAMPLE_IDENTITY_SIZE = 16;
-  memcpy(request_identity.writer_guid.value, &req_id.writer_guid[0], SAMPLE_IDENTITY_SIZE);
-
-  request_identity.sequence_number.high = (int32_t)((req_id.sequence_number & 0xFFFFFFFF00000000) >> 32);
-  request_identity.sequence_number.low = (uint32_t)(req_id.sequence_number & 0xFFFFFFFF);
-
-  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_replier);
-
-  replier->send_reply(response, request_identity);
-  return true;
+const char *
+destroy_responder__@(spec.srv_name)(void * untyped_responder, void (* deallocator)(void *))
+{
+  using ResponderT = rosidl_typesupport_connext_cpp::Responder<
+    @(__dds_msg_type_prefix)_Request_,
+    @(__dds_msg_type_prefix)_Response_
+  >;
+  auto responder = static_cast<ResponderT *>(untyped_responder);
+  try {
+    responder->~ResponderT();
+  } catch(...) {
+    // TODO(wjwwood): catch errors and add their type and what() to the error.
+    // This cannot be done when we just return const char *, so a more complex
+    // error reporting will be required for this function if we continue to
+    // throw exceptions below.
+    return "C++ exception caught during destruction of ResponderT";
+  }
+  // TODO(wjwwood): we need a "deinit" function on the class to undo anything done in the init().
+  auto _deallocator = deallocator ? deallocator : &free;
+  _deallocator(responder);
+  return nullptr;
 }
 
 static service_type_support_callbacks_t callbacks = {
   "@(spec.pkg_name)",
   "@(spec.srv_name)",
   &create_requester__@(spec.srv_name),
-  &create_replier__@(spec.srv_name),
+  &destroy_requester__@(spec.srv_name),
+  &create_responder__@(spec.srv_name),
+  &destroy_responder__@(spec.srv_name),
   &send_request__@(spec.srv_name),
   &take_request__@(spec.srv_name),
   &send_response__@(spec.srv_name),
