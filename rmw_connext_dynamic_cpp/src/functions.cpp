@@ -189,7 +189,7 @@ DDS_TypeCode * create_type_code(
     RMW_SET_ERROR_MSG("failed to create struct typecode");
     goto fail;
   }
-  for (unsigned long i = 0; i < members->member_count_; ++i) {
+  for (uint32_t i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     const DDS_TypeCode * member_type_code = nullptr;
     DDS_TypeCode * member_type_code_non_const = nullptr;
@@ -968,7 +968,7 @@ bool _publish(
   DDS_DynamicData * dynamic_data, const void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
-  for (unsigned long i = 0; i < members->member_count_; ++i) {
+  for (uint32_t i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     switch (member->type_id_) {
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
@@ -1782,7 +1782,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 bool _take(DDS_DynamicData * dynamic_data, void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
-  for (unsigned long i = 0; i < members->member_count_; ++i) {
+  for (uint32_t i = 0; i < members->member_count_; ++i) {
     const rosidl_typesupport_introspection_cpp::MessageMember * member = members->members_ + i;
     switch (member->type_id_) {
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
