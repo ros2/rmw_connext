@@ -93,7 +93,7 @@ struct ConnextStaticClientInfo
 
 struct ConnextStaticServiceInfo
 {
-  void * replier_;
+  void * responder_;
   DDSDataReader * request_datareader_;
   DDSReadCondition * read_condition_;
   const service_type_support_callbacks_t * callbacks_;
@@ -822,6 +822,7 @@ rmw_create_client(
   }
   // Past this point, a failure results in unrolling code in the goto fail block.
   rmw_client_t * client = nullptr;
+  const char * error_string = nullptr;
   DDS_DataReaderQos datareader_qos;
   DDS_DataWriterQos datawriter_qos;
   DDSDataReader * response_datareader = nullptr;
@@ -847,13 +848,23 @@ rmw_create_client(
     goto fail;
   }
 
-  requester = callbacks->create_requester(
-    participant, service_name, &datareader_qos, &datawriter_qos,
-    reinterpret_cast<void **>(&response_datareader));
+  error_string = callbacks->create_requester(
+    participant, service_name,
+    reinterpret_cast<void **>(&requester),
+    reinterpret_cast<void **>(&response_datareader),
+    reinterpret_cast<const void *>(&datareader_qos),
+    reinterpret_cast<const void *>(&datawriter_qos),
+    &rmw_allocate);
+  if (error_string) {
+    RMW_SET_ERROR_MSG((std::string("failed to create requester: ") + error_string).c_str());
+    goto fail;
+  }
+
   if (!requester) {
     RMW_SET_ERROR_MSG("failed to create requester");
     goto fail;
   }
+
   if (!response_datareader) {
     RMW_SET_ERROR_MSG("data reader handle is null");
     goto fail;
@@ -866,14 +877,12 @@ rmw_create_client(
     goto fail;
   }
 
-  buf = rmw_allocate(sizeof(ConnextStaticClientInfo));
-  if (!buf) {
+  client_info = static_cast<ConnextStaticClientInfo *>(
+    rmw_allocate(sizeof(ConnextStaticClientInfo)));
+  if (!client_info) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
-  // Use a placement new to construct the ConnextStaticClientInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextStaticClientInfo)
-  buf = nullptr;  // Only free the client_info pointer; don't need the buf pointer anymore.
   client_info->requester_ = requester;
   client_info->callbacks_ = callbacks;
   client_info->response_datareader_ = response_datareader;
@@ -883,27 +892,30 @@ rmw_create_client(
   client->data = client_info;
   return client;
 fail:
-  if (client) {
-    rmw_client_free(client);
-  }
   if (response_datareader) {
-    if (participant->delete_datareader(response_datareader) != DDS_RETCODE_OK) {
+    if (read_condition) {
+      if (response_datareader->delete_readcondition(read_condition) != DDS_RETCODE_OK) {
+        fprintf(stderr, "leaking readcondition while handling failure\n");
+      }
+    }
+  }
+
+  if (requester) {
+    const char * error_string = callbacks->destroy_requester(requester, &rmw_free);
+    if (error_string) {
       std::stringstream ss;
-      ss << "leaking datareader while handling failure at " <<
+      ss << "failed to destroy requester: " << error_string << ", at: " <<
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
     }
   }
-  // TODO(wjwwood): deallocate requester (currently allocated with new elsewhere)
   if (client_info) {
-    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-      client_info->~ConnextStaticClientInfo(), ConnextStaticClientInfo)
     rmw_free(client_info);
   }
-  if (buf) {
-    rmw_free(buf);
+  if (client) {
+    rmw_client_free(client);
   }
-  return NULL;
+  return nullptr;
 }
 
 rmw_ret_t
@@ -918,9 +930,10 @@ rmw_destroy_client(rmw_client_t * client)
     client->implementation_identifier, rti_connext_identifier,
     return RMW_RET_ERROR)
 
-  auto result = RMW_RET_OK;
-  ConnextStaticClientInfo * client_info = static_cast<ConnextStaticClientInfo *>(client->data);
+  ConnextStaticClientInfo * client_info =
+    static_cast<ConnextStaticClientInfo *>(client->data);
 
+  auto result = RMW_RET_OK;
   if (client_info) {
     auto response_datareader = client_info->response_datareader_;
     if (response_datareader) {
@@ -932,26 +945,33 @@ rmw_destroy_client(rmw_client_t * client)
         }
         client_info->read_condition_ = nullptr;
       }
-    } else if (client_info->read_condition_) {
-      RMW_SET_ERROR_MSG("cannot delete readcondition because the datareader is null");
-      result = RMW_RET_ERROR;
     }
-
-    RMW_TRY_DESTRUCTOR(
-      client_info->~ConnextStaticClientInfo(),
-      ConnextStaticClientInfo, result = RMW_RET_ERROR)
-    rmw_free(client_info);
-    client->data = nullptr;
+  } else {
+    RMW_SET_ERROR_MSG("client_info handle is null");
+    return RMW_RET_ERROR;
   }
-  rmw_client_free(client);
 
+  const service_type_support_callbacks_t * callbacks =
+    static_cast<const service_type_support_callbacks_t *>(client_info->callbacks_);
+  if (!callbacks) {
+    RMW_SET_ERROR_MSG("callbacks handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  const char * error_string = callbacks->destroy_requester(client_info->requester_, &rmw_free);
+  if (error_string) {
+    RMW_SET_ERROR_MSG((std::string("failed to destroy requester: ") + error_string).c_str());
+    return RMW_RET_ERROR;
+  }
+
+  rmw_free(client_info);
+  rmw_client_free(client);
   return result;
 }
 
 rmw_ret_t
 rmw_send_request(
-  const rmw_client_t * client,
-  const void * ros_request,
+  const rmw_client_t * client, const void * ros_request,
   int64_t * sequence_id)
 {
   if (!client) {
@@ -968,14 +988,10 @@ rmw_send_request(
     return RMW_RET_ERROR;
   }
 
-  ConnextStaticClientInfo * client_info = static_cast<ConnextStaticClientInfo *>(client->data);
+  ConnextStaticClientInfo * client_info =
+    static_cast<ConnextStaticClientInfo *>(client->data);
   if (!client_info) {
     RMW_SET_ERROR_MSG("client info handle is null");
-    return RMW_RET_ERROR;
-  }
-  const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
-  if (!callbacks) {
-    RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
   void * requester = client_info->requester_;
@@ -983,8 +999,16 @@ rmw_send_request(
     RMW_SET_ERROR_MSG("requester handle is null");
     return RMW_RET_ERROR;
   }
-
-  *sequence_id = callbacks->send_request(requester, ros_request);
+  const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
+  if (!callbacks) {
+    RMW_SET_ERROR_MSG("callbacks handle is null");
+    return RMW_RET_ERROR;
+  }
+  const char * error_string = callbacks->send_request(requester, ros_request, sequence_id);
+  if (error_string) {
+    RMW_SET_ERROR_MSG((std::string("failed to send request: ") + error_string).c_str());
+    return RMW_RET_ERROR;
+  }
   return RMW_RET_OK;
 }
 
@@ -1037,10 +1061,11 @@ rmw_create_service(
   DDSReadCondition * read_condition = nullptr;
   DDS_DataReaderQos datareader_qos;
   DDS_DataWriterQos datawriter_qos;
-  void * replier = nullptr;
+  void * responder = nullptr;
   void * buf = nullptr;
   ConnextStaticServiceInfo * service_info = nullptr;
   rmw_service_t * service = nullptr;
+  const char * error_string = nullptr;
   // Begin initializing elements.
   service = rmw_service_allocate();
   if (!service) {
@@ -1058,34 +1083,32 @@ rmw_create_service(
     goto fail;
   }
 
-  replier = callbacks->create_replier(
-    participant, service_name, &datareader_qos, &datawriter_qos,
-    reinterpret_cast<void **>(&request_datareader));
-  if (!replier) {
-    RMW_SET_ERROR_MSG("failed to create replier");
-    goto fail;
-  }
-  if (!request_datareader) {
-    RMW_SET_ERROR_MSG("data reader handle is null");
+  error_string = callbacks->create_responder(
+    participant, service_name,
+    reinterpret_cast<void **>(&responder),
+    reinterpret_cast<void **>(&request_datareader),
+    reinterpret_cast<const void *>(&datareader_qos),
+    reinterpret_cast<const void *>(&datawriter_qos),
+    &rmw_allocate);
+  if (error_string) {
+    RMW_SET_ERROR_MSG((std::string("failed to create responder: ") + error_string).c_str());
     goto fail;
   }
 
   read_condition = request_datareader->create_readcondition(
-    DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
+    DDS::ANY_SAMPLE_STATE, DDS::ANY_VIEW_STATE, DDS::ANY_INSTANCE_STATE);
   if (!read_condition) {
     RMW_SET_ERROR_MSG("failed to create read condition");
     goto fail;
   }
 
-  buf = rmw_allocate(sizeof(ConnextStaticServiceInfo));
-  if (!buf) {
+  service_info =
+    static_cast<ConnextStaticServiceInfo *>(rmw_allocate(sizeof(ConnextStaticServiceInfo)));
+  if (!service_info) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
-  // Use a placement new to construct the ConnextStaticServiceInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(service_info, buf, goto fail, ConnextStaticServiceInfo)
-  buf = nullptr;  // Only free the service_info pointer; don't need the buf pointer anymore.
-  service_info->replier_ = replier;
+  service_info->responder_ = responder;
   service_info->callbacks_ = callbacks;
   service_info->request_datareader_ = request_datareader;
   service_info->read_condition_ = read_condition;
@@ -1094,34 +1117,30 @@ rmw_create_service(
   service->data = service_info;
   return service;
 fail:
-  if (service) {
-    rmw_service_free(service);
-  }
   if (request_datareader) {
     if (read_condition) {
-      if (request_datareader->delete_readcondition(read_condition) != DDS_RETCODE_OK) {
-        std::stringstream ss;
-        ss << "leaking readcondition while handling failure at " <<
-          __FILE__ << ":" << __LINE__ << '\n';
-        (std::cerr << ss.str()).flush();
+      if (request_datareader->delete_readcondition(read_condition) != DDS::RETCODE_OK) {
+        fprintf(stderr, "leaking readcondition while handling failure\n");
       }
     }
-    if (participant->delete_datareader(request_datareader) != RMW_RET_OK) {
+  }
+
+  if (responder) {
+    const char * error_string = callbacks->destroy_responder(responder, &rmw_free);
+    if (error_string) {
       std::stringstream ss;
-      ss << "leaking datareader while handling failure at " <<
+      ss << "failed to destroy responder: " << error_string << ", at: " <<
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
     }
   }
   if (service_info) {
-    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-      service_info->~ConnextStaticServiceInfo(), ConnextStaticServiceInfo)
     rmw_free(service_info);
   }
-  if (buf) {
-    rmw_free(buf);
+  if (service) {
+    rmw_service_free(service);
   }
-  return NULL;
+  return nullptr;
 }
 
 rmw_ret_t
@@ -1136,42 +1155,47 @@ rmw_destroy_service(rmw_service_t * service)
     service->implementation_identifier, rti_connext_identifier,
     return RMW_RET_ERROR)
 
-  auto result = RMW_RET_OK;
-  ConnextStaticServiceInfo * service_info = static_cast<ConnextStaticServiceInfo *>(service->data);
+  ConnextStaticServiceInfo * service_info =
+    static_cast<ConnextStaticServiceInfo *>(service->data);
 
+  auto result = RMW_RET_OK;
   if (service_info) {
     auto request_datareader = service_info->request_datareader_;
     if (request_datareader) {
       auto read_condition = service_info->read_condition_;
       if (read_condition) {
-        if (request_datareader->delete_readcondition(read_condition) != DDS_RETCODE_OK) {
+        if (request_datareader->delete_readcondition(read_condition) != DDS::RETCODE_OK) {
           RMW_SET_ERROR_MSG("failed to delete readcondition");
           result = RMW_RET_ERROR;
         }
         service_info->read_condition_ = nullptr;
       }
-    } else if (service_info->read_condition_) {
-      RMW_SET_ERROR_MSG("cannot delete readcondition because the datareader is null");
-      result = RMW_RET_ERROR;
     }
-
-    RMW_TRY_DESTRUCTOR(
-      service_info->~ConnextStaticServiceInfo(),
-      ConnextStaticServiceInfo, result = RMW_RET_ERROR)
-    rmw_free(service_info);
-    service->data = nullptr;
+  } else {
+    RMW_SET_ERROR_MSG("service_info handle is null");
+    return RMW_RET_ERROR;
   }
-  rmw_service_free(service);
 
+  const service_type_support_callbacks_t * callbacks =
+    static_cast<const service_type_support_callbacks_t *>(service_info->callbacks_);
+  if (!callbacks) {
+    RMW_SET_ERROR_MSG("callbacks handle is null");
+    return RMW_RET_ERROR;
+  }
+  const char * error_string = callbacks->destroy_responder(service_info->responder_, &rmw_free);
+  if (error_string) {
+    RMW_SET_ERROR_MSG((std::string("failed to destroy responder: ") + error_string).c_str());
+  }
+
+  rmw_free(service_info);
+  rmw_service_free(service);
   return result;
 }
 
 rmw_ret_t
 rmw_take_request(
   const rmw_service_t * service,
-  void * ros_request_header,
-  void * ros_request,
-  bool * taken)
+  void * ros_request_header, void * ros_request, bool * taken)
 {
   if (!service) {
     RMW_SET_ERROR_MSG("service handle is null");
@@ -1190,8 +1214,8 @@ rmw_take_request(
     RMW_SET_ERROR_MSG("ros request handle is null");
     return RMW_RET_ERROR;
   }
-  if (!taken) {
-    RMW_SET_ERROR_MSG("taken handle is null");
+  if (taken == nullptr) {
+    RMW_SET_ERROR_MSG("taken argument cannot be null");
     return RMW_RET_ERROR;
   }
 
@@ -1201,30 +1225,28 @@ rmw_take_request(
     RMW_SET_ERROR_MSG("service info handle is null");
     return RMW_RET_ERROR;
   }
-
-  void * replier = service_info->replier_;
-  if (!replier) {
-    RMW_SET_ERROR_MSG("replier handle is null");
+  void * responder = service_info->responder_;
+  if (!responder) {
+    RMW_SET_ERROR_MSG("responder handle is null");
     return RMW_RET_ERROR;
   }
-
   const service_type_support_callbacks_t * callbacks = service_info->callbacks_;
   if (!callbacks) {
     RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
-
-  *taken = callbacks->take_request(replier, ros_request_header, ros_request);
-
+  const char * error_string =
+    callbacks->take_request(responder, ros_request_header, ros_request, taken);
+  if (error_string) {
+    RMW_SET_ERROR_MSG((std::string("failed to take request: ") + error_string).c_str());
+    return RMW_RET_ERROR;
+  }
   return RMW_RET_OK;
 }
 
 rmw_ret_t
-rmw_take_response(
-  const rmw_client_t * client,
-  void * ros_request_header,
-  void * ros_response,
-  bool * taken)
+rmw_take_response(const rmw_client_t * client, void * ros_request_header,
+  void * ros_response, bool * taken)
 {
   if (!client) {
     RMW_SET_ERROR_MSG("client handle is null");
@@ -1243,8 +1265,8 @@ rmw_take_response(
     RMW_SET_ERROR_MSG("ros response handle is null");
     return RMW_RET_ERROR;
   }
-  if (!taken) {
-    RMW_SET_ERROR_MSG("taken handle is null");
+  if (taken == nullptr) {
+    RMW_SET_ERROR_MSG("taken argument cannot be null");
     return RMW_RET_ERROR;
   }
 
@@ -1254,29 +1276,29 @@ rmw_take_response(
     RMW_SET_ERROR_MSG("client info handle is null");
     return RMW_RET_ERROR;
   }
-
   void * requester = client_info->requester_;
   if (!requester) {
     RMW_SET_ERROR_MSG("requester handle is null");
     return RMW_RET_ERROR;
   }
-
   const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
   if (!callbacks) {
     RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
-
-  *taken = callbacks->take_response(requester, ros_request_header, ros_response);
-
+  const char * error_string =
+    callbacks->take_response(requester, ros_request_header, ros_response, taken);
+  if (error_string) {
+    RMW_SET_ERROR_MSG((std::string("failed to take response: ") + error_string).c_str());
+    return RMW_RET_ERROR;
+  }
   return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_send_response(
   const rmw_service_t * service,
-  void * ros_request_header,
-  void * ros_response)
+  void * ros_request_header, void * ros_response)
 {
   if (!service) {
     RMW_SET_ERROR_MSG("service handle is null");
@@ -1302,24 +1324,24 @@ rmw_send_response(
     RMW_SET_ERROR_MSG("service info handle is null");
     return RMW_RET_ERROR;
   }
-
-  void * replier = service_info->replier_;
-  if (!replier) {
-    RMW_SET_ERROR_MSG("replier handle is null");
+  void * responder = service_info->responder_;
+  if (!responder) {
+    RMW_SET_ERROR_MSG("responder handle is null");
     return RMW_RET_ERROR;
   }
-
   const service_type_support_callbacks_t * callbacks = service_info->callbacks_;
   if (!callbacks) {
     RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
-
-  callbacks->send_response(replier, ros_request_header, ros_response);
-
+  const char * error_string =
+    callbacks->send_response(responder, ros_request_header, ros_response);
+  if (error_string) {
+    RMW_SET_ERROR_MSG(error_string);
+    return RMW_RET_ERROR;
+  }
   return RMW_RET_OK;
 }
-
 
 rmw_ret_t
 rmw_get_topic_names_and_types(
