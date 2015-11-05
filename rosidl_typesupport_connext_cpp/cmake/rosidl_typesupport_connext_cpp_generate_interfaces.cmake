@@ -153,7 +153,7 @@ add_custom_command(
   --dds-interface-base-path "${_dds_idl_base_path}"
   --idl-pp "${_idl_pp}"
   DEPENDS ${target_dependencies} ${_dds_idl_files}
-  COMMENT "Generating C++ type support for RTI Connext"
+  COMMENT "Generating C++ type support for RTI Connext (using '${_idl_pp}')"
   VERBATIM
 )
 
