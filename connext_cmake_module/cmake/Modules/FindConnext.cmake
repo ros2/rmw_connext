@@ -27,6 +27,7 @@
 # - Connext_FOUND: flag indicating if the package was found
 # - Connext_INCLUDE_DIRS: Paths to the header files
 # - Connext_HOME: Root directory for the NDDS install.
+# - Connext_ARCHITECTURE_NAME: Architecture name according to the lib subfolder
 # - Connext_LIBRARIES: Name to the C++ libraries including the path
 # - Connext_LIBRARY_DIRS: Paths to the libraries
 # - Connext_LIBRARY_DIR: Path to libraries; guaranteed to be a single path
@@ -184,6 +185,9 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
   # Since we know Connext_LIBRARY_DIRS is a single path, just alias it.
   set(Connext_LIBRARY_DIR "${Connext_LIBRARY_DIRS}")
 
+  # extract architecture name
+  get_filename_component(Connext_ARCHITECTURE_NAME "${Connext_LIBRARY_DIR}" NAME)
+
   if(WIN32)
     set(Connext_DEFINITIONS "RTI_WIN32" "NDDS_DLL_VARIABLE")
     # This will be a .bat file and it will be on the PATH.
@@ -244,7 +248,8 @@ if(Connext_DDSGEN_SERVER)
 endif()
 
 include(FindPackageHandleStandardArgs)
-# Connext_HOME, Connext_LIBRARY_DIRS, and Connext_LIBRARY_DIR are not always set, depending on the source of Connext.
+# Connext_HOME, Connext_ARCHITECTURE_NAME, Connext_LIBRARY_DIRS, and
+# Connext_LIBRARY_DIR are not always set, depending on the source of Connext.
 find_package_handle_standard_args(Connext
   FOUND_VAR Connext_FOUND
   REQUIRED_VARS
