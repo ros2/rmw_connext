@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 2.8.3)
 
 project(rmw_connext_dynamic_cpp)
 
+set(CONNEXT_DYNAMIC_DISABLE $ENV{CONNEXT_DYNAMIC_DISABLE}
+  CACHE BOOL "If Connext Dynamic should be disabled.")
+
 if(NOT WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 endif()
@@ -10,9 +13,13 @@ find_package(ament_cmake REQUIRED)
 
 find_package(connext_cmake_module REQUIRED)
 find_package(Connext MODULE)
-if(NOT Connext_FOUND)
+if(NOT Connext_FOUND OR CONNEXT_DYNAMIC_DISABLE)
   ament_package()
-  message(WARNING "Could not find RTI Connext - skipping '${PROJECT_NAME}'")
+  if(NOT Connext_FOUND)
+    message(WARNING "Could not find RTI Connext - skipping '${PROJECT_NAME}'")
+  else()
+    message(STATUS "Connext dynamic rmw implementation explicitly disabled - skipping '${PROJECT_NAME}'")
+  endif()
   return()
 endif()
 
