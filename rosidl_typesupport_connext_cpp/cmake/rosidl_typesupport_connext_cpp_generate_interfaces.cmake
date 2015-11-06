@@ -166,6 +166,7 @@ endif()
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED
   ${_generated_msg_files} ${_generated_external_msg_files} ${_generated_srv_files})
+ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix} "rmw")
 if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "ROSIDL_BUILDING_DLL")
