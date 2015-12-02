@@ -152,19 +152,125 @@ destroy_guard_condition(const char * implementation_identifier,
   rmw_guard_condition_t * guard_condition);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
+rmw_waitset_t *
+create_waitset(const char * implementation_identifier,
+  rmw_guard_conditions_t * fixed_guard_conditions, size_t max_conditions);
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+rmw_ret_t
+destroy_waitset(const char * implementation_identifier,
+  rmw_waitset_t * waitset);
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
 trigger_guard_condition(const char * implementation_identifier,
   const rmw_guard_condition_t * guard_condition_handle);
 
 template<typename SubscriberInfo, typename ServiceInfo, typename ClientInfo>
 rmw_ret_t
-wait(rmw_subscriptions_t * subscriptions,
+wait(const char * implementation_identifier,
+  rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
+  rmw_waitset_t * waitset,
   const rmw_time_t * wait_timeout)
 {
-  DDSWaitSet waitset;
+  // To ensure that we properly clean up the wait set, we declare an
+  // object whose destructor will detach what we attached (this was previously
+  // being done inside the destructor of the wait set.
+  struct atexit_t
+  {
+    ~atexit_t()
+    {
+      // Manually detach conditions and clear sequences, to ensure a clean wait set for next time.
+      if (!waitset) {
+        RMW_SET_ERROR_MSG("waitset handle is null");
+        return;
+      }
+      RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+        waitset handle,
+        waitset->implementation_identifier, implementation_identifier,
+        return )
+      ConnextWaitSetInfo * waitset_info = static_cast<ConnextWaitSetInfo *>(waitset->data);
+      if (!waitset_info) {
+        RMW_SET_ERROR_MSG("WaitSet implementation struct is null");
+        return;
+      }
+
+      DDSWaitSet * dds_waitset = static_cast<DDSWaitSet *>(waitset_info->waitset);
+      if (!dds_waitset) {
+        RMW_SET_ERROR_MSG("DDS waitset handle is null");
+        return;
+      }
+
+      DDSConditionSeq * attached_conditions =
+        static_cast<DDSConditionSeq *>(waitset_info->attached_conditions);
+      if (!attached_conditions) {
+        RMW_SET_ERROR_MSG("DDS condition sequence handle is null");
+        return;
+      }
+
+      DDS_ReturnCode_t retcode;
+      retcode = dds_waitset->get_conditions(*attached_conditions);
+      if (retcode != DDS_RETCODE_OK) {
+        RMW_SET_ERROR_MSG("Failed to get attached conditions for waitset");
+        return;
+      }
+
+      for (DDS_Long i = 0; i < attached_conditions->length(); ++i) {
+        bool fixed = false;
+        for (uint32_t j = 0; j < waitset->fixed_guard_conditions->guard_condition_count; ++j) {
+          DDS::GuardCondition * fixed_guard_cond = static_cast<DDSGuardCondition *>(
+            waitset->fixed_guard_conditions->guard_conditions[j]);
+          if (fixed_guard_cond == (*attached_conditions)[i]) {
+            fixed = true;
+            break;
+          }
+        }
+        if (fixed) {
+          continue;
+        }
+        retcode = dds_waitset->detach_condition((*attached_conditions)[i]);
+        if (retcode != DDS_RETCODE_OK) {
+          RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        }
+      }
+    }
+    rmw_waitset_t * waitset = NULL;
+    const char * implementation_identifier = NULL;
+  } atexit;
+
+  atexit.waitset = waitset;
+  atexit.implementation_identifier = implementation_identifier;
+
+  if (!waitset) {
+    RMW_SET_ERROR_MSG("waitset handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    waitset,
+    waitset->implementation_identifier, implementation_identifier,
+    return RMW_RET_ERROR);
+
+  ConnextWaitSetInfo * waitset_info = static_cast<ConnextWaitSetInfo *>(waitset->data);
+  if (!waitset_info) {
+    RMW_SET_ERROR_MSG("WaitSet implementation struct is null");
+    return RMW_RET_ERROR;
+  }
+
+  DDSWaitSet * dds_waitset = static_cast<DDSWaitSet *>(waitset_info->waitset);
+  if (!dds_waitset) {
+    RMW_SET_ERROR_MSG("DDS waitset handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  DDSConditionSeq * active_conditions =
+    static_cast<DDSConditionSeq *>(waitset_info->active_conditions);
+  if (!active_conditions) {
+    RMW_SET_ERROR_MSG("DDS condition sequence handle is null");
+    return RMW_RET_ERROR;
+  }
 
   // add a condition for each subscriber
   for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
@@ -180,24 +286,26 @@ wait(rmw_subscriptions_t * subscriptions,
       return RMW_RET_ERROR;
     }
     rmw_ret_t rmw_status = check_attach_condition_error(
-      waitset.attach_condition(read_condition));
+      dds_waitset->attach_condition(read_condition));
     if (rmw_status != RMW_RET_OK) {
       return rmw_status;
     }
   }
 
   // add a condition for each guard condition
-  for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
-    DDSGuardCondition * guard_condition =
-      static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
-    if (!guard_condition) {
-      RMW_SET_ERROR_MSG("guard condition handle is null");
-      return RMW_RET_ERROR;
-    }
-    rmw_ret_t rmw_status = check_attach_condition_error(
-      waitset.attach_condition(guard_condition));
-    if (rmw_status != RMW_RET_OK) {
-      return rmw_status;
+  if (guard_conditions) {
+    for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
+      DDSGuardCondition * guard_condition =
+        static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
+      if (!guard_condition) {
+        RMW_SET_ERROR_MSG("guard condition handle is null");
+        return RMW_RET_ERROR;
+      }
+      rmw_ret_t rmw_status = check_attach_condition_error(
+        dds_waitset->attach_condition(guard_condition));
+      if (rmw_status != RMW_RET_OK) {
+        return rmw_status;
+      }
     }
   }
 
@@ -215,7 +323,7 @@ wait(rmw_subscriptions_t * subscriptions,
       return RMW_RET_ERROR;
     }
     rmw_ret_t rmw_status = check_attach_condition_error(
-      waitset.attach_condition(read_condition));
+      dds_waitset->attach_condition(read_condition));
     if (rmw_status != RMW_RET_OK) {
       return rmw_status;
     }
@@ -241,14 +349,13 @@ wait(rmw_subscriptions_t * subscriptions,
       return RMW_RET_ERROR;
     }
     rmw_ret_t rmw_status = check_attach_condition_error(
-      waitset.attach_condition(read_condition));
+      dds_waitset->attach_condition(read_condition));
     if (rmw_status != RMW_RET_OK) {
       return rmw_status;
     }
   }
 
   // invoke wait until one of the conditions triggers
-  DDSConditionSeq active_conditions;
   DDS_Duration_t timeout;
   if (!wait_timeout) {
     timeout = DDS_DURATION_INFINITE;
@@ -256,7 +363,7 @@ wait(rmw_subscriptions_t * subscriptions,
     timeout.sec = static_cast<DDS_Long>(wait_timeout->sec);
     timeout.nanosec = static_cast<DDS_Long>(wait_timeout->nsec);
   }
-  DDS_ReturnCode_t status = waitset.wait(active_conditions, timeout);
+  DDS_ReturnCode_t status = dds_waitset->wait(*active_conditions, timeout);
 
   if (status == DDS_RETCODE_TIMEOUT) {
     return RMW_RET_TIMEOUT;
@@ -283,44 +390,46 @@ wait(rmw_subscriptions_t * subscriptions,
 
     // search for subscriber condition in active set
     DDS_Long j = 0;
-    for (; j < active_conditions.length(); ++j) {
-      if (active_conditions[j] == read_condition) {
+    for (; j < active_conditions->length(); ++j) {
+      if ((*active_conditions)[j] == read_condition) {
         break;
       }
     }
     // if subscriber condition is not found in the active set
     // reset the subscriber handle
-    if (!(j < active_conditions.length())) {
+    if (!(j < active_conditions->length())) {
       subscriptions->subscribers[i] = 0;
     }
   }
 
   // set guard condition handles to zero for all not triggered conditions
-  for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
-    DDSCondition * condition =
-      static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
-    if (!condition) {
-      RMW_SET_ERROR_MSG("condition handle is null");
-      return RMW_RET_ERROR;
-    }
-
-    // search for guard condition in active set
-    DDS_Long j = 0;
-    for (; j < active_conditions.length(); ++j) {
-      if (active_conditions[j] == condition) {
-        DDSGuardCondition * guard = static_cast<DDSGuardCondition *>(condition);
-        DDS_ReturnCode_t status = guard->set_trigger_value(DDS_BOOLEAN_FALSE);
-        if (status != DDS_RETCODE_OK) {
-          RMW_SET_ERROR_MSG("failed to set trigger value");
-          return RMW_RET_ERROR;
-        }
-        break;
+  if (guard_conditions) {
+    for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
+      DDSCondition * condition =
+        static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
+      if (!condition) {
+        RMW_SET_ERROR_MSG("condition handle is null");
+        return RMW_RET_ERROR;
       }
-    }
-    // if guard condition is not found in the active set
-    // reset the guard handle
-    if (!(j < active_conditions.length())) {
-      guard_conditions->guard_conditions[i] = 0;
+
+      // search for guard condition in active set
+      DDS_Long j = 0;
+      for (; j < active_conditions->length(); ++j) {
+        if ((*active_conditions)[j] == condition) {
+          DDSGuardCondition * guard = static_cast<DDSGuardCondition *>(condition);
+          DDS_ReturnCode_t status = guard->set_trigger_value(DDS_BOOLEAN_FALSE);
+          if (status != DDS_RETCODE_OK) {
+            RMW_SET_ERROR_MSG("failed to set trigger value");
+            return RMW_RET_ERROR;
+          }
+          break;
+        }
+      }
+      // if guard condition is not found in the active set
+      // reset the guard handle
+      if (!(j < active_conditions->length())) {
+        guard_conditions->guard_conditions[i] = 0;
+      }
     }
   }
 
@@ -340,14 +449,14 @@ wait(rmw_subscriptions_t * subscriptions,
 
     // search for service condition in active set
     DDS_Long j = 0;
-    for (; j < active_conditions.length(); ++j) {
-      if (active_conditions[j] == read_condition) {
+    for (; j < active_conditions->length(); ++j) {
+      if ((*active_conditions)[j] == read_condition) {
         break;
       }
     }
     // if service condition is not found in the active set
     // reset the subscriber handle
-    if (!(j < active_conditions.length())) {
+    if (!(j < active_conditions->length())) {
       services->services[i] = 0;
     }
   }
@@ -368,14 +477,14 @@ wait(rmw_subscriptions_t * subscriptions,
 
     // search for service condition in active set
     DDS_Long j = 0;
-    for (; j < active_conditions.length(); ++j) {
-      if (active_conditions[j] == read_condition) {
+    for (; j < active_conditions->length(); ++j) {
+      if ((*active_conditions)[j] == read_condition) {
         break;
       }
     }
     // if client condition is not found in the active set
     // reset the subscriber handle
-    if (!(j < active_conditions.length())) {
+    if (!(j < active_conditions->length())) {
       clients->clients[i] = 0;
     }
   }
