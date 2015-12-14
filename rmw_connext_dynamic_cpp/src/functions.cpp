@@ -376,7 +376,7 @@ rmw_create_publisher(
   const rmw_node_t * node,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
-  const rmw_qos_profile_t & qos_profile)
+  const rmw_qos_profile_t * qos_profile)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -508,7 +508,7 @@ rmw_create_publisher(
     }
   }
 
-  if (!get_datawriter_qos(participant, qos_profile, datawriter_qos)) {
+  if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
     // error string was set within the function
     goto fail;
   }
@@ -1139,7 +1139,7 @@ rmw_create_subscription(
   const rmw_node_t * node,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
-  const rmw_qos_profile_t & qos_profile,
+  const rmw_qos_profile_t * qos_profile,
   bool ignore_local_publications)
 {
   if (!node) {
@@ -1274,7 +1274,7 @@ rmw_create_subscription(
     }
   }
 
-  if (!get_datareader_qos(participant, qos_profile, datareader_qos)) {
+  if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
     // error string was set within the function
     goto fail;
   }
@@ -2053,7 +2053,7 @@ rmw_wait(
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
-  rmw_time_t * wait_timeout)
+  const rmw_time_t * wait_timeout)
 {
   return wait<CustomSubscriberInfo, ConnextDynamicServiceInfo, ConnextDynamicClientInfo>
            (subscriptions, guard_conditions, services, clients, wait_timeout);
@@ -2064,7 +2064,7 @@ rmw_create_client(
   const rmw_node_t * node,
   const rosidl_service_type_support_t * type_support,
   const char * service_name,
-  const rmw_qos_profile_t & qos_profile)
+  const rmw_qos_profile_t * qos_profile)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -2181,11 +2181,11 @@ rmw_create_client(
 
   // create requester
   {
-    if (!get_datareader_qos(participant, qos_profile, datareader_qos)) {
+    if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
       // error string was set within the function
       goto fail;
     }
-    if (!get_datawriter_qos(participant, qos_profile, datawriter_qos)) {
+    if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
       // error string was set within the function
       goto fail;
     }
@@ -2443,7 +2443,7 @@ rmw_create_service(
   const rmw_node_t * node,
   const rosidl_service_type_support_t * type_support,
   const char * service_name,
-  const rmw_qos_profile_t & qos_profile)
+  const rmw_qos_profile_t * qos_profile)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -2563,11 +2563,11 @@ rmw_create_service(
   buf = nullptr;  // Only free the casted pointer; don't need the buf anymore.
 
   {
-    if (!get_datareader_qos(participant, qos_profile, datareader_qos)) {
+    if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
       // error string was set within the function
       goto fail;
     }
-    if (!get_datawriter_qos(participant, qos_profile, datawriter_qos)) {
+    if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
       // error string was set within the function
       goto fail;
     }
