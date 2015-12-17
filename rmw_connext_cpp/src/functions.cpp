@@ -150,6 +150,11 @@ rmw_create_publisher(
     rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
     return NULL)
 
+  if (!qos_profile) {
+    RMW_SET_ERROR_MSG("qos_profile is null");
+    return nullptr;
+  }
+
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
@@ -433,6 +438,11 @@ rmw_create_subscription(const rmw_node_t * node,
     type_support->typesupport_identifier,
     rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
     return NULL)
+
+  if (!qos_profile) {
+    RMW_SET_ERROR_MSG("qos_profile is null");
+    return nullptr;
+  }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
@@ -803,6 +813,11 @@ rmw_create_client(
     rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
     return NULL)
 
+  if (!qos_profile) {
+    RMW_SET_ERROR_MSG("qos_profile is null");
+    return nullptr;
+  }
+
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
@@ -1013,6 +1028,11 @@ rmw_create_service(
     type_support->typesupport_identifier,
     rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
     return NULL)
+
+  if (!qos_profile) {
+    RMW_SET_ERROR_MSG("qos_profile is null");
+    return nullptr;
+  }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
