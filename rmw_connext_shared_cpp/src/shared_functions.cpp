@@ -235,8 +235,6 @@ destroy_topic_names_and_types(
 rmw_node_t *
 create_node(const char * implementation_identifier, const char * name, size_t domain_id)
 {
-  (void)name;
-
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
     RMW_SET_ERROR_MSG("failed to get participant factory");
@@ -341,6 +339,13 @@ create_node(const char * implementation_identifier, const char * name, size_t do
   node_handle->implementation_identifier = implementation_identifier;
   node_handle->data = participant;
 
+  node_handle->name =
+    reinterpret_cast<const char *>(rmw_allocate(sizeof(char) * strlen(name) + 1));
+  if (!node_handle->name) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
   buf = rmw_allocate(sizeof(ConnextNodeInfo));
   if (!buf) {
@@ -375,6 +380,9 @@ fail:
     rmw_free(subscriber_listener);
   }
   if (node_handle) {
+    if (node_handle->name) {
+      rmw_free(const_cast<char *>(node_handle->name));
+    }
     rmw_free(node_handle);
   }
   if (node_info) {
@@ -443,6 +451,8 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
 
   rmw_free(node_info);
   node->data = nullptr;
+  rmw_free(const_cast<char *>(node->name));
+  node->name = nullptr;
   rmw_node_free(node);
 
   return RMW_RET_OK;
