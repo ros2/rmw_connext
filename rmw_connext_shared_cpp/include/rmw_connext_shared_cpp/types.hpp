@@ -92,4 +92,11 @@ struct ConnextPublisherGID
   DDS_InstanceHandle_t publication_handle;
 };
 
+struct ConnextWaitSetInfo
+{
+  DDSWaitSet * waitset;
+  DDSConditionSeq * active_conditions;
+  DDSConditionSeq * attached_conditions;
+};
+
 #endif  // RMW_CONNEXT_SHARED_CPP__TYPES_HPP_

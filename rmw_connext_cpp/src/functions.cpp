@@ -776,15 +776,29 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
   return trigger_guard_condition(rti_connext_identifier, guard_condition_handle);
 }
 
+rmw_waitset_t *
+rmw_create_waitset(rmw_guard_conditions_t * fixed_guard_conditions, size_t max_conditions)
+{
+  return create_waitset(rti_connext_identifier, fixed_guard_conditions, max_conditions);
+}
+
+rmw_ret_t
+rmw_destroy_waitset(rmw_waitset_t * waitset)
+{
+  return destroy_waitset(rti_connext_identifier, waitset);
+}
+
 rmw_ret_t
 rmw_wait(rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
+  rmw_waitset_t * waitset,
   const rmw_time_t * wait_timeout)
 {
   return wait<ConnextStaticSubscriberInfo, ConnextStaticServiceInfo, ConnextStaticClientInfo>
-           (subscriptions, guard_conditions, services, clients, wait_timeout);
+           (rti_connext_identifier, subscriptions, guard_conditions, services, clients, waitset,
+           wait_timeout);
 }
 
 rmw_client_t *
