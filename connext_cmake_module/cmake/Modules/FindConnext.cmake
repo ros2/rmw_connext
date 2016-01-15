@@ -67,11 +67,15 @@ function(_find_connext_ensure_libraries var expected_library_names library_paths
   set(${var} TRUE PARENT_SCOPE)
 endfunction()
 
+set(_lib_suffix "")
+if("${CMAKE_BUILD_TYPE} " STREQUAL "Debug ")
+  set(_lib_suffix "d")
+endif()
 set(_expected_library_base_names
-  "nddsc"
-  "nddscore"
-  "nddscpp"
-  "rticonnextmsgcpp"
+  "nddsc${_lib_suffix}"
+  "nddscore${_lib_suffix}"
+  "nddscpp${_lib_suffix}"
+  "rticonnextmsgcpp${_lib_suffix}"
 )
 
 set(_expected_library_names "")
