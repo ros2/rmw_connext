@@ -15,7 +15,7 @@
 #include <limits>
 #include <stdexcept>
 
-#include <rosidl_generator_c/message_type_support.h>
+#include <rosidl_generator_c/message_type_support_struct.h>
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
 #include <rosidl_generator_cpp/message_type_support.hpp>
