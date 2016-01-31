@@ -35,7 +35,8 @@ find_package(rmw_connext_shared_cpp REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 
 ament_export_dependencies(
-  rmw rmw_connext_shared_cpp
+  rmw
+  rmw_connext_shared_cpp
   rosidl_generator_cpp
   rosidl_typesupport_connext_cpp)
 
