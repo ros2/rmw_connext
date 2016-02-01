@@ -324,7 +324,9 @@ static message_type_support_callbacks_t callbacks = {
   "@(spec.base_type.type)",
   &register_type__@(spec.base_type.type),
   &publish__@(spec.base_type.type),
-  &take__@(spec.base_type.type)
+  &take__@(spec.base_type.type),
+  nullptr,
+  nullptr
 };
 
 static rosidl_message_type_support_t handle = {

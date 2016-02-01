@@ -60,7 +60,7 @@ if(WIN32)
             "RMW_CONNEXT_SHARED_BUILDING_DLL")
 endif()
 
-register_rmw_implementation("rosidl_typesupport_connext_cpp")
+register_rmw_implementation("rosidl_typesupport_connext_c;rosidl_typesupport_connext_cpp")
 
 if(AMENT_ENABLE_TESTING)
   find_package(ament_lint_auto REQUIRED)
