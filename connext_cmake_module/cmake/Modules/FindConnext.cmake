@@ -48,42 +48,133 @@
 
 set(Connext_FOUND FALSE)
 
-# check if all libraries with an expected name have been found
-function(_find_connext_ensure_libraries var expected_library_names library_paths)
-  foreach(expected_library_name ${expected_library_names})
-    set(found FALSE)
-    foreach(library_path ${library_paths})
-      get_filename_component(library_name "${library_path}" NAME)
-      if("${expected_library_name}" STREQUAL "${library_name}")
-        set(found TRUE)
-        break()
-      endif()
-    endforeach()
-    if(NOT found)
-      set(${var} FALSE PARENT_SCOPE)
-      return()
+# get the platform specific library names
+function(_get_expected_library_names var postfix)
+  set(base_names
+    "nddsc"
+    "nddscore"
+    "nddscpp"
+    "rticonnextmsgcpp"
+  )
+
+  set(library_names "")
+  foreach(base_name IN LISTS base_names)
+    # append optional postfix
+    set(base_name "${base_name}${postfix}")
+    if(WIN32)
+      set(library_name "${base_name}.lib")
+    elseif(APPLE)
+      set(library_name "lib${base_name}.dylib")
+    else()
+      set(library_name "lib${base_name}.so")
     endif()
+    list(APPEND library_names "${library_name}")
   endforeach()
-  set(${var} TRUE PARENT_SCOPE)
+
+  set(${var} "${library_names}" PARENT_SCOPE)
 endfunction()
 
-set(_expected_library_base_names
-  "nddsc"
-  "nddscore"
-  "nddscpp"
-  "rticonnextmsgcpp"
-)
+# get the platform specific libraries
+function(_find_connext_libraries var library_names basepath)
+  # search for specific file names
+  set(search_paths "")
+  foreach(library_name ${library_names})
+    list(APPEND search_paths "${basepath}/${library_name}")
+  endforeach()
+  # find libraries
+  file(GLOB_RECURSE libraries
+    RELATIVE "${basepath}"
+    ${search_paths}
+  )
+  # remove libraries from non-matching platforms
+  set(i 0)
+  while(TRUE)
+    list(LENGTH libraries length)
+    if(NOT ${i} LESS ${length})
+      break()
+    endif()
+    list(GET libraries ${i} library)
+    set(match TRUE)
+    # ignore libraries in folders with 'jdk' suffix
+    string(FIND "${library}" "jdk/" _found)
+    if(NOT ${_found} EQUAL -1)
+      set(match FALSE)
+    endif()
+    # ignore libraries in folders containing 'Linux2'
+    string(FIND "${library}" "Linux2" _found)
+    if(NOT ${_found} EQUAL -1)
+      set(match FALSE)
+    endif()
+    # If this is Darwin, only accept Darwin
+    if(APPLE)
+      # Only match binaries for x64Darwin14clang6.0.
+      # As this is the only binary that is known to work.
+      string(FIND "${library}" "x64Darwin14clang6.0" _found)
+      if(${_found} EQUAL -1)
+        set(match FALSE)
+      endif()
+    endif()
+    if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+      # on 64 bit platforms ignore libraries in folders containing 'i86'
+      string(FIND "${library}" "i86" _found)
+      if(NOT ${_found} EQUAL -1)
+        set(match FALSE)
+      endif()
+    else()
+      # on 32 bit platforms ignore libraries in folders containing 'x64'
+      string(FIND "${library}" "x64" _found)
+      if(NOT ${_found} EQUAL -1)
+        set(match FALSE)
+      endif()
+    endif()
+    # If matched so far, and Windows, ignore anything without VS2013 or VS2015
+    if(match AND WIN32)
+      set(match FALSE)
+      string(FIND "${library}" "VS2015/" _found)
+      if(NOT ${_found} EQUAL -1)
+        set(match TRUE)
+      else()
+        # only consider VS 2013 if VS 2015 was not found
+        string(FIND "${library}" "VS2013/" _found)
+        if(NOT ${_found} EQUAL -1)
+          set(match TRUE)
+        endif()
+      endif()
+    endif()
+    # keep libraries matching this platform
+    if(match)
+      math(EXPR i "${i} + 1")
+    else()
+      list(REMOVE_AT libraries ${i})
+    endif()
+  endwhile()
 
-set(_expected_library_names "")
-foreach(_base_name IN LISTS _expected_library_base_names)
-  if(WIN32)
-    list(APPEND _expected_library_names "${_base_name}.lib")
-  elseif(APPLE)
-    list(APPEND _expected_library_names "lib${_base_name}.dylib")
-  else()
-    list(APPEND _expected_library_names "lib${_base_name}.so")
-  endif()
-endforeach()
+  set(${var} "${libraries}" PARENT_SCOPE)
+endfunction()
+
+# collect the number of libraries matching and expected name and
+# check that each expected library name is found at least once
+function(_count_found_libraries var_count var_found expected_library_names libraries)
+  set(found_libraries "")
+  set(found_all_libraries TRUE)
+  foreach(library_path ${libraries})
+    get_filename_component(library_name "${library_path}" NAME)
+    list(GET expected_library_names "${library_name}" index)
+    if(index EQUAL -1)
+      set(found_all_libraries FALSE)
+    else()
+      list(APPEND found_libraries "${library_path}")
+    endif()
+  endforeach()
+  list(LENGTH found_libraries length)
+  set(${var_count} ${length} PARENT_SCOPE)
+  set(${var_found} ${found_all_libraries} PARENT_SCOPE)
+endfunction()
+
+
+# get library names
+_get_expected_library_names(_optimized_library_names "")
+_get_expected_library_names(_debug_library_names "d")
 
 file(TO_CMAKE_PATH "$ENV{NDDSHOME}" _NDDSHOME)
 
@@ -95,95 +186,55 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
 
   set(_lib_path "${_NDDSHOME}/lib")
 
-  set(_search_library_paths "")
-  foreach(_library_name ${_expected_library_names})
-    list(APPEND _search_library_paths "${_lib_path}/${_library_name}")
-  endforeach()
+  # find platform specific Connext libraries
+  _find_connext_libraries(_optimized_libraries "${_optimized_library_names}" "${_lib_path}")
+  _find_connext_libraries(_debug_libraries "${_debug_library_names}" "${_lib_path}")
 
-  # find library nddscpp
-  file(GLOB_RECURSE _libs
-    RELATIVE "${_lib_path}"
-    ${_search_library_paths}
-  )
+  # check if all expected libraries have been found exactly once
+  _count_found_libraries(_optimized_libraries_count _found_all_optimized_libraries "${_optimized_library_names}" "${_optimized_libraries}")
+  _count_found_libraries(_debug_libraries_count _found_all_debug_libraries "${_debug_library_names}" "${_debug_libraries}")
 
-  # remove libraries from non-matching platforms
-  set(_i 0)
-  while(TRUE)
-    list(LENGTH _libs _length)
-    if(NOT ${_i} LESS ${_length})
-      break()
-    endif()
-    list(GET _libs ${_i} _lib)
-    set(_match TRUE)
-    # ignore libraries in folders with 'jdk' suffix
-    string(FIND "${_lib}" "jdk/" _found)
-    if(NOT ${_found} EQUAL -1)
-      set(_match FALSE)
-    endif()
-    # ignore libraries in folders containing 'Linux2'
-    string(FIND "${_lib}" "Linux2" _found)
-    if(NOT ${_found} EQUAL -1)
-      set(_match FALSE)
-    endif()
-    # If this is Darwin, only accept Darwin
-    if(APPLE)
-      # Only match binaries for x64Darwin14clang6.0.
-      # As this is the only binary that is known to work.
-      string(FIND "${_lib}" "x64Darwin14clang6.0" _found)
-      if(${_found} EQUAL -1)
-        set(_match FALSE)
-      endif()
-    endif()
-    if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)
-      # on 64 bit platforms ignore libraries in folders containing 'i86'
-      string(FIND "${_lib}" "i86" _found)
-      if(NOT ${_found} EQUAL -1)
-        set(_match FALSE)
-      endif()
-    else()
-      # on 32 bit platforms ignore libraries in folders containing 'x64'
-      string(FIND "${_lib}" "x64" _found)
-      if(NOT ${_found} EQUAL -1)
-        set(_match FALSE)
-      endif()
-    endif()
-    # If matched so far, and Windows, ignore anything without VS2013 or VS2015
-    if(_match AND WIN32)
-      set(_match FALSE)
-      string(FIND "${_lib}" "VS2015/" _found)
-      if(NOT ${_found} EQUAL -1)
-        set(_match TRUE)
-      endif()
-      string(FIND "${_lib}" "VS2013/" _found)
-      if(NOT ${_found} EQUAL -1)
-        set(_match TRUE)
-      endif()
-    endif()
-    # keep libraries matching this platform
-    if(_match)
-      math(EXPR _i "${_i} + 1")
-    else()
-      list(REMOVE_AT _libs ${_i})
-    endif()
-  endwhile()
-
-  _find_connext_ensure_libraries(_found_all_libraries "${_expected_library_names}" "${_libs}")
-  if(NOT _found_all_libraries)
-    message(FATAL_ERROR "NDDSHOME set to '${_NDDSHOME}' but could not find all libraries '${_expected_library_names}' under '${_lib_path}': ${_libs}")
+  list(LENGTH _optimized_library_names _expected_length)
+  if(_optimized_libraries_count GREATER _expected_length)
+    message(WARNING "NDDSHOME set to '${_NDDSHOME}' but found multiple files named '${_optimized_library_names}' under '${_lib_path}': ${_optimized_libraries}")
+    set(_found_all_optimized_libraries FALSE)
   endif()
-  list(LENGTH _expected_library_names _expected_length)
-  if(_length GREATER _expected_length)
-    message(FATAL_ERROR "NDDSHOME set to '${_NDDSHOME}' but found multiple files named '${_expected_library_names}' under '${_lib_path}': ${_libs}")
+
+  list(LENGTH _debug_library_names _expected_length)
+  if(_debug_libraries_count GREATER _expected_length)
+    message(WARNING "NDDSHOME set to '${_NDDSHOME}' but found multiple files named '${_debug_library_names}' under '${_lib_path}': ${_debug_libraries}")
+    set(_found_all_debug_libraries FALSE)
+  endif()
+
+  if(NOT _found_all_optimized_libraries AND NOT _found_all_debug_libraries)
+    message(FATAL_ERROR "NDDSHOME set to '${_NDDSHOME}' but could neither find all optimized libraries '${_optimized_library_names}' nor all debug libraries '${_debug_library_names}' under '${_lib_path}':\n- optimized: ${_optimized_libraries}\n- debug: ${_debug_libraries}")
   endif()
 
   set(Connext_LIBRARIES "")
-  foreach(_lib IN LISTS _libs)
-    list(APPEND Connext_LIBRARIES "${_lib_path}/${_lib}")
-  endforeach()
-  list(GET _libs 0 _first_lib)
-  get_filename_component(Connext_LIBRARY_DIRS "${_lib_path}/${_first_lib}" DIRECTORY)
-  # Since we know Connext_LIBRARY_DIRS is a single path, just alias it.
-  set(Connext_LIBRARY_DIR "${Connext_LIBRARY_DIRS}")
+  if(_found_all_optimized_libraries)
+    foreach(_lib IN LISTS _optimized_libraries)
+      # if libraries of both types are found use prepend the build configuration
+      if(_found_all_debug_libraries)
+        list(APPEND Connext_LIBRARIES "optimized")
+      endif()
+      list(APPEND Connext_LIBRARIES "${_lib_path}/${_lib}")
+    endforeach()
+  endif()
+  if(_found_all_debug_libraries)
+    foreach(_lib IN LISTS _debug_libraries)
+      # if libraries of both types are found use prepend the build configuration
+      if(_found_all_optimized_libraries)
+        list(APPEND Connext_LIBRARIES "debug")
+      endif()
+      list(APPEND Connext_LIBRARIES "${_lib_path}/${_lib}")
+    endforeach()
+  endif()
+  # use the last since the first might be a build configuration keyword
+  list(LENGTH Connext_LIBRARIES _length)
+  math(EXPR _last_index "${_length} - 1")
+  list(GET Connext_LIBRARIES ${_last_index} _last_lib)
+  get_filename_component(Connext_LIBRARY_DIR "${_last_lib}" DIRECTORY)
+  set(Connext_LIBRARY_DIRS "${Connext_LIBRARY_DIR}")
 
   # extract architecture name
   get_filename_component(Connext_ARCHITECTURE_NAME "${Connext_LIBRARY_DIR}" NAME)
@@ -203,33 +254,7 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
     endif()
   endif()
   set(Connext_FOUND TRUE)
-else()
-  # try to find_package() it
-  find_package(nddscpp)
-  find_package(rticonnextmsgcpp)
-  if(nddscpp_FOUND AND rticonnextmsgcpp_FOUND)
-    message(STATUS "Found RTI Connext: ${nddscpp_DIR} ${rticonnextmsgcpp_DIR}")
-    set(Connext_INCLUDE_DIRS
-      ${nddscpp_INCLUDE_DIRS} ${rticonnextmsgcpp_INCLUDE_DIRS})
-    set(Connext_LIBRARIES ${nddscpp_LIBRARIES} ${rticonnextmsgcpp_LIBRARIES})
-    set(Connext_LIBRARY_DIRS "")
-    set(Connext_LIBRARY_DIR "")
-    set(Connext_DEFINITIONS
-      ${nddscpp_DEFINITIONS} ${rticonnextmsgcpp_DEFINITIONS})
-    set(Connext_DDSGEN "/usr/bin/rtiddsgen")
-    if(NOT EXISTS "${Connext_DDSGEN}")
-      message(FATAL_ERROR "Could not find executable '${Connext_DDSGEN}'")
-    endif()
-    if(EXISTS "/usr/bin/rtiddsgen_server")
-      set(Connext_DDSGEN_SERVER "/usr/bin/rtiddsgen_server")
-    endif()
-    set(Connext_FOUND TRUE)
 
-    _find_connext_ensure_libraries(_found_all_libraries "${_expected_library_names}" "${Connext_LIBRARIES}")
-    if(NOT _found_all_libraries)
-      message(FATAL_ERROR "Connext_LIBRARIES does not contain all libraries '${_expected_library_names}': ${Connext_LIBRARIES}")
-    endif()
-  endif()
 endif()
 
 if(Connext_FOUND AND NOT WIN32)
