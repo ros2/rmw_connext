@@ -261,7 +261,7 @@ DDS_TypeCode * create_type_code(
             return NULL;
           }
           auto sub_members =
-            static_cast<const::rosidl_typesupport_introspection_cpp::MessageMembers *>(
+            static_cast<const ::rosidl_typesupport_introspection_cpp::MessageMembers *>(
             member->members_->data);
           if (!sub_members) {
             RMW_SET_ERROR_MSG("sub members handle is null");
@@ -941,7 +941,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     RMW_SET_ERROR_MSG("members handle is null"); \
     return false; \
   } \
-  auto sub_members = static_cast<const::rosidl_typesupport_introspection_cpp::MessageMembers *>( \
+  auto sub_members = static_cast<const ::rosidl_typesupport_introspection_cpp::MessageMembers *>( \
     member->members_->data); \
   if (!sub_members) { \
     RMW_SET_ERROR_MSG("sub members handle is null"); \
@@ -1773,7 +1773,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     RMW_SET_ERROR_MSG("members handle is null"); \
     return false; \
   } \
-  auto sub_members = static_cast<const::rosidl_typesupport_introspection_cpp::MessageMembers *>( \
+  auto sub_members = static_cast<const ::rosidl_typesupport_introspection_cpp::MessageMembers *>( \
     member->members_->data); \
   if (!sub_members) { \
     RMW_SET_ERROR_MSG("sub members handle is null"); \
