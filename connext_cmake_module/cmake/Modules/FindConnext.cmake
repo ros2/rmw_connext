@@ -49,14 +49,7 @@
 set(Connext_FOUND FALSE)
 
 # get the platform specific library names
-function(_get_expected_library_names var postfix)
-  set(base_names
-    "nddsc"
-    "nddscore"
-    "nddscpp"
-    "rticonnextmsgcpp"
-  )
-
+function(_get_expected_library_names var postfix base_names)
   set(library_names "")
   foreach(base_name IN LISTS base_names)
     # append optional postfix
@@ -171,10 +164,15 @@ function(_count_found_libraries var_count var_found expected_library_names libra
   set(${var_found} ${found_all_libraries} PARENT_SCOPE)
 endfunction()
 
-
 # get library names
-_get_expected_library_names(_optimized_library_names "")
-_get_expected_library_names(_debug_library_names "d")
+set(_base_names
+  "nddsc"
+  "nddscore"
+  "nddscpp"
+  "rticonnextmsgcpp"
+)
+_get_expected_library_names(_optimized_library_names "" "${_base_names}")
+_get_expected_library_names(_debug_library_names "d" "${_base_names}")
 
 file(TO_CMAKE_PATH "$ENV{NDDSHOME}" _NDDSHOME)
 
@@ -211,29 +209,38 @@ if(NOT "${_NDDSHOME} " STREQUAL " ")
   endif()
 
   set(Connext_LIBRARIES "")
+  # first create an imported target for each Connext library
+  foreach(_base_name IN LISTS _base_names)
+    add_library(${_base_name} UNKNOWN IMPORTED)
+    list(APPEND Connext_LIBRARIES ${_base_name})
+  endforeach()
+  list(LENGTH _base_names _base_names_len)
+  math(EXPR _loop_iterations "${_base_names_len} - 1")
   if(_found_all_optimized_libraries)
-    foreach(_lib IN LISTS _optimized_libraries)
-      # if libraries of both types are found use prepend the build configuration
-      if(_found_all_debug_libraries)
-        list(APPEND Connext_LIBRARIES "optimized")
-      endif()
-      list(APPEND Connext_LIBRARIES "${_lib_path}/${_lib}")
+    # for each of the optimized libraries set the IMPORTED_LOCATION for the RELEASE config
+    foreach(_val RANGE ${_loop_iterations})
+      list(GET _base_names ${_val} _base_name)
+      list(GET _optimized_libraries ${_val} _lib)
+      set_target_properties(${_base_name} PROPERTIES IMPORTED_LOCATION_RELEASE "${_lib_path}/${_lib}")
     endforeach()
   endif()
   if(_found_all_debug_libraries)
-    foreach(_lib IN LISTS _debug_libraries)
-      # if libraries of both types are found use prepend the build configuration
-      if(_found_all_optimized_libraries)
-        list(APPEND Connext_LIBRARIES "debug")
-      endif()
-      list(APPEND Connext_LIBRARIES "${_lib_path}/${_lib}")
+    # for each of the debug libraries set the IMPORTED_LOCATION for the DEBUG config
+    foreach(_val RANGE ${_loop_iterations})
+      list(GET _base_names ${_val} _base_name)
+      list(GET _debug_libraries ${_val} _lib)
+      set_target_properties(${_base_name} PROPERTIES IMPORTED_LOCATION_DEBUG "${_lib_path}/${_lib}")
     endforeach()
   endif()
-  # use the last since the first might be a build configuration keyword
-  list(LENGTH Connext_LIBRARIES _length)
-  math(EXPR _last_index "${_length} - 1")
-  list(GET Connext_LIBRARIES ${_last_index} _last_lib)
-  get_filename_component(Connext_LIBRARY_DIR "${_last_lib}" DIRECTORY)
+  # use the first library of one of the lists to figure out the LIBRARY_DIR
+  if(_found_all_optimized_libraries)
+    list(GET _optimized_libraries 0 _first_lib)
+  endif()
+  if(_found_all_debug_libraries)
+    list(GET _debug_libraries 0 _first_lib)
+  endif()
+  # _first_lib is guaranteed to be set at this point
+  get_filename_component(Connext_LIBRARY_DIR "${_lib_path}/${_first_lib}" DIRECTORY)
   set(Connext_LIBRARY_DIRS "${Connext_LIBRARY_DIR}")
 
   # extract architecture name
