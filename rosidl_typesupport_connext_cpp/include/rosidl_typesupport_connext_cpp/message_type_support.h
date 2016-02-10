@@ -29,6 +29,12 @@ typedef struct message_type_support_callbacks_t
   bool (* take)(
     void * dds_data_reader, bool ignore_local_publications, void * ros_message, bool * taken,
     void * sending_publication_handle);
+  bool (* convert_ros_to_dds)(
+    const void * untyped_ros_message,
+    void * untyped_data_message);
+  bool (* convert_dds_to_ros)(
+    const void * untyped_data_message,
+    void * untyped_ros_message);
 } message_type_support_callbacks_t;
 
 #endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__MESSAGE_TYPE_SUPPORT_H_
