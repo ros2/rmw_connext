@@ -36,28 +36,22 @@
 # - Connext_DDSGEN_SERVER: Path to the idl2code generator in server mode
 #   (if available and runnable)
 #
-# - Connext_reset_module: macro which must be called before trying to redo
-#   a find_package(Connext) call that previously failed or succeeded.
-#
 # Example usage:
 #
 #   find_package(connext_cmake_module REQUIRED)
 #   find_package(Connext MODULE)
 #   # use Connext_* variables
 #
+# In order to make repeated calls to find_package(Connext ...) after a success
+# then you must first reset the Connext_FOUND variable to False.
+#
 ###############################################################################
 
 # lint_cmake: -convention/filename, -package/stdargs
 
-macro(Connext_reset_module)
-  set(_FindConnext__cmake FALSE)
-endmacro()
-
-if(_FindConnext__cmake)
+if(Connext_FOUND)
   return()
 endif()
-
-set(_FindConnext__cmake TRUE)
 
 set(Connext_FOUND FALSE)
 
