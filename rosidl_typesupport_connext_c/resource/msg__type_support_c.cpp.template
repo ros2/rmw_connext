@@ -21,7 +21,6 @@
 #include <cassert>
 #include <limits>
 
-
 // Provides the definition of the rosidl_message_type_support_t struct as well
 // as the Connext specific macros, e.g. ROSIDL_GET_TYPE_SUPPORT_FUNCTION.
 #include <rosidl_generator_c/message_type_support.h>
@@ -48,7 +47,6 @@ static_assert(USING_ROSIDL_TYPESUPPORT_CONNEXT_C, "expected Connext C message ty
 #ifndef _WIN32
 # pragma GCC diagnostic pop
 #endif
-
 
 // includes and forward declarations of message dependencies and their conversion functions
 
