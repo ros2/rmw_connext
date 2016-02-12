@@ -371,11 +371,7 @@ wait(const char * implementation_identifier,
   }
   DDS_ReturnCode_t status = dds_waitset->wait(*active_conditions, timeout);
 
-  if (status == DDS_RETCODE_TIMEOUT) {
-    return RMW_RET_TIMEOUT;
-  }
-
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS_RETCODE_OK && status != DDS_RETCODE_TIMEOUT) {
     RMW_SET_ERROR_MSG("failed to wait on waitset");
     return RMW_RET_ERROR;
   }
@@ -493,6 +489,10 @@ wait(const char * implementation_identifier,
     if (!(j < active_conditions->length())) {
       clients->clients[i] = 0;
     }
+  }
+
+  if (status == DDS_RETCODE_TIMEOUT) {
+    return RMW_RET_TIMEOUT;
   }
   return RMW_RET_OK;
 }
