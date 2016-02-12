@@ -245,14 +245,19 @@ if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
     )
   endif()
 
+  if(
+    NOT "${_generated_msg_files}${_generated_external_msg_files} " STREQUAL " " OR
+    NOT "${_generated_srv_files}${_generated_external_srv_files} " STREQUAL " "
+  )
+    ament_export_include_directories(include)
+  endif()
+
   install(
     TARGETS ${rosidl_generate_interfaces_TARGET}${_target_suffix}
     ARCHIVE DESTINATION lib
     LIBRARY DESTINATION lib
     RUNTIME DESTINATION bin
   )
+
+  ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${Connext_LIBRARIES})
 endif()
-
-ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${Connext_LIBRARIES})
-
-ament_export_include_directories(include)
