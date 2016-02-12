@@ -580,7 +580,7 @@ create_waitset(const char * implementation_identifier,
   }
 
   waitset->fixed_guard_conditions = fixed_guard_conditions;
-  if (fixed_guard_conditions) {
+  if (fixed_guard_conditions && fixed_guard_conditions->guard_condition_count > 0) {
     if (!fixed_guard_conditions->guard_conditions) {
       RMW_SET_ERROR_MSG("Received invalid guard condition array");
       goto fail;
