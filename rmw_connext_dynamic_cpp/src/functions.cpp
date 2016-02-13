@@ -2192,7 +2192,7 @@ rmw_create_client(
   buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
 
   response_type_code = create_type_code(response_type_name, response_members, participant_qos);
-  if (!request_type_code) {
+  if (!response_type_code) {
     // error string was set within the function
     goto fail;
   }
