@@ -2190,6 +2190,11 @@ rmw_create_client(
     DDS::DynamicDataTypeSupport, request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
   buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
 
+  if (!request_type_support->is_valid()) {
+    RMW_SET_ERROR_MSG("failed to construct dynamic data type support for request");
+    goto fail;
+  }
+
   response_type_code = create_type_code(response_type_name, response_members);
   if (!response_type_code) {
     // error string was set within the function
@@ -2207,6 +2212,11 @@ rmw_create_client(
     goto fail,
     DDS::DynamicDataTypeSupport, response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
   buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
+
+  if (!response_type_support->is_valid()) {
+    RMW_SET_ERROR_MSG("failed to construct dynamic data type support for response");
+    goto fail;
+  }
 
   // create requester
   {
