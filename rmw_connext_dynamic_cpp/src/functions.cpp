@@ -2381,18 +2381,20 @@ rmw_destroy_client(rmw_client_t * client)
         return RMW_RET_ERROR;
       }
     }
-    if (client_info->request_type_support_) {
-      RMW_TRY_DESTRUCTOR(
-        client_info->request_type_support_->~DynamicDataTypeSupport(),
-        DynamicDataTypeSupport, result = RMW_RET_ERROR)
-      rmw_free(client_info->request_type_support_);
-    }
-    if (client_info->response_type_support_) {
-      RMW_TRY_DESTRUCTOR(
-        client_info->response_type_support_->~DynamicDataTypeSupport(),
-        DynamicDataTypeSupport, result = RMW_RET_ERROR)
-      rmw_free(client_info->response_type_support_);
-    }
+    // TODO(dirk-thomas) the deletion break something within Connext
+    // afterwards it is not possible to create another client of the same type
+    // if (client_info->request_type_support_) {
+    //   RMW_TRY_DESTRUCTOR(
+    //     client_info->request_type_support_->~DynamicDataTypeSupport(),
+    //     DynamicDataTypeSupport, result = RMW_RET_ERROR)
+    //   rmw_free(client_info->request_type_support_);
+    // }
+    // if (client_info->response_type_support_) {
+    //   RMW_TRY_DESTRUCTOR(
+    //     client_info->response_type_support_->~DynamicDataTypeSupport(),
+    //     DynamicDataTypeSupport, result = RMW_RET_ERROR)
+    //   rmw_free(client_info->response_type_support_);
+    // }
     if (client_info->requester_) {
       RMW_TRY_DESTRUCTOR(
         client_info->requester_->~Requester(),
