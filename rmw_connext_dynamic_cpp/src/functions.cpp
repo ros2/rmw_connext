@@ -172,8 +172,7 @@ destroy_type_code(DDS_TypeCode * type_code)
 }
 
 DDS_TypeCode * create_type_code(
-  std::string type_name, const rosidl_typesupport_introspection_cpp::MessageMembers * members,
-  DDS_DomainParticipantQos & participant_qos)
+  std::string type_name, const rosidl_typesupport_introspection_cpp::MessageMembers * members)
 {
   DDS_TypeCodeFactory * factory = DDS_TypeCodeFactory::get_instance();
   if (!factory) {
@@ -268,7 +267,7 @@ DDS_TypeCode * create_type_code(
             return NULL;
           }
           std::string field_type_name = _create_type_name(sub_members, "msg");
-          member_type_code = create_type_code(field_type_name, sub_members, participant_qos);
+          member_type_code = create_type_code(field_type_name, sub_members);
           if (!member_type_code) {
             // error string was set within the function
             goto fail;
@@ -447,7 +446,7 @@ rmw_create_publisher(
     goto fail;
   }
 
-  type_code = create_type_code(type_name, members, participant_qos);
+  type_code = create_type_code(type_name, members);
   if (!type_code) {
     // error string was set within the function
     goto fail;
@@ -1218,7 +1217,7 @@ rmw_create_subscription(
     goto fail;
   }
 
-  type_code = create_type_code(type_name, members, participant_qos);
+  type_code = create_type_code(type_name, members);
   if (!type_code) {
     // error string was set within the function
     goto fail;
@@ -2173,7 +2172,7 @@ rmw_create_client(
     goto fail;
   }
 
-  request_type_code = create_type_code(request_type_name, request_members, participant_qos);
+  request_type_code = create_type_code(request_type_name, request_members);
   if (!request_type_code) {
     // error string was set within the function
     goto fail;
@@ -2191,8 +2190,13 @@ rmw_create_client(
     DDS::DynamicDataTypeSupport, request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
   buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
 
-  response_type_code = create_type_code(response_type_name, response_members, participant_qos);
-  if (!request_type_code) {
+  if (!request_type_support->is_valid()) {
+    RMW_SET_ERROR_MSG("failed to construct dynamic data type support for request");
+    goto fail;
+  }
+
+  response_type_code = create_type_code(response_type_name, response_members);
+  if (!response_type_code) {
     // error string was set within the function
     goto fail;
   }
@@ -2208,6 +2212,11 @@ rmw_create_client(
     goto fail,
     DDS::DynamicDataTypeSupport, response_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
   buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
+
+  if (!response_type_support->is_valid()) {
+    RMW_SET_ERROR_MSG("failed to construct dynamic data type support for response");
+    goto fail;
+  }
 
   // create requester
   {
@@ -2372,18 +2381,20 @@ rmw_destroy_client(rmw_client_t * client)
         return RMW_RET_ERROR;
       }
     }
-    if (client_info->request_type_support_) {
-      RMW_TRY_DESTRUCTOR(
-        client_info->request_type_support_->~DynamicDataTypeSupport(),
-        DynamicDataTypeSupport, result = RMW_RET_ERROR)
-      rmw_free(client_info->request_type_support_);
-    }
-    if (client_info->response_type_support_) {
-      RMW_TRY_DESTRUCTOR(
-        client_info->response_type_support_->~DynamicDataTypeSupport(),
-        DynamicDataTypeSupport, result = RMW_RET_ERROR)
-      rmw_free(client_info->response_type_support_);
-    }
+    // TODO(dirk-thomas) the deletion break something within Connext
+    // afterwards it is not possible to create another client of the same type
+    // if (client_info->request_type_support_) {
+    //   RMW_TRY_DESTRUCTOR(
+    //     client_info->request_type_support_->~DynamicDataTypeSupport(),
+    //     DynamicDataTypeSupport, result = RMW_RET_ERROR)
+    //   rmw_free(client_info->request_type_support_);
+    // }
+    // if (client_info->response_type_support_) {
+    //   RMW_TRY_DESTRUCTOR(
+    //     client_info->response_type_support_->~DynamicDataTypeSupport(),
+    //     DynamicDataTypeSupport, result = RMW_RET_ERROR)
+    //   rmw_free(client_info->response_type_support_);
+    // }
     if (client_info->requester_) {
       RMW_TRY_DESTRUCTOR(
         client_info->requester_->~Requester(),
@@ -2561,7 +2572,7 @@ rmw_create_service(
     goto fail;
   }
 
-  request_type_code = create_type_code(request_type_name, request_members, participant_qos);
+  request_type_code = create_type_code(request_type_name, request_members);
   if (!request_type_code) {
     // error string was set within the function
     goto fail;
@@ -2579,7 +2590,7 @@ rmw_create_service(
     DDS::DynamicDataTypeSupport, request_type_code, DDS_DYNAMIC_DATA_TYPE_PROPERTY_DEFAULT)
   buf = nullptr;  // Only free the casted pointer; don't need the buf anymore.
 
-  response_type_code = create_type_code(response_type_name, response_members, participant_qos);
+  response_type_code = create_type_code(response_type_name, response_members);
   if (!response_type_code) {
     // error string was set within the function
     goto fail;
