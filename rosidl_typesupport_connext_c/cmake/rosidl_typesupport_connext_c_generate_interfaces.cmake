@@ -56,7 +56,7 @@ foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
     list(APPEND _generated_external_msg_files "${_dds_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.cxx")
     list(APPEND _generated_msg_files "${_output_path}/msg/dds_connext_c/${_header_name}__type_support_c.cpp")
   elseif("${_extension} " STREQUAL ".srv ")
-    #list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext_c/${_header_name}__type_support.cpp")
+    list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext_c/${_header_name}__type_support_c.cpp")
   else()
     message(FATAL_ERROR "Interface file with unknown extension: ${_idl_file}")
   endif()
@@ -113,7 +113,7 @@ set(target_dependencies
   "${rosidl_typesupport_connext_c_BIN}"
   ${rosidl_typesupport_connext_c_GENERATOR_FILES}
   "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/msg__type_support_c.cpp.template"
-  # "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/srv__type_support_c.cpp.template"
+  "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/srv__type_support_c.cpp.template"
   ${_dependency_files})
 foreach(dep ${target_dependencies})
   if(NOT EXISTS "${dep}")
