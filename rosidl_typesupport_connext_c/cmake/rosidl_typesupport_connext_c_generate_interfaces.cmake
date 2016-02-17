@@ -232,9 +232,9 @@ add_dependencies(
 )
 
 if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
-  if(NOT "${_generated_msg_files}${_generated_external_msg_files} " STREQUAL " ")
+  if(NOT "${_generated_msg_files} " STREQUAL " ")
     install(
-      FILES ${_generated_msg_files} ${_generated_external_msg_files}
+      FILES ${_generated_msg_files}
       DESTINATION "include/${PROJECT_NAME}/msg/dds_connext_c"
     )
   endif()
@@ -245,10 +245,7 @@ if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
     )
   endif()
 
-  if(
-    NOT "${_generated_msg_files}${_generated_external_msg_files} " STREQUAL " " OR
-    NOT "${_generated_srv_files}${_generated_external_srv_files} " STREQUAL " "
-  )
+  if(NOT "${_generated_msg_files} " STREQUAL " " OR NOT "${_generated_srv_files} " STREQUAL " ")
     ament_export_include_directories(include)
   endif()
 
