@@ -2278,6 +2278,14 @@ rmw_create_client(
     return NULL;
   }
 
+  const void * untyped_request_members;
+  const void * untyped_response_members;
+
+  untyped_request_members =
+    get_request_ptr(type_support->data, type_support->typesupport_identifier);
+  untyped_response_members = get_response_ptr(type_support->data,
+      type_support->typesupport_identifier);
+
   std::string request_type_name = _create_type_name(untyped_request_members, "srv",
       type_support->typesupport_identifier);
   std::string response_type_name = _create_type_name(untyped_response_members, "srv",
@@ -2302,13 +2310,6 @@ rmw_create_client(
   DDSDataReader * response_datareader = nullptr;
   DDSReadCondition * read_condition = nullptr;
   ConnextDynamicClientInfo * client_info = nullptr;
-  const void * untyped_request_members;
-  const void * untyped_response_members;
-
-  untyped_request_members =
-    get_request_ptr(type_support->data, type_support->typesupport_identifier);
-  untyped_response_members = get_response_ptr(type_support->data,
-      type_support->typesupport_identifier);
 
   // Begin initializing elements
   client = rmw_client_allocate();
