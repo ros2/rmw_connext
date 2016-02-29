@@ -23,10 +23,11 @@ if(NOT Connext_FOUND OR CONNEXT_DYNAMIC_DISABLE)
   return()
 endif()
 
+find_package(rosidl_typesupport_introspection_c)
 find_package(rosidl_typesupport_introspection_cpp)
-if(NOT rosidl_typesupport_introspection_cpp_FOUND)
+if(NOT rosidl_typesupport_introspection_c_FOUND AND NOT rosidl_typesupport_introspection_cpp_FOUND)
   ament_package()
-  message(WARNING "Could not find ROSIDL TypeSupport for Connext (rosidl_typesupport_introspection_cpp) - skipping '${PROJECT_NAME}'")
+  message(WARNING "Could not find ROSIDL TypeSupport for Connext (rosidl_typesupport_introspection_c|cpp) - skipping '${PROJECT_NAME}'")
   return()
 endif()
 
@@ -45,6 +46,7 @@ register_rmw_implementation("rosidl_typesupport_introspection_c;rosidl_typesuppo
 
 add_library(rmw_connext_dynamic_cpp SHARED src/functions.cpp)
 ament_target_dependencies(rmw_connext_dynamic_cpp
+  "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
   "rmw"
   "rmw_connext_shared_cpp"
