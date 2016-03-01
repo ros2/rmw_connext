@@ -2298,13 +2298,18 @@ rmw_create_client(
     return NULL;
   }
 
-  const void * untyped_request_members;
-  const void * untyped_response_members;
-
-  untyped_request_members =
+  const void * untyped_request_members =
     get_request_ptr(type_support->data, type_support->typesupport_identifier);
-  untyped_response_members = get_response_ptr(type_support->data,
+  if (!untyped_request_members) {
+    RMW_SET_ERROR_MSG("couldn't get request members");
+    return NULL;
+  }
+  const void * untyped_response_members = get_response_ptr(type_support->data,
       type_support->typesupport_identifier);
+  if (!untyped_response_members) {
+    RMW_SET_ERROR_MSG("couldn't get response members");
+    return NULL;
+  }
 
   std::string request_type_name = _create_type_name(untyped_request_members, "srv",
       type_support->typesupport_identifier);

@@ -16,7 +16,7 @@
 #define ROSIDL_TYPESUPPORT_CONNEXT_CPP__SERVICE_TYPE_SUPPORT_H_
 
 #include <stdint.h>
-
+#include <rmw/types.h>
 #include "rosidl_generator_c/service_type_support.h"
 
 typedef struct service_type_support_callbacks_t
