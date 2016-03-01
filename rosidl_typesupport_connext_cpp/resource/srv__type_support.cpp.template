@@ -88,6 +88,21 @@ void * create_requester__@(spec.srv_name)(
   return requester;
 }
 
+const char * destroy_requester__@(spec.srv_name)(
+  void * untyped_requester,
+  void (* deallocator)(void *))
+{
+  using RequesterType = connext::Requester<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  auto requester = static_cast<RequesterType * >(untyped_requester);
+
+  requester->~RequesterType();
+  auto _deallocator = deallocator ? deallocator : &free;
+  _deallocator(requester);
+  return nullptr;
+}
+
 int64_t send_request__@(spec.srv_name)(
   void * untyped_requester,
   const void * untyped_ros_request)
@@ -145,6 +160,21 @@ void * create_replier__@(spec.srv_name)(
 
   *untyped_reader = replier->get_request_datareader();
   return replier;
+}
+
+const char * destroy_replier__@(spec.srv_name)(
+  void * untyped_replier,
+  void (* deallocator)(void *))
+{
+  using ReplierType = connext::Replier<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  auto replier = static_cast<ReplierType * >(untyped_replier);
+
+  replier->~ReplierType();
+  auto _deallocator = deallocator ? deallocator : &free;
+  _deallocator(replier);
+  return nullptr;
 }
 
 bool take_request__@(spec.srv_name)(
@@ -257,7 +287,9 @@ static service_type_support_callbacks_t callbacks = {
   "@(spec.pkg_name)",
   "@(spec.srv_name)",
   &create_requester__@(spec.srv_name),
+  &destroy_requester__@(spec.srv_name),
   &create_replier__@(spec.srv_name),
+  &destroy_replier__@(spec.srv_name),
   &send_request__@(spec.srv_name),
   &take_request__@(spec.srv_name),
   &send_response__@(spec.srv_name),

@@ -28,11 +28,17 @@ typedef struct service_type_support_callbacks_t
     void * participant, const char * service_name,
     const void * datareader_qos, const void * datawriter_qos,
     void ** reader, void * (*allocator)(size_t));
+  // Function to destroy a requester
+  const char * (*destroy_requester)(
+    void * untyped_requester, void (* deallocator)(void *));
   // Function to create a replier
   void * (*create_replier)(
     void * participant, const char * service_name,
     const void * datareader_qos, const void * datawriter_qos,
     void ** reader, void * (*allocator)(size_t));
+  // Function to destroy a replier
+  const char * (*destroy_replier)(
+    void * untyped_replier, void (* deallocator)(void *));
   // Function to send ROS requests
   int64_t (* send_request)(void * requester, const void * ros_request);
   // Function to read a ROS request from the wire
