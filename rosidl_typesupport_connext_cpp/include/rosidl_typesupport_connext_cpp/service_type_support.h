@@ -27,22 +27,22 @@ typedef struct service_type_support_callbacks_t
   void * (*create_requester)(
     void * participant, const char * service_name,
     const void * datareader_qos, const void * datawriter_qos,
-    void ** reader);
+    void ** reader, void * (*allocator)(size_t));
   // Function to create a replier
   void * (*create_replier)(
     void * participant, const char * service_name,
     const void * datareader_qos, const void * datawriter_qos,
-    void ** reader);
+    void ** reader, void * (*allocator)(size_t));
   // Function to send ROS requests
   int64_t (* send_request)(void * requester, const void * ros_request);
   // Function to read a ROS request from the wire
-  bool (* take_request)(void * replier, void * ros_request_header, void * ros_request);
+  bool (* take_request)(void * replier, rmw_request_id_t * request_header, void * ros_request);
   // Function to send ROS responses
   bool (* send_response)(
-    void * replier, const void * ros_request_header,
+    void * replier, const rmw_request_id_t * request_header,
     const void * ros_response);
   // Function to read a ROS response from the wire
-  bool (* take_response)(void * requester, void * ros_request_header, void * ros_response);
+  bool (* take_response)(void * requester, rmw_request_id_t * request_header, void * ros_response);
 } service_type_support_callbacks_t;
 
 #endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__SERVICE_TYPE_SUPPORT_H_
