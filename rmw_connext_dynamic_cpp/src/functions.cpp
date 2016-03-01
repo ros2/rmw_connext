@@ -2943,7 +2943,7 @@ rmw_destroy_service(rmw_service_t * service)
 rmw_ret_t
 rmw_take_request(
   const rmw_service_t * service,
-  void * ros_request_header,
+  rmw_request_id_t * request_header,
   void * ros_request,
   bool * taken)
 {
@@ -2956,7 +2956,7 @@ rmw_take_request(
     service->implementation_identifier, rti_connext_dynamic_identifier,
     return RMW_RET_ERROR)
 
-  if (!ros_request_header) {
+  if (!request_header) {
     RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
@@ -2981,8 +2981,6 @@ rmw_take_request(
     return RMW_RET_ERROR;
   }
 
-  rmw_request_id_t & req_id = *(static_cast<rmw_request_id_t *>(ros_request_header));
-
   connext::LoanedSamples<DDS::DynamicData> requests = replier->take_requests(1);
   if (requests.begin() != requests.end() && requests.begin()->info().valid_data) {
     bool success = _take(
@@ -2995,10 +2993,11 @@ rmw_take_request(
 
     size_t SAMPLE_IDENTITY_SIZE = 16;
     memcpy(
-      &req_id.writer_guid[0], requests.begin()->identity().writer_guid.value,
+      &request_header->writer_guid[0], requests.begin()->identity().writer_guid.value,
       SAMPLE_IDENTITY_SIZE);
 
-    req_id.sequence_number = ((int64_t)requests.begin()->identity().sequence_number.high) << 32 |
+    request_header->sequence_number =
+      ((int64_t)requests.begin()->identity().sequence_number.high) << 32 |
       requests.begin()->identity().sequence_number.low;
     *taken = true;
   } else {
@@ -3011,7 +3010,7 @@ rmw_take_request(
 rmw_ret_t
 rmw_take_response(
   const rmw_client_t * client,
-  void * ros_request_header,
+  rmw_request_id_t * request_header,
   void * ros_response,
   bool * taken)
 {
@@ -3024,7 +3023,7 @@ rmw_take_response(
     client->implementation_identifier, rti_connext_dynamic_identifier,
     return RMW_RET_ERROR)
 
-  if (!ros_request_header) {
+  if (!request_header) {
     RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
@@ -3059,8 +3058,7 @@ rmw_take_response(
       return RMW_RET_ERROR;
     }
 
-    rmw_request_id_t & req_id = *(static_cast<rmw_request_id_t *>(ros_request_header));
-    req_id.sequence_number =
+    request_header->sequence_number =
       (((int64_t)replies.begin()->related_identity().sequence_number.high) << 32) |
       replies.begin()->related_identity().sequence_number.low;
     *taken = true;
@@ -3074,7 +3072,7 @@ rmw_take_response(
 rmw_ret_t
 rmw_send_response(
   const rmw_service_t * service,
-  void * ros_request_header,
+  rmw_request_id_t * request_header,
   void * ros_response)
 {
   if (!service) {
@@ -3086,7 +3084,7 @@ rmw_send_response(
     service->implementation_identifier, rti_connext_dynamic_identifier,
     return RMW_RET_ERROR)
 
-  if (!ros_request_header) {
+  if (!request_header) {
     RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
@@ -3128,17 +3126,14 @@ rmw_send_response(
     return RMW_RET_ERROR;
   }
 
-  const rmw_request_id_t & req_id =
-    *(static_cast<const rmw_request_id_t *>(ros_request_header));
-
   DDS_SampleIdentity_t request_identity;
 
   size_t SAMPLE_IDENTITY_SIZE = 16;
-  memcpy(request_identity.writer_guid.value, &req_id.writer_guid[0], SAMPLE_IDENTITY_SIZE);
+  memcpy(request_identity.writer_guid.value, &request_header->writer_guid[0], SAMPLE_IDENTITY_SIZE);
 
   request_identity.sequence_number.high = (int32_t)(
-    (req_id.sequence_number & 0xFFFFFFFF00000000) >> 32);
-  request_identity.sequence_number.low = (uint32_t)(req_id.sequence_number & 0xFFFFFFFF);
+    (request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);
+  request_identity.sequence_number.low = (uint32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
   replier->send_reply(response, request_identity);
 

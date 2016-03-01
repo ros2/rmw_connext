@@ -1203,7 +1203,7 @@ rmw_destroy_service(rmw_service_t * service)
 rmw_ret_t
 rmw_take_request(
   const rmw_service_t * service,
-  void * ros_request_header,
+  rmw_request_id_t * request_header,
   void * ros_request,
   bool * taken)
 {
@@ -1216,7 +1216,7 @@ rmw_take_request(
     service->implementation_identifier, rti_connext_identifier,
     return RMW_RET_ERROR)
 
-  if (!ros_request_header) {
+  if (!request_header) {
     RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
@@ -1248,7 +1248,7 @@ rmw_take_request(
     return RMW_RET_ERROR;
   }
 
-  *taken = callbacks->take_request(replier, ros_request_header, ros_request);
+  *taken = callbacks->take_request(replier, request_header, ros_request);
 
   return RMW_RET_OK;
 }
@@ -1256,7 +1256,7 @@ rmw_take_request(
 rmw_ret_t
 rmw_take_response(
   const rmw_client_t * client,
-  void * ros_request_header,
+  rmw_request_id_t * request_header,
   void * ros_response,
   bool * taken)
 {
@@ -1269,7 +1269,7 @@ rmw_take_response(
     client->implementation_identifier, rti_connext_identifier,
     return RMW_RET_ERROR)
 
-  if (!ros_request_header) {
+  if (!request_header) {
     RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
@@ -1301,7 +1301,7 @@ rmw_take_response(
     return RMW_RET_ERROR;
   }
 
-  *taken = callbacks->take_response(requester, ros_request_header, ros_response);
+  *taken = callbacks->take_response(requester, request_header, ros_response);
 
   return RMW_RET_OK;
 }
@@ -1309,7 +1309,7 @@ rmw_take_response(
 rmw_ret_t
 rmw_send_response(
   const rmw_service_t * service,
-  void * ros_request_header,
+  rmw_request_id_t * request_header,
   void * ros_response)
 {
   if (!service) {
@@ -1321,7 +1321,7 @@ rmw_send_response(
     service->implementation_identifier, rti_connext_identifier,
     return RMW_RET_ERROR)
 
-  if (!ros_request_header) {
+  if (!request_header) {
     RMW_SET_ERROR_MSG("ros request header handle is null");
     return RMW_RET_ERROR;
   }
@@ -1349,7 +1349,7 @@ rmw_send_response(
     return RMW_RET_ERROR;
   }
 
-  callbacks->send_response(replier, ros_request_header, ros_response);
+  callbacks->send_response(replier, request_header, ros_response);
 
   return RMW_RET_OK;
 }
