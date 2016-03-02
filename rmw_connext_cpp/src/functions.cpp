@@ -878,7 +878,7 @@ rmw_create_client(
 
   requester = callbacks->create_requester(
     participant, service_name, &datareader_qos, &datawriter_qos,
-    reinterpret_cast<void **>(&response_datareader));
+    reinterpret_cast<void **>(&response_datareader), &rmw_allocate);
   if (!requester) {
     RMW_SET_ERROR_MSG("failed to create requester");
     goto fail;
@@ -964,6 +964,12 @@ rmw_destroy_client(rmw_client_t * client)
     } else if (client_info->read_condition_) {
       RMW_SET_ERROR_MSG("cannot delete readcondition because the datareader is null");
       result = RMW_RET_ERROR;
+    }
+    const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
+    if (callbacks) {
+      if (client_info->requester_) {
+        callbacks->destroy_requester(client_info->requester_, &rmw_free);
+      }
     }
 
     RMW_TRY_DESTRUCTOR(
@@ -1094,7 +1100,7 @@ rmw_create_service(
 
   replier = callbacks->create_replier(
     participant, service_name, &datareader_qos, &datawriter_qos,
-    reinterpret_cast<void **>(&request_datareader));
+    reinterpret_cast<void **>(&request_datareader), &rmw_allocate);
   if (!replier) {
     RMW_SET_ERROR_MSG("failed to create replier");
     goto fail;
@@ -1187,6 +1193,12 @@ rmw_destroy_service(rmw_service_t * service)
     } else if (service_info->read_condition_) {
       RMW_SET_ERROR_MSG("cannot delete readcondition because the datareader is null");
       result = RMW_RET_ERROR;
+    }
+    const service_type_support_callbacks_t * callbacks = service_info->callbacks_;
+    if (callbacks) {
+      if (service_info->replier_) {
+        callbacks->destroy_replier(service_info->replier_, &rmw_free);
+      }
     }
 
     RMW_TRY_DESTRUCTOR(

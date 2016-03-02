@@ -25,6 +25,7 @@
 #endif
 
 #include <rmw/rmw.h>
+#include <rmw/error_handling.h>
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
 #include <rosidl_generator_cpp/service_type_support.hpp>
@@ -56,11 +57,16 @@ void * create_requester__@(spec.srv_name)(
   const char * service_name,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
-  void ** untyped_reader)
+  void ** untyped_reader,
+  void * (*allocator)(size_t))
 {
+  using RequesterType = connext::Requester<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   if (!untyped_participant || !service_name || !untyped_reader) {
     return NULL;
   }
+  auto _allocator = allocator ? allocator : &malloc;
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
   const DDS_DataReaderQos * datareader_qos = static_cast<const DDS_DataReaderQos *>(untyped_datareader_qos);
@@ -70,25 +76,53 @@ void * create_requester__@(spec.srv_name)(
   requester_params.datareader_qos(*datareader_qos);
   requester_params.datawriter_qos(*datawriter_qos);
 
-  // TODO(wjwwood): use rmw allocators for this.
-  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester(new connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(requester_params));
+  RequesterType * requester = static_cast<RequesterType *>(_allocator(sizeof(RequesterType)));
+  try {
+    new (requester) RequesterType(requester_params);
+  } catch(...) {
+    RMW_SET_ERROR_MSG("C++ exception during construction of Requester");
+    return NULL;
+  }
 
   *untyped_reader = requester->get_reply_datareader();
   return requester;
+}
+
+const char * destroy_requester__@(spec.srv_name)(
+  void * untyped_requester,
+  void (* deallocator)(void *))
+{
+  using RequesterType = connext::Requester<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  auto requester = static_cast<RequesterType * >(untyped_requester);
+
+  requester->~RequesterType();
+  auto _deallocator = deallocator ? deallocator : &free;
+  _deallocator(requester);
+  return nullptr;
 }
 
 int64_t send_request__@(spec.srv_name)(
   void * untyped_requester,
   const void * untyped_ros_request)
 {
-  connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
-  const @(spec.pkg_name)::srv::@(spec.srv_name)_Request & ros_request = *(reinterpret_cast<const @(spec.pkg_name)::srv::@(spec.srv_name)_Request *>(untyped_ros_request));
-  @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(ros_request, request.data());
+  using ROSRequestType = @(spec.pkg_name)::srv::@(spec.srv_name)_Request;
+  using RequesterType = connext::Requester<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  connext::WriteSample<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
+  const ROSRequestType & ros_request = *(
+    reinterpret_cast<const ROSRequestType *>(untyped_ros_request));
+  @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(
+    ros_request, request.data());
 
-  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_requester);
+  RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
 
   requester->send_request(request);
-  int64_t sequence_number = ((int64_t)request.identity().sequence_number.high) << 32 | request.identity().sequence_number.low;
+  int64_t sequence_number = ((int64_t)request.identity().sequence_number.high) << 32 |
+    request.identity().sequence_number.low;
   return sequence_number;
 }
 
@@ -97,11 +131,16 @@ void * create_replier__@(spec.srv_name)(
   const char * service_name,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
-  void ** untyped_reader)
+  void ** untyped_reader,
+  void * (*allocator)(size_t))
 {
+  using ReplierType = connext::Replier<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   if (!untyped_participant || !service_name || !untyped_reader) {
     return NULL;
   }
+  auto _allocator = allocator ? allocator : &malloc;
 
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
   const DDS_DataReaderQos * datareader_qos = static_cast<const DDS_DataReaderQos *>(untyped_datareader_qos);
@@ -111,26 +150,49 @@ void * create_replier__@(spec.srv_name)(
   replier_params.datareader_qos(*datareader_qos);
   replier_params.datawriter_qos(*datawriter_qos);
 
-  // TODO(wjwwood): use rmw allocators for this.
-  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier(new connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>(replier_params));
+  ReplierType * replier = static_cast<ReplierType *>(_allocator(sizeof(ReplierType)));
+  try {
+    new (replier) ReplierType(replier_params);
+  } catch(...) {
+    RMW_SET_ERROR_MSG("C++ exception during construction of Requester");
+    return NULL;
+  }
 
   *untyped_reader = replier->get_request_datareader();
   return replier;
 }
 
+const char * destroy_replier__@(spec.srv_name)(
+  void * untyped_replier,
+  void (* deallocator)(void *))
+{
+  using ReplierType = connext::Replier<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  auto replier = static_cast<ReplierType * >(untyped_replier);
+
+  replier->~ReplierType();
+  auto _deallocator = deallocator ? deallocator : &free;
+  _deallocator(replier);
+  return nullptr;
+}
+
 bool take_request__@(spec.srv_name)(
   void * untyped_replier,
-  void * untyped_ros_request_header,
+  rmw_request_id_t * request_header,
   void * untyped_ros_request)
 {
-  if (!untyped_replier || !untyped_ros_request_header || !untyped_ros_request) {
+  using ReplierType = connext::Replier<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  using ROSRequestType = @(spec.pkg_name)::srv::@(spec.srv_name)_Request;
+  if (!untyped_replier || !request_header || !untyped_ros_request) {
     return false;
   }
 
-  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_replier);
+  ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
 
-  @(spec.pkg_name)::srv::@(spec.srv_name)_Request & ros_request = *(@(spec.pkg_name)::srv::@(spec.srv_name)_Request *)untyped_ros_request;
-  rmw_request_id_t & req_id = *(static_cast<rmw_request_id_t *>(untyped_ros_request_header));
+  ROSRequestType & ros_request = *(ROSRequestType *)untyped_ros_request;
 
   connext::Sample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   bool taken = replier->take_request(request);
@@ -148,24 +210,26 @@ bool take_request__@(spec.srv_name)(
   }
 
   size_t SAMPLE_IDENTITY_SIZE = 16;
-  memcpy(&req_id.writer_guid[0], request.identity().writer_guid.value, SAMPLE_IDENTITY_SIZE);
+  memcpy(&(request_header->writer_guid[0]), request.identity().writer_guid.value, SAMPLE_IDENTITY_SIZE);
 
-  req_id.sequence_number = ((int64_t)request.identity().sequence_number.high) << 32 | request.identity().sequence_number.low;
+  request_header->sequence_number = ((int64_t)request.identity().sequence_number.high) << 32 | request.identity().sequence_number.low;
   return true;
 }
 
 bool take_response__@(spec.srv_name)(
   void * untyped_requester,
-  void * untyped_ros_request_header,
+  rmw_request_id_t * request_header,
   void * untyped_ros_response)
 {
-  if (!untyped_requester || !untyped_ros_request_header || !untyped_ros_response) {
+  using RequesterType = connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  using ROSResponseType = @(spec.pkg_name)::srv::@(spec.srv_name)_Response;
+  if (!untyped_requester || !request_header || !untyped_ros_response) {
     return false;
   }
 
-  connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * requester = reinterpret_cast<connext::Requester<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_requester);
+  RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
 
-  @(spec.pkg_name)::srv::@(spec.srv_name)_Response & ros_response = *(@(spec.pkg_name)::srv::@(spec.srv_name)_Response *)untyped_ros_response;
+  ROSResponseType & ros_response = *(ROSResponseType *)untyped_ros_response;
 
   connext::Sample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
   bool received = requester->take_reply(response);
@@ -175,12 +239,11 @@ bool take_response__@(spec.srv_name)(
   if (!response.info().valid_data) {
     return false;
   }
-  rmw_request_id_t & req_id = *(reinterpret_cast<rmw_request_id_t *>(untyped_ros_request_header));
 
   int64_t sequence_number =
     (((int64_t)response.related_identity().sequence_number.high) << 32) |
     response.related_identity().sequence_number.low;
-  req_id.sequence_number = sequence_number;
+  request_header->sequence_number = sequence_number;
 
   bool converted =
     @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_dds_message_to_ros(response.data(), ros_response);
@@ -189,32 +252,32 @@ bool take_response__@(spec.srv_name)(
 
 bool send_response__@(spec.srv_name)(
   void * untyped_replier,
-  const void * untyped_ros_request_header,
+  const rmw_request_id_t * request_header,
   const void * untyped_ros_response)
 {
-  if (!untyped_replier || !untyped_ros_request_header || !untyped_ros_response) {
+  using ROSResponseType = const @(spec.pkg_name)::srv::@(spec.srv_name)_Response;
+  using ReplierType = connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  if (!untyped_replier || !request_header || !untyped_ros_response) {
     return false;
   }
 
   connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
-  const @(spec.pkg_name)::srv::@(spec.srv_name)_Response & ros_response = *(reinterpret_cast<const @(spec.pkg_name)::srv::@(spec.srv_name)_Response *>(untyped_ros_response));
+  ROSResponseType & ros_response = *(reinterpret_cast<ROSResponseType *>(untyped_ros_response));
   bool converted =
     @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(ros_response, response.data());
   if (!converted) {
     return false;
   }
 
-  const rmw_request_id_t & req_id = *(reinterpret_cast<const rmw_request_id_t *>(untyped_ros_request_header));
-
   DDS_SampleIdentity_t request_identity;
 
   size_t SAMPLE_IDENTITY_SIZE = 16;
-  memcpy(request_identity.writer_guid.value, &req_id.writer_guid[0], SAMPLE_IDENTITY_SIZE);
+  memcpy(request_identity.writer_guid.value, &request_header->writer_guid[0], SAMPLE_IDENTITY_SIZE);
 
-  request_identity.sequence_number.high = (int32_t)((req_id.sequence_number & 0xFFFFFFFF00000000) >> 32);
-  request_identity.sequence_number.low = (uint32_t)(req_id.sequence_number & 0xFFFFFFFF);
+  request_identity.sequence_number.high = (int32_t)((request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);
+  request_identity.sequence_number.low = (uint32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
-  connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> * replier = reinterpret_cast<connext::Replier<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> *>(untyped_replier);
+  ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
 
   replier->send_reply(response, request_identity);
   return true;
@@ -224,7 +287,9 @@ static service_type_support_callbacks_t callbacks = {
   "@(spec.pkg_name)",
   "@(spec.srv_name)",
   &create_requester__@(spec.srv_name),
+  &destroy_requester__@(spec.srv_name),
   &create_replier__@(spec.srv_name),
+  &destroy_replier__@(spec.srv_name),
   &send_request__@(spec.srv_name),
   &take_request__@(spec.srv_name),
   &send_response__@(spec.srv_name),
