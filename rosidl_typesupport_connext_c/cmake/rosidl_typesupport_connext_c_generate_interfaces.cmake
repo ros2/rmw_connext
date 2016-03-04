@@ -187,6 +187,7 @@ else()
     "/wd4100"  # Ignore unreferenced formal parameter warnings
     "/wd4127"  # Ignore conditional expression is constant warnings
     "/wd4275"  # Ignore "an exported class derived from a non-exported class" warnings
+    "/wd4305"  # Ignore "initializing: truncation from..." warnings
     "/wd4458"  # Ignore class hides member variable warnings
     "/wd4701"  # Ignore unused variable warnings
   )
