@@ -82,15 +82,20 @@ def generate_dds_connext_cpp(
             cmd[-5:-5] = ['-dllExportMacroSuffix', pkg_name]
         subprocess.check_call(cmd)
 
+        msg_name = os.path.splitext(os.path.basename(idl_file))[0]
         if os.name == 'nt':
             # modify generated code to use declspec(dllimport)
-            msg_name = os.path.splitext(os.path.basename(idl_file))[0]
             msg_filename = os.path.join(output_path, msg_name + '.h')
             _modify(msg_filename, pkg_name, msg_name, _inject_dllimport)
             msg_plugin_filename = os.path.join(output_path, msg_name + 'Plugin.h')
             _modify(msg_plugin_filename, pkg_name, msg_name, _rework_declspec)
             msg_support_filename = os.path.join(output_path, msg_name + 'Support.h')
             _modify(msg_support_filename, pkg_name, msg_name, _inject_dllimport)
+        else:
+            # modify generated code to avoid unsed global variable warning
+            # which can't be suppressed non-globally with gcc
+            msg_filename = os.path.join(output_path, msg_name + '.h')
+            _modify(msg_filename, pkg_name, msg_name, _inject_unused_attribute)
 
     return 0
 
@@ -167,6 +172,17 @@ def _rework_declspec(pkg_name, msg_name, lines):
             lines[index] = line.replace(
                 'NDDSUSERDllExport', 'NDDSUSERDllExport_' + pkg_name)
 
+    return True
+
+
+def _inject_unused_attribute(pkg_name, msg_name, lines):
+    # prepend attribute before constants of string type
+    prefix = 'static const DDS_Char * Constants__'
+    inject_prefix = '__attribute__((unused)) '
+    for index, line in enumerate(lines):
+        if not line.lstrip().startswith(prefix):
+            continue
+        lines[index] = line.replace(prefix, inject_prefix + prefix)
     return True
 
 
