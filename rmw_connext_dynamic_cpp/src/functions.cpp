@@ -682,6 +682,13 @@ rmw_create_publisher(
 
   publisher->implementation_identifier = rti_connext_dynamic_identifier;
   publisher->data = custom_publisher_info;
+  publisher->topic_name = reinterpret_cast<const char *>(rmw_allocate(strlen(topic_name) + 1));
+  if (!publisher->topic_name) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
+
   return publisher;
 fail:
   // Something went wrong, unwind anything that's already been done.
@@ -861,6 +868,9 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     }
     custom_publisher_info->type_code_ = nullptr;
     rmw_free(custom_publisher_info);
+  }
+  if (publisher->topic_name) {
+    rmw_free(const_cast<char *>(publisher->topic_name));
   }
   publisher->data = nullptr;
   rmw_publisher_free(publisher);
@@ -1471,6 +1481,13 @@ rmw_create_subscription(
 
   subscription->implementation_identifier = rti_connext_dynamic_identifier;
   subscription->data = custom_subscriber_info;
+
+  subscription->topic_name = reinterpret_cast<const char *>(rmw_allocate(strlen(topic_name) + 1));
+  if (!subscription->topic_name) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
   return subscription;
 fail:
   // Something has gone wrong, unroll what has been done.
@@ -1663,6 +1680,9 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     rmw_free(custom_subscription_info);
   }
   subscription->data = nullptr;
+  if (subscription->topic_name) {
+    rmw_free(const_cast<char *>(subscription->topic_name));
+  }
   rmw_subscription_free(subscription);
   return RMW_RET_OK;
 }
