@@ -82,6 +82,7 @@ if(NOT WIN32)
     )
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(_connext_compile_flags
+      "-Wno-strict-aliasing"
       "-Wno-unused-but-set-variable"
       "-Wno-unused-parameter"
       "-Wno-unused-variable"
