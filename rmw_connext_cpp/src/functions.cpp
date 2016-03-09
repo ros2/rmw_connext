@@ -910,6 +910,12 @@ rmw_create_client(
 
   client->implementation_identifier = rti_connext_identifier;
   client->data = client_info;
+  client->service_name = reinterpret_cast<const char *>(rmw_allocate(strlen(service_name) + 1));
+  if (!client->service_name) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
   return client;
 fail:
   if (client) {
@@ -977,6 +983,9 @@ rmw_destroy_client(rmw_client_t * client)
       ConnextStaticClientInfo, result = RMW_RET_ERROR)
     rmw_free(client_info);
     client->data = nullptr;
+    if (client->service_name) {
+      rmw_free(const_cast<char *>(client->service_name));
+    }
   }
   rmw_client_free(client);
 
@@ -1132,6 +1141,12 @@ rmw_create_service(
 
   service->implementation_identifier = rti_connext_identifier;
   service->data = service_info;
+  service->service_name = reinterpret_cast<const char *>(rmw_allocate(strlen(service_name) + 1));
+  if (!service->service_name) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
   return service;
 fail:
   if (service) {
@@ -1206,6 +1221,9 @@ rmw_destroy_service(rmw_service_t * service)
       ConnextStaticServiceInfo, result = RMW_RET_ERROR)
     rmw_free(service_info);
     service->data = nullptr;
+    if (service->service_name) {
+      rmw_free(const_cast<char *>(service->service_name));
+    }
   }
   rmw_service_free(service);
 

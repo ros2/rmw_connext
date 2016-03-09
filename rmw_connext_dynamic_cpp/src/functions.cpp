@@ -2438,6 +2438,12 @@ rmw_create_client(
 
   client->implementation_identifier = rti_connext_dynamic_identifier;
   client->data = client_info;
+  client->service_name = reinterpret_cast<const char *>(rmw_allocate(strlen(service_name) + 1));
+  if (!client->service_name) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
   return client;
 fail:
   if (response_datareader) {
@@ -2554,6 +2560,9 @@ rmw_destroy_client(rmw_client_t * client)
         "connext::Requester<DDS_DynamicData, DDS_DynamicData>",
         result = RMW_RET_ERROR)
       rmw_free(client_info->requester_);
+    }
+    if (client->service_name) {
+      rmw_free(const_cast<char *>(client->service_name));
     }
   }
 
@@ -2812,6 +2821,12 @@ rmw_create_service(
 
   service->implementation_identifier = rti_connext_dynamic_identifier;
   service->data = server_info;
+  service->service_name = reinterpret_cast<const char *>(rmw_allocate(strlen(service_name) + 1));
+  if (!service->service_name) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
   return service;
 fail:
   if (request_datareader) {
@@ -2926,6 +2941,9 @@ rmw_destroy_service(rmw_service_t * service)
         "connext::Replier<DDS_DynamicData, DDS_DynamicData>",
         result = RMW_RET_ERROR)
       rmw_free(service_info->replier_);
+    }
+    if (service->service_name) {
+      rmw_free(const_cast<char *>(service->service_name));
     }
   }
   if (service_info) {
