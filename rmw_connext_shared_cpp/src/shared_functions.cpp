@@ -516,8 +516,6 @@ create_waitset(const char * implementation_identifier, size_t max_conditions)
   rmw_waitset_t * waitset = rmw_waitset_allocate();
 
   ConnextWaitSetInfo * waitset_info = nullptr;
-  DDSGuardCondition * dds_guard_cond = nullptr;
-  DDS_ReturnCode_t ret;
 
   // From here onward, error results in unrolling in the goto fail block.
   if (!waitset) {
@@ -623,8 +621,6 @@ destroy_waitset(const char * implementation_identifier,
 
   auto result = RMW_RET_OK;
   ConnextWaitSetInfo * waitset_info = static_cast<ConnextWaitSetInfo *>(waitset->data);
-  DDS::WaitSet * dds_waitset =
-    static_cast<DDSWaitSet *>(waitset_info->waitset);
 
   // Explicitly call destructor since the "placement new" was used
   if (waitset_info->active_conditions) {
