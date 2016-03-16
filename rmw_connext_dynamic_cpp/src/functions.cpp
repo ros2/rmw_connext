@@ -2235,9 +2235,9 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
 }
 
 rmw_waitset_t *
-rmw_create_waitset(rmw_guard_conditions_t * fixed_guard_conditions, size_t max_conditions)
+rmw_create_waitset(size_t max_conditions)
 {
-  return create_waitset(rti_connext_dynamic_identifier, fixed_guard_conditions, max_conditions);
+  return create_waitset(rti_connext_dynamic_identifier, max_conditions);
 }
 
 rmw_ret_t

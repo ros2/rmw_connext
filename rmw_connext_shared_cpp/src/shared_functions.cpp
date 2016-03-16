@@ -511,8 +511,7 @@ destroy_guard_condition(const char * implementation_identifier,
 }
 
 rmw_waitset_t *
-create_waitset(const char * implementation_identifier,
-  rmw_guard_conditions_t * fixed_guard_conditions, size_t max_conditions)
+create_waitset(const char * implementation_identifier, size_t max_conditions)
 {
   rmw_waitset_t * waitset = rmw_waitset_allocate();
 
@@ -579,27 +578,6 @@ create_waitset(const char * implementation_identifier,
       DDSConditionSeq)
   }
 
-  waitset->fixed_guard_conditions = fixed_guard_conditions;
-  if (fixed_guard_conditions && fixed_guard_conditions->guard_condition_count > 0) {
-    if (!fixed_guard_conditions->guard_conditions) {
-      RMW_SET_ERROR_MSG("Received invalid guard condition array");
-      goto fail;
-    }
-    // We also need to attach the fixed guard conditions to the waitset (and detach them in destroy)
-    for (size_t i = 0; i < fixed_guard_conditions->guard_condition_count; ++i) {
-      void * guard_cond = fixed_guard_conditions->guard_conditions[i];
-      if (!guard_cond) {
-        RMW_SET_ERROR_MSG("Received invalid guard condition");
-        goto fail;
-      }
-      dds_guard_cond = static_cast<DDSGuardCondition *>(guard_cond);
-      ret = waitset_info->waitset->attach_condition(dds_guard_cond);
-      if (ret != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to attach condition to waitset");
-      }
-    }
-  }
-
   return waitset;
 
 fail:
@@ -647,26 +625,6 @@ destroy_waitset(const char * implementation_identifier,
   ConnextWaitSetInfo * waitset_info = static_cast<ConnextWaitSetInfo *>(waitset->data);
   DDS::WaitSet * dds_waitset =
     static_cast<DDSWaitSet *>(waitset_info->waitset);
-
-  const rmw_guard_conditions_t * fixed_guard_conditions = waitset->fixed_guard_conditions;
-  if (fixed_guard_conditions && fixed_guard_conditions->guard_conditions && dds_waitset) {
-    // We also need to attach the fixed guard conditions to the waitset (and detach them in destroy)
-    for (size_t i = 0; i < fixed_guard_conditions->guard_condition_count; ++i) {
-      void * guard_cond = static_cast<rmw_guard_condition_t *>(
-        fixed_guard_conditions->guard_conditions[i]);
-      if (!guard_cond) {
-        continue;
-      }
-      DDS::GuardCondition * dds_guard_cond = static_cast<DDSGuardCondition *>(guard_cond);
-      if (!dds_guard_cond) {
-        continue;
-      }
-      DDS_ReturnCode_t ret = dds_waitset->detach_condition(dds_guard_cond);
-      if (ret != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to detach condition from waitset");
-      }
-    }
-  }
 
   // Explicitly call destructor since the "placement new" was used
   if (waitset_info->active_conditions) {

@@ -153,8 +153,7 @@ destroy_guard_condition(const char * implementation_identifier,
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_waitset_t *
-create_waitset(const char * implementation_identifier,
-  rmw_guard_conditions_t * fixed_guard_conditions, size_t max_conditions);
+create_waitset(const char * implementation_identifier, size_t max_conditions);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -220,6 +219,7 @@ wait(const char * implementation_identifier,
 
       for (DDS_Long i = 0; i < attached_conditions->length(); ++i) {
         bool fixed = false;
+        /*
         for (uint32_t j = 0; j < waitset->fixed_guard_conditions->guard_condition_count; ++j) {
           DDS::GuardCondition * fixed_guard_cond = static_cast<DDSGuardCondition *>(
             waitset->fixed_guard_conditions->guard_conditions[j]);
@@ -237,6 +237,7 @@ wait(const char * implementation_identifier,
         if (fixed) {
           continue;
         }
+        */
         retcode = dds_waitset->detach_condition((*attached_conditions)[i]);
         if (retcode != DDS_RETCODE_OK) {
           RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
