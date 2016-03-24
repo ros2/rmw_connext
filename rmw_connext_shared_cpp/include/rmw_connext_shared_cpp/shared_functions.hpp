@@ -385,6 +385,7 @@ wait(const char * implementation_identifier,
     }
   }
 
+  // set guard condition handles to zero for all not triggered conditions
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       DDSCondition * condition =
@@ -406,6 +407,11 @@ wait(const char * implementation_identifier,
           }
           break;
         }
+      }
+      // if guard condition is not found in the active set
+      // reset the guard handle
+      if (!(j < active_conditions->length())) {
+        guard_conditions->guard_conditions[i] = 0;
       }
     }
   }
