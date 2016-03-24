@@ -204,6 +204,8 @@ def generate_cpp(args, message_specs, service_specs, known_msg_types):
     mapping_srvs = {
         os.path.join(template_dir, 'srv__type_support.cpp.template'):
         '%s__type_support.cpp',
+        os.path.join(template_dir, 'srv__type_support.hpp.template'):
+        '%s__type_support.hpp',
     }
 
     for template_file in mapping_msgs.keys():

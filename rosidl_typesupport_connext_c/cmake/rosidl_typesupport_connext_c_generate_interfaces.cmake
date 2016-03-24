@@ -198,6 +198,7 @@ set_target_properties(${rosidl_generate_interfaces_TARGET}${_target_suffix}
 target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PUBLIC
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_c
+  ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_c
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp
 )
@@ -216,13 +217,19 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
 endforeach()
 ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   "Connext"
-  "rosidl_typesupport_connext_c")
+  "rosidl_typesupport_connext_c"
+  "${PROJECT_NAME}__rosidl_typesupport_connext_cpp")
 target_link_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  ${rosidl_generate_interfaces_TARGET}__rosidl_generator_c)
+  ${rosidl_generate_interfaces_TARGET}__rosidl_generator_c
+  ${rosidl_generate_interfaces_TARGET}__rosidl_typesupport_connext_cpp)
 
 add_dependencies(
   ${rosidl_generate_interfaces_TARGET}
   ${rosidl_generate_interfaces_TARGET}${_target_suffix}
+)
+add_dependencies(
+  ${rosidl_generate_interfaces_TARGET}${_target_suffix}
+  ${rosidl_generate_interfaces_TARGET}__rosidl_typesupport_connext_cpp
 )
 add_dependencies(
   ${rosidl_generate_interfaces_TARGET}${_target_suffix}
