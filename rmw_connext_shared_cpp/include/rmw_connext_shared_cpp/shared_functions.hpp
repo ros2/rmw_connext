@@ -153,8 +153,7 @@ destroy_guard_condition(const char * implementation_identifier,
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_waitset_t *
-create_waitset(const char * implementation_identifier,
-  rmw_guard_conditions_t * fixed_guard_conditions, size_t max_conditions);
+create_waitset(const char * implementation_identifier, size_t max_conditions);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -219,24 +218,6 @@ wait(const char * implementation_identifier,
       }
 
       for (DDS_Long i = 0; i < attached_conditions->length(); ++i) {
-        bool fixed = false;
-        for (uint32_t j = 0; j < waitset->fixed_guard_conditions->guard_condition_count; ++j) {
-          DDS::GuardCondition * fixed_guard_cond = static_cast<DDSGuardCondition *>(
-            waitset->fixed_guard_conditions->guard_conditions[j]);
-          if (fixed_guard_cond == (*attached_conditions)[i]) {
-            // Reset the fixed guard conditions to avoid being woken up
-            // immediately next time.
-            retcode = fixed_guard_cond->set_trigger_value(DDS_BOOLEAN_FALSE);
-            if (retcode != DDS_RETCODE_OK) {
-              fprintf(stderr, "failed to set trigger value\n");
-            }
-            fixed = true;
-            break;
-          }
-        }
-        if (fixed) {
-          continue;
-        }
         retcode = dds_waitset->detach_condition((*attached_conditions)[i]);
         if (retcode != DDS_RETCODE_OK) {
           RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
@@ -402,6 +383,10 @@ wait(const char * implementation_identifier,
     if (!(j < active_conditions->length())) {
       subscriptions->subscribers[i] = 0;
     }
+    DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
+    if (retcode != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+    }
   }
 
   // set guard condition handles to zero for all not triggered conditions
@@ -432,6 +417,10 @@ wait(const char * implementation_identifier,
       if (!(j < active_conditions->length())) {
         guard_conditions->guard_conditions[i] = 0;
       }
+      DDS_ReturnCode_t retcode = dds_waitset->detach_condition(condition);
+      if (retcode != DDS_RETCODE_OK) {
+        RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+      }
     }
   }
 
@@ -461,6 +450,10 @@ wait(const char * implementation_identifier,
     if (!(j < active_conditions->length())) {
       services->services[i] = 0;
     }
+    DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
+    if (retcode != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+    }
   }
 
   // set client handles to zero for all not triggered conditions
@@ -488,6 +481,10 @@ wait(const char * implementation_identifier,
     // reset the subscriber handle
     if (!(j < active_conditions->length())) {
       clients->clients[i] = 0;
+    }
+    DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
+    if (retcode != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
     }
   }
 
