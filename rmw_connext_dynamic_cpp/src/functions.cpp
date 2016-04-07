@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#define _GLIBCXX_USE_CXX11_ABI 0
+
 #include <cassert>
 #include <exception>
 #include <iostream>
@@ -26,6 +28,7 @@
 
 #ifndef _WIN32
 # pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 # pragma GCC diagnostic ignored "-Wunused-parameter"
 # ifdef __clang__
 #  pragma clang diagnostic ignored "-Wdeprecated-register"
