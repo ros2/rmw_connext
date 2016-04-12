@@ -64,7 +64,7 @@ _create_type_name(
 
 extern "C"
 {
-const char * rti_connext_identifier = "connext_static";
+const char * rti_connext_identifier = "rmw_connext_cpp";
 
 
 struct ConnextStaticPublisherInfo

@@ -172,7 +172,7 @@ const void * get_response_ptr(const void * untyped_service_members, const char *
 extern "C"
 {
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
-const char * rti_connext_dynamic_identifier = "connext_dynamic";
+const char * rti_connext_dynamic_identifier = "rmw_connext_dynamic_cpp";
 
 struct CustomPublisherInfo
 {
