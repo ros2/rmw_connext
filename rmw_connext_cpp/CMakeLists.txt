@@ -61,8 +61,8 @@ if(WIN32)
 endif()
 
 register_rmw_implementation(
-  "c" "rosidl_typesupport_connext_c"
-  "cpp" "rosidl_typesupport_connext_cpp"
+  "c:rosidl_typesupport_connext_c"
+  "cpp:rosidl_typesupport_connext_cpp"
 )
 
 if(AMENT_ENABLE_TESTING)
