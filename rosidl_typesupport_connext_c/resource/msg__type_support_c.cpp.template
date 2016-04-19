@@ -182,7 +182,7 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
       return false;
     }
     DDS_Long length = static_cast<DDS_Long>(size);
-    dds_message->@(field.name)_.length(length);
+    dds_message->@(field.name)_.ensure_length(length, length);
 @[end if]@
     for (DDS_Long i = 0; i < static_cast<DDS_Long>(size); ++i) {
 @[if field.type.array_size]@
