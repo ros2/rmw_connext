@@ -506,6 +506,7 @@ destroy_guard_condition(const char * implementation_identifier,
   RMW_TRY_DESTRUCTOR(
     static_cast<DDSGuardCondition *>(guard_condition->data)->~DDSGuardCondition(),
     DDSGuardCondition, result = RMW_RET_ERROR)
+  rmw_free(guard_condition->data);
   rmw_guard_condition_free(guard_condition);
   return result;
 }
