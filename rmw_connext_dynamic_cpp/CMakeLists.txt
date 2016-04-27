@@ -88,5 +88,5 @@ install(
   RUNTIME DESTINATION bin
 )
 
-ament_index_get_resource(connext_shared_output_filter "rmw_output_filter" "rmw_connext_shared_cpp")
-ament_index_register_resource("rmw_output_filter" CONTENT "${connext_shared_output_filter}")
+get_rmw_connext_output_filter("rmw_connext_output_filter")
+ament_index_register_resource("rmw_output_filter" CONTENT "${rmw_connext_output_filter}")
