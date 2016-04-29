@@ -74,14 +74,6 @@ if(NOT WIN32)
   set(rmw_connext_dynamic_cpp_ADDITIONAL_LIBRARIES dl pthread)
 endif()
 
-set(rmw_output_filter_filename "rmw_output_filter.txt")
-ament_index_register_resource("rmw_output_filter"
-  CONTENT "resource/${rmw_output_filter_filename}")
-install(
-  FILES resource/${rmw_output_filter_filename}
-  DESTINATION share/${PROJECT_NAME}/resource
-)
-
 if(AMENT_ENABLE_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
@@ -95,3 +87,6 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+ament_index_get_resource(connext_shared_output_filter "rmw_output_filter" "rmw_connext_shared_cpp")
+ament_index_register_resource("rmw_output_filter" CONTENT "${connext_shared_output_filter}")

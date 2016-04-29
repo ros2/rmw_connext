@@ -56,3 +56,6 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+ament_index_register_resource("rmw_output_filter"
+  CONTENT "RTI Data Distribution Service\nExpires on")
