@@ -113,7 +113,7 @@ convert_ros_message_to_dds(
       throw std::runtime_error("failed to set maximum of sequence");
     }
 @[end if]@
-    if (!dds_message.@(field.name)_.length(length)) {
+    if (!dds_message.@(field.name)_.ensure_length(length, length)) {
       throw std::runtime_error("failed to set length of sequence");
     }
 @[end if]@
