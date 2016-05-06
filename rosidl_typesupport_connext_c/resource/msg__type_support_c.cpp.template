@@ -196,7 +196,7 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
         fprintf(stderr, "string capacity not greater than size\n");
         return false;
       }
-      if (str->data[str->size - 1] == '\0') {
+      if (str->data[str->size] != '\0') {
         fprintf(stderr, "string not null-terminated\n");
         return false;
       }
@@ -219,7 +219,7 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
       fprintf(stderr, "string capacity not greater than size\n");
       return false;
     }
-    if (str->data[str->size - 1] == '\0') {
+    if (str->data[str->size] != '\0') {
       fprintf(stderr, "string not null-terminated\n");
       return false;
     }
