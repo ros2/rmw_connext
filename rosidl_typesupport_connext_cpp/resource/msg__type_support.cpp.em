@@ -42,7 +42,7 @@
 
 // forward declaration of message dependencies and their conversion functions
 @[for field in spec.fields]@
-@[if not field.type.is_primitive_type()]@
+@[  if not field.type.is_primitive_type()]@
 namespace @(field.type.pkg_name)
 {
 namespace msg
@@ -63,7 +63,7 @@ bool convert_dds_message_to_ros(
 }  // namespace msg
 }  // namespace @(field.type.pkg_name)
 
-@[end if]@
+@[  end if]@
 @[end for]@
 
 namespace @(spec.base_type.pkg_name)
@@ -98,34 +98,34 @@ convert_ros_message_to_dds(
 @[end if]@
 @[for field in spec.fields]@
   // field.name @(field.name)
-@[if field.type.is_array]@
+@[  if field.type.is_array]@
   {
-@[if field.type.array_size]@
+@[    if field.type.array_size]@
     size_t size = @(field.type.array_size);
-@[else]@
+@[    else]@
     size_t size = ros_message.@(field.name).size();
     if (size > (std::numeric_limits<DDS_Long>::max)()) {
       throw std::runtime_error("array size exceeds maximum DDS sequence size");
     }
     DDS_Long length = static_cast<DDS_Long>(size);
-@[if not field.type.is_upper_bound]@
+@[      if not field.type.is_upper_bound]@
     if (!dds_message.@(field.name)_.maximum(length)) {
       throw std::runtime_error("failed to set maximum of sequence");
     }
-@[end if]@
+@[      end if]@
     if (!dds_message.@(field.name)_.ensure_length(length, length)) {
       throw std::runtime_error("failed to set length of sequence");
     }
-@[end if]@
+@[    end if]@
     for (size_t i = 0; i < size; i++) {
-@[if field.type.type == 'string']@
+@[    if field.type.type == 'string']@
       DDS_String_free(dds_message.@(field.name)_[static_cast<DDS_Long>(i)]);
       dds_message.@(field.name)_[static_cast<DDS_Long>(i)] =
         DDS_String_dup(ros_message.@(field.name)[i].c_str());
-@[elif field.type.is_primitive_type()]@
+@[    elif field.type.is_primitive_type()]@
       dds_message.@(field.name)_[static_cast<DDS_Long>(i)] =
         ros_message.@(field.name)[i];
-@[else]@
+@[    else]@
       if (
         !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_ros_message_to_dds(
           ros_message.@(field.name)[i],
@@ -133,17 +133,17 @@ convert_ros_message_to_dds(
       {
         return false;
       }
-@[end if]@
+@[    end if]@
     }
   }
-@[elif field.type.type == 'string']@
+@[  elif field.type.type == 'string']@
   DDS_String_free(dds_message.@(field.name)_);
   dds_message.@(field.name)_ =
     DDS_String_dup(ros_message.@(field.name).c_str());
-@[elif field.type.is_primitive_type()]@
+@[  elif field.type.is_primitive_type()]@
   dds_message.@(field.name)_ =
     ros_message.@(field.name);
-@[else]@
+@[  else]@
   if (
     !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_ros_message_to_dds(
       ros_message.@(field.name),
@@ -151,7 +151,7 @@ convert_ros_message_to_dds(
   {
     return false;
   }
-@[end if]@
+@[  end if]@
 
 @[end for]@
   return true;
@@ -198,19 +198,19 @@ convert_dds_message_to_ros(
 @[end if]@
 @[for field in spec.fields]@
   // field.name @(field.name)
-@[if field.type.is_array]@
+@[  if field.type.is_array]@
   {
-@[if field.type.array_size]@
+@[    if field.type.array_size]@
     size_t size = @(field.type.array_size);
-@[else]@
+@[    else]@
     size_t size = dds_message.@(field.name)_.length();
     ros_message.@(field.name).resize(size);
-@[end if]@
+@[    end if]@
     for (size_t i = 0; i < size; i++) {
-@[if field.type.is_primitive_type()]@
+@[    if field.type.is_primitive_type()]@
       ros_message.@(field.name)[i] =
         dds_message.@(field.name)_[static_cast<DDS_Long>(i)]@(' == DDS_BOOLEAN_TRUE' if field.type.type == 'bool' else '');
-@[else]@
+@[    else]@
       if (
         !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_dds_message_to_ros(
           dds_message.@(field.name)_[static_cast<DDS_Long>(i)],
@@ -218,13 +218,13 @@ convert_dds_message_to_ros(
       {
         return false;
       }
-@[end if]@
+@[    end if]@
     }
   }
-@[elif field.type.is_primitive_type()]@
+@[  elif field.type.is_primitive_type()]@
   ros_message.@(field.name) =
     dds_message.@(field.name)_@(' == DDS_BOOLEAN_TRUE' if field.type.type == 'bool' else '');
-@[else]@
+@[  else]@
   if (
     !@(field.type.pkg_name)::msg::typesupport_connext_cpp::convert_dds_message_to_ros(
       dds_message.@(field.name)_,
@@ -232,7 +232,7 @@ convert_dds_message_to_ros(
   {
     return false;
   }
-@[end if]@
+@[  end if]@
 
 @[end for]@
   return true;
