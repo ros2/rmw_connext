@@ -1,4 +1,4 @@
-// generated from rosidl_typesupport_connext_cpp/resource/msg__type_support.hpp.template
+// generated from rosidl_typesupport_connext_cpp/resource/msg__type_support.hpp.em
 
 @#######################################################################
 @# EmPy template for generating <msg>__type_support.hpp files

@@ -1,4 +1,4 @@
-// generated from rosidl_typesupport_connext_c/resource/msg__type_support_c.cpp.template
+// generated from rosidl_typesupport_connext_c/resource/msg__type_support_c.cpp.em
 
 @##########################################################################
 @# EmPy template for generating <msg>__type_support.c files for Connext
