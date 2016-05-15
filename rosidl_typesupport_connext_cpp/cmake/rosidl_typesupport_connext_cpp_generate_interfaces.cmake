@@ -121,10 +121,10 @@ endforeach()
 set(target_dependencies
   "${rosidl_typesupport_connext_cpp_BIN}"
   ${rosidl_typesupport_connext_cpp_GENERATOR_FILES}
-  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg__type_support.hpp.template"
-  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg__type_support.cpp.template"
-  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/srv__type_support.hpp.template"
-  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/srv__type_support.cpp.template"
+  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg__type_support.hpp.em"
+  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg__type_support.cpp.em"
+  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/srv__type_support.hpp.em"
+  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/srv__type_support.cpp.em"
   ${_dependency_files})
 foreach(dep ${target_dependencies})
   if(NOT EXISTS "${dep}")

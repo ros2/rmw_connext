@@ -1,4 +1,4 @@
-// generated from rosidl_typesupport_connext_c/resource/msg__type_support_c.cpp.template
+// generated from rosidl_typesupport_connext_c/resource/msg__type_support_c.cpp.em
 
 @##########################################################################
 @# EmPy template for generating <msg>__type_support.c files for Connext
@@ -67,32 +67,32 @@ have_not_included_primitive_arrays = True
 have_not_included_string = True
 }@
 @[for field in spec.fields]@
-@[if field.type.is_primitive_type()]@
-@[if field.type.is_array and have_not_included_primitive_arrays]@
+@[  if field.type.is_primitive_type()]@
+@[    if field.type.is_array and have_not_included_primitive_arrays]@
 @{have_not_included_primitive_arrays = False}@
 #include <rosidl_generator_c/primitives_array.h>
 #include <rosidl_generator_c/primitives_array_functions.h>
 
-@[end if]@
-@[if field.type.type == 'string' and have_not_included_string]@
+@[    end if]@
+@[    if field.type.type == 'string' and have_not_included_string]@
 @{have_not_included_string = False}@
 #include <rosidl_generator_c/string.h>
 #include <rosidl_generator_c/string_functions.h>
 
-@[end if]@
-@[else]@
+@[    end if]@
+@[  else]@
 // Include helper functions for type @(field.type.type)
 @{header_file_name = get_header_filename_from_msg_name(field.type.type)}@
 #include <@(field.type.pkg_name)/msg/@(header_file_name)__functions.h>
 
 // Forward declare the get type support function for @(field.type.type)
-@[if field.type.pkg_name != pkg]@
+@[    if field.type.pkg_name != pkg]@
 ROSIDL_GENERATOR_C_IMPORT_@(spec.base_type.pkg_name)
-@[end if]@
+@[    end if]@
 const rosidl_message_type_support_t *
 ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(field.type.pkg_name), msg, @(field.type.type))();
 
-@[end if]@
+@[  end if]@
 @[end for]@
 @
 @# // Make callback functions specific to this message type.
@@ -166,16 +166,16 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
 @[for field in spec.fields]@
   // Field name: @(field.name)
   {
-@[if not field.type.is_primitive_type()]@
+@[  if not field.type.is_primitive_type()]@
     const message_type_support_callbacks_t * @(field.type.pkg_name)__msg__@(field.type.type)__callbacks =
       static_cast<const message_type_support_callbacks_t *>(ROSIDL_GET_TYPE_SUPPORT_FUNCTION(
         @(field.type.pkg_name), msg, @(field.type.type)
       )()->data);
-@[end if]@
-@[if field.type.is_array]@
-@[if field.type.array_size]@
+@[  end if]@
+@[  if field.type.is_array]@
+@[    if field.type.array_size]@
     size_t size = @(field.type.array_size);
-@[else]@
+@[    else]@
     size_t size = ros_message->@(field.name).size;
     if (size > (std::numeric_limits<DDS_Long>::max)()) {
       fprintf(stderr, "array size exceeds maximum DDS sequence size\n");
@@ -183,14 +183,14 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
     }
     DDS_Long length = static_cast<DDS_Long>(size);
     dds_message->@(field.name)_.ensure_length(length, length);
-@[end if]@
+@[    end if]@
     for (DDS_Long i = 0; i < static_cast<DDS_Long>(size); ++i) {
-@[if field.type.array_size]@
+@[    if field.type.array_size]@
       auto & ros_i = ros_message->@(field.name)[i];
-@[else]@
+@[    else]@
       auto & ros_i = ros_message->@(field.name).data[i];
-@[end if]@
-@[if field.type.type == 'string']@
+@[    end if]@
+@[    if field.type.type == 'string']@
       const rosidl_generator_c__String * str = &ros_i;
       if (str->capacity == 0 || str->capacity <= str->size) {
         fprintf(stderr, "string capacity not greater than size\n");
@@ -201,19 +201,19 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
         return false;
       }
       dds_message->@(field.name)_[i] = str->data;
-@[elif field.type.type == 'bool']@
+@[    elif field.type.type == 'bool']@
       dds_message->@(field.name)_[i] = 1 ? ros_i : 0;
-@[elif field.type.is_primitive_type()]@
+@[    elif field.type.is_primitive_type()]@
       dds_message->@(field.name)_[i] = ros_i;
-@[else]@
+@[    else]@
      if (!@(field.type.pkg_name)__msg__@(field.type.type)__callbacks->convert_ros_to_dds(
         &ros_i, &dds_message->@(field.name)_[i]))
     {
       return false;
     }
-@[end if]@
+@[    end if]@
     }
-@[elif field.type.type == 'string']@
+@[  elif field.type.type == 'string']@
     const rosidl_generator_c__String * str = &ros_message->@(field.name);
     if (str->capacity == 0 || str->capacity <= str->size) {
       fprintf(stderr, "string capacity not greater than size\n");
@@ -224,15 +224,15 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
       return false;
     }
     dds_message->@(field.name)_ = str->data;
-@[elif field.type.is_primitive_type()]@
+@[  elif field.type.is_primitive_type()]@
     dds_message->@(field.name)_ = ros_message->@(field.name);
-@[else]@
+@[  else]@
     if (!@(field.type.pkg_name)__msg__@(field.type.type)__callbacks->convert_ros_to_dds(
       &ros_message->@(field.name), &dds_message->@(field.name)_))
     {
       return false;
     }
-@[end if]@
+@[  end if]@
   }
 
 @[end for]@
@@ -262,31 +262,31 @@ publish(void * dds_data_writer, const void * untyped_ros_message)
     @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
   DDS_ReturnCode_t status = data_writer->write(dds_message, DDS_HANDLE_NIL);
 @[for field in spec.fields]@
-@[if field.type.type == 'string']@
-@[if field.type.is_array]@
+@[  if field.type.type == 'string']@
+@[    if field.type.is_array]@
   {
-@[if field.type.array_size]@
+@[      if field.type.array_size]@
     DDS_Long size = static_cast<DDS_Long>(@(field.type.array_size));
     for (DDS_Long i = 0; i < size; ++i) {
       DDS_String_free(dds_message.@(field.name)_[i]);
       dds_message.@(field.name)_[i] =
         DDS_String_dup(ros_message->@(field.name)[i].data);
     }
-@[else]@
+@[      else]@
     DDS_Long size = dds_message.@(field.name)_.length();
     for (DDS_Long i = 0; i < size; ++i) {
       DDS_String_free(dds_message.@(field.name)_[i]);
       dds_message.@(field.name)_[i] =
         DDS_String_dup(ros_message->@(field.name).data[i].data);
     }
-@[end if]@
+@[      end if]@
   }
-@[else]@
+@[    else]@
   DDS_String_free(static_cast<char *>(dds_message.@(field.name)_));
   dds_message.@(field.name)_ =
     DDS_String_dup(ros_message->@(field.name).data);
-@[end if]@
-@[end if]@
+@[    end if]@
+@[  end if]@
 @[end for]@
   switch (status) {
     case DDS_RETCODE_ERROR:
@@ -348,10 +348,10 @@ convert_dds_to_ros(const void * untyped_dds_message, void * untyped_ros_message)
 @[for field in spec.fields]@
   // Field name: @(field.name)
   {
-@[if field.type.is_array]@
-@[if field.type.array_size]@
+@[  if field.type.is_array]@
+@[    if field.type.array_size]@
     DDS_Long size = @(field.type.array_size);
-@[else]@
+@[    else]@
 @{
 if field.type.type == 'string':
     array_init = 'rosidl_generator_c__String__Array__init'
@@ -370,16 +370,16 @@ else:
     if (!@(array_init)(&ros_message->@(field.name), size)) {
       return "failed to create array for field '@(field.name)'";
     }
-@[end if]@
+@[    end if]@
     for (DDS_Long i = 0; i < size; i++) {
-@[if field.type.array_size]@
+@[    if field.type.array_size]@
       auto & ros_i = ros_message->@(field.name)[i];
-@[else]@
+@[    else]@
       auto & ros_i = ros_message->@(field.name).data[i];
-@[end if]@
-@[if field.type.type == 'bool']@
+@[    end if]@
+@[    if field.type.type == 'bool']@
       ros_i = (dds_message->@(field.name)_[i] != 0);
-@[elif field.type.type == 'string']@
+@[    elif field.type.type == 'string']@
       if (!ros_i.data) {
         rosidl_generator_c__String__init(&ros_i);
       }
@@ -391,17 +391,17 @@ else:
         fprintf(stderr, "failed to assign string into field '@(field.name)'\n");
         return false;
       }
-@[elif field.type.is_primitive_type()]@
+@[    elif field.type.is_primitive_type()]@
       ros_i = dds_message->@(field.name)_[i];
-@[else]@
+@[    else]@
       const rosidl_message_type_support_t * ts =
         ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(field.type.pkg_name), msg, @(field.type.type))();
       const message_type_support_callbacks_t * callbacks =
         static_cast<const message_type_support_callbacks_t *>(ts->data);
       callbacks->convert_dds_to_ros(&dds_message->@(field.name)_[i], &ros_i);
-@[end if]@
+@[    end if]@
     }
-@[elif field.type.type == 'string']@
+@[  elif field.type.type == 'string']@
     if (!ros_message->@(field.name).data) {
       rosidl_generator_c__String__init(&ros_message->@(field.name));
     }
@@ -413,15 +413,15 @@ else:
       fprintf(stderr, "failed to assign string into field '@(field.name)'\n");
       return false;
     }
-@[elif field.type.is_primitive_type()]@
+@[  elif field.type.is_primitive_type()]@
     ros_message->@(field.name) = dds_message->@(field.name)_@(' == static_cast<DDS_Boolean>(true)' if field.type.type == 'bool' else '');
-@[else]@
+@[  else]@
     const rosidl_message_type_support_t * ts =
       ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(field.type.pkg_name), msg, @(field.type.type))();
     const message_type_support_callbacks_t * callbacks =
       static_cast<const message_type_support_callbacks_t *>(ts->data);
     callbacks->convert_dds_to_ros(&dds_message->@(field.name)_, &ros_message->@(field.name));
-@[end if]@
+@[  end if]@
   }
 
 @[end for]@

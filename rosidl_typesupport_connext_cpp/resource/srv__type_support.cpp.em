@@ -1,4 +1,4 @@
-// generated from rosidl_typesupport_connext_cpp/resource/srv__type_support.cpp.template
+// generated from rosidl_typesupport_connext_cpp/resource/srv__type_support.cpp.em
 // generated code does not contain a copyright notice
 
 @#######################################################################

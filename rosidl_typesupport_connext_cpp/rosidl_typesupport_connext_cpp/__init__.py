@@ -198,13 +198,13 @@ def _modify(filename, pkg_name, msg_name, callback):
 def generate_cpp(args, message_specs, service_specs, known_msg_types):
     template_dir = args['template_dir']
     mapping_msgs = {
-        os.path.join(template_dir, 'msg__type_support.hpp.template'): '%s__type_support.hpp',
-        os.path.join(template_dir, 'msg__type_support.cpp.template'): '%s__type_support.cpp',
+        os.path.join(template_dir, 'msg__type_support.hpp.em'): '%s__type_support.hpp',
+        os.path.join(template_dir, 'msg__type_support.cpp.em'): '%s__type_support.cpp',
     }
     mapping_srvs = {
-        os.path.join(template_dir, 'srv__type_support.cpp.template'):
+        os.path.join(template_dir, 'srv__type_support.cpp.em'):
         '%s__type_support.cpp',
-        os.path.join(template_dir, 'srv__type_support.hpp.template'):
+        os.path.join(template_dir, 'srv__type_support.hpp.em'):
         '%s__type_support.hpp',
     }
 
