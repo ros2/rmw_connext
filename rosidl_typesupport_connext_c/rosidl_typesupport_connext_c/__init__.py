@@ -26,11 +26,11 @@ from rosidl_parser import validate_field_types
 def generate_typesupport_connext_c(args):
     template_dir = args['template_dir']
     mapping_msgs = {
-        os.path.join(template_dir, 'msg__type_support_c.cpp.template'): '%s__type_support_c.cpp',
+        os.path.join(template_dir, 'msg__type_support_c.cpp.em'): '%s__type_support_c.cpp',
     }
 
     mapping_srvs = {
-        os.path.join(template_dir, 'srv__type_support_c.cpp.template'): '%s__type_support_c.cpp',
+        os.path.join(template_dir, 'srv__type_support_c.cpp.em'): '%s__type_support_c.cpp',
     }
 
     for template_file in mapping_msgs.keys():
