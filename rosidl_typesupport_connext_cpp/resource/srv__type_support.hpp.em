@@ -10,8 +10,14 @@
 @#  - get_header_filename_from_srv_name (function)
 @#######################################################################
 @
-#ifndef __@(spec.pkg_name)__srv__dds_connext__@(get_header_filename_from_msg_name(spec.srv_name))__type_support__hpp__
-#define __@(spec.pkg_name)__srv__dds_connext__@(get_header_filename_from_msg_name(spec.srv_name))__type_support__hpp__
+@{
+header_guard_parts = [
+    spec.pkg_name, 'srv', 'dds_connext',
+    get_header_filename_from_msg_name(spec.srv_name) + '__type_support_hpp']
+header_guard_variable = '__'.join([x.upper() for x in header_guard_parts]) + '_'
+}@
+#ifndef @(header_guard_variable)
+#define @(header_guard_variable)
 
 #include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
@@ -94,4 +100,4 @@ get_request_topic_name__@(spec.srv_name)(void * untyped_requester);
 
 }  // namespace @(spec.pkg_name)
 
-#endif  // __@(spec.pkg_name)__srv__dds_connext__@(get_header_filename_from_msg_name(spec.srv_name))__type_support__hpp__
+#endif  // @(header_guard_variable)

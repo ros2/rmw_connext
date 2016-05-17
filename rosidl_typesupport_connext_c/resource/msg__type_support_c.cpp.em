@@ -1,4 +1,5 @@
 // generated from rosidl_typesupport_connext_c/resource/msg__type_support_c.cpp.em
+// generated code does not contain a copyright notice
 
 @##########################################################################
 @# EmPy template for generating <msg>__type_support.c files for Connext
@@ -23,13 +24,13 @@
 
 // Provides the definition of the rosidl_message_type_support_t struct as well
 // as the Connext specific macros, e.g. ROSIDL_GET_TYPE_SUPPORT_FUNCTION.
-#include <rosidl_generator_c/message_type_support.h>
+#include "rosidl_generator_c/message_type_support.h"
 // Ensure the correct version of the above header was included.
 static_assert(USING_ROSIDL_TYPESUPPORT_CONNEXT_C, "expected Connext C message type support");
 // Provides the rosidl_typesupport_connext_c__identifier symbol declaration.
-#include <rosidl_typesupport_connext_c/identifier.h>
+#include "rosidl_typesupport_connext_c/identifier.h"
 // Provides the definition of the message_type_support_callbacks_t struct.
-#include <rosidl_typesupport_connext_cpp/message_type_support.h>
+#include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
 @{header_file_name = get_header_filename_from_msg_name(type)}@
 #include "@(pkg)/@(subfolder)/@(header_file_name)__struct.h"
@@ -60,41 +61,50 @@ extern "C"
 // Forward declare the get type support function for this type.
 ROSIDL_GENERATOR_C_EXPORT_@(pkg)
 const rosidl_message_type_support_t *
-ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(pkg), @(subfolder), @(msg))(void);
+  ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(pkg), @(subfolder), @(msg))(void);
 
+// include message dependencies
 @{
-have_not_included_primitive_arrays = True
-have_not_included_string = True
+includes = {}
+for field in spec.fields:
+    keys = set([])
+    if field.type.is_primitive_type():
+        if field.type.is_array:
+            keys.add('rosidl_generator_c/primitives_array.h')
+            keys.add('rosidl_generator_c/primitives_array_functions.h')
+        if field.type.type == 'string':
+            keys.add('rosidl_generator_c/string.h')
+            keys.add('rosidl_generator_c/string_functions.h')
+    else:
+        header_file_name = get_header_filename_from_msg_name(field.type.type)
+        keys.add('%s/msg/%s__functions.h' % (field.type.pkg_name, header_file_name))
+    for key in keys:
+        if key not in includes:
+            includes[key] = set([])
+        includes[key].add(field.name)
 }@
-@[for field in spec.fields]@
-@[  if field.type.is_primitive_type()]@
-@[    if field.type.is_array and have_not_included_primitive_arrays]@
-@{have_not_included_primitive_arrays = False}@
-#include <rosidl_generator_c/primitives_array.h>
-#include <rosidl_generator_c/primitives_array_functions.h>
-
-@[    end if]@
-@[    if field.type.type == 'string' and have_not_included_string]@
-@{have_not_included_string = False}@
-#include <rosidl_generator_c/string.h>
-#include <rosidl_generator_c/string_functions.h>
-
-@[    end if]@
-@[  else]@
-// Include helper functions for type @(field.type.type)
-@{header_file_name = get_header_filename_from_msg_name(field.type.type)}@
-#include <@(field.type.pkg_name)/msg/@(header_file_name)__functions.h>
-
-// Forward declare the get type support function for @(field.type.type)
-@[    if field.type.pkg_name != pkg]@
-ROSIDL_GENERATOR_C_IMPORT_@(spec.base_type.pkg_name)
-@[    end if]@
-const rosidl_message_type_support_t *
-ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(field.type.pkg_name), msg, @(field.type.type))();
-
-@[  end if]@
+@[for key in sorted(includes.keys())]@
+#include "@(key)"  // @(', '.join(includes[key]))
 @[end for]@
-@
+
+// forward declare type support functions
+@{
+forward_declares = {}
+for field in spec.fields:
+    if not field.type.is_primitive_type():
+        key = (field.type.pkg_name, field.type.type)
+        if key not in includes:
+            forward_declares[key] = set([])
+        forward_declares[key].add(field.name)
+}@
+@[for key in sorted(forward_declares.keys())]@
+@[  if key[0] != pkg]@
+ROSIDL_GENERATOR_C_IMPORT_@(pkg)
+@[  end if]@
+const rosidl_message_type_support_t *
+  ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(key[0]), msg, @(key[1]))();  // @(', '.join(forward_declares[key]))
+@[end for]@
+
 @# // Make callback functions specific to this message type.
 
 @{
@@ -118,24 +128,23 @@ register_type(void * untyped_participant, const char * type_name)
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
 
   DDS_ReturnCode_t status =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type(
-      participant, type_name);
+    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
   switch (status) {
     case DDS_RETCODE_ERROR:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: "
-             "an internal error has occurred\n");
+        "an internal error has occurred\n");
       return false;
     case DDS_RETCODE_BAD_PARAMETER:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: "
-             "bad domain participant or type name parameter\n");
+        "bad domain participant or type name parameter\n");
       return false;
     case DDS_RETCODE_OUT_OF_RESOURCES:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: "
-             "out of resources\n");
+        "out of resources\n");
       return false;
     case DDS_RETCODE_PRECONDITION_NOT_MET:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: "
-             "already registered with a different TypeSupport class\n");
+        "already registered with a different TypeSupport class\n");
       return false;
     case DDS_RETCODE_OK:
       return true;
@@ -206,11 +215,11 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
 @[    elif field.type.is_primitive_type()]@
       dds_message->@(field.name)_[i] = ros_i;
 @[    else]@
-     if (!@(field.type.pkg_name)__msg__@(field.type.type)__callbacks->convert_ros_to_dds(
-        &ros_i, &dds_message->@(field.name)_[i]))
-    {
-      return false;
-    }
+      if (!@(field.type.pkg_name)__msg__@(field.type.type)__callbacks->convert_ros_to_dds(
+          &ros_i, &dds_message->@(field.name)_[i]))
+      {
+        return false;
+      }
 @[    end if]@
     }
 @[  elif field.type.type == 'string']@
@@ -228,7 +237,7 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
     dds_message->@(field.name)_ = ros_message->@(field.name);
 @[  else]@
     if (!@(field.type.pkg_name)__msg__@(field.type.type)__callbacks->convert_ros_to_dds(
-      &ros_message->@(field.name), &dds_message->@(field.name)_))
+        &ros_message->@(field.name), &dds_message->@(field.name)_))
     {
       return false;
     }
@@ -290,39 +299,39 @@ publish(void * dds_data_writer, const void * untyped_ros_message)
 @[end for]@
   switch (status) {
     case DDS_RETCODE_ERROR:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write:"
-        " an internal error has occurred\n");
+      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+        "an internal error has occurred\n");
       return false;
     case DDS_RETCODE_BAD_PARAMETER:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write:"
-        " bad handle or instance_data parameter\n");
+      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+        "bad handle or instance_data parameter\n");
       return false;
     case DDS_RETCODE_ALREADY_DELETED:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write:"
-        " this @(__dds_msg_type_prefix)DataWriter has already been deleted\n");
+      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+        "this @(__dds_msg_type_prefix)DataWriter has already been deleted\n");
       return false;
     case DDS_RETCODE_OUT_OF_RESOURCES:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write:"
-        " out of resources\n");
+      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+        "out of resources\n");
       return false;
     case DDS_RETCODE_NOT_ENABLED:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
-             "this @(__dds_msg_type_prefix)DataWriter is not enabled\n");
+        "this @(__dds_msg_type_prefix)DataWriter is not enabled\n");
       return false;
     case DDS_RETCODE_PRECONDITION_NOT_MET:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
-             "the handle has not been registered with this @(__dds_msg_type_prefix)DataWriter\n");
+        "the handle has not been registered with this @(__dds_msg_type_prefix)DataWriter\n");
       return false;
     case DDS_RETCODE_TIMEOUT:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
-             "writing resulted in blocking and then exceeded the timeout set by the "
-             "max_blocking_time of the ReliabilityQosPolicy\n");
+        "writing resulted in blocking and then exceeded the timeout set by the "
+        "max_blocking_time of the ReliabilityQosPolicy\n");
       return false;
     case DDS_RETCODE_OK:
       return true;
     default:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write:"
-        " unknown return code\n");
+      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+        "unknown return code\n");
   }
   return false;
 }
@@ -385,8 +394,7 @@ else:
       }
       bool succeeded = rosidl_generator_c__String__assign(
         &ros_i,
-        dds_message->@(field.name)_[i]
-      );
+        dds_message->@(field.name)_[i]);
       if (!succeeded) {
         fprintf(stderr, "failed to assign string into field '@(field.name)'\n");
         return false;
@@ -407,8 +415,7 @@ else:
     }
     bool succeeded = rosidl_generator_c__String__assign(
       &ros_message->@(field.name),
-      dds_message->@(field.name)_
-    );
+      dds_message->@(field.name)_);
     if (!succeeded) {
       fprintf(stderr, "failed to assign string into field '@(field.name)'\n");
       return false;
@@ -439,9 +446,9 @@ take(
   if (untyped_ros_message == 0) {
     fprintf(stderr, "invalid ros message pointer\n");
     return false;
-  };
+  }
 
-  DDSDataReader * topic_reader = static_cast<DDSDataReader*>(dds_data_reader);
+  DDSDataReader * topic_reader = static_cast<DDSDataReader *>(dds_data_reader);
 
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader * data_reader =
     @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
@@ -461,26 +468,26 @@ take(
   switch (status) {
     case DDS_RETCODE_ERROR:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-             "an internal error has occurred\n");
+        "an internal error has occurred\n");
       goto finally;
     case DDS_RETCODE_ALREADY_DELETED:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-             "this @(__dds_msg_type_prefix)DataReader has already been deleted\n");
+        "this @(__dds_msg_type_prefix)DataReader has already been deleted\n");
       goto finally;
     case DDS_RETCODE_OUT_OF_RESOURCES:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-             "out of resources\n");
+        "out of resources\n");
       goto finally;
     case DDS_RETCODE_NOT_ENABLED:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-             "this @(__dds_msg_type_prefix)DataReader is not enabled\n");
+        "this @(__dds_msg_type_prefix)DataReader is not enabled\n");
       goto finally;
     case DDS_RETCODE_PRECONDITION_NOT_MET:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-             "a precondition is not met, one of: "
-             "max_samples > maximum and max_samples != LENGTH_UNLIMITED, or "
-             "the two sequences do not have matching parameters (length, maximum, release), or "
-             "maximum > 0 and release is false.\n");
+        "a precondition is not met, one of: "
+        "max_samples > maximum and max_samples != LENGTH_UNLIMITED, or "
+        "the two sequences do not have matching parameters (length, maximum, release), or "
+        "maximum > 0 and release is false.\n");
       goto finally;
     case DDS_RETCODE_NO_DATA:
       *taken = false;
@@ -488,8 +495,8 @@ take(
     case DDS_RETCODE_OK:
       break;
     default:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take:"
-        " unknown return code\n");
+      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
+        "unknown return code\n");
       goto finally;
   }
 
@@ -506,7 +513,7 @@ take(
       ignore_sample = true;
       for (size_t i = 0; i < 12; ++i) {
         DDS_Octet * sender_element = &(sender_guid.value[i]);
-        DDS_Octet * receiver_element = &(((DDS_Octet *)&receiver_instance_handle)[i]);
+        DDS_Octet * receiver_element = &(reinterpret_cast<DDS_Octet *>(&receiver_instance_handle)[i]);
         if (*sender_element != *receiver_element) {
           ignore_sample = false;
           break;
@@ -535,32 +542,32 @@ finally:
   switch (status) {
     case DDS_RETCODE_ERROR:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-             "an internal error has occurred\n");
+        "an internal error has occurred\n");
       return false;
     case DDS_RETCODE_ALREADY_DELETED:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-             "this @(__dds_msg_type_prefix)DataReader has already been deleted\n");
+        "this @(__dds_msg_type_prefix)DataReader has already been deleted\n");
       return false;
     case DDS_RETCODE_OUT_OF_RESOURCES:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-             "out of resources\n");
+        "out of resources\n");
       return false;
     case DDS_RETCODE_NOT_ENABLED:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-             "this @(__dds_msg_type_prefix)DataReader is not enabled\n");
+        "this @(__dds_msg_type_prefix)DataReader is not enabled\n");
       return false;
     case DDS_RETCODE_PRECONDITION_NOT_MET:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-             "a precondition is not met, one of: "
-             "the data_values and info_seq do not belong to a single related pair, or "
-             "the data_values and info_seq were not obtained from this "
-             "@(__dds_msg_type_prefix)DataReader\n");
+        "a precondition is not met, one of: "
+        "the data_values and info_seq do not belong to a single related pair, or "
+        "the data_values and info_seq were not obtained from this "
+        "@(__dds_msg_type_prefix)DataReader\n");
       return false;
     case DDS_RETCODE_OK:
       return true;
     default:
       fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-             "unknown return code\n");
+        "unknown return code\n");
   }
 
   return false;
@@ -573,7 +580,7 @@ static message_type_support_callbacks_t __callbacks = {
   "@(msg)",  // message_name
   register_type,  // register_type
   publish,  // publish
-  take, // take
+  take,  // take
   convert_ros_to_dds,  // convert_ros_to_dds
   convert_dds_to_ros,  // convert_dds_to_ros
 };
@@ -586,8 +593,7 @@ static rosidl_message_type_support_t __type_support = {
 
 ROSIDL_GENERATOR_C_EXPORT_@(spec.base_type.pkg_name)
 const rosidl_message_type_support_t *
-ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(pkg), @(subfolder), @(msg))()
-{
+ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(pkg), @(subfolder), @(msg))() {
   if (!__type_support.typesupport_identifier) {
     __type_support.typesupport_identifier = rosidl_typesupport_connext_c__identifier;
   }
