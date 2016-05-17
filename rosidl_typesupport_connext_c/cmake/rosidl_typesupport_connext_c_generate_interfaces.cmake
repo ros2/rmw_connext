@@ -147,17 +147,6 @@ add_custom_command(
   VERBATIM
 )
 
-set(_visibility_control_file
-  "${_output_path}/msg/dds_connext_c/visibility_control.h")
-string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
-configure_file(
-  "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/visibility_control.h.in"
-  "${_visibility_control_file}"
-  @ONLY
-)
-
-list(APPEND _generated_msg_files "${_visibility_control_file}")
-
 set(_target_suffix "__rosidl_typesupport_connext_c")
 
 link_directories(${Connext_LIBRARY_DIRS})
