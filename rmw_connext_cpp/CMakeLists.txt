@@ -23,6 +23,13 @@ if(NOT Connext_FOUND OR CONNEXT_STATIC_DISABLE)
   return()
 endif()
 
+find_package(rosidl_typesupport_connext_c)
+if(NOT rosidl_typesupport_connext_c_FOUND)
+  ament_package()
+  message(WARNING "Could not find ROSIDL TypeSupport for Connext (rosidl_typesupport_connext_c) - skipping '${PROJECT_NAME}'")
+  return()
+endif()
+
 find_package(rosidl_typesupport_connext_cpp)
 if(NOT rosidl_typesupport_connext_cpp_FOUND)
   ament_package()
@@ -39,8 +46,7 @@ ament_export_dependencies(
   rmw_connext_shared_cpp
   rosidl_generator_cpp
   rosidl_typesupport_connext_c
-  rosidl_typesupport_connext_cpp
-)
+  rosidl_typesupport_connext_cpp)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_connext_c"
@@ -52,6 +58,7 @@ ament_target_dependencies(rmw_connext_cpp
   "rmw"
   "rmw_connext_shared_cpp"
   "rosidl_generator_cpp"
+  "rosidl_typesupport_connext_c"
   "rosidl_typesupport_connext_cpp"
   "Connext")
 ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
