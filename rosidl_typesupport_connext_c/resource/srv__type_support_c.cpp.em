@@ -27,16 +27,16 @@
 # pragma GCC diagnostic pop
 #endif
 
-#include <rmw/rmw.h>
-#include <rmw/error_handling.h>
-#include <rosidl_generator_cpp/service_type_support.hpp>
+#include "rmw/rmw.h"
+#include "rmw/error_handling.h"
+#include "rosidl_generator_cpp/service_type_support.hpp"
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
-#include <rosidl_generator_c/message_type_support.h>
-#include <rosidl_typesupport_connext_c/identifier.h>
-#include <rosidl_typesupport_connext_c/visibility_control.h>
+#include "rosidl_generator_c/message_type_support.h"
+#include "rosidl_typesupport_connext_c/identifier.h"
+#include "rosidl_typesupport_connext_c/visibility_control.h"
 // Provides the definition of the service_type_support_callbacks_t struct.
-#include <rosidl_typesupport_connext_cpp/service_type_support.h>
+#include "rosidl_typesupport_connext_cpp/service_type_support.h"
 
 #include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_Support.h"
 #include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__type_support.hpp"
@@ -162,8 +162,7 @@ static rosidl_service_type_support_t __type_support = {
 
 ROSIDL_GENERATOR_C_EXPORT_@(spec.pkg_name)
 const rosidl_service_type_support_t *
-ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(spec.pkg_name), srv, @(spec.srv_name))()
-{
+ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(spec.pkg_name), srv, @(spec.srv_name))() {
   if (!__type_support.typesupport_identifier) {
     __type_support.typesupport_identifier = rosidl_typesupport_connext_c__identifier;
   }

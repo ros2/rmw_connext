@@ -10,6 +10,8 @@
 @#  - get_header_filename_from_msg_name (function)
 @#######################################################################
 @
+#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name))__type_support.hpp"
+
 #define _GLIBCXX_USE_CXX11_ABI 0
 #ifndef _WIN32
 # pragma GCC diagnostic push
@@ -28,15 +30,14 @@
 # pragma GCC diagnostic pop
 #endif
 
-#include <rmw/error_handling.h>
+#include "rmw/error_handling.h"
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
-#include <rosidl_generator_cpp/service_type_support.hpp>
+#include "rosidl_generator_cpp/service_type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
-#include <rosidl_typesupport_connext_cpp/visibility_control.h>
+#include "rosidl_typesupport_connext_cpp/visibility_control.h"
 
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name))__type_support.hpp"
 #include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__struct.hpp"
 #include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_Support.h"
 #include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__type_support.hpp"
@@ -65,8 +66,8 @@ void * create_requester__@(spec.srv_name)(
   void * (*allocator)(size_t))
 {
   using RequesterType = connext::Requester<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   if (!untyped_participant || !service_name || !untyped_reader) {
     return NULL;
   }
@@ -83,7 +84,7 @@ void * create_requester__@(spec.srv_name)(
   RequesterType * requester = static_cast<RequesterType *>(_allocator(sizeof(RequesterType)));
   try {
     new (requester) RequesterType(requester_params);
-  } catch(...) {
+  } catch (...) {
     RMW_SET_ERROR_MSG("C++ exception during construction of Requester");
     return NULL;
   }
@@ -97,9 +98,9 @@ const char * destroy_requester__@(spec.srv_name)(
   void (* deallocator)(void *))
 {
   using RequesterType = connext::Requester<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
-  auto requester = static_cast<RequesterType * >(untyped_requester);
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  auto requester = static_cast<RequesterType *>(untyped_requester);
 
   requester->~RequesterType();
   auto _deallocator = deallocator ? deallocator : &free;
@@ -113,16 +114,16 @@ int64_t send_request__@(spec.srv_name)(
 {
   using ROSRequestType = @(spec.pkg_name)::srv::@(spec.srv_name)_Request;
   using RequesterType = connext::Requester<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   connext::WriteSample<
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   const ROSRequestType & ros_request = *(
-    reinterpret_cast<const ROSRequestType *>(untyped_ros_request));
+    static_cast<const ROSRequestType *>(untyped_ros_request));
   @(spec.pkg_name)::srv::typesupport_connext_cpp::convert_ros_message_to_dds(
     ros_request, request.data());
 
-  RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
+  RequesterType * requester = static_cast<RequesterType *>(untyped_requester);
 
   requester->send_request(request);
   int64_t sequence_number = ((int64_t)request.identity().sequence_number.high) << 32 |
@@ -139,8 +140,8 @@ void * create_replier__@(spec.srv_name)(
   void * (*allocator)(size_t))
 {
   using ReplierType = connext::Replier<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   if (!untyped_participant || !service_name || !untyped_reader) {
     return NULL;
   }
@@ -157,7 +158,7 @@ void * create_replier__@(spec.srv_name)(
   ReplierType * replier = static_cast<ReplierType *>(_allocator(sizeof(ReplierType)));
   try {
     new (replier) ReplierType(replier_params);
-  } catch(...) {
+  } catch (...) {
     RMW_SET_ERROR_MSG("C++ exception during construction of Requester");
     return NULL;
   }
@@ -171,9 +172,9 @@ const char * destroy_replier__@(spec.srv_name)(
   void (* deallocator)(void *))
 {
   using ReplierType = connext::Replier<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
-  auto replier = static_cast<ReplierType * >(untyped_replier);
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+  auto replier = static_cast<ReplierType *>(untyped_replier);
 
   replier->~ReplierType();
   auto _deallocator = deallocator ? deallocator : &free;
@@ -187,16 +188,16 @@ bool take_request__@(spec.srv_name)(
   void * untyped_ros_request)
 {
   using ReplierType = connext::Replier<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   using ROSRequestType = @(spec.pkg_name)::srv::@(spec.srv_name)_Request;
   if (!untyped_replier || !request_header || !untyped_ros_request) {
     return false;
   }
 
-  ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
+  ReplierType * replier = static_cast<ReplierType *>(untyped_replier);
 
-  ROSRequestType & ros_request = *(ROSRequestType *)untyped_ros_request;
+  ROSRequestType & ros_request = *static_cast<ROSRequestType *>(untyped_ros_request);
 
   connext::Sample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   bool taken = replier->take_request(request);
@@ -231,9 +232,9 @@ bool take_response__@(spec.srv_name)(
     return false;
   }
 
-  RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
+  RequesterType * requester = static_cast<RequesterType *>(untyped_requester);
 
-  ROSResponseType & ros_response = *(ROSResponseType *)untyped_ros_response;
+  ROSResponseType & ros_response = *static_cast<ROSResponseType *>(untyped_ros_response);
 
   connext::Sample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
   bool received = requester->take_reply(response);
@@ -281,7 +282,7 @@ bool send_response__@(spec.srv_name)(
   request_identity.sequence_number.high = (int32_t)((request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);
   request_identity.sequence_number.low = (uint32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
-  ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
+  ReplierType * replier = static_cast<ReplierType *>(untyped_replier);
 
   replier->send_reply(response, request_identity);
   return true;

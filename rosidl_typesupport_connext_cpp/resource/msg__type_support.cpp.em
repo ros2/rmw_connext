@@ -1,4 +1,5 @@
 // generated from rosidl_typesupport_connext_cpp/resource/msg__type_support.cpp.em
+// generated code does not contain a copyright notice
 
 @#######################################################################
 @# EmPy template for generating <msg>__type_support.cpp files
@@ -12,31 +13,17 @@
 @#  - get_header_filename_from_msg_name (function)
 @#######################################################################
 @
+#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(get_header_filename_from_msg_name(spec.base_type.type))__type_support.hpp"
+
 #include <limits>
 #include <stdexcept>
 
-#include <rosidl_generator_c/message_type_support_struct.h>
+#include "rosidl_generator_c/message_type_support_struct.h"
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
-#include <rosidl_generator_cpp/message_type_support.hpp>
-#include <rosidl_typesupport_connext_cpp/visibility_control.h>
+#include "rosidl_generator_cpp/message_type_support.hpp"
+#include "rosidl_typesupport_connext_cpp/visibility_control.h"
 
-#include "@(spec.base_type.pkg_name)/@(subfolder)/@(get_header_filename_from_msg_name(spec.base_type.type))__struct.hpp"
-#ifndef _WIN32
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-parameter"
-# pragma GCC diagnostic ignored "-Wunused-variable"
-# ifdef __clang__
-#  pragma clang diagnostic ignored "-Wdeprecated-register"
-#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-# endif
-#endif
-#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
-#ifndef _WIN32
-# pragma GCC diagnostic pop
-#endif
-
-#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(get_header_filename_from_msg_name(spec.base_type.type))__type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
@@ -292,7 +279,7 @@ take__@(spec.base_type.type)(
     ignore_sample = true;
     for (size_t i = 0; i < 12; ++i) {
       DDS_Octet * sender_element = &(sender_guid.value[i]);
-      DDS_Octet * receiver_element = &(((DDS_Octet *)&receiver_instance_handle)[i]);
+      DDS_Octet * receiver_element = &(reinterpret_cast<DDS_Octet *>(&receiver_instance_handle)[i]);
       if (*sender_element != *receiver_element) {
         ignore_sample = false;
         break;
