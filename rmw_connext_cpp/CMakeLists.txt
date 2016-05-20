@@ -38,7 +38,9 @@ ament_export_dependencies(
   rmw
   rmw_connext_shared_cpp
   rosidl_generator_cpp
-  rosidl_typesupport_connext_cpp)
+  rosidl_typesupport_connext_c
+  rosidl_typesupport_connext_cpp
+)
 
 add_library(rmw_connext_cpp SHARED src/functions.cpp)
 ament_target_dependencies(rmw_connext_cpp
