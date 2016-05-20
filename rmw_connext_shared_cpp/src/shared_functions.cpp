@@ -65,6 +65,7 @@ void CustomPublisherListener::on_data_available(DDSDataReader * reader)
     data_seq, info_seq, DDS_LENGTH_UNLIMITED,
     DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
 
+  printf("enter Pub\n");
   if (retcode == DDS_RETCODE_NO_DATA) {
     return;
   }
@@ -81,6 +82,14 @@ void CustomPublisherListener::on_data_available(DDSDataReader * reader)
     }
   }
 
+  printf("here Pub: %d\n", data_seq.length());
+  if (data_seq.length() > 0) {
+    rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
+    if (ret != RMW_RET_OK) {
+      fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string_safe());
+    }
+  }
+
   builtin_reader->return_loan(data_seq, info_seq);
 }
 
@@ -89,6 +98,7 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
   DDSSubscriptionBuiltinTopicDataDataReader * builtin_reader =
     static_cast<DDSSubscriptionBuiltinTopicDataDataReader *>(reader);
 
+  printf("enter Sub\n");
   DDS_SubscriptionBuiltinTopicDataSeq data_seq;
   DDS_SampleInfoSeq info_seq;
   DDS_ReturnCode_t retcode = builtin_reader->take(
@@ -108,6 +118,14 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
       add_information(info_seq[i], data_seq[i].topic_name, data_seq[i].type_name);
     } else {
       remove_information(info_seq[i]);
+    }
+  }
+
+  printf("here Sub: %d\n", data_seq.length());
+  if (data_seq.length() > 0) {
+    rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
+    if (ret != RMW_RET_OK) {
+      fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string_safe());
     }
   }
 
@@ -282,6 +300,7 @@ create_node(const char * implementation_identifier, const char * name, size_t do
 
   rmw_node_t * node_handle = nullptr;
   ConnextNodeInfo * node_info = nullptr;
+  rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomPublisherListener * publisher_listener = nullptr;
   CustomSubscriberListener * subscriber_listener = nullptr;
   void * buf = nullptr;
@@ -304,12 +323,20 @@ create_node(const char * implementation_identifier, const char * name, size_t do
     goto fail;
   }
 
+  graph_guard_condition = create_guard_condition(implementation_identifier);
+  if (!graph_guard_condition) {
+    RMW_SET_ERROR_MSG("failed to create graph guard condition");
+    goto fail;
+  }
+
   buf = rmw_allocate(sizeof(CustomPublisherListener));
   if (!buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
-  RMW_TRY_PLACEMENT_NEW(publisher_listener, buf, goto fail, CustomPublisherListener)
+  RMW_TRY_PLACEMENT_NEW(
+    publisher_listener, buf, goto fail, CustomPublisherListener,
+    implementation_identifier, graph_guard_condition)
   buf = nullptr;
   builtin_publication_datareader->set_listener(publisher_listener, DDS_DATA_AVAILABLE_STATUS);
 
@@ -327,7 +354,9 @@ create_node(const char * implementation_identifier, const char * name, size_t do
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
-  RMW_TRY_PLACEMENT_NEW(subscriber_listener, buf, goto fail, CustomSubscriberListener)
+  RMW_TRY_PLACEMENT_NEW(
+    subscriber_listener, buf, goto fail, CustomSubscriberListener,
+    implementation_identifier, graph_guard_condition)
   buf = nullptr;
   builtin_subscription_datareader->set_listener(subscriber_listener, DDS_DATA_AVAILABLE_STATUS);
 
@@ -357,6 +386,7 @@ create_node(const char * implementation_identifier, const char * name, size_t do
   node_info->participant = participant;
   node_info->publisher_listener = publisher_listener;
   node_info->subscriber_listener = subscriber_listener;
+  node_info->graph_guard_condition = graph_guard_condition;
 
   node_handle->implementation_identifier = implementation_identifier;
   node_handle->data = node_info;
@@ -368,6 +398,15 @@ fail:
     ss << "leaking participant while handling failure at " <<
       __FILE__ << ":" << __LINE__;
     (std::cerr << ss.str()).flush();
+  }
+  if (graph_guard_condition) {
+    rmw_ret_t ret = destroy_guard_condition(implementation_identifier, graph_guard_condition);
+    if (ret != RMW_RET_OK) {
+      std::stringstream ss;
+      ss << "failed to destroy guard condition while handling failure at " <<
+        __FILE__ << ":" << __LINE__;
+      (std::cerr << ss.str()).flush();
+    }
   }
   if (publisher_listener) {
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
@@ -447,6 +486,15 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
       node_info->subscriber_listener->~CustomSubscriberListener(), CustomSubscriberListener)
     rmw_free(node_info->subscriber_listener);
     node_info->subscriber_listener = nullptr;
+  }
+  if (node_info->graph_guard_condition) {
+    rmw_ret_t ret =
+      destroy_guard_condition(implementation_identifier, node_info->graph_guard_condition);
+    if (ret != RMW_RET_OK) {
+      RMW_SET_ERROR_MSG("failed to delete graph guard condition");
+      return RMW_RET_ERROR;
+    }
+    node_info->graph_guard_condition = nullptr;
   }
 
   rmw_free(node_info);
@@ -876,4 +924,19 @@ count_subscribers(const char * implementation_identifier,
     *count = it->second.size();
   }
   return RMW_RET_OK;
+}
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+const rmw_guard_condition_t *
+node_get_graph_guard_condition(const rmw_node_t * node)
+{
+  // node argument is checked in calling function.
+
+  ConnextNodeInfo * node_info = static_cast<ConnextNodeInfo *>(node->data);
+  if (!node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return nullptr;
+  }
+
+  return node_info->graph_guard_condition;
 }

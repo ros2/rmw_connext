@@ -287,6 +287,20 @@ bool send_response__@(spec.srv_name)(
   return true;
 }
 
+const char *
+get_request_topic_name__@(spec.srv_name)(void * untyped_requester)
+{
+  if (!untyped_requester) {
+    return NULL;
+  }
+  using RequesterType = connext::Requester<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_
+  >;
+  RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
+  return requester->get_request_datawriter()->get_topic()->get_name();
+}
+
 static service_type_support_callbacks_t callbacks = {
   "@(spec.pkg_name)",
   "@(spec.srv_name)",
@@ -298,6 +312,7 @@ static service_type_support_callbacks_t callbacks = {
   &take_request__@(spec.srv_name),
   &send_response__@(spec.srv_name),
   &take_response__@(spec.srv_name),
+  &get_request_topic_name__@(spec.srv_name),
 };
 
 static rosidl_service_type_support_t handle = {
