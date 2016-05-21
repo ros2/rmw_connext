@@ -895,7 +895,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     return false; \
   }
 
-#define ARRAY_SIZE_AND_VALUES(TYPE) \
+// TODO C-style arrays
+#define ARRAY_SIZE_AND_VALUES(TYPE, INTROSPECTION_TYPE) \
   const TYPE * ros_values = nullptr; \
   size_t array_size; \
   if (member->array_size_ && !member->is_upper_bound_) { \
@@ -957,7 +958,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     } \
   }
 
-#define SET_VALUE_WITH_BOOL_TYPE(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
+// TODO: C-style arrays
+#define SET_VALUE_WITH_BOOL_TYPE(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME, INTROSPECTION_TYPE) \
   { \
     if (member->is_array_) { \
       DDS_TYPE * values = nullptr; \
@@ -1046,6 +1048,17 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     } else { \
       const TYPE * value = \
         reinterpret_cast<const TYPE *>(static_cast<const char *>(ros_message) + member->offset_); \
+      if (!value) { \
+        RMW_SET_ERROR_MSG("failed to cast string"); \
+        return false; \
+      } \
+      if (!value->ACCESSOR) { \
+        continue; \
+      } \
+      /* perhaps this should conditionally depend on C typesupport */\
+      if (value->ACCESSOR[0] == '\0') { \
+        continue; \
+      } \
       DDS_ReturnCode_t status = dynamic_data->METHOD_NAME( \
         NULL, \
         static_cast<DDS_DynamicDataMemberId>(i + 1), \
@@ -1715,7 +1728,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     } \
   }
 
-#define ARRAY_RESIZE_AND_VALUES(TYPE) \
+// TODO: C-style arrays
+#define ARRAY_RESIZE_AND_VALUES(TYPE, INTROSPECTION_TYPE) \
   TYPE * ros_values = nullptr; \
   if (member->array_size_ && !member->is_upper_bound_) { \
     ros_values = reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
@@ -1798,7 +1812,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     } \
   }
 
-#define GET_VALUE_WITH_BOOL_TYPE(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
+// TODO: C-style arrays
+#define GET_VALUE_WITH_BOOL_TYPE(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME, INTROSPECTION_TYPE) \
   { \
     if (member->is_array_) { \
       ARRAY_SIZE() \
