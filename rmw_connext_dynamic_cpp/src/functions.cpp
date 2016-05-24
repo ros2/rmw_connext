@@ -895,6 +895,26 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     return false; \
   }
 
+template<typename T, typename MessageMemberT, typename FunctionT>
+void set_primitive_value(
+    const void * ros_message,
+    MessageMemberT * member,
+    FunctionT & set_method,
+    DDS_DynamicData * dynamic_data)
+{
+  const T * value =
+    reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_);
+  DDS_ReturnCode_t status = dynamic_data->set_method(
+    NULL,
+    i + 1,
+    *value);
+  if (status != DDS_RETCODE_OK) {
+    // TODO Method name reflection...
+    RMW_SET_ERROR_MSG("failed to set primitive value using " #METHOD_NAME);
+    return false;
+  }
+}
+
 // TODO C-style arrays
 #define ARRAY_SIZE_AND_VALUES(TYPE, INTROSPECTION_TYPE) \
   const TYPE * ros_values = nullptr; \
@@ -909,6 +929,88 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     ros_values = vector->data(); \
     array_size = vector->size(); \
   }
+
+// C++-style arrays
+// TODO enable if with C++ style
+// TODO Better naming
+template<typename T>
+void vector_size_and_values(
+    const void * ros_message,
+    T * ros_values,
+    size_t & array_size,
+    std::vector<T> & output)
+{
+  // const T * ros_values = nullptr;
+  // size_t array_size;
+  if (member->array_size_ && !member->is_upper_bound_) {
+    ros_values =
+      reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_);
+    array_size = member->array_size_;
+  } else {
+    const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_;
+    output = static_cast<const std::vector<T> *>(untyped_vector);
+    ros_values = output->data();
+    array_size = output->size();
+  }
+}
+
+#define ROSIDL_GENERATOR_C_ARRAY(C_TS_TYPE) C_TS_TYPE ## __Array
+
+// ArrayT has to be a rosidl_generator_c-style array
+// TODO better goddamn naming
+template<typename T, typename ArrayT = ROSIDL_GENERATOR_C_ARRAY(T)>
+void array_size_and_values(
+    const void * ros_message,
+    T * ros_values,
+    size_t & array_size,
+    ArrayT & output)
+{
+  if (member->array_size_ && !member->is_upper_bound_) {
+    ros_values =
+      reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_);
+    array_size = member->array_size_;
+  } else {
+    const void * untyped_array = static_cast<const char *>(ros_message) + member->offset_;
+    output = static_cast<const ArrayT *>(untyped_array);
+    ros_values = output->data;
+    array_size = output->size;
+  }
+}
+
+// Input to all set* functions is:
+//  DDS_DynamicData * dynamic_data, const void * ros_message,
+//  const void * untyped_members, const char * typesupport
+
+
+// TODO Infer the functions from the types through a static map
+// TODO Need to bind set_array_method to dynamic_data
+template<typename T, typename MethodT, typename ArrayMethodT, typename MessageMemberT>
+bool set_value(
+    const MessageMemberT * member,
+    const void * ros_message,
+    T * ros_values,
+    size_t & array_size,
+    ArrayT & output,
+    MethodT & set_method,
+    ArrayMethodT & set_array_method,
+    DDSDynamicData * dynamic_data)
+{
+  if (member->is_array_) {
+    array_size_and_values(ros_message, ros_values, array_size, output);
+    DDS_ReturnCode_t status = dynamic_data->set_array_method(
+      NULL,
+      i + 1,
+      static_cast<DDS_UnsignedLong>(array_size),
+      ros_values);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to set array value using " #ARRAY_METHOD_NAME);
+      return false;
+    }
+  } else {
+    set_primitive_value(ros_message, member, set_method, dynamic_data);
+  }
+  return true;
+}
 
 #define SET_VALUE(TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
   { \
@@ -927,6 +1029,49 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
     } \
   }
+
+// TODO Return values as a parameter?
+// TODO Binding of dynamic_data and set_array_method
+// What is this actually doing?
+// Consider that set_value is a generalization of set_value_with_different_types
+// and the two functions could be phrased more elegantly as such
+template<typename DDSType, typename FunctionT, typename ArrayMethodT, typename MessageMemberT>
+bool set_value_with_different_types(const void * ros_message,
+    MessageMemberT * member,
+    FunctionT & set_method,
+    DDS_DynamicData * dynamic_data,
+    ArrayMethodT & set_array_method)
+{
+  if (member->is_array_) {
+    array_size_and_values(ros_message, ros_values, array_size, output);
+    DDSType * values = nullptr;
+    if (array_size > 0) {
+      values = static_cast<DDSType *>(rmw_allocate(sizeof(DDSType) * array_size));
+      if (!values) {
+        RMW_SET_ERROR_MSG("failed to allocate memory");
+        return false;
+      }
+      for (size_t j = 0; j < array_size; ++j) {
+        values[j] = ros_values[j];
+      }
+    }
+    DDS_ReturnCode_t status = dynamic_data->set_array_method(
+      NULL,
+      i + 1,
+      static_cast<DDS_UnsignedLong>(array_size),
+      values);
+    rmw_free(values);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to set array value using " #ARRAY_METHOD_NAME);
+      return false;
+    }
+  } else {
+    set_primitive_value(ros_message, member, set_method, dynamic_data);
+
+  }
+  return true;
+}
+
 
 #define SET_VALUE_WITH_DIFFERENT_TYPES(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
   { \
@@ -957,6 +1102,71 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
     } \
   }
+
+// TODO agh
+template<>
+set_value<bool>(const MessageMemberT * member,
+    const void * ros_message,
+    bool * ros_values,
+    size_t & array_size,
+    ArrayT & output,
+    MethodT & set_method,
+    ArrayMethodT & set_array_method,
+    DDSDynamicData * dynamic_data)
+{
+  if (member->is_array_) {
+    DDSType * values = nullptr;
+    size_t array_size;
+    if (member->array_size_ && !member->is_upper_bound_) {
+      array_size = member->array_size_;
+      auto ros_values =
+        reinterpret_cast<const bool *>(
+        static_cast<const char *>(ros_message) + member->offset_);
+      values = static_cast<DDSType *>(rmw_allocate(sizeof(DDSType) * array_size));
+      if (!values) {
+        RMW_SET_ERROR_MSG("failed to allocate memory");
+        return false;
+      }
+      for (size_t j = 0; j < array_size; ++j) {
+        values[j] = ros_values[j];
+      }
+    } else {
+      // TODO Hmmmmmm
+      // Need specialization for C
+      // Why was this a different macro in the first place?
+      const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_;
+      auto vector = static_cast<const std::vector<bool> *>(untyped_vector);
+      array_size = vector->size();
+      if (array_size > (std::numeric_limits<DDS_UnsignedLong>::max)()) {
+        RMW_SET_ERROR_MSG(
+          "failed to set values since the requested array size exceeds the DDS type");
+        return false;
+      }
+      if (array_size > 0) {
+        values = static_cast<DDSType *>(rmw_allocate(sizeof(DDSType) * array_size));
+        if (!values) {
+          RMW_SET_ERROR_MSG("failed to allocate memory");
+          return false;
+        }
+        for (size_t j = 0; j < array_size; ++j) {
+          values[j] = (*vector)[j];
+        }
+      }
+    }
+    DDS_ReturnCode_t status = dynamic_data->set_array_method(
+      NULL,
+      i + 1,
+      static_cast<DDS_UnsignedLong>(array_size),
+      values);
+    rmw_free(values);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to set array value using " #ARRAY_METHOD_NAME);
+      return false;
+    }
+  } else {
+    set_primitive_value(ros_message, member, set_method, dynamic_data);
+  }
+}
 
 // TODO: C-style arrays
 #define SET_VALUE_WITH_BOOL_TYPE(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME, INTROSPECTION_TYPE) \
@@ -1011,6 +1221,71 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       SET_PRIMITIVE_VALUE(TYPE, METHOD_NAME) \
     } \
   }
+
+template<typename T, typename MessageMemberT, typename SetFunctionT, typename AccessorFunctionT>
+bool set_string_value(
+    MessageMemberT * member,
+    DDSDynamicData * dynamic_data,
+    SetFunctionT & set_method,
+    AccessorFunctionT & accessor_method)
+{
+  if (member->is_array_) {
+    DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
+    DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
+      dynamic_data_member,
+      NULL,
+      static_cast<DDS_DynamicDataMemberId>(i + 1));
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to bind complex member");
+      return false;
+    }
+    //ARRAY_SIZE_AND_VALUES(TYPE)
+    array_size_and_values(ros_message, ros_values, array_size, output);
+    if (array_size > (std::numeric_limits<DDS_DynamicDataMemberId>::max)()) {
+      RMW_SET_ERROR_MSG(
+        "failed to set string since the requested string length exceeds the DDS type");
+      return false;
+    }
+    for (size_t j = 0; j < array_size; ++j) {
+      status = dynamic_data_member.set_method(
+        NULL,
+        static_cast<DDS_DynamicDataMemberId>(j + 1),
+        ros_values[j].accessor_method);
+      if (status != DDS_RETCODE_OK) {
+        RMW_SET_ERROR_MSG("failed to set array value using " #METHOD_NAME);
+        return false;
+      }
+    }
+    status = dynamic_data->unbind_complex_member(dynamic_data_member);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to unbind complex member");
+      return false;
+    }
+  } else {
+    const T * value =
+      reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_);
+    if (!value) {
+      RMW_SET_ERROR_MSG("failed to cast string");
+      return false;
+    }
+    if (!value->accessor_method) {
+      continue;
+    }
+    /* TODO this should conditionally depend on C typesupport, potentially as a part of a different specialization*/
+    if (value->accessor_method[0] == '\0') {
+      continue;
+    }
+    DDS_ReturnCode_t status = dynamic_data->set_method_name(
+      NULL,
+      static_cast<DDS_DynamicDataMemberId>(i + 1),
+      value->accessor);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to set value using " #METHOD_NAME);
+      return false;
+    }
+  }
+  return true;
+}
 
 #define SET_STRING_VALUE(TYPE, METHOD_NAME, ACCESSOR) \
   { \
@@ -1069,6 +1344,47 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       } \
     } \
   }
+
+template<typename MembersT>
+bool set_submessage_value(DDSDynamicData * dynamic_data, size_t i)
+{
+  DDS_DynamicData sub_dynamic_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
+  DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
+    sub_dynamic_data,
+    NULL,
+    static_cast<DDS_DynamicDataMemberId>(i + 1));
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to bind complex member");
+    return false;
+  }
+  const void * sub_ros_message = static_cast<const char *>(ros_message) + member->offset_;
+  if (!member->members_) {
+    RMW_SET_ERROR_MSG("members handle is null");
+    return false;
+  }
+  bool published = publish<MembersT>(
+    &sub_dynamic_data, sub_ros_message, member->members_->data, typesupport);
+  if (!published) {
+    DDS_UnsignedLong count = sub_dynamic_data.get_member_count();
+    for (DDS_UnsignedLong k = 0; k < count; ++k) {
+      DDS_DynamicDataMemberInfo info;
+      status = sub_dynamic_data.get_member_info_by_index(info, k);
+      if (status != DDS_RETCODE_OK) {
+        RMW_SET_ERROR_MSG("failed to get member info");
+        return false;
+      }
+    }
+  }
+  status = dynamic_data->unbind_complex_member(sub_dynamic_data);
+  if (!published) {
+    RMW_SET_ERROR_MSG("failed to publish sub message");
+    return false;
+  }
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to unbind complex member");
+    return false;
+  }
+}
 
 #define SET_SUBMESSAGE_VALUE(dynamic_data, i, INTROSPECTION_TYPE) \
   DDS_DynamicData sub_dynamic_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
@@ -1706,6 +2022,30 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   return RMW_RET_OK;
 }
 
+template<typename MessageMemberT>
+bool array_size(const MessageMemberT * member, size_t & array_size)
+{
+  if (member->array_size_ && !member->is_upper_bound_) {
+    array_size = member->array_size_;
+  } else {
+    DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
+    DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
+      dynamic_data_member,
+      NULL,
+      i + 1);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to bind complex member");
+      return false;
+    }
+    array_size = dynamic_data_member.get_member_count();
+    status = dynamic_data->unbind_complex_member(dynamic_data_member);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to unbind complex member");
+      return false;
+    }
+  }
+}
+
 #define ARRAY_SIZE() \
   size_t array_size; \
   if (member->array_size_ && !member->is_upper_bound_) { \
@@ -1728,6 +2068,26 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     } \
   }
 
+// TODO Make a specialization for C-style arrays
+template<typename T, typename MessageMembersT>
+array_resize_and_values(
+    T * ros_values,
+    void * ros_message,
+    MessageMembersT * member,
+    size_t array_size,
+    std::vector<T *> & vector)
+{
+  if (member->array_size_ && !member->is_upper_bound_) { \
+    ros_values = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_); \
+  } else { \
+    void * untyped_vector = static_cast<char *>(ros_message) + member->offset_; \
+    //TODO Tighten up the vector assign
+    vector = static_cast<std::vector<T> *>(untyped_vector); \
+    vector->resize(array_size); \
+    ros_values = vector->data(); \
+  }
+}
+
 // TODO: C-style arrays
 #define ARRAY_RESIZE_AND_VALUES(TYPE, INTROSPECTION_TYPE) \
   TYPE * ros_values = nullptr; \
@@ -1739,6 +2099,49 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     vector->resize(array_size); \
     ros_values = vector->data(); \
   }
+
+// TODO Why the fuck are there different get/set macros with conditional logic for arrays and different inputs/outputs
+// agghgh
+// Only need to take one method?
+// If the args are bound outside of this method, don't need so much conditional logic
+template<typename T, typename MessageMemberT, typename FunctionT>
+bool get_value(const MessageMemberT * member, T * ros_values, void * ros_message,FunctionT & set_method)
+{
+  if (member->is_array_) {
+    if (!array_size(member, array_size)) {
+      return false;
+    }
+    std::vector<T *> output;
+
+    if (!array_resize_and_values(ros_values, ros_message, member, array_size, vector))
+    {
+      return false;
+    }
+    // ARRAY_RESIZE_AND_VALUES(TYPE)
+    DDS_UnsignedLong length = static_cast<DDS_UnsignedLong>(array_size);
+    DDS_ReturnCode_t status = dynamic_data->array_set_method(
+      ros_values,
+      &length,
+      NULL,
+      i + 1);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to get array value using " #ARRAY_METHOD_NAME);
+      return false;
+    }
+  } else {
+    T * value = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
+    DDS_ReturnCode_t status = dynamic_data->set_method(
+      *value,
+      NULL,
+      i + 1);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to get primitive value using " #METHOD_NAME);
+      return false;
+    }
+  }
+  return true;
+}
+
 
 #define GET_VALUE(TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
   { \
@@ -1767,6 +2170,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       } \
     } \
   }
+
+
 
 #define GET_VALUE_WITH_DIFFERENT_TYPES(TYPE, DDS_TYPE, METHOD_NAME, ARRAY_METHOD_NAME) \
   { \
@@ -1936,6 +2341,34 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     } \
   }
 
+bool get_submessage_value(DDSDynamicData * data, size_t i, const char * typesupport) {
+  DDS_DynamicData sub_dynamic_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
+  DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
+    sub_dynamic_data,
+    NULL,
+    static_cast<DDS_DynamicDataMemberId>(i + 1));
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to bind complex member");
+    return false;
+  }
+  void * sub_ros_message = static_cast<char *>(ros_message) + member->offset_;
+  if (!member->members_) {
+    RMW_SET_ERROR_MSG("members handle is null");
+    return false;
+  }
+  bool success = _take(
+    &sub_dynamic_data, sub_ros_message, member->members_->data, typesupport);
+  status = dynamic_data->unbind_complex_member(sub_dynamic_data);
+  if (!success) {
+    return false;
+  }
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to unbind complex member");
+    return false;
+  }
+  return true;
+}
+
 #define GET_SUBMESSAGE_VALUE(dynamic_data, i) \
   DDS_DynamicData sub_dynamic_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT); \
   DDS_ReturnCode_t status = dynamic_data->bind_complex_member( \
@@ -1974,6 +2407,13 @@ bool take(DDS_DynamicData * dynamic_data, void * ros_message,
   }
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     auto member = members->members_ + i;
+
+    // template<typename typename T, typename DDSType, typename FunctionT>
+    // get_value(FunctionT & get_function)
+    // if (member->is_array)
+      // get_value_array<>()
+    // else
+    //
     switch (member->type_id_) {
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
         GET_VALUE_WITH_BOOL_TYPE(bool, DDS_Boolean, get_boolean, get_boolean_array)
