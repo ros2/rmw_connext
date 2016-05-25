@@ -149,7 +149,6 @@ bool _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
 }
 
 
-
 // This extern "C" prevents accidental overloading of functions. With this in
 // place, overloading produces an error rather than a new C++ symbol.
 extern "C"

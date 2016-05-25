@@ -30,7 +30,7 @@
     DDS_DynamicData * dynamic_data, size_t index, size_t array_size, const DDSTYPE * values) \
   { \
     return dynamic_data->set_ ## METHOD_TYPE ## _array(NULL, index, \
-      static_cast<DDS_UnsignedLong>(array_size), values); \
+             static_cast<DDS_UnsignedLong>(array_size), values); \
   } \
   template<> \
   DDS_ReturnCode_t get_dynamic_data<TYPE, DDSTYPE>( \
@@ -43,7 +43,7 @@
   } \
   template<> \
   DDS_ReturnCode_t get_dynamic_data_array<TYPE, DDSTYPE>( \
-    DDS_DynamicData * dynamic_data, DDSTYPE * & values, size_t array_size, size_t index) \
+    DDS_DynamicData * dynamic_data, DDSTYPE * &values, size_t array_size, size_t index) \
   { \
     DDS_UnsignedLong length = static_cast<DDS_UnsignedLong>(array_size); \
     return dynamic_data->get_ ## METHOD_TYPE ## _array( \
@@ -55,10 +55,10 @@
 
 
 #define SPECIALIZE_GENERIC_C_ARRAY(C_NAME, C_TYPE) \
-template<> \
-struct GenericCArray<C_TYPE> \
-{ \
-using type = rosidl_generator_c__ ## C_NAME ## __Array;\
-};
+  template<> \
+  struct GenericCArray<C_TYPE> \
+  { \
+    using type = rosidl_generator_c__ ## C_NAME ## __Array; \
+  };
 
 #endif  // MACROS_HPP_

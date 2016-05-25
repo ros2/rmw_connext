@@ -12,8 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_DYNAMIC_CPP__TEMPLATES_HPP_
-#define RMW_CONNEXT_DYNAMIC_CPP__TEMPLATES_HPP_
+#ifndef TEMPLATES_HPP_
+#define TEMPLATES_HPP_
+
+#include <limits>
+#include <string>
+#include <vector>
 
 #include "rosidl_generator_cpp/message_type_support.hpp"
 
@@ -80,7 +84,8 @@ SPECIALIZE_GENERIC_C_ARRAY(uint64, uint64_t)
 
 /********** Map dynamic data function names to types **********/
 template<typename T, typename DDSType>
-DDS_ReturnCode_t set_dynamic_data(DDS_DynamicData * dynamic_data, size_t index, const DDSType value);
+DDS_ReturnCode_t set_dynamic_data(DDS_DynamicData * dynamic_data, size_t index,
+  const DDSType value);
 
 template<typename T, typename DDSType>
 DDS_ReturnCode_t set_dynamic_data_array(
@@ -99,9 +104,9 @@ DEFINE_DYNAMIC_DATA_METHODS(float, float, float)
 DEFINE_DYNAMIC_DATA_METHODS(double, double, double)
 DEFINE_DYNAMIC_DATA_METHODS(int8_t, DDS_Octet, octet)
 DEFINE_DYNAMIC_DATA_METHODS(uint8_t, uint8_t, octet)
-DEFINE_DYNAMIC_DATA_METHODS(int16_t, int16_t, short)
+DEFINE_DYNAMIC_DATA_METHODS(int16_t, int16_t, short)  // NOLINT
 DEFINE_DYNAMIC_DATA_METHODS(uint16_t, uint16_t, ushort)
-DEFINE_DYNAMIC_DATA_METHODS(int32_t, int32_t, long)
+DEFINE_DYNAMIC_DATA_METHODS(int32_t, int32_t, long)  // NOLINT
 DEFINE_DYNAMIC_DATA_METHODS(uint32_t, uint32_t, ulong)
 DEFINE_DYNAMIC_DATA_METHODS(int64_t, DDS_LongLong, longlong)
 DEFINE_DYNAMIC_DATA_METHODS(uint64_t, DDS_UnsignedLongLong, ulonglong)
@@ -110,7 +115,7 @@ template<>
 DDS_ReturnCode_t set_dynamic_data<char *, char *>(
   DDS_DynamicData * dynamic_data, size_t index, char * const value)
 {
-  auto member_id =  static_cast<DDS_DynamicDataMemberId>(index);
+  auto member_id = static_cast<DDS_DynamicDataMemberId>(index);
   return dynamic_data->set_string(NULL, member_id, value);
 }
 
@@ -118,14 +123,14 @@ template<>
 DDS_ReturnCode_t set_dynamic_data<char *, const char *>(
   DDS_DynamicData * dynamic_data, size_t index, const char * value)
 {
-  auto member_id =  static_cast<DDS_DynamicDataMemberId>(index);
+  auto member_id = static_cast<DDS_DynamicDataMemberId>(index);
   return dynamic_data->set_string(NULL, member_id, value);
 }
 
 DDS_ReturnCode_t get_dynamic_data_string(
   DDS_DynamicData * dynamic_data, char * & values, DDS_UnsignedLong * array_size, size_t index)
 {
-  auto member_id =  static_cast<DDS_DynamicDataMemberId>(index);
+  auto member_id = static_cast<DDS_DynamicDataMemberId>(index);
   return dynamic_data->get_string(values, array_size, NULL, member_id);
 }
 
@@ -382,10 +387,10 @@ const void * get_response_ptr(const void * untyped_service_members)
 
 template<typename TrueType, typename T, typename MessageMemberT>
 bool set_primitive_value(
-    const void * ros_message,
-    const MessageMemberT * member,
-    DDS_DynamicData * dynamic_data,
-    size_t i)
+  const void * ros_message,
+  const MessageMemberT * member,
+  DDS_DynamicData * dynamic_data,
+  size_t i)
 {
   const T * value =
     reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_);
@@ -407,13 +412,14 @@ size_t set_array_size_and_values(
 
 template<typename T, typename std::enable_if<!std::is_same<T, bool>::value>::type * = nullptr>
 size_t set_array_size_and_values(
-    const rosidl_typesupport_introspection_cpp::MessageMember * member,
-    const void * ros_message,
-    T * & ros_values)
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  const void * ros_message,
+  T * & ros_values)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values =
-      const_cast<T *>(reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_));
+      const_cast<T *>(reinterpret_cast<const T *>(static_cast<const char *>(ros_message) +
+      member->offset_));
     return member->array_size_;
   }
   const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_;
@@ -424,13 +430,14 @@ size_t set_array_size_and_values(
 
 template<>
 size_t set_array_size_and_values(
-    const rosidl_typesupport_introspection_cpp::MessageMember * member,
-    const void * ros_message,
-    bool * & ros_values)
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  const void * ros_message,
+  bool * & ros_values)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values =
-      const_cast<bool *>(reinterpret_cast<const bool *>(static_cast<const char *>(ros_message) + member->offset_));
+      const_cast<bool *>(reinterpret_cast<const bool *>(static_cast<const char *>(ros_message) +
+      member->offset_));
     return member->array_size_;
   }
   const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_;
@@ -449,7 +456,8 @@ size_t set_array_size_and_values(
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values =
-      const_cast<T *>(reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_));
+      const_cast<T *>(reinterpret_cast<const T *>(static_cast<const char *>(ros_message) +
+      member->offset_));
     return member->array_size_;
   }
   const void * untyped_array = static_cast<const char *>(ros_message) + member->offset_;
@@ -562,7 +570,8 @@ bool set_value<std::string>(
     }
   } else {
     const std::string * value =
-      reinterpret_cast<const std::string *>(static_cast<const char *>(ros_message) + member->offset_);
+      reinterpret_cast<const std::string *>(static_cast<const char *>(ros_message) +
+      member->offset_);
     if (!value) {
       RMW_SET_ERROR_MSG("failed to cast string");
       return false;
@@ -624,7 +633,7 @@ bool set_value<rosidl_generator_c__String>(
   } else {
     const rosidl_generator_c__String * value =
       reinterpret_cast<const rosidl_generator_c__String *>(
-        static_cast<const char *>(ros_message) + member->offset_);
+      static_cast<const char *>(ros_message) + member->offset_);
     if (!value) {
       RMW_SET_ERROR_MSG("failed to cast string");
       return false;
@@ -667,7 +676,7 @@ bool publish(
     switch (member->type_id_) {
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
         if (!set_value_with_different_types<bool, DDS_Boolean>(
-          member, ros_message, dynamic_data, i))
+            member, ros_message, dynamic_data, i))
         {
           return false;
         }
@@ -694,7 +703,7 @@ bool publish(
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
         if (!set_value_with_different_types<int8_t, DDS_Octet>(
-          member, ros_message, dynamic_data, i))
+            member, ros_message, dynamic_data, i))
         {
           return false;
         }
@@ -726,14 +735,14 @@ bool publish(
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
         if (!set_value_with_different_types<int64_t, DDS_LongLong>(
-          member, ros_message, dynamic_data, i))
+            member, ros_message, dynamic_data, i))
         {
           return false;
         }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
         if (!set_value_with_different_types<uint64_t, DDS_UnsignedLongLong>(
-          member, ros_message, dynamic_data, i))
+            member, ros_message, dynamic_data, i))
         {
           return false;
         }
@@ -852,7 +861,8 @@ bool set_submessage_value(
 /********** get_*values functions **********/
 
 template<typename MessageMemberT>
-bool get_array_size(const MessageMemberT * member, size_t & array_size, DDS_DynamicData * dynamic_data, size_t i)
+bool get_array_size(const MessageMemberT * member, size_t & array_size,
+  DDS_DynamicData * dynamic_data, size_t i)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     array_size = member->array_size_;
@@ -878,17 +888,17 @@ bool get_array_size(const MessageMemberT * member, size_t & array_size, DDS_Dyna
 
 template<typename T, typename MessageMemberT>
 void resize_array_and_get_values(
-    T * & ros_values,
-    void * ros_message,
-    const MessageMemberT * member,
-    size_t array_size);
+  T * & ros_values,
+  void * ros_message,
+  const MessageMemberT * member,
+  size_t array_size);
 
 template<typename T, typename std::enable_if<!std::is_same<T, bool>::value>::type * = nullptr>
 void resize_array_and_get_values(
-    T * & ros_values,
-    void * ros_message,
-    const rosidl_typesupport_introspection_cpp::MessageMember * member,
-    size_t array_size)
+  T * & ros_values,
+  void * ros_message,
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  size_t array_size)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
@@ -902,10 +912,10 @@ void resize_array_and_get_values(
 
 template<>
 void resize_array_and_get_values(
-    bool * & ros_values,
-    void * ros_message,
-    const rosidl_typesupport_introspection_cpp::MessageMember * member,
-    size_t array_size)
+  bool * & ros_values,
+  void * ros_message,
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  size_t array_size)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values = reinterpret_cast<bool *>(static_cast<char *>(ros_message) + member->offset_);
@@ -921,21 +931,21 @@ void resize_array_and_get_values(
 
 template<typename T>
 void resize_array_and_get_values(
-    T * & ros_values,
-    void * ros_message,
-    const rosidl_typesupport_introspection_c__MessageMember * member,
-    size_t array_size)
+  T * & ros_values,
+  void * ros_message,
+  const rosidl_typesupport_introspection_c__MessageMember * member,
+  size_t array_size)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
   } else {
-    // TODO alloc/dealloc
+    // TODO(jacquelinekay) dealloc for C strings
     auto output = static_cast<const typename GenericCArray<T>::type *>(ros_message);
 
     T * resized = static_cast<T *>(rmw_allocate(sizeof(T) * array_size));
     memcpy(resized, output->data, output->size);
 
-    // ros_values = output->data;
+    ros_values = resized;
   }
 }
 
@@ -1109,7 +1119,6 @@ bool get_string_value(
         RMW_SET_ERROR_MSG("failed to get array value");
         return false;
       }
-      // TODO ros_values was null
       if (!string_assign(&ros_values[j], value)) {
         RMW_SET_ERROR_MSG("failed to assign string");
         return false;
@@ -1198,7 +1207,7 @@ bool take(DDS_DynamicData * dynamic_data, void * ros_message,
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
         if (!get_value_with_different_types<int8_t, DDS_Octet>(
-          member, ros_message, dynamic_data, i))
+            member, ros_message, dynamic_data, i))
         {
           return false;
         }
@@ -1230,14 +1239,14 @@ bool take(DDS_DynamicData * dynamic_data, void * ros_message,
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
         if (!get_value_with_different_types<int64_t, DDS_LongLong>(
-          member, ros_message, dynamic_data, i))
+            member, ros_message, dynamic_data, i))
         {
           return false;
         }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
         if (!get_value_with_different_types<uint64_t, DDS_UnsignedLongLong>(
-          member, ros_message, dynamic_data, i))
+            member, ros_message, dynamic_data, i))
         {
           return false;
         }
@@ -1353,5 +1362,4 @@ bool get_submessage_value(
 
 /********** end get_*values functions **********/
 
-#endif  // RMW_CONNEXT_DYNAMIC_CPP__TEMPLATES_HPP_
-
+#endif  // TEMPLATES_HPP_
