@@ -54,11 +54,11 @@
   } \
 
 
-#define SPECIALIZE_GENERIC_C_ARRAY(C_TYPE) \
+#define SPECIALIZE_GENERIC_C_ARRAY(C_NAME, C_TYPE) \
 template<> \
 struct GenericCArray<C_TYPE> \
 { \
-using type = C_TYPE ## __Array;\
+using type = rosidl_generator_c__ ## C_NAME ## __Array;\
 };
 
 #endif  // MACROS_HPP_
