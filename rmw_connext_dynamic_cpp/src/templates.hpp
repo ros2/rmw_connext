@@ -723,14 +723,14 @@ bool publish(
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
         if (!set_value_with_different_types<int64_t, DDS_LongLong>(
-          member, ros_message, dynamic_data, i)
+          member, ros_message, dynamic_data, i))
         {
           return false;
         }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
         if (!set_value_with_different_types<uint64_t, DDS_UnsignedLongLong>(
-          member, ros_message, dynamic_data, i)
+          member, ros_message, dynamic_data, i))
         {
           return false;
         }
