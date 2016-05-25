@@ -79,47 +79,51 @@ SPECIALIZE_GENERIC_C_ARRAY(uint64, uint64_t)
 /********** end utility structs **********/
 
 /********** Map dynamic data function names to types **********/
-template<typename T>
-DDS_ReturnCode_t set_dynamic_data(DDS_DynamicData * dynamic_data, size_t index, T value);
+template<typename T, typename DDSType>
+DDS_ReturnCode_t set_dynamic_data(DDS_DynamicData * dynamic_data, size_t index, const DDSType value);
 
-template<typename T>
+template<typename T, typename DDSType>
 DDS_ReturnCode_t set_dynamic_data_array(
-  DDS_DynamicData * dynamic_data, size_t index, size_t array_size, T * values);
+  DDS_DynamicData * dynamic_data, size_t index, size_t array_size, const DDSType * values);
 
-template<typename T>
-DDS_ReturnCode_t get_dynamic_data(DDS_DynamicData * dynamic_data, T value, size_t index);
+template<typename T, typename DDSType>
+DDS_ReturnCode_t get_dynamic_data(DDS_DynamicData * dynamic_data, DDSType & value, size_t index);
 
-template<typename T>
+template<typename T, typename DDSType>
 DDS_ReturnCode_t get_dynamic_data_array(
-  DDS_DynamicData * dynamic_data, T * values, size_t array_size, size_t index);
+  DDS_DynamicData * dynamic_data, DDSType * & values, size_t array_size, size_t index);
 
-// TODO(jacquelinekay) this results in an ambiguous definition)
-// DEFINE_DYNAMIC_DATA_METHODS(DDS_Boolean, boolean)
-DEFINE_DYNAMIC_DATA_METHODS(char, char)
-DEFINE_DYNAMIC_DATA_METHODS(float, float)
-DEFINE_DYNAMIC_DATA_METHODS(double, double)
-DEFINE_DYNAMIC_DATA_METHODS(DDS_Octet, octet)
-DEFINE_DYNAMIC_DATA_METHODS(int16_t, short)
-DEFINE_DYNAMIC_DATA_METHODS(uint16_t, ushort)
-DEFINE_DYNAMIC_DATA_METHODS(int32_t, long)
-DEFINE_DYNAMIC_DATA_METHODS(uint32_t, ulong)
-DEFINE_DYNAMIC_DATA_METHODS(DDS_LongLong, longlong)
-DEFINE_DYNAMIC_DATA_METHODS(DDS_UnsignedLongLong, ulonglong)
+DEFINE_DYNAMIC_DATA_METHODS(bool, DDS_Boolean, boolean)
+DEFINE_DYNAMIC_DATA_METHODS(char, char, char)
+DEFINE_DYNAMIC_DATA_METHODS(float, float, float)
+DEFINE_DYNAMIC_DATA_METHODS(double, double, double)
+DEFINE_DYNAMIC_DATA_METHODS(int8_t, DDS_Octet, octet)
+DEFINE_DYNAMIC_DATA_METHODS(uint8_t, uint8_t, octet)
+DEFINE_DYNAMIC_DATA_METHODS(int16_t, int16_t, short)
+DEFINE_DYNAMIC_DATA_METHODS(uint16_t, uint16_t, ushort)
+DEFINE_DYNAMIC_DATA_METHODS(int32_t, int32_t, long)
+DEFINE_DYNAMIC_DATA_METHODS(uint32_t, uint32_t, ulong)
+DEFINE_DYNAMIC_DATA_METHODS(int64_t, DDS_LongLong, longlong)
+DEFINE_DYNAMIC_DATA_METHODS(uint64_t, DDS_UnsignedLongLong, ulonglong)
 
-DDS_ReturnCode_t set_dynamic_data(
-  DDS_DynamicData * dynamic_data, size_t index, const char * value)
+template<>
+DDS_ReturnCode_t set_dynamic_data<char *, char *>(
+  DDS_DynamicData * dynamic_data, size_t index, char * const value)
 {
-  return dynamic_data->set_string(NULL, index, value);
+  auto member_id =  static_cast<DDS_DynamicDataMemberId>(index);
+  return dynamic_data->set_string(NULL, member_id, value);
 }
 
-DDS_ReturnCode_t set_dynamic_data(
-  DDS_DynamicData * dynamic_data, size_t index, char * value)
+template<>
+DDS_ReturnCode_t set_dynamic_data<char *, const char *>(
+  DDS_DynamicData * dynamic_data, size_t index, const char * value)
 {
-  return dynamic_data->set_string(NULL, index, value);
+  auto member_id =  static_cast<DDS_DynamicDataMemberId>(index);
+  return dynamic_data->set_string(NULL, member_id, value);
 }
 
 DDS_ReturnCode_t get_dynamic_data_string(
-  DDS_DynamicData * dynamic_data, char * values, DDS_UnsignedLong * array_size, size_t index)
+  DDS_DynamicData * dynamic_data, char * & values, DDS_UnsignedLong * array_size, size_t index)
 {
   auto member_id =  static_cast<DDS_DynamicDataMemberId>(index);
   return dynamic_data->get_string(values, array_size, NULL, member_id);
@@ -376,7 +380,7 @@ const void * get_response_ptr(const void * untyped_service_members)
 
 /********** set_*values **********/
 
-template<typename T, typename MessageMemberT>
+template<typename TrueType, typename T, typename MessageMemberT>
 bool set_primitive_value(
     const void * ros_message,
     const MessageMemberT * member,
@@ -385,7 +389,7 @@ bool set_primitive_value(
 {
   const T * value =
     reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_);
-  DDS_ReturnCode_t status = set_dynamic_data(
+  DDS_ReturnCode_t status = set_dynamic_data<TrueType>(
     dynamic_data,
     i + 1,
     *value);
@@ -395,18 +399,17 @@ bool set_primitive_value(
   }
   return true;
 }
-
 template<typename T, typename MessageMemberT>
 size_t set_array_size_and_values(
   const MessageMemberT * member,
   const void * ros_message,
-  T * ros_values);
+  T * & ros_values);
 
 template<typename T, typename std::enable_if<!std::is_same<T, bool>::value>::type * = nullptr>
 size_t set_array_size_and_values(
     const rosidl_typesupport_introspection_cpp::MessageMember * member,
     const void * ros_message,
-    T * ros_values)
+    T * & ros_values)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values =
@@ -423,7 +426,7 @@ template<>
 size_t set_array_size_and_values(
     const rosidl_typesupport_introspection_cpp::MessageMember * member,
     const void * ros_message,
-    bool * ros_values)
+    bool * & ros_values)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values =
@@ -442,7 +445,7 @@ template<typename T>
 size_t set_array_size_and_values(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   const void * ros_message,
-  T * ros_values)
+  T * & ros_values)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values =
@@ -465,7 +468,7 @@ bool set_value(
   T * ros_values = nullptr;
   if (member->is_array_) {
     size_t array_size = set_array_size_and_values(member, ros_message, ros_values);
-    DDS_ReturnCode_t status = set_dynamic_data_array(
+    DDS_ReturnCode_t status = set_dynamic_data_array<T>(
       dynamic_data,
       i + 1,
       static_cast<DDS_UnsignedLong>(array_size),
@@ -476,7 +479,7 @@ bool set_value(
     }
     return true;
   }
-  return set_primitive_value<T>(ros_message, member, dynamic_data, i);
+  return set_primitive_value<T, T>(ros_message, member, dynamic_data, i);
 }
 
 // TODO(jacquelinekay): Consider that set_value is a generalization of
@@ -502,7 +505,7 @@ bool set_value_with_different_types(
         values[j] = ros_values[j];
       }
     }
-    DDS_ReturnCode_t status = set_dynamic_data_array(
+    DDS_ReturnCode_t status = set_dynamic_data_array<T>(
       dynamic_data,
       i + 1,
       static_cast<DDS_UnsignedLong>(array_size),
@@ -513,7 +516,7 @@ bool set_value_with_different_types(
       return false;
     }
   } else {
-    set_primitive_value<DDSType>(ros_message, member, dynamic_data, i);
+    set_primitive_value<T, DDSType>(ros_message, member, dynamic_data, i);
   }
   return true;
 }
@@ -543,9 +546,9 @@ bool set_value<std::string>(
       return false;
     }
     for (size_t j = 0; j < array_size; ++j) {
-      status = set_dynamic_data(
-        dynamic_data,
-        static_cast<DDS_DynamicDataMemberId>(j + 1),
+      status = set_dynamic_data<char *>(
+        &dynamic_data_member,
+        j + 1,
         ros_values[j].c_str());
       if (status != DDS_RETCODE_OK) {
         RMW_SET_ERROR_MSG("failed to set array value");
@@ -567,9 +570,9 @@ bool set_value<std::string>(
     if (!value->c_str()) {
       return false;
     }
-    DDS_ReturnCode_t status = set_dynamic_data(
+    DDS_ReturnCode_t status = set_dynamic_data<char *>(
       dynamic_data,
-      static_cast<DDS_DynamicDataMemberId>(i + 1),
+      i + 1,
       value->c_str());
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to set value");
@@ -604,7 +607,7 @@ bool set_value<rosidl_generator_c__String>(
       return false;
     }
     for (size_t j = 0; j < array_size; ++j) {
-      status = set_dynamic_data(
+      status = set_dynamic_data<char *>(
         dynamic_data,
         static_cast<DDS_DynamicDataMemberId>(j + 1),
         ros_values[j].data);
@@ -632,7 +635,7 @@ bool set_value<rosidl_generator_c__String>(
     if (value->data[0] == '\0') {
       return false;
     }
-    DDS_ReturnCode_t status = set_dynamic_data(
+    DDS_ReturnCode_t status = set_dynamic_data<char *>(
       dynamic_data,
       static_cast<DDS_DynamicDataMemberId>(i + 1),
       value->data);
@@ -875,14 +878,14 @@ bool get_array_size(const MessageMemberT * member, size_t & array_size, DDS_Dyna
 
 template<typename T, typename MessageMemberT>
 void resize_array_and_get_values(
-    T * ros_values,
+    T * & ros_values,
     void * ros_message,
     const MessageMemberT * member,
     size_t array_size);
 
 template<typename T, typename std::enable_if<!std::is_same<T, bool>::value>::type * = nullptr>
 void resize_array_and_get_values(
-    T * ros_values,
+    T * & ros_values,
     void * ros_message,
     const rosidl_typesupport_introspection_cpp::MessageMember * member,
     size_t array_size)
@@ -899,7 +902,7 @@ void resize_array_and_get_values(
 
 template<>
 void resize_array_and_get_values(
-    bool * ros_values,
+    bool * & ros_values,
     void * ros_message,
     const rosidl_typesupport_introspection_cpp::MessageMember * member,
     size_t array_size)
@@ -918,7 +921,7 @@ void resize_array_and_get_values(
 
 template<typename T>
 void resize_array_and_get_values(
-    T * ros_values,
+    T * & ros_values,
     void * ros_message,
     const rosidl_typesupport_introspection_c__MessageMember * member,
     size_t array_size)
@@ -926,13 +929,13 @@ void resize_array_and_get_values(
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
   } else {
-    // TODO deallocation
+    // TODO alloc/dealloc
     auto output = static_cast<const typename GenericCArray<T>::type *>(ros_message);
 
     T * resized = static_cast<T *>(rmw_allocate(sizeof(T) * array_size));
     memcpy(resized, output->data, output->size);
 
-    ros_values = resized;
+    // ros_values = output->data;
   }
 }
 
@@ -952,7 +955,7 @@ bool get_value(
 
     resize_array_and_get_values(ros_values, ros_message, member, array_size);
 
-    DDS_ReturnCode_t status = get_dynamic_data_array(
+    DDS_ReturnCode_t status = get_dynamic_data_array<T, T>(
       dynamic_data,
       ros_values,
       array_size,
@@ -963,7 +966,7 @@ bool get_value(
     }
   } else {
     T * value = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
-    DDS_ReturnCode_t status = get_dynamic_data(
+    DDS_ReturnCode_t status = get_dynamic_data<T, T>(
       dynamic_data,
       *value,
       i + 1);
@@ -1009,7 +1012,7 @@ bool get_value_with_different_types(
         RMW_SET_ERROR_MSG("failed to allocate memory");
         return false;
       }
-      DDS_ReturnCode_t status = get_dynamic_data_array(
+      DDS_ReturnCode_t status = get_dynamic_data_array<T, DDSType>(
         dynamic_data,
         values,
         array_size,
@@ -1026,7 +1029,7 @@ bool get_value_with_different_types(
     }
   } else {
     DDSType value = 0;
-    DDS_ReturnCode_t status = get_dynamic_data(
+    DDS_ReturnCode_t status = get_dynamic_data<T, DDSType>(
       dynamic_data,
       value,
       i + 1);
@@ -1042,18 +1045,22 @@ bool get_value_with_different_types(
 }
 
 template<typename T, typename U>
-void string_assign(T dst, U src);
+bool string_assign(T dst, const U src);
 
 template<>
-void string_assign(rosidl_generator_c__String * dst, char * src)
+bool string_assign(rosidl_generator_c__String * dst, char * src)
 {
-  rosidl_generator_c__String__assign(dst, src);
+  return rosidl_generator_c__String__assign(dst, src);
 }
 
 template<>
-void string_assign(std::string * dst, char * src)
+bool string_assign(std::string * dst, char * src)
 {
+  if (!dst || !src) {
+    return false;
+  }
   *dst = src;
+  return true;
 }
 
 template<typename T, typename MessageMemberT>
@@ -1086,12 +1093,12 @@ bool get_string_value(
       return false;
     }
     for (size_t j = 0; j < array_size; ++j) {
-      char * value = 0;
+      char * value = nullptr;
       DDS_UnsignedLong size;
       /* TODO(wjwwood): Figure out how value is allocated. Why are we freeing it? */
 
       status = get_dynamic_data_string(
-        dynamic_data,
+        &dynamic_data_member,
         value,
         &size,
         j + 1);
@@ -1102,7 +1109,11 @@ bool get_string_value(
         RMW_SET_ERROR_MSG("failed to get array value");
         return false;
       }
-      string_assign(&ros_values[j], value);
+      // TODO ros_values was null
+      if (!string_assign(&ros_values[j], value)) {
+        RMW_SET_ERROR_MSG("failed to assign string");
+        return false;
+      }
       if (value) {
         delete[] value;
       }
@@ -1119,7 +1130,7 @@ bool get_string_value(
       dynamic_data,
       value,
       &size,
-      static_cast<DDS_DynamicDataMemberId>(i + 1));
+      i + 1);
     if (status != DDS_RETCODE_OK) {
       if (value) {
         delete[] value;
@@ -1129,7 +1140,10 @@ bool get_string_value(
     }
     auto ros_value =
       reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
-    string_assign(ros_value, value);
+    if (!string_assign(ros_value, value)) {
+      RMW_SET_ERROR_MSG("failed to assign string");
+      return false;
+    }
     if (value) {
       delete[] value;
     }
