@@ -40,6 +40,11 @@ ament_export_dependencies(
   rosidl_generator_cpp
   rosidl_typesupport_connext_cpp)
 
+register_rmw_implementation(
+  "c:rosidl_typesupport_connext_c"
+  "cpp:rosidl_typesupport_connext_cpp"
+)
+
 add_library(rmw_connext_cpp SHARED src/functions.cpp)
 ament_target_dependencies(rmw_connext_cpp
   "rmw"
@@ -48,10 +53,12 @@ ament_target_dependencies(rmw_connext_cpp
   "rosidl_typesupport_connext_cpp"
   "Connext")
 ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
+
 # On Windows this adds the RMW_BUILDING_DLL definition.
 # On Unix (GCC or Clang) it hides the symbols with -fvisibility=hidden.
 configure_rmw_library(rmw_connext_cpp)
 # Additionally, on Windows, add the ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL definition.
+
 if(WIN32)
   target_compile_definitions(rmw_connext_cpp
     PRIVATE "_CRT_NONSTDC_NO_DEPRECATE")
@@ -59,11 +66,6 @@ if(WIN32)
     PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL"
             "RMW_CONNEXT_SHARED_BUILDING_DLL")
 endif()
-
-register_rmw_implementation(
-  "c:rosidl_typesupport_connext_c"
-  "cpp:rosidl_typesupport_connext_cpp"
-)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -78,3 +80,6 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+get_rmw_connext_output_filter("rmw_connext_output_filter")
+ament_index_register_resource("rmw_output_filter" CONTENT "${rmw_connext_output_filter}")

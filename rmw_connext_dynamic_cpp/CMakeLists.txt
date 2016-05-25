@@ -87,3 +87,6 @@ install(
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
 )
+
+get_rmw_connext_output_filter("rmw_connext_output_filter")
+ament_index_register_resource("rmw_output_filter" CONTENT "${rmw_connext_output_filter}")
