@@ -36,7 +36,6 @@
 
 #include "./macros.hpp"
 
-
 /********** Utility structs **********/
 
 // This struct is used to associate MessageMember the introspection packages
@@ -60,7 +59,6 @@ struct GenericMembersT<rosidl_typesupport_introspection_c__MessageMember>
 template<typename T>
 struct GenericCArray;
 
-// TODO Agggggh
 // multiple definitions of ambiguous primitive types
 SPECIALIZE_GENERIC_C_ARRAY(String, rosidl_generator_c__String)
 SPECIALIZE_GENERIC_C_ARRAY(bool, bool)
@@ -69,6 +67,7 @@ SPECIALIZE_GENERIC_C_ARRAY(char, char)
 SPECIALIZE_GENERIC_C_ARRAY(float32, float)
 SPECIALIZE_GENERIC_C_ARRAY(float64, double);
 SPECIALIZE_GENERIC_C_ARRAY(int8, int8_t)
+// TODO(jacquelinekay) this results in an ambiguous definition
 // SPECIALIZE_GENERIC_C_ARRAY(uint8, uint8_t)
 SPECIALIZE_GENERIC_C_ARRAY(int16, int16_t)
 SPECIALIZE_GENERIC_C_ARRAY(uint16, uint16_t)
@@ -94,6 +93,7 @@ template<typename T>
 DDS_ReturnCode_t get_dynamic_data_array(
   DDS_DynamicData * dynamic_data, T * values, size_t array_size, size_t index);
 
+// TODO(jacquelinekay) this results in an ambiguous definition)
 // DEFINE_DYNAMIC_DATA_METHODS(DDS_Boolean, boolean)
 DEFINE_DYNAMIC_DATA_METHODS(char, char)
 DEFINE_DYNAMIC_DATA_METHODS(float, float)
@@ -390,7 +390,6 @@ bool set_primitive_value(
     i + 1,
     *value);
   if (status != DDS_RETCODE_OK) {
-    // TODO Method name reflection...
     RMW_SET_ERROR_MSG("failed to set primitive value");
     return false;
   }
@@ -664,47 +663,82 @@ bool publish(
     auto * member = members->members_ + i;
     switch (member->type_id_) {
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-        set_value_with_different_types<bool, DDS_Boolean>(member, ros_message, dynamic_data, i);
+        if (!set_value_with_different_types<bool, DDS_Boolean>(
+          member, ros_message, dynamic_data, i))
+        {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
-        set_value<uint8_t>(member, ros_message, dynamic_data, i);
+        if (!set_value<uint8_t>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
-        set_value<char>(member, ros_message, dynamic_data, i);
+        if (!set_value<char>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-        set_value<float>(member, ros_message, dynamic_data, i);
+        if (!set_value<float>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-        set_value<double>(member, ros_message, dynamic_data, i);
+        if (!set_value<double>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-        set_value_with_different_types<int8_t, DDS_Octet>(member, ros_message, dynamic_data, i);
+        if (!set_value_with_different_types<int8_t, DDS_Octet>(
+          member, ros_message, dynamic_data, i))
+        {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-        set_value<uint8_t>(member, ros_message, dynamic_data, i);
-        break;
+        if (!set_value<uint8_t>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-        set_value<int16_t>(member, ros_message, dynamic_data, i);
+        if (!set_value<int16_t>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-        set_value<uint16_t>(member, ros_message, dynamic_data, i);
+        if (!set_value<uint16_t>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-        set_value<int32_t>(member, ros_message, dynamic_data, i);
+        if (!set_value<int32_t>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-        set_value<uint32_t>(member, ros_message, dynamic_data, i);
+        if (!set_value<uint32_t>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-        set_value_with_different_types<int64_t, DDS_LongLong>(member, ros_message, dynamic_data, i);
+        if (!set_value_with_different_types<int64_t, DDS_LongLong>(
+          member, ros_message, dynamic_data, i)
+        {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-        set_value_with_different_types<uint64_t, DDS_UnsignedLongLong>(member, ros_message, dynamic_data, i);
+        if (!set_value_with_different_types<uint64_t, DDS_UnsignedLongLong>(
+          member, ros_message, dynamic_data, i)
+        {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-        set_value<StringType>(member, ros_message, dynamic_data, i);
+        if (!set_value<StringType>(member, ros_message, dynamic_data, i)) {
+          return false;
+        }
         break;
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
@@ -892,8 +926,7 @@ void resize_array_and_get_values(
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
   } else {
-    // TODO
-    // Need vector copy?
+    // TODO deallocation
     auto output = static_cast<const typename GenericCArray<T>::type *>(ros_message);
 
     T * resized = static_cast<T *>(rmw_allocate(sizeof(T) * array_size));
@@ -1101,6 +1134,7 @@ bool get_string_value(
       delete[] value;
     }
   }
+  return true;
 }
 
 template<
@@ -1122,7 +1156,9 @@ bool take(DDS_DynamicData * dynamic_data, void * ros_message,
 
     switch (member->type_id_) {
       case rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-        if (!get_value_with_different_types<bool, DDS_Boolean>(member, ros_message, dynamic_data, i)) {
+        if (!get_value_with_different_types<bool, DDS_Boolean>(
+            member, ros_message, dynamic_data, i))
+        {
           return false;
         }
         break;
@@ -1228,6 +1264,7 @@ bool take(DDS_DynamicData * dynamic_data, void * ros_message,
             if (!member->array_size_ || member->is_upper_bound_) {
               member->resize_function(untyped_member, array_size);
             }
+            bool errored = false;
             for (size_t j = 0; j < array_size; ++j) {
               void * ros_message;
               {
@@ -1245,8 +1282,14 @@ bool take(DDS_DynamicData * dynamic_data, void * ros_message,
               RMW_SET_ERROR_MSG("failed to unbind complex member");
               return false;
             }
+            if (errored) {
+              RMW_SET_ERROR_MSG("get_submessage_value failed");
+              return false;
+            }
           } else {
-            get_submessage_value(member, ros_message, dynamic_data, i);
+            if (!get_submessage_value(member, ros_message, dynamic_data, i)) {
+              return false;
+            }
           }
         }
         break;
@@ -1294,9 +1337,7 @@ bool get_submessage_value(
   return true;
 }
 
-
 /********** end get_*values functions **********/
-
 
 #endif  // RMW_CONNEXT_DYNAMIC_CPP__TEMPLATES_HPP_
 
