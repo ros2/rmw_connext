@@ -23,13 +23,15 @@
   DDS_ReturnCode_t set_dynamic_data<TYPE, DDSTYPE>( \
     DDS_DynamicData * dynamic_data, size_t index, const DDSTYPE value) \
   { \
-    return dynamic_data->set_ ## METHOD_TYPE(NULL, index, value); \
+    auto member_id = static_cast<DDS_DynamicDataMemberId>(index); \
+    return dynamic_data->set_ ## METHOD_TYPE(NULL, member_id, value); \
   } \
   template<> \
   DDS_ReturnCode_t set_dynamic_data_array<TYPE, DDSTYPE>( \
     DDS_DynamicData * dynamic_data, size_t index, size_t array_size, const DDSTYPE * values) \
   { \
-    return dynamic_data->set_ ## METHOD_TYPE ## _array(NULL, index, \
+    auto member_id = static_cast<DDS_DynamicDataMemberId>(index); \
+    return dynamic_data->set_ ## METHOD_TYPE ## _array(NULL, member_id, \
              static_cast<DDS_UnsignedLong>(array_size), values); \
   } \
   template<> \
@@ -50,7 +52,7 @@
       values, \
       &length, \
       NULL, \
-      index); \
+      static_cast<DDS_DynamicDataMemberId>(index)); \
   } \
 
 

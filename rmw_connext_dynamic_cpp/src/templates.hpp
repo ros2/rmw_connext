@@ -871,7 +871,7 @@ bool get_array_size(const MessageMemberT * member, size_t & array_size,
     DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
       dynamic_data_member,
       NULL,
-      i + 1);
+      static_cast<DDS_DynamicDataMemberId>(i + 1));
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to bind complex member");
       return false;
