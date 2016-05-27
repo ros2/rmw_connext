@@ -51,8 +51,7 @@ typedef struct service_type_support_callbacks_t
   bool (* take_response)(void * requester, rmw_request_id_t * request_header, void * ros_response);
   // Function to get the topic name from an untyped requester
   const char *
-  (* get_request_topic_name)(void * untyped_requester);
-
+  (*get_request_topic_name)(void * untyped_requester);
 } service_type_support_callbacks_t;
 
 #endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__SERVICE_TYPE_SUPPORT_H_

@@ -1622,5 +1622,4 @@ rmw_service_server_is_available(
   *is_available = true;
   return RMW_RET_OK;
 }
-
 }  // extern "C"

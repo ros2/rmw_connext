@@ -78,6 +78,7 @@ public:
   {}
 
   virtual void on_data_available(DDSDataReader * reader);
+
 private:
   const char * implementation_identifier_;
   rmw_guard_condition_t * graph_guard_condition_;
@@ -94,6 +95,7 @@ public:
   {}
 
   virtual void on_data_available(DDSDataReader * reader);
+
 private:
   const char * implementation_identifier_;
   rmw_guard_condition_t * graph_guard_condition_;
