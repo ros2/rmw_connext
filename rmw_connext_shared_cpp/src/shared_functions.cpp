@@ -65,7 +65,6 @@ void CustomPublisherListener::on_data_available(DDSDataReader * reader)
     data_seq, info_seq, DDS_LENGTH_UNLIMITED,
     DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
 
-  printf("enter Pub\n");
   if (retcode == DDS_RETCODE_NO_DATA) {
     return;
   }
@@ -82,7 +81,6 @@ void CustomPublisherListener::on_data_available(DDSDataReader * reader)
     }
   }
 
-  printf("here Pub: %d\n", data_seq.length());
   if (data_seq.length() > 0) {
     rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
     if (ret != RMW_RET_OK) {
@@ -98,7 +96,6 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
   DDSSubscriptionBuiltinTopicDataDataReader * builtin_reader =
     static_cast<DDSSubscriptionBuiltinTopicDataDataReader *>(reader);
 
-  printf("enter Sub\n");
   DDS_SubscriptionBuiltinTopicDataSeq data_seq;
   DDS_SampleInfoSeq info_seq;
   DDS_ReturnCode_t retcode = builtin_reader->take(
@@ -121,7 +118,6 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
     }
   }
 
-  printf("here Sub: %d\n", data_seq.length());
   if (data_seq.length() > 0) {
     rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
     if (ret != RMW_RET_OK) {
