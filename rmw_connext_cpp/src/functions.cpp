@@ -1537,6 +1537,10 @@ rmw_service_server_is_available(
   const rmw_client_t * client,
   bool * is_available)
 {
+  // TODO(wjwwood): remove this once local graph changes are detected.
+  RMW_SET_ERROR_MSG("not implemented");
+  return RMW_RET_ERROR;
+
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
     return RMW_RET_ERROR;
