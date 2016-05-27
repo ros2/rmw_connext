@@ -117,7 +117,6 @@ set(target_dependencies
   "${rosidl_typesupport_connext_c_BIN}"
   ${rosidl_typesupport_connext_c_GENERATOR_FILES}
   "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/msg__type_support_c.cpp.em"
-  "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/msg__type_support.h.em"
   "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/srv__type_support_c.cpp.em"
   ${_dependency_files})
 foreach(dep ${target_dependencies})

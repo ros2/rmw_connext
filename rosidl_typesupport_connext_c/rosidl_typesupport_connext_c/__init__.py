@@ -27,7 +27,6 @@ def generate_typesupport_connext_c(args):
     template_dir = args['template_dir']
     mapping_msgs = {
         os.path.join(template_dir, 'msg__type_support_c.cpp.em'): '%s__type_support_c.cpp',
-        os.path.join(template_dir, 'msg__type_support.h.em'): '%s__type_support.h',
     }
 
     mapping_srvs = {

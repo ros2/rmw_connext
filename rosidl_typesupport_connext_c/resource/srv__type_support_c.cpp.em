@@ -36,10 +36,14 @@
 #include "rosidl_typesupport_connext_c/identifier.h"
 #include "rosidl_typesupport_connext_c/visibility_control.h"
 // Provides the definition of the service_type_support_callbacks_t struct.
-#include "rosidl_typesupport_connext_cpp/service_type_support.h"
+#include <rosidl_typesupport_connext_cpp/service_type_support.h>
+// Provides the definition of the message_type_support_callbacks_t struct.
+#include <rosidl_typesupport_connext_cpp/message_type_support.h>
 
-#include "@(spec.pkg_name)/srv/dds_connext_c/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__type_support.h"
-#include "@(spec.pkg_name)/srv/dds_connext_c/@(get_header_filename_from_msg_name(spec.srv_name + '_Response'))__type_support.h"
+@{req_header_file_name = get_header_filename_from_msg_name(spec.srv_name + '__request')}@
+@{res_header_file_name = get_header_filename_from_msg_name(spec.srv_name + '__response')}@
+#include "@(spec.pkg_name)/srv/@(req_header_file_name).h"
+#include "@(spec.pkg_name)/srv/@(res_header_file_name).h"
 
 #include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_Support.h"
 #include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__type_support.hpp"
@@ -93,7 +97,11 @@ int64_t send_request__@(spec.srv_name)(
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   connext::WriteSample<
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
-  bool converted = @(spec.pkg_name)__@(spec.srv_name)_Request__convert_ros_to_dds(
+  const rosidl_message_type_support_t * ts =
+    ROSIDL_GET_TYPE_SUPPORT(@(spec.pkg_name), srv, @(spec.srv_name)_Request);
+  const message_type_support_callbacks_t * callbacks =
+    static_cast<const message_type_support_callbacks_t *>(ts->data);
+  bool converted = callbacks->convert_ros_to_dds(
     untyped_ros_request, static_cast<void*>(&request.data()));
   if (!converted) {
     fprintf(stderr, "Unable to convert request!\n");
@@ -156,9 +164,12 @@ bool take_request__@(spec.srv_name)(
     return false;
   }
 
-  bool converted =
-    @(spec.pkg_name)__@(spec.srv_name)_Request__convert_dds_to_ros(
-      static_cast<const void *>(&request.data()), untyped_ros_request);
+  const rosidl_message_type_support_t * ts =
+    ROSIDL_GET_TYPE_SUPPORT(@(spec.pkg_name), srv, @(spec.srv_name)_Request);
+  const message_type_support_callbacks_t * callbacks =
+    static_cast<const message_type_support_callbacks_t *>(ts->data);
+  bool converted = callbacks->convert_dds_to_ros(
+    static_cast<const void *>(&request.data()), untyped_ros_request);
   if (!converted) {
     return false;
   }
@@ -196,9 +207,12 @@ bool take_response__@(spec.srv_name)(
     response.related_identity().sequence_number.low;
   request_header->sequence_number = sequence_number;
 
-  bool converted =
-    @(spec.pkg_name)__@(spec.srv_name)_Response__convert_dds_to_ros(
-      static_cast<const void *>(&response.data()), untyped_ros_response);
+  const rosidl_message_type_support_t * ts =
+    ROSIDL_GET_TYPE_SUPPORT(@(spec.pkg_name), srv, @(spec.srv_name)_Response);
+  const message_type_support_callbacks_t * callbacks =
+    static_cast<const message_type_support_callbacks_t *>(ts->data);
+  bool converted = callbacks->convert_dds_to_ros(
+    static_cast<const void *>(&response.data()), untyped_ros_response);
   return converted;
 }
 
@@ -213,9 +227,12 @@ bool send_response__@(spec.srv_name)(
   }
 
   connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
-  bool converted =
-    @(spec.pkg_name)__@(spec.srv_name)_Response__convert_ros_to_dds(
-      untyped_ros_response, static_cast<void *>(&response.data()));
+  const rosidl_message_type_support_t * ts =
+    ROSIDL_GET_TYPE_SUPPORT(@(spec.pkg_name), srv, @(spec.srv_name)_Response);
+  const message_type_support_callbacks_t * callbacks =
+    static_cast<const message_type_support_callbacks_t *>(ts->data);
+  bool converted = callbacks->convert_ros_to_dds(
+    untyped_ros_response, static_cast<void *>(&response.data()));
   if (!converted) {
     return false;
   }
