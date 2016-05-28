@@ -166,11 +166,15 @@ if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_C_BUILDING_DLL")
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+    PRIVATE "ROSIDL_GENERATOR_C_${PROJECT_NAME}_BUILDING_DLL")
+  target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "NDDS_USER_DLL_EXPORT_${PROJECT_NAME}")
 endif()
 # The following still uses CPP because the Connext code which uses it was generated for CPP.
 target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL_${PROJECT_NAME}")
+target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+  PRIVATE "ROSIDL_GENERATOR_C_BUILDING_DLL_${PROJECT_NAME}")
 
 if(NOT WIN32)
   set(_target_compile_flags "-Wall -Wextra")

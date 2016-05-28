@@ -34,7 +34,6 @@
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
 #include "rosidl_generator_c/message_type_support.h"
 #include "rosidl_typesupport_connext_c/identifier.h"
-#include "rosidl_typesupport_connext_c/visibility_control.h"
 // Provides the definition of the service_type_support_callbacks_t struct.
 #include <rosidl_typesupport_connext_cpp/service_type_support.h>
 // Provides the definition of the message_type_support_callbacks_t struct.
@@ -52,8 +51,6 @@
 
 // Re-use most of the functions from C++ typesupport
 #include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name))__type_support.hpp"
-
-#include "@(spec.pkg_name)/msg/rosidl_generator_c__visibility_control.h"
 
 class DDSDomainParticipant;
 class DDSDataReader;
