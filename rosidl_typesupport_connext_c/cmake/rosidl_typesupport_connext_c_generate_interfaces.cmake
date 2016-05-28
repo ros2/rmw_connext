@@ -39,6 +39,7 @@ set(_dds_output_path "${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp
 set(_generated_msg_files "")
 set(_generated_external_msg_files "")
 set(_generated_srv_files "")
+set(_generated_external_srv_files "")
 foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
   get_filename_component(_extension "${_idl_file}" EXT)
   get_filename_component(_msg_name "${_idl_file}" NAME_WE)

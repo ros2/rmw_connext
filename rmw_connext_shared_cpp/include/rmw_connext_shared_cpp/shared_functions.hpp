@@ -39,6 +39,7 @@
 # pragma GCC diagnostic pop
 #endif
 
+#include "rmw/allocators.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
@@ -516,5 +517,9 @@ count_subscribers(const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
   size_t * count);
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+const rmw_guard_condition_t *
+node_get_graph_guard_condition(const rmw_node_t * node);
 
 #endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_

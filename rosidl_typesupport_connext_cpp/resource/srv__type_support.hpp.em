@@ -83,6 +83,11 @@ send_response__@(spec.srv_name)(
   void * untyped_replier,
   const rmw_request_id_t * request_header,
   const void * untyped_ros_response);
+
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
+const char *
+get_request_topic_name__@(spec.srv_name)(void * untyped_requester);
+
 }  // namespace typesupport_connext_cpp
 
 }  // namespace srv

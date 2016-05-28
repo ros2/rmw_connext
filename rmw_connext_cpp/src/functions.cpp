@@ -1515,4 +1515,111 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
   *result = (matches == DDS_BOOLEAN_TRUE);
   return RMW_RET_OK;
 }
+
+const rmw_guard_condition_t *
+rmw_node_get_graph_guard_condition(const rmw_node_t * node)
+{
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return nullptr;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_identifier,
+    return nullptr)
+
+  return node_get_graph_guard_condition(node);
+}
+
+rmw_ret_t
+rmw_service_server_is_available(
+  const rmw_node_t * node,
+  const rmw_client_t * client,
+  bool * is_available)
+{
+  // TODO(wjwwood): remove this once local graph changes are detected.
+  RMW_SET_ERROR_MSG("not implemented");
+  return RMW_RET_ERROR;
+
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_identifier,
+    return RMW_RET_ERROR)
+  if (!client) {
+    RMW_SET_ERROR_MSG("client handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    client handle,
+    client->implementation_identifier, rti_connext_identifier,
+    return RMW_RET_ERROR)
+
+  if (!is_available) {
+    RMW_SET_ERROR_MSG("is_available is null");
+    return RMW_RET_ERROR;
+  }
+
+  ConnextStaticClientInfo * client_info =
+    static_cast<ConnextStaticClientInfo *>(client->data);
+  if (!client_info) {
+    RMW_SET_ERROR_MSG("client info handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  const service_type_support_callbacks_t * callbacks = client_info->callbacks_;
+  if (!callbacks) {
+    RMW_SET_ERROR_MSG("callbacks handle is null");
+    return RMW_RET_ERROR;
+  }
+  void * requester = client_info->requester_;
+  if (!requester) {
+    RMW_SET_ERROR_MSG("requester handle is null");
+    return RMW_RET_ERROR;
+  }
+  const char * request_topic_name = callbacks->get_request_topic_name(requester);
+  if (!request_topic_name) {
+    RMW_SET_ERROR_MSG("could not get request topic name");
+    return RMW_RET_ERROR;
+  }
+
+  *is_available = false;
+  // In the Connext RPC implementation, a server is ready when:
+  //   - At least one server is subscribed to the request topic.
+  //   - At least one server is publishing to the reponse topic.
+  size_t number_of_request_subscribers = 0;
+  rmw_ret_t ret = rmw_count_subscribers(
+    node,
+    request_topic_name,
+    &number_of_request_subscribers);
+  if (ret != RMW_RET_OK) {
+    // error string already set
+    return ret;
+  }
+  if (number_of_request_subscribers == 0) {
+    // not ready
+    return RMW_RET_OK;
+  }
+
+  size_t number_of_response_publishers = 0;
+  ret = rmw_count_publishers(
+    node,
+    client_info->response_datareader_->get_topicdescription()->get_name(),
+    &number_of_response_publishers);
+  if (ret != RMW_RET_OK) {
+    // error string already set
+    return ret;
+  }
+  if (number_of_response_publishers == 0) {
+    // not ready
+    return RMW_RET_OK;
+  }
+
+  // all conditions met, there is a service server available
+  *is_available = true;
+  return RMW_RET_OK;
+}
 }  // extern "C"

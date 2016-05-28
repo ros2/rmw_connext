@@ -71,14 +71,34 @@ class CustomPublisherListener
   : public CustomDataReaderListener
 {
 public:
+  explicit CustomPublisherListener(
+    const char * implementation_identifier, rmw_guard_condition_t * graph_guard_condition)
+  : implementation_identifier_(implementation_identifier),
+    graph_guard_condition_(graph_guard_condition)
+  {}
+
   virtual void on_data_available(DDSDataReader * reader);
+
+private:
+  const char * implementation_identifier_;
+  rmw_guard_condition_t * graph_guard_condition_;
 };
 
 class CustomSubscriberListener
   : public CustomDataReaderListener
 {
 public:
+  explicit CustomSubscriberListener(
+    const char * implementation_identifier, rmw_guard_condition_t * graph_guard_condition)
+  : implementation_identifier_(implementation_identifier),
+    graph_guard_condition_(graph_guard_condition)
+  {}
+
   virtual void on_data_available(DDSDataReader * reader);
+
+private:
+  const char * implementation_identifier_;
+  rmw_guard_condition_t * graph_guard_condition_;
 };
 
 struct ConnextNodeInfo
@@ -86,6 +106,7 @@ struct ConnextNodeInfo
   DDSDomainParticipant * participant;
   CustomPublisherListener * publisher_listener;
   CustomSubscriberListener * subscriber_listener;
+  rmw_guard_condition_t * graph_guard_condition;
 };
 
 struct ConnextPublisherGID
