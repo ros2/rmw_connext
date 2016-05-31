@@ -1,4 +1,5 @@
 // generated from rosidl_typesupport_connext_cpp/resource/msg__type_support.hpp.em
+// generated code does not contain a copyright notice
 
 @#######################################################################
 @# EmPy template for generating <msg>__type_support.hpp files
@@ -12,13 +13,31 @@
 @#  - get_header_filename_from_msg_name (function)
 @#######################################################################
 @
-#ifndef __@(spec.base_type.pkg_name)__@(subfolder)__dds_connext__@(get_header_filename_from_msg_name(spec.base_type.type))__type_support__hpp__
-#define __@(spec.base_type.pkg_name)__@(subfolder)__dds_connext__@(get_header_filename_from_msg_name(spec.base_type.type))__type_support__hpp__
+@{
+header_guard_parts = [
+    spec.base_type.pkg_name, subfolder, 'dds_connext',
+    get_header_filename_from_msg_name(spec.base_type.type) + '__type_support_hpp']
+header_guard_variable = '__'.join([x.upper() for x in header_guard_parts]) + '_'
+}@
+#ifndef @(header_guard_variable)
+#define @(header_guard_variable)
 
 #include <rosidl_typesupport_connext_cpp/visibility_control.h>
 
 #include "@(spec.base_type.pkg_name)/@(subfolder)/@(get_header_filename_from_msg_name(spec.base_type.type))__struct.hpp"
+#ifndef _WIN32
+# pragma GCC diagnostic push
+# pragma GCC diagnostic ignored "-Wunused-parameter"
+# pragma GCC diagnostic ignored "-Wunused-variable"
+# ifdef __clang__
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+# endif
+#endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
+#ifndef _WIN32
+# pragma GCC diagnostic pop
+#endif
 
 // forward declaration of DDS types
 class DDSDomainParticipant;
@@ -69,4 +88,4 @@ take__@(spec.base_type.type)(
 
 }  // namespace @(spec.base_type.pkg_name)
 
-#endif  // __@(spec.base_type.pkg_name)__@(subfolder)__dds_connext__@(get_header_filename_from_msg_name(spec.base_type.type))__type_support__hpp__
+#endif  // @(header_guard_variable)

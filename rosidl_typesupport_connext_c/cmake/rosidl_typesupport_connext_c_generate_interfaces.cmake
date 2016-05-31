@@ -148,16 +148,6 @@ add_custom_command(
   VERBATIM
 )
 
-set(_visibility_control_file
-  "${_output_path}/msg/dds_connext_c/visibility_control.h")
-configure_file(
-  "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/visibility_control.h.in"
-  "${_visibility_control_file}"
-  @ONLY
-)
-
-list(APPEND _generated_msg_files "${_visibility_control_file}")
-
 set(_target_suffix "__rosidl_typesupport_connext_c")
 
 link_directories(${Connext_LIBRARY_DIRS})
@@ -267,4 +257,29 @@ if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
   )
 
   ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${Connext_LIBRARIES})
+endif()
+
+if(BUILD_TESTING AND rosidl_generate_interfaces_ADD_LINTER_TESTS)
+  if(NOT "${_generated_msg_files}${_generated_srv_files} " STREQUAL " ")
+    find_package(ament_cmake_cppcheck REQUIRED)
+    ament_cppcheck(
+      TESTNAME "cppcheck_rosidl_typesupport_connext_c"
+      ${_generated_msg_files} ${_generated_srv_files})
+
+    find_package(ament_cmake_cpplint REQUIRED)
+    get_filename_component(_cpplint_root "${_output_path}" DIRECTORY)
+    ament_cpplint(
+      TESTNAME "cpplint_rosidl_typesupport_connext_c"
+      # the generated code might contain longer lines for templated types
+      MAX_LINE_LENGTH 999
+      ROOT "${_cpplint_root}"
+      ${_generated_msg_files} ${_generated_srv_files})
+
+    find_package(ament_cmake_uncrustify REQUIRED)
+    ament_uncrustify(
+      TESTNAME "uncrustify_rosidl_typesupport_connext_c"
+      # the generated code might contain longer lines for templated types
+      MAX_LINE_LENGTH 999
+      ${_generated_msg_files} ${_generated_srv_files})
+  endif()
 endif()
