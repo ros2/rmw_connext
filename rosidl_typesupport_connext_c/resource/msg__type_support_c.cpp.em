@@ -218,7 +218,6 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
         fprintf(stderr, "string not null-terminated\n");
         return false;
       }
-      DDS_String_free(dds_message->@(field.name)_[static_cast<DDS_Long>(i)]);
       dds_message->@(field.name)_[static_cast<DDS_Long>(i)] = DDS_String_dup(str->data);
 @[    elif field.type.type == 'bool']@
       dds_message->@(field.name)_[i] = 1 ? ros_i : 0;
@@ -242,7 +241,6 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
       fprintf(stderr, "string not null-terminated\n");
       return false;
     }
-    DDS_String_free(dds_message->@(field.name)_);
     dds_message->@(field.name)_ = DDS_String_dup(str->data);
 @[  elif field.type.is_primitive_type()]@
     dds_message->@(field.name)_ = ros_message->@(field.name);
@@ -278,66 +276,44 @@ publish(void * dds_data_writer, const void * untyped_ros_message)
   if (!convert_ros_to_dds(ros_message, &dds_message)) {
     return false;
   }
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
+  @(pkg)::@(subfolder)::dds_::@(type)_DataWriter * data_writer =
+    @(pkg)::@(subfolder)::dds_::@(type)_DataWriter::narrow(topic_writer);
   DDS_ReturnCode_t status = data_writer->write(dds_message, DDS_HANDLE_NIL);
-@[for field in spec.fields]@
-@[  if field.type.type == 'string']@
-@[    if field.type.is_array]@
-  {
-@[      if field.type.array_size and not field.type.is_upper_bound]@
-    DDS_Long size = static_cast<DDS_Long>(@(field.type.array_size));
-    for (DDS_Long i = 0; i < size; ++i) {
-      dds_message.@(field.name)_[static_cast<DDS_Long>(i)] =
-        ros_message->@(field.name)[static_cast<DDS_Long>(i)].data;
-    }
-@[      else]@
-    DDS_Long size = dds_message.@(field.name)_.length();
-    for (DDS_Long i = 0; i < size; ++i) {
-      dds_message.@(field.name)_[static_cast<DDS_Long>(i)] =
-        ros_message->@(field.name).data[static_cast<DDS_Long>(i)].data;
-    }
-@[      end if]@
-  }
-@[    else]@
-  dds_message.@(field.name)_ = ros_message->@(field.name).data;
-@[    end if]@
-@[  end if]@
-@[end for]@
+
   switch (status) {
     case DDS_RETCODE_ERROR:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
         "an internal error has occurred\n");
       return false;
     case DDS_RETCODE_BAD_PARAMETER:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
         "bad handle or instance_data parameter\n");
       return false;
     case DDS_RETCODE_ALREADY_DELETED:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
         "this @(__dds_msg_type_prefix)DataWriter has already been deleted\n");
       return false;
     case DDS_RETCODE_OUT_OF_RESOURCES:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
         "out of resources\n");
       return false;
     case DDS_RETCODE_NOT_ENABLED:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
         "this @(__dds_msg_type_prefix)DataWriter is not enabled\n");
       return false;
     case DDS_RETCODE_PRECONDITION_NOT_MET:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
         "the handle has not been registered with this @(__dds_msg_type_prefix)DataWriter\n");
       return false;
     case DDS_RETCODE_TIMEOUT:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
         "writing resulted in blocking and then exceeded the timeout set by the "
         "max_blocking_time of the ReliabilityQosPolicy\n");
       return false;
     case DDS_RETCODE_OK:
       return true;
     default:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter.write: "
+      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
         "unknown return code\n");
   }
   return false;
