@@ -392,6 +392,10 @@ bool set_primitive_value(
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   const T * value =
     reinterpret_cast<const T *>(static_cast<const char *>(ros_message) + member->offset_);
   DDS_ReturnCode_t status = set_dynamic_data<TrueType>(
@@ -473,6 +477,10 @@ bool set_value(
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   T * ros_values = nullptr;
   if (member->is_array_) {
     size_t array_size = set_array_size_and_values(member, ros_message, ros_values);
@@ -499,6 +507,10 @@ bool set_value_with_different_types(
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   T * ros_values = nullptr;
   if (member->is_array_) {
     size_t array_size = set_array_size_and_values(member, ros_message, ros_values);
@@ -536,6 +548,10 @@ bool set_value<std::string>(
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   std::string * ros_values = nullptr;
   if (member->is_array_) {
     DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
@@ -598,6 +614,10 @@ bool set_value<rosidl_generator_c__String>(
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   rosidl_generator_c__String * ros_values = nullptr;
   if (member->is_array_) {
     DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
@@ -639,11 +659,10 @@ bool set_value<rosidl_generator_c__String>(
       return false;
     }
     if (!value->data) {
+      RMW_SET_ERROR_MSG("String data was null");
       return false;
     }
-    if (value->data[0] == '\0') {
-      return false;
-    }
+
     DDS_ReturnCode_t status = set_dynamic_data<char *>(
       dynamic_data,
       static_cast<DDS_DynamicDataMemberId>(i + 1),
@@ -817,6 +836,10 @@ bool set_submessage_value(
   size_t i)
 {
   using MembersT = typename GenericMembersT<MessageMemberT>::type;
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   DDS_DynamicData sub_dynamic_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
   DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
     sub_dynamic_data,
@@ -867,6 +890,10 @@ bool get_array_size(const MessageMemberT * member, size_t & array_size,
   if (member->array_size_ && !member->is_upper_bound_) {
     array_size = member->array_size_;
   } else {
+    if (!dynamic_data) {
+      RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+      return false;
+    }
     DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
     DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
       dynamic_data_member,
@@ -887,14 +914,14 @@ bool get_array_size(const MessageMemberT * member, size_t & array_size,
 }
 
 template<typename T, typename MessageMemberT>
-void resize_array_and_get_values(
+bool resize_array_and_get_values(
   T * & ros_values,
   void * ros_message,
   const MessageMemberT * member,
   size_t array_size);
 
 template<typename T, typename std::enable_if<!std::is_same<T, bool>::value>::type * = nullptr>
-void resize_array_and_get_values(
+bool resize_array_and_get_values(
   T * & ros_values,
   void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
@@ -905,13 +932,18 @@ void resize_array_and_get_values(
   } else {
     void * untyped_vector = static_cast<char *>(ros_message) + member->offset_;
     auto vector = static_cast<std::vector<T> *>(untyped_vector);
+    if (!vector) {
+      RMW_SET_ERROR_MSG("Failed to cast vector from ROS message");
+      return false;
+    }
     vector->resize(array_size);
     ros_values = vector->data();
   }
+  return true;
 }
 
 template<>
-void resize_array_and_get_values(
+bool resize_array_and_get_values(
   bool * & ros_values,
   void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
@@ -922,15 +954,20 @@ void resize_array_and_get_values(
   } else {
     void * untyped_vector = static_cast<char *>(ros_message) + member->offset_;
     auto vector = static_cast<std::vector<bool> *>(untyped_vector);
+    if (!vector) {
+      RMW_SET_ERROR_MSG("Failed to cast vector from ROS message");
+      return false;
+    }
     vector->resize(array_size);
     for (size_t i = 0; i < vector->size(); ++i) {
       ros_values[i] = (*vector)[i];
     }
   }
+  return true;
 }
 
 template<typename T>
-void resize_array_and_get_values(
+bool resize_array_and_get_values(
   T * & ros_values,
   void * ros_message,
   const rosidl_typesupport_introspection_c__MessageMember * member,
@@ -941,21 +978,30 @@ void resize_array_and_get_values(
   } else {
     // TODO(jacquelinekay) dealloc for C strings
     auto output = static_cast<const typename GenericCArray<T>::type *>(ros_message);
+    if (!output) {
+      RMW_SET_ERROR_MSG("Failed to cast C array from ROS message");
+      return false;
+    }
 
     T * resized = static_cast<T *>(rmw_allocate(sizeof(T) * array_size));
-    memcpy(resized, output->data, output->size);
+    memcpy(resized, output->data, std::min(array_size, output->size)*sizeof(T));
 
     ros_values = resized;
   }
+  return true;
 }
 
 template<typename T, typename MessageMemberT>
 bool get_value(
   const MessageMemberT * member,
-  void * ros_message,
+  void *& ros_message,
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   T * ros_values = nullptr;
   if (member->is_array_) {
     size_t array_size;
@@ -1007,6 +1053,10 @@ bool get_value_with_different_types(
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   T * ros_values = nullptr;
   if (member->is_array_) {
     size_t array_size;
@@ -1076,10 +1126,14 @@ bool string_assign(std::string * dst, char * src)
 template<typename T, typename MessageMemberT>
 bool get_string_value(
   const MessageMemberT * member,
-  void * ros_message,
+  void *& ros_message,
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   T * ros_values = nullptr;
   if (member->is_array_) {
     size_t array_size;
@@ -1333,6 +1387,10 @@ bool get_submessage_value(
   size_t i)
 {
   using MembersT = typename GenericMembersT<MessageMemberT>::type;
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
   DDS_DynamicData sub_dynamic_data(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
   DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
     sub_dynamic_data,
