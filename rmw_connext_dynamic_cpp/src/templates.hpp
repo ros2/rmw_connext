@@ -409,6 +409,7 @@ bool set_primitive_value(
   }
   return true;
 }
+
 template<typename T, typename MessageMemberT>
 size_t set_array_size_and_values(
   const MessageMemberT * member,
@@ -445,12 +446,8 @@ size_t set_array_size_and_values(
       member->offset_));
     return member->array_size_;
   }
-  const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_;
-  auto output = static_cast<const std::vector<bool> *>(untyped_vector);
-  for (size_t i = 0; i < output->size(); ++i) {
-    ros_values[i] = (*output)[i];
-  }
-  return output->size();
+  fprintf(stderr, "WARNING: specialization of set_array_size_and_values is invalid!\n");
+  return 0;
 }
 
 template<typename T>
@@ -541,6 +538,62 @@ bool set_value_with_different_types(
   }
   return true;
 }
+
+template<>
+bool set_value_with_different_types<bool, DDS_Boolean>(
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  const void * ros_message,
+  DDS_DynamicData * dynamic_data,
+  size_t i)
+{
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
+  if (member->is_array_) {
+    DDS_Boolean * values = nullptr;
+    size_t array_size;
+    if (member->array_size_ && !member->is_upper_bound_) {
+      bool * ros_values = nullptr;
+      array_size = set_array_size_and_values(member, ros_message, ros_values);
+      if (array_size > 0) {
+        values = static_cast<DDS_Boolean *>(rmw_allocate(sizeof(DDS_Boolean) * array_size));
+        if (!values) {
+          RMW_SET_ERROR_MSG("failed to allocate memory");
+          return false;
+        }
+        for (size_t j = 0; j < array_size; ++j) {
+          values[j] = ros_values[j];
+        }
+      }
+    } else {
+      const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_;
+      auto output = static_cast<const std::vector<bool> *>(untyped_vector);
+      array_size = output->size();
+      values = static_cast<DDS_Boolean *>(rmw_allocate(sizeof(DDS_Boolean) * array_size));
+      for (size_t j = 0; j < output->size(); ++j) {
+        values[j] = (*output)[j];
+      }
+    }
+    if (array_size > 0) {
+      DDS_ReturnCode_t status = set_dynamic_data_array<bool>(
+        dynamic_data,
+        i + 1,
+        static_cast<DDS_UnsignedLong>(array_size),
+        values);
+      rmw_free(values);
+      if (status != DDS_RETCODE_OK) {
+        RMW_SET_ERROR_MSG("failed to set array value");
+        return false;
+      }
+    }
+  } else {
+    set_primitive_value<bool, DDS_Boolean>(ros_message, member, dynamic_data, i);
+  }
+  return true;
+}
+
+
 
 template<>
 bool set_value<std::string>(
@@ -948,11 +1001,13 @@ bool resize_array_and_get_values(
   bool * & ros_values,
   void * ros_message,
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
-  size_t array_size)
+  size_t /*array_size*/)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values = reinterpret_cast<bool *>(static_cast<char *>(ros_message) + member->offset_);
-  } else {
+    return true;
+  }
+/* else {
     void * untyped_vector = static_cast<char *>(ros_message) + member->offset_;
     auto vector = static_cast<std::vector<bool> *>(untyped_vector);
     if (!vector) {
@@ -964,7 +1019,8 @@ bool resize_array_and_get_values(
       ros_values[i] = (*vector)[i];
     }
   }
-  return true;
+*/
+  return false;
 }
 
 template<typename T>
@@ -1108,6 +1164,80 @@ bool get_value_with_different_types(
   }
   return true;
 }
+
+template<>
+bool get_value_with_different_types<bool, DDS_Boolean>(
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  void * ros_message,
+  DDS_DynamicData * dynamic_data,
+  size_t i)
+{
+  if (!dynamic_data) {
+    RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
+    return false;
+  }
+  if (member->is_array_) {
+    size_t array_size;
+    if (!get_array_size(member, array_size, dynamic_data, i)) {
+      return false;
+    }
+
+    if (array_size > 0) {
+      DDS_Boolean * values =
+        static_cast<DDS_Boolean *>(rmw_allocate(sizeof(DDS_Boolean) * array_size));
+      if (!values) {
+        RMW_SET_ERROR_MSG("failed to allocate memory");
+        return false;
+      }
+      DDS_ReturnCode_t status = get_dynamic_data_array<bool, DDS_Boolean>(
+        dynamic_data,
+        values,
+        array_size,
+        i + 1);
+      if (status != DDS_RETCODE_OK) {
+        rmw_free(values);
+        RMW_SET_ERROR_MSG("failed to get array value");
+        return false;
+      }
+      bool * ros_values = nullptr;
+      if (member->array_size_ && !member->is_upper_bound_) {
+        resize_array_and_get_values(ros_values, ros_message, member, array_size);
+
+        for (size_t i = 0; i < array_size; ++i) {
+          ros_values[i] = primitive_convert_from_dds<bool, DDS_Boolean>(values[i]);
+        }
+      } else {
+        void * untyped_vector = static_cast<char *>(ros_message) + member->offset_;
+        auto vector = static_cast<std::vector<bool> *>(untyped_vector);
+        if (!vector) {
+          RMW_SET_ERROR_MSG("Failed to cast vector from ROS message");
+          return false;
+        }
+        vector->resize(array_size);
+        for (size_t i = 0; i < array_size; ++i) {
+          (*vector)[i] = primitive_convert_from_dds<bool, DDS_Boolean>(values[i]);
+        }
+      }
+      rmw_free(values);
+    }
+  } else {
+    DDS_Boolean value = 0;
+    DDS_ReturnCode_t status = get_dynamic_data<bool, DDS_Boolean>(
+      dynamic_data,
+      value,
+      i + 1);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to get primitive value");
+      return false;
+    }
+    auto ros_value =
+      reinterpret_cast<bool *>(static_cast<char *>(ros_message) + member->offset_);
+    *ros_value = primitive_convert_from_dds<bool, DDS_Boolean>(value);
+  }
+  return true;
+}
+
+
 
 template<typename T, typename U>
 bool string_assign(T dst, U src);
