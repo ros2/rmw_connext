@@ -61,6 +61,14 @@
   struct GenericCArray<C_TYPE> \
   { \
     using type = rosidl_generator_c__ ## C_NAME ## __Array; \
+    \
+    static void fini(type * array) { \
+      rosidl_generator_c__ ## C_NAME ## __Array__fini(array); \
+    } \
+    \
+    static bool init(type * array, size_t size) { \
+      return rosidl_generator_c__ ## C_NAME ## __Array__init(array, size); \
+    } \
   };
 
 #endif  // MACROS_HPP_

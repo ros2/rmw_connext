@@ -21,6 +21,7 @@
 
 #include "rosidl_generator_cpp/message_type_support.hpp"
 
+#include "rosidl_generator_c/primitives_array_functions.h"
 #include "rosidl_generator_c/string.h"
 #include "rosidl_generator_c/string_functions.h"
 
@@ -637,7 +638,7 @@ bool set_value<rosidl_generator_c__String>(
     }
     for (size_t j = 0; j < array_size; ++j) {
       status = set_dynamic_data<char *>(
-        dynamic_data,
+        &dynamic_data_member,
         static_cast<DDS_DynamicDataMemberId>(j + 1),
         ros_values[j].data);
       if (status != DDS_RETCODE_OK) {
@@ -976,17 +977,20 @@ bool resize_array_and_get_values(
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
   } else {
-    // TODO(jacquelinekay) dealloc for C strings
-    auto output = static_cast<const typename GenericCArray<T>::type *>(ros_message);
+    auto output = static_cast<typename GenericCArray<T>::type *>(ros_message);
     if (!output) {
       RMW_SET_ERROR_MSG("Failed to cast C array from ROS message");
       return false;
     }
 
-    T * resized = static_cast<T *>(rmw_allocate(sizeof(T) * array_size));
-    memcpy(resized, output->data, std::min(array_size, output->size)*sizeof(T));
-
-    ros_values = resized;
+    if (output->size < array_size) {
+      GenericCArray<T>::fini(output);
+      if (!GenericCArray<T>::init(output, array_size)) {
+        RMW_SET_ERROR_MSG("Could not resize array");
+        return false;
+      };
+    }
+    ros_values = output->data;
   }
   return true;
 }
@@ -1105,7 +1109,7 @@ bool get_value_with_different_types(
 }
 
 template<typename T, typename U>
-bool string_assign(T dst, const U src);
+bool string_assign(T dst, U src);
 
 template<>
 bool string_assign(rosidl_generator_c__String * dst, char * src)
@@ -1134,8 +1138,8 @@ bool get_string_value(
     RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
     return false;
   }
-  T * ros_values = nullptr;
   if (member->is_array_) {
+    T * ros_values = nullptr;
     size_t array_size;
     if (!get_array_size(member, array_size, dynamic_data, i)) {
       return false;
@@ -1173,6 +1177,7 @@ bool get_string_value(
         RMW_SET_ERROR_MSG("failed to get array value");
         return false;
       }
+      fprintf(stderr, "Assigning value %s\n", value);
       if (!string_assign(&ros_values[j], value)) {
         RMW_SET_ERROR_MSG("failed to assign string");
         return false;
@@ -1409,6 +1414,7 @@ bool get_submessage_value(
     &sub_dynamic_data, sub_ros_message, member->members_->data);
   status = dynamic_data->unbind_complex_member(sub_dynamic_data);
   if (!success) {
+    RMW_SET_ERROR_MSG("take failed for submessage");
     return false;
   }
   if (status != DDS_RETCODE_OK) {
