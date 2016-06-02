@@ -594,7 +594,6 @@ bool set_value_with_different_types<bool, DDS_Boolean>(
 }
 
 
-
 template<>
 bool set_value<std::string>(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
@@ -1045,7 +1044,7 @@ bool resize_array_and_get_values(
       if (!GenericCArray<T>::init(output, array_size)) {
         RMW_SET_ERROR_MSG("Could not resize array");
         return false;
-      };
+      }
     }
     ros_values = output->data;
   }
@@ -1055,7 +1054,7 @@ bool resize_array_and_get_values(
 template<typename T, typename MessageMemberT>
 bool get_value(
   const MessageMemberT * member,
-  void *& ros_message,
+  void * & ros_message,
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
@@ -1238,7 +1237,6 @@ bool get_value_with_different_types<bool, DDS_Boolean>(
 }
 
 
-
 template<typename T, typename U>
 bool string_assign(T dst, U src);
 
@@ -1261,7 +1259,7 @@ bool string_assign(std::string * dst, char * src)
 template<typename T, typename MessageMemberT>
 bool get_string_value(
   const MessageMemberT * member,
-  void *& ros_message,
+  void * & ros_message,
   DDS_DynamicData * dynamic_data,
   size_t i)
 {
