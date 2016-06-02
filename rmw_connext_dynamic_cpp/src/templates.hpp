@@ -977,7 +977,8 @@ bool resize_array_and_get_values(
   if (member->array_size_ && !member->is_upper_bound_) {
     ros_values = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
   } else {
-    auto output = static_cast<typename GenericCArray<T>::type *>(ros_message);
+    void * untyped_output = static_cast<char *>(ros_message) + member->offset_;
+    auto output = static_cast<typename GenericCArray<T>::type *>(untyped_output);
     if (!output) {
       RMW_SET_ERROR_MSG("Failed to cast C array from ROS message");
       return false;
@@ -1177,7 +1178,6 @@ bool get_string_value(
         RMW_SET_ERROR_MSG("failed to get array value");
         return false;
       }
-      fprintf(stderr, "Assigning value %s\n", value);
       if (!string_assign(&ros_values[j], value)) {
         RMW_SET_ERROR_MSG("failed to assign string");
         return false;
