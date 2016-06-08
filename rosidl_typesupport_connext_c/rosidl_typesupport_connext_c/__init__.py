@@ -70,14 +70,9 @@ def generate_typesupport_connext_c(args):
                     'subfolder': subfolder,
                 }
                 data.update(functions)
-                try:
-                    expand_template(
-                        template_file, data, generated_file,
-                        minimum_timestamp=latest_target_timestamp)
-                except Exception:
-                    print("\nException when expanding '{0}' into '{1}':\n"
-                          .format(template_file, generated_file))
-                    raise
+                expand_template(
+                    template_file, data, generated_file,
+                    minimum_timestamp=latest_target_timestamp)
 
         elif extension == '.srv':
             spec = parse_service_file(pkg_name, idl_file)
