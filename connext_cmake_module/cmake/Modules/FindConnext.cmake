@@ -299,8 +299,27 @@ else()
   endif()
 endif()
 
-if(Connext_FOUND AND NOT WIN32)
-  list(APPEND Connext_LIBRARIES "pthread" "dl")
+if(Connext_FOUND)
+  if(NOT WIN32)
+    list(APPEND Connext_LIBRARIES "pthread" "dl")
+  endif()
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # check with which ABI the Connext libraries are built
+    configure_file(
+      "${connext_cmake_module_DIR}/check_abi.cmake"
+      "${CMAKE_CURRENT_BINARY_DIR}/connext_cmake_module/check_abi/CMakeLists.txt"
+      @ONLY
+    )
+    try_compile(
+      Connext_GLIBCXX_USE_CXX11_ABI_ZERO
+      "${CMAKE_CURRENT_BINARY_DIR}/connext_cmake_module/check_abi/build"
+      "${CMAKE_CURRENT_BINARY_DIR}/connext_cmake_module/check_abi"
+      check_abi exe)
+    if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
+      message(STATUS "Connext was build with an old libc++ ABI and needs _GLIBCXX_USE_CXX11_ABI 0")
+    endif()
+  endif()
 endif()
 
 if(Connext_DDSGEN_SERVER)
