@@ -174,7 +174,7 @@ _get_expected_library_names(_debug_library_names "d")
 
 file(TO_CMAKE_PATH "$ENV{NDDSHOME}" _NDDSHOME)
 
-if(NOT "${_NDDSHOME} " STREQUAL " ")
+if(NOT _NDDSHOME STREQUAL "")
   # look inside of NDDSHOME if defined
   message(STATUS "Found RTI Connext: ${_NDDSHOME}")
   set(Connext_HOME "${_NDDSHOME}")

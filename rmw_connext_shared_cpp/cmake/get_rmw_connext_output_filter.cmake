@@ -22,7 +22,7 @@
 # @public
 #
 macro(get_rmw_connext_output_filter output_filter)
-  if(NOT "${ARGN} " STREQUAL " ")
+  if(NOT "${ARGN}" STREQUAL "")
     message(FATAL_ERROR "get_rmw_connext_output_filter() called with "
       "unused arguments: ${ARGN}")
   endif()
