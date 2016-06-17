@@ -12,7 +12,10 @@
 @
 #include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name))__type_support.hpp"
 
+#ifdef Connext_GLIBCXX_USE_CXX11_ABI_ZERO
 #define _GLIBCXX_USE_CXX11_ABI 0
+#endif
+
 #ifndef _WIN32
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wdeprecated-declarations"

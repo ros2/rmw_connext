@@ -55,6 +55,10 @@ ament_target_dependencies(rmw_connext_dynamic_cpp
   "rmw_connext_shared_cpp"
   "rosidl_generator_cpp"
   "Connext")
+if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
+  target_compile_definitions(rmw_connext_dynamic_cpp
+    PRIVATE Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
+endif()
 ament_export_libraries(rmw_connext_dynamic_cpp ${Connext_LIBRARIES})
 
 # On Windows this adds the RMW_BUILDING_DLL definition.

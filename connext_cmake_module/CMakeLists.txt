@@ -4,6 +4,7 @@ project(connext_cmake_module)
 
 find_package(ament_cmake REQUIRED)
 
+set(${PROJECT_NAME}_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 list(INSERT CMAKE_MODULE_PATH 0 "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 find_package(Connext MODULE)
 if(Connext_HOME)
