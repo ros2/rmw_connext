@@ -174,7 +174,6 @@ if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
 endif()
-ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix} "rmw")
 if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "ROSIDL_BUILDING_DLL")
@@ -204,6 +203,10 @@ target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_generator_cpp
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp
 )
+ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+  "Connext"
+  "rmw"
+  "rosidl_typesupport_connext_cpp")
 foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   set(_msg_include_dir "${${_pkg_name}_DIR}/../../../include/${_pkg_name}/msg/dds_connext")
   set(_srv_include_dir "${${_pkg_name}_DIR}/../../../include/${_pkg_name}/srv/dds_connext")
@@ -217,9 +220,6 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     ${_pkg_name})
 endforeach()
-ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  "Connext"
-  "rosidl_typesupport_connext_cpp")
 
 add_dependencies(
   ${rosidl_generate_interfaces_TARGET}

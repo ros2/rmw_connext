@@ -182,7 +182,7 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
       )()->data);
 @[  end if]@
 @[  if field.type.is_array]@
-@[    if field.type.array_size]@
+@[    if field.type.array_size and not field.type.is_upper_bound]@
     size_t size = @(field.type.array_size);
 @[    else]@
     size_t size = ros_message->@(field.name).size;
@@ -190,8 +190,23 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
       fprintf(stderr, "array size exceeds maximum DDS sequence size\n");
       return false;
     }
+@[      if field.type.is_upper_bound]@
+    if (size > @(field.type.array_size)) {
+      fprintf(stderr, "array size exceeds upper bound\n");
+      return false;
+    }
+@[      end if]@
     DDS_Long length = static_cast<DDS_Long>(size);
-    dds_message->@(field.name)_.ensure_length(length, length);
+    if (length > dds_message->@(field.name)_.maximum()) {
+      if (!dds_message->@(field.name)_.maximum(length)) {
+        fprintf(stderr, "failed to set maximum of sequence\n");
+        return false;
+      }
+    }
+    if (!dds_message->@(field.name)_.length(length)) {
+      fprintf(stderr, "failed to set length of sequence\n");
+      return false;
+    }
 @[    end if]@
     for (DDS_Long i = 0; i < static_cast<DDS_Long>(size); ++i) {
 @[    if field.type.array_size and not field.type.is_upper_bound]@
@@ -358,7 +373,7 @@ convert_dds_to_ros(const void * untyped_dds_message, void * untyped_ros_message)
   // Field name: @(field.name)
   {
 @[  if field.type.is_array]@
-@[    if field.type.array_size]@
+@[    if field.type.array_size and not field.type.is_upper_bound]@
     DDS_Long size = @(field.type.array_size);
 @[    else]@
 @{
