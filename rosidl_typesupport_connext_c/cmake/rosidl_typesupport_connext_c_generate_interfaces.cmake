@@ -66,7 +66,7 @@ endforeach()
 # If not on Windows, disable some warnings with Connext's generated code
 if(NOT WIN32)
   set(_connext_compile_flags)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(_connext_compile_flags
       "-Wno-deprecated-register"
       "-Wno-mismatched-tags"
