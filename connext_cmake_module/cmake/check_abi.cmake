@@ -16,8 +16,8 @@ cmake_minimum_required(VERSION 2.8.3)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wextra")
 
-add_definitions(@Connext_DEFINITIONS@)
 include_directories(@Connext_INCLUDE_DIRS@)
 add_executable(exe
   "@connext_cmake_module_DIR@/check_abi.cpp")
+target_compile_definitions(exe PRIVATE @Connext_DEFINITIONS@)
 target_link_libraries(exe @Connext_LIBRARIES@)
