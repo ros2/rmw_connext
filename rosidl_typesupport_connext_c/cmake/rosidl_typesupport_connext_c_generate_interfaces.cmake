@@ -193,6 +193,10 @@ target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_c
   ${CMAKE_CURRENT_BINARY_DIR}/rosidl_typesupport_connext_cpp
 )
+ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+  "Connext"
+  "rosidl_typesupport_connext_c"
+  "${PROJECT_NAME}__rosidl_typesupport_connext_cpp")
 foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   set(_msg_include_dir "${${_pkg_name}_DIR}/../../../include/${_pkg_name}/msg/dds_connext_c")
   set(_srv_include_dir "${${_pkg_name}_DIR}/../../../include/${_pkg_name}/srv/dds_connext_c")
@@ -206,10 +210,6 @@ foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     ${_pkg_name})
 endforeach()
-ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  "Connext"
-  "rosidl_typesupport_connext_c"
-  "${PROJECT_NAME}__rosidl_typesupport_connext_cpp")
 target_link_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   ${rosidl_generate_interfaces_TARGET}__rosidl_generator_c
   ${rosidl_generate_interfaces_TARGET}__rosidl_typesupport_connext_cpp)

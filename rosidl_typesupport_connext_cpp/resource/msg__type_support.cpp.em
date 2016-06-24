@@ -87,20 +87,25 @@ convert_ros_message_to_dds(
   // field.name @(field.name)
 @[  if field.type.is_array]@
   {
-@[    if field.type.array_size]@
+@[    if field.type.array_size and not field.type.is_upper_bound]@
     size_t size = @(field.type.array_size);
 @[    else]@
     size_t size = ros_message.@(field.name).size();
     if (size > (std::numeric_limits<DDS_Long>::max)()) {
       throw std::runtime_error("array size exceeds maximum DDS sequence size");
     }
-    DDS_Long length = static_cast<DDS_Long>(size);
-@[      if not field.type.is_upper_bound]@
-    if (!dds_message.@(field.name)_.maximum(length)) {
-      throw std::runtime_error("failed to set maximum of sequence");
+@[      if field.type.is_upper_bound]@
+    if (size > @(field.type.array_size)) {
+      throw std::runtime_error("array size exceeds upper bound");
     }
 @[      end if]@
-    if (!dds_message.@(field.name)_.ensure_length(length, length)) {
+    DDS_Long length = static_cast<DDS_Long>(size);
+    if (length > dds_message.@(field.name)_.maximum()) {
+      if (!dds_message.@(field.name)_.maximum(length)) {
+        throw std::runtime_error("failed to set maximum of sequence");
+      }
+    }
+    if (!dds_message.@(field.name)_.length(length)) {
       throw std::runtime_error("failed to set length of sequence");
     }
 @[    end if]@
@@ -187,7 +192,7 @@ convert_dds_message_to_ros(
   // field.name @(field.name)
 @[  if field.type.is_array]@
   {
-@[    if field.type.array_size]@
+@[    if field.type.array_size and not field.type.is_upper_bound]@
     size_t size = @(field.type.array_size);
 @[    else]@
     size_t size = dds_message.@(field.name)_.length();
