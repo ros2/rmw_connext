@@ -145,7 +145,7 @@ rosidl_write_generator_arguments(
 )
 
 set(_idl_pp "${Connext_DDSGEN}")
-if(NOT Connext_DDSGEN_SERVER STREQUAL "")
+if(NOT "${Connext_DDSGEN_SERVER}" STREQUAL "")
   # use the code generator in server mode when available
   # because it speeds up the code generation step significantly
   set(_idl_pp "${Connext_DDSGEN_SERVER}")
