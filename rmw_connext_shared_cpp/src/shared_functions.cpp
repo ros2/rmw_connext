@@ -220,6 +220,8 @@ get_datawriter_qos(
     return false;
   }
 
+  datawriter_qos.publish_mode.kind = DDS::ASYNCHRONOUS_PUBLISH_MODE_QOS;
+
   return true;
 }
 
