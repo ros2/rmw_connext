@@ -21,7 +21,6 @@ extern "C"
 {
 #endif
 
-ROSIDL_TYPESUPPORT_CONNEXT_C_EXPORT
 const char *
   rosidl_typesupport_connext_c__identifier = "connext_static_c";
 
