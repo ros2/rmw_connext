@@ -156,6 +156,10 @@ link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED
   ${_generated_msg_files} ${_generated_external_msg_files} ${_generated_srv_files}
   ${_generated_external_srv_files})
+if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
+  target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+    PRIVATE Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
+endif()
 ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   "rmw"
   "rosidl_typesupport_connext_cpp"
