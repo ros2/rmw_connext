@@ -22,7 +22,7 @@ extern "C"
 {
 #endif
 
-ROSIDL_TYPESUPPORT_CONNEXT_C_IMPORT
+ROSIDL_TYPESUPPORT_CONNEXT_C_PUBLIC
 extern const char * rosidl_typesupport_connext_c__identifier;
 
 #if __cplusplus

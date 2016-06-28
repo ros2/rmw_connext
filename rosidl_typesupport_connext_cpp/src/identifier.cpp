@@ -18,6 +18,6 @@ namespace rosidl_typesupport_connext_cpp
 {
 
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
-const char * typesupport_connext_identifier = "connext_static";
+const char * typesupport_connext_identifier = "connext_static_cpp";
 
 }  // namespace rosidl_typesupport_connext_cpp

@@ -58,6 +58,8 @@ foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
     list(APPEND _generated_msg_files "${_output_path}/msg/dds_connext_c/${_header_name}__type_support_c.cpp")
   elseif(_extension STREQUAL ".srv")
     list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext_c/${_header_name}__type_support_c.cpp")
+    list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext_c/${_header_name}__request__type_support_c.cpp")
+    list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext_c/${_header_name}__response__type_support_c.cpp")
   else()
     message(FATAL_ERROR "Interface file with unknown extension: ${_idl_file}")
   endif()
@@ -162,7 +164,7 @@ if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "ROSIDL_BUILDING_DLL")
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_C_BUILDING_DLL")
+    PRIVATE "ROSIDL_GENERATOR_C_BUILDING_DLL_${PROJECT_NAME}")
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "NDDS_USER_DLL_EXPORT_${PROJECT_NAME}")
 endif()
