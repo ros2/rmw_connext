@@ -18,13 +18,57 @@
 #include <limits>
 #include <string>
 
-// Two different kinds of concatenation are needed for these namespaces
-#define INTROSPECTION_CPP_TYPE(A) rosidl_typesupport_introspection_cpp::A
+#define DEFINE_DYNAMIC_DATA_METHODS(TYPE, DDSTYPE, METHOD_TYPE) \
+  template<> \
+  DDS_ReturnCode_t set_dynamic_data<TYPE, DDSTYPE>( \
+    DDS_DynamicData * dynamic_data, size_t index, const DDSTYPE value) \
+  { \
+    auto member_id = static_cast<DDS_DynamicDataMemberId>(index); \
+    return dynamic_data->set_ ## METHOD_TYPE(NULL, member_id, value); \
+  } \
+  template<> \
+  DDS_ReturnCode_t set_dynamic_data_array<TYPE, DDSTYPE>( \
+    DDS_DynamicData * dynamic_data, size_t index, size_t array_size, const DDSTYPE * values) \
+  { \
+    auto member_id = static_cast<DDS_DynamicDataMemberId>(index); \
+    return dynamic_data->set_ ## METHOD_TYPE ## _array(NULL, member_id, \
+             static_cast<DDS_UnsignedLong>(array_size), values); \
+  } \
+  template<> \
+  DDS_ReturnCode_t get_dynamic_data<TYPE, DDSTYPE>( \
+    DDS_DynamicData * dynamic_data, DDSTYPE & value, size_t index) \
+  { \
+    return dynamic_data->get_ ## METHOD_TYPE( \
+      value, \
+      NULL, \
+      static_cast<DDS_DynamicDataMemberId>(index)); \
+  } \
+  template<> \
+  DDS_ReturnCode_t get_dynamic_data_array<TYPE, DDSTYPE>( \
+    DDS_DynamicData * dynamic_data, DDSTYPE * &values, size_t array_size, size_t index) \
+  { \
+    DDS_UnsignedLong length = static_cast<DDS_UnsignedLong>(array_size); \
+    return dynamic_data->get_ ## METHOD_TYPE ## _array( \
+      values, \
+      &length, \
+      NULL, \
+      static_cast<DDS_DynamicDataMemberId>(index)); \
+  } \
 
-#define INTROSPECTION_C_TYPE(A) rosidl_typesupport_introspection_c__ ## A
 
-#define C_STRING_ASSIGN(A, B) rosidl_generator_c__String__assignn(&A, B, size - 1);
-
-#define CPP_STRING_ASSIGN(A, B) A = B;
+#define SPECIALIZE_GENERIC_C_ARRAY(C_NAME, C_TYPE) \
+  template<> \
+  struct GenericCArray<C_TYPE> \
+  { \
+    using type = rosidl_generator_c__ ## C_NAME ## __Array; \
+ \
+    static void fini(type * array) { \
+      rosidl_generator_c__ ## C_NAME ## __Array__fini(array); \
+    } \
+ \
+    static bool init(type * array, size_t size) { \
+      return rosidl_generator_c__ ## C_NAME ## __Array__init(array, size); \
+    } \
+  };
 
 #endif  // MACROS_HPP_
