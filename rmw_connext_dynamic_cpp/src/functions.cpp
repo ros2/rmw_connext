@@ -904,7 +904,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     array_size = member->array_size_; \
   } else { \
     const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_; \
-    auto vector = static_cast<const std::vector<TYPE> *>(untyped_vector); \
+    typedef std::vector<TYPE> typed_vector; \
+    auto vector = static_cast<const typed_vector *>(untyped_vector); \
     ros_values = vector->data(); \
     array_size = vector->size(); \
   }
@@ -938,7 +939,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
           RMW_SET_ERROR_MSG("failed to allocate memory"); \
           return false; \
         } \
-        for (size_t j = 0; j < array_size; ++j) { \
+        for (size_t j = 0; array_size > j; ++j) { \
           values[j] = ros_values[j]; \
         } \
       } \
@@ -972,12 +973,13 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
           RMW_SET_ERROR_MSG("failed to allocate memory"); \
           return false; \
         } \
-        for (size_t j = 0; j < array_size; ++j) { \
+        for (size_t j = 0; array_size > j; ++j) { \
           values[j] = ros_values[j]; \
         } \
       } else { \
         const void * untyped_vector = static_cast<const char *>(ros_message) + member->offset_; \
-        auto vector = static_cast<const std::vector<TYPE> *>(untyped_vector); \
+        typedef std::vector<TYPE> typed_vector; \
+        auto vector = static_cast<const typed_vector *>(untyped_vector); \
         array_size = vector->size(); \
         if (array_size > (std::numeric_limits<DDS_UnsignedLong>::max)()) { \
           RMW_SET_ERROR_MSG( \
@@ -990,7 +992,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
             RMW_SET_ERROR_MSG("failed to allocate memory"); \
             return false; \
           } \
-          for (size_t j = 0; j < array_size; ++j) { \
+          for (size_t j = 0; array_size > j; ++j) { \
             values[j] = (*vector)[j]; \
           } \
         } \
@@ -1028,7 +1030,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
           "failed to set string since the requested string length exceeds the DDS type"); \
         return false; \
       } \
-      for (size_t j = 0; j < array_size; ++j) { \
+      for (size_t j = 0; array_size > j; ++j) { \
         status = dynamic_data_member.METHOD_NAME( \
           NULL, \
           static_cast<DDS_DynamicDataMemberId>(j + 1), \
@@ -1076,7 +1078,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     &sub_dynamic_data, sub_ros_message, member->members_->data, typesupport); \
   if (!published) { \
     DDS_UnsignedLong count = sub_dynamic_data.get_member_count(); \
-    for (DDS_UnsignedLong k = 0; k < count; ++k) { \
+    for (DDS_UnsignedLong k = 0; count > k; ++k) { \
       DDS_DynamicDataMemberInfo info; \
       status = sub_dynamic_data.get_member_info_by_index(info, k); \
       if (status != DDS_RETCODE_OK) { \
@@ -1721,7 +1723,8 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     ros_values = reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
   } else { \
     void * untyped_vector = static_cast<char *>(ros_message) + member->offset_; \
-    auto vector = static_cast<std::vector<TYPE> *>(untyped_vector); \
+    typedef std::vector<TYPE> typed_vector; \
+    auto vector = static_cast<typed_vector *>(untyped_vector); \
     vector->resize(array_size); \
     ros_values = vector->data(); \
   }
@@ -1777,7 +1780,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
           RMW_SET_ERROR_MSG("failed to get array value using " #ARRAY_METHOD_NAME); \
           return false; \
         } \
-        for (size_t i = 0; i < array_size; ++i) { \
+        for (size_t i = 0; array_size > i; ++i) { \
           ros_values[i] = values[i]; \
         } \
         rmw_free(values); \
@@ -1823,14 +1826,15 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         if (member->array_size_ && !member->is_upper_bound_) { \
           auto ros_values = \
             reinterpret_cast<TYPE *>(static_cast<char *>(ros_message) + member->offset_); \
-          for (size_t i = 0; i < array_size; ++i) { \
+          for (size_t i = 0; array_size > i; ++i) { \
             ros_values[i] = values[i] == DDS_BOOLEAN_TRUE; \
           } \
         } else { \
           void * untyped_vector = static_cast<char *>(ros_message) + member->offset_; \
-          auto vector = static_cast<std::vector<TYPE> *>(untyped_vector); \
+          typedef std::vector<TYPE> typed_vector; \
+          auto vector = static_cast<typed_vector *>(untyped_vector); \
           vector->resize(array_size); \
-          for (size_t i = 0; i < array_size; ++i) { \
+          for (size_t i = 0; array_size > i; ++i) { \
             (*vector)[i] = values[i] == DDS_BOOLEAN_TRUE; \
           } \
         } \
@@ -1871,7 +1875,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         RMW_SET_ERROR_MSG("failed to bind complex member"); \
         return false; \
       } \
-      for (size_t j = 0; j < array_size; ++j) { \
+      for (size_t j = 0; array_size > j; ++j) { \
         char * value = 0; \
         DDS_UnsignedLong size; \
         /* TODO(wjwwood): Figure out how value is allocated. Why are we freeing it? */ \
