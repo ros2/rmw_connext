@@ -74,7 +74,8 @@
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
-#include "macros.hpp"
+#include "./macros.hpp"
+#include "./templates.hpp"
 
 
 bool using_introspection_c_typesupport(const char * typesupport_identifier)
@@ -238,7 +239,6 @@ destroy_type_code(DDS_TypeCode * type_code)
   }
   return RMW_RET_OK;
 }
-}  // extern C
 
 DDS_TypeCode * _create_type_code(
   std::string type_name, const void * untyped_members, const char * typesupport)
@@ -255,8 +255,6 @@ DDS_TypeCode * _create_type_code(
   return NULL;
 }
 
-extern "C"
-{
 rmw_publisher_t *
 rmw_create_publisher(
   const rmw_node_t * node,
@@ -640,8 +638,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   rmw_publisher_free(publisher);
   return RMW_RET_OK;
 }
-
-}  // extern C
+}  // extern "C"
 
 
 bool _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
@@ -649,10 +646,10 @@ bool _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
 {
   if (using_introspection_c_typesupport(typesupport)) {
     return publish<rosidl_typesupport_introspection_c__MessageMembers>(
-      dynamic_data, ros_message, untyped_members, typesupport);
+      dynamic_data, ros_message, untyped_members);
   } else if (using_introspection_cpp_typesupport(typesupport)) {
     return publish<rosidl_typesupport_introspection_cpp::MessageMembers>(
-      dynamic_data, ros_message, untyped_members, typesupport);
+      dynamic_data, ros_message, untyped_members);
   }
 
   RMW_SET_ERROR_MSG("Unknown typesupport identifier")
@@ -1121,25 +1118,20 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   return RMW_RET_OK;
 }
 
-}  // extern_c
-
-
 bool _take(DDS_DynamicData * dynamic_data, void * ros_message,
   const void * untyped_members, const char * typesupport)
 {
   if (using_introspection_c_typesupport(typesupport)) {
     return take<rosidl_typesupport_introspection_c__MessageMembers>(
-      dynamic_data, ros_message, untyped_members, typesupport);
+      dynamic_data, ros_message, untyped_members);
   } else if (using_introspection_cpp_typesupport(typesupport)) {
     return take<rosidl_typesupport_introspection_cpp::MessageMembers>(
-      dynamic_data, ros_message, untyped_members, typesupport);
+      dynamic_data, ros_message, untyped_members);
   }
   RMW_SET_ERROR_MSG("Unknown typesupport identifier")
   return false;
 }
 
-extern "C"
-{
 rmw_ret_t
 _take_impl(const rmw_subscription_t * subscription, void * ros_message, bool * taken,
   DDS_InstanceHandle_t * sending_publication_handle)
