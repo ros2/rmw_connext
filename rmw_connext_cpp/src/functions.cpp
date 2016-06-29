@@ -60,7 +60,18 @@
     rosidl_typesupport_connext_cpp::typesupport_connext_identifier && \
     TYPESUPPORT->typesupport_identifier != rosidl_typesupport_connext_c__identifier) \
   { \
-    RMW_SET_ERROR_MSG("type support identifier did not match valid typesupports"); \
+    char __msg[1024]; \
+    snprintf( \
+      __msg, 1024, \
+      "type support handle implementation '%s' (%p) does not match valid type supports " \
+      "('%s' (%p), '%s' (%p))", \
+      TYPESUPPORT->typesupport_identifier, \
+      TYPESUPPORT->typesupport_identifier, \
+      rosidl_typesupport_connext_cpp::typesupport_connext_identifier, \
+      rosidl_typesupport_connext_cpp::typesupport_connext_identifier, \
+      rosidl_typesupport_connext_c__identifier, \
+      rosidl_typesupport_connext_c__identifier); \
+    RMW_SET_ERROR_MSG(__msg); \
     return NULL; \
   }
 
