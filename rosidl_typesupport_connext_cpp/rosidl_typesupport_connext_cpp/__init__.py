@@ -14,6 +14,7 @@
 
 import os
 import subprocess
+import sys
 
 from rosidl_cmake import convert_camel_case_to_lower_case_underscore
 from rosidl_cmake import expand_template
@@ -80,9 +81,24 @@ def generate_dds_connext_cpp(
         ]
         if os.name == 'nt':
             cmd[-5:-5] = ['-dllExportMacroSuffix', pkg_name]
-        subprocess.check_call(cmd)
 
         msg_name = os.path.splitext(os.path.basename(idl_file))[0]
+        subprocess.check_call(cmd)
+
+        # fail safe if the generator does not work as expected
+        any_missing = False
+        for suffix in ['.h', '.cxx', 'Plugin.h', 'Plugin.cxx', 'Support.h', 'Support.cxx']:
+            filename = os.path.join(output_path, msg_name + suffix)
+            if not os.path.exists(filename):
+                any_missing = True
+                break
+        if any_missing:
+            error_msg = "'%s' failed to generate the expected files" % idl_pp
+            if os.name != 'nt':
+                raise RuntimeError(error_msg)
+            print(error_msg + ', retrying once on Windows', file=sys.stderr)
+            subprocess.check_call(cmd)
+
         if os.name != 'nt':
             # modify generated code to avoid unsed global variable warning
             # which can't be suppressed non-globally with gcc
