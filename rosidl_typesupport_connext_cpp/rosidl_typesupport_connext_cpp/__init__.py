@@ -93,10 +93,8 @@ def generate_dds_connext_cpp(
                 any_missing = True
                 break
         if any_missing:
-            error_msg = "'%s' failed to generate the expected files" % idl_pp
-            if os.name != 'nt':
-                raise RuntimeError(error_msg)
-            print(error_msg + ', retrying once on Windows', file=sys.stderr)
+            print("'%s' failed to generate the expected files" % idl_pp +
+                  ', retrying once on Windows', file=sys.stderr)
             subprocess.check_call(cmd)
 
         if os.name != 'nt':
