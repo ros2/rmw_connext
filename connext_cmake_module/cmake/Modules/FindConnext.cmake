@@ -32,6 +32,7 @@
 # - Connext_LIBRARY_DIRS: Paths to the libraries
 # - Connext_LIBRARY_DIR: Path to libraries; guaranteed to be a single path
 # - Connext_DEFINITIONS: Definitions to be passed on
+# - Connext_LINK_FLAGS: Definitions to be passed on
 # - Connext_DDSGEN: Path to the idl2code generator
 # - Connext_DDSGEN_SERVER: Path to the idl2code generator in server mode
 #   (if available and runnable)
@@ -299,12 +300,15 @@ else()
   endif()
 endif()
 
+set(Connext_LINK_FLAGS "")
 if(Connext_FOUND)
   if(NOT WIN32)
     list(APPEND Connext_LIBRARIES "pthread" "dl")
   endif()
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    list(APPEND Connext_LINK_FLAGS "-Wl,--no-as-needed")
+
     # check with which ABI the Connext libraries are built
     configure_file(
       "${connext_cmake_module_DIR}/check_abi.cmake"
