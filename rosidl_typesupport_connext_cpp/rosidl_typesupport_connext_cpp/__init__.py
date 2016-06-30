@@ -83,19 +83,28 @@ def generate_dds_connext_cpp(
             cmd[-5:-5] = ['-dllExportMacroSuffix', pkg_name]
 
         msg_name = os.path.splitext(os.path.basename(idl_file))[0]
-        subprocess.check_call(cmd)
-
-        # fail safe if the generator does not work as expected
-        any_missing = False
-        for suffix in ['.h', '.cxx', 'Plugin.h', 'Plugin.cxx', 'Support.h', 'Support.cxx']:
-            filename = os.path.join(output_path, msg_name + suffix)
-            if not os.path.exists(filename):
-                any_missing = True
-                break
-        if any_missing:
-            print("'%s' failed to generate the expected files" % idl_pp +
-                  ', retrying once on Windows', file=sys.stderr)
+        count = 1
+        max_count = 5
+        while True:
             subprocess.check_call(cmd)
+
+            # fail safe if the generator does not work as expected
+            any_missing = False
+            for suffix in ['.h', '.cxx', 'Plugin.h', 'Plugin.cxx', 'Support.h', 'Support.cxx']:
+                filename = os.path.join(output_path, msg_name + suffix)
+                if not os.path.exists(filename):
+                    any_missing = True
+                    break
+            if not any_missing:
+                break
+            print("'%s' failed to generate the expected files for '%s/%s'" %
+                  (idl_pp, pkg_name, msg_name), file=sys.stderr)
+            if count < max_count:
+                count += 1
+                print('Running code generator again (retry %d of %d)...' %
+                      (count, max_count), file=sys.stderr)
+                continue
+            raise RuntimeError('failed to generate the expected files')
 
         if os.name != 'nt':
             # modify generated code to avoid unsed global variable warning
