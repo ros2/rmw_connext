@@ -220,6 +220,8 @@ get_datawriter_qos(
     return false;
   }
 
+  // TODO(wjwwood): conditionally use the async publish mode using a heuristic:
+  //  https://github.com/ros2/rmw_connext/issues/190
   datawriter_qos.publish_mode.kind = DDS::ASYNCHRONOUS_PUBLISH_MODE_QOS;
 
   return true;
