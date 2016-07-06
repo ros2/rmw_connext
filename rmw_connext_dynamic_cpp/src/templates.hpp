@@ -520,6 +520,10 @@ bool set_value_with_different_types(
   T * ros_values = nullptr;
   if (member->is_array_) {
     size_t array_size = set_array_size_and_values<Id>(member, ros_message, ros_values);
+    if (!ros_values) {
+      RMW_SET_ERROR_MSG("failed to cast ros_values from message array");
+      return false;
+    }
     DDSType * values = nullptr;
     if (array_size > 0) {
       values = static_cast<DDSType *>(rmw_allocate(sizeof(DDSType) * array_size));
@@ -566,6 +570,10 @@ set_value_with_different_types<rosidl_typesupport_introspection_cpp::ROS_TYPE_BO
     if (member->array_size_ && !member->is_upper_bound_) {
       bool * ros_values = nullptr;
       array_size = set_array_size_and_values<Id>(member, ros_message, ros_values);
+      if (!ros_values) {
+        RMW_SET_ERROR_MSG("failed to cast ros_values from message array");
+        return false;
+      }
       if (array_size > 0) {
         values = static_cast<DDS_Boolean *>(rmw_allocate(sizeof(DDS_Boolean) * array_size));
         if (!values) {
@@ -629,6 +637,10 @@ bool set_value<rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING>(
     size_t array_size =
       set_array_size_and_values<rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING>(
       member, ros_message, ros_values);
+    if (!ros_values) {
+      RMW_SET_ERROR_MSG("failed to cast ros_values from message array");
+      return false;
+    }
     if (array_size > (std::numeric_limits<DDS_DynamicDataMemberId>::max)()) {
       RMW_SET_ERROR_MSG(
         "failed to set string since the requested string length exceeds the DDS type");
@@ -696,6 +708,10 @@ bool set_value<rosidl_typesupport_introspection_c__ROS_TYPE_STRING>(
       return false;
     }
     size_t array_size = set_array_size_and_values<Id>(member, ros_message, ros_values);
+    if (!ros_values) {
+      RMW_SET_ERROR_MSG("failed to cast ros_values from message array");
+      return false;
+    }
     if (array_size > (std::numeric_limits<DDS_DynamicDataMemberId>::max)()) {
       RMW_SET_ERROR_MSG(
         "failed to set string since the requested string length exceeds the DDS type");
@@ -1137,6 +1153,10 @@ bool get_value_with_different_types(
       return false;
     }
     resize_array_and_get_values<Id>(ros_values, ros_message, member, array_size);
+    if (!ros_values) {
+      RMW_SET_ERROR_MSG("failed to cast ros_values from message array");
+      return false;
+    }
 
     if (array_size > 0) {
       DDSType * values =
@@ -1213,9 +1233,13 @@ get_value_with_different_types<rosidl_typesupport_introspection_cpp::ROS_TYPE_BO
         RMW_SET_ERROR_MSG("failed to get array value");
         return false;
       }
-      bool * ros_values = nullptr;
       if (member->array_size_ && !member->is_upper_bound_) {
+        bool * ros_values = nullptr;
         resize_array_and_get_values<Id>(ros_values, ros_message, member, array_size);
+        if (!ros_values) {
+          RMW_SET_ERROR_MSG("failed to cast ros_values from message array");
+          return false;
+        }
 
         for (size_t i = 0; i < array_size; ++i) {
           ros_values[i] = primitive_convert_from_dds<bool, DDS_Boolean>(values[i]);
