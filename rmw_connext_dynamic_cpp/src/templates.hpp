@@ -637,7 +637,7 @@ bool set_value<rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING>(
     size_t array_size =
       set_array_size_and_values<rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING>(
       member, ros_message, ros_values);
-    if (!ros_values && array_size) {
+    if (!ros_values && array_size > 0) {
       RMW_SET_ERROR_MSG("failed to cast ros_values from message array");
       return false;
     }
