@@ -16,6 +16,7 @@
 #define UTILITY_TEMPLATES_HPP_
 
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
