@@ -263,8 +263,8 @@ take__@(spec.base_type.type)(
     DDS_ANY_VIEW_STATE,
     DDS_ANY_INSTANCE_STATE);
   if (status == DDS_RETCODE_NO_DATA) {
-    fprintf(stderr, "take failed with status DDS_RETCODE_NO_DATA\n");
-    return false;
+    *taken = false;
+    return true;
   }
   if (status != DDS_RETCODE_OK) {
     fprintf(stderr, "take failed with status = %d\n", status);
