@@ -1000,7 +1000,7 @@ fail:
 }
 
 rmw_ret_t
-rmw_destroy_client(rmw_client_t * client)
+rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
 {
   if (!client) {
     RMW_SET_ERROR_MSG("client handle is null");
@@ -1118,7 +1118,7 @@ rmw_create_service(
     return nullptr;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  ConnextNodeInfo * node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
@@ -1235,7 +1235,7 @@ fail:
 }
 
 rmw_ret_t
-rmw_destroy_service(rmw_service_t * service)
+rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
   if (!service) {
     RMW_SET_ERROR_MSG("service handle is null");
