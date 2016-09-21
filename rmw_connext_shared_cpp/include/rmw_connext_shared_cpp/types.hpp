@@ -21,6 +21,7 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <mutex>
 #include <set>
 #include <sstream>
 #include <stdexcept>
@@ -43,21 +44,35 @@
 
 #include "rmw/rmw.h"
 
+enum EntityType {Publisher, Subscriber};
+
 class CustomDataReaderListener
   : public DDSDataReaderListener
 {
 public:
+  explicit
+  CustomDataReaderListener(
+    const char * implementation_identifier, rmw_guard_condition_t * graph_guard_condition)
+  : graph_guard_condition_(graph_guard_condition),
+    implementation_identifier_(implementation_identifier)
+  {}
+
   std::map<std::string, std::multiset<std::string>> topic_names_and_types;
 
-protected:
   virtual void add_information(
-    const DDS_SampleInfo & sample_info,
+    const DDS_InstanceHandle_t & instance_handle,
     const std::string & topic_name,
-    const std::string & type_name);
+    const std::string & type_name,
+    EntityType entity_type);
 
-  virtual void remove_information(const DDS_SampleInfo & sample_info);
+  virtual void remove_information(
+    const DDS_InstanceHandle_t & instance_handle,
+    EntityType entity_type);
+
+  virtual void trigger_graph_guard_condition();
 
 private:
+  mutable std::mutex topic_descriptor_mutex_;
   struct TopicDescriptor
   {
     DDS_InstanceHandle_t instance_handle;
@@ -65,40 +80,32 @@ private:
     std::string type;
   };
   std::list<TopicDescriptor> topic_descriptors;
+  rmw_guard_condition_t * graph_guard_condition_;
+  const char * implementation_identifier_;
 };
 
 class CustomPublisherListener
   : public CustomDataReaderListener
 {
 public:
-  explicit CustomPublisherListener(
+  CustomPublisherListener(
     const char * implementation_identifier, rmw_guard_condition_t * graph_guard_condition)
-  : implementation_identifier_(implementation_identifier),
-    graph_guard_condition_(graph_guard_condition)
+  : CustomDataReaderListener(implementation_identifier, graph_guard_condition)
   {}
 
   virtual void on_data_available(DDSDataReader * reader);
-
-private:
-  const char * implementation_identifier_;
-  rmw_guard_condition_t * graph_guard_condition_;
 };
 
 class CustomSubscriberListener
   : public CustomDataReaderListener
 {
 public:
-  explicit CustomSubscriberListener(
+  CustomSubscriberListener(
     const char * implementation_identifier, rmw_guard_condition_t * graph_guard_condition)
-  : implementation_identifier_(implementation_identifier),
-    graph_guard_condition_(graph_guard_condition)
+  : CustomDataReaderListener(implementation_identifier, graph_guard_condition)
   {}
 
   virtual void on_data_available(DDSDataReader * reader);
-
-private:
-  const char * implementation_identifier_;
-  rmw_guard_condition_t * graph_guard_condition_;
 };
 
 struct ConnextNodeInfo

@@ -291,8 +291,8 @@ bool send_response__@(spec.srv_name)(
   return true;
 }
 
-const char *
-get_request_topic_name__@(spec.srv_name)(void * untyped_requester)
+void *
+get_request_datawriter__@(spec.srv_name)(void * untyped_requester)
 {
   if (!untyped_requester) {
     return NULL;
@@ -301,7 +301,49 @@ get_request_topic_name__@(spec.srv_name)(void * untyped_requester)
       @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
       @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
-  return requester->get_request_datawriter()->get_topic()->get_name();
+  return requester->get_request_datawriter();
+}
+
+void *
+get_reply_datareader__@(spec.srv_name)(void * untyped_requester)
+{
+  if (!untyped_requester) {
+    return NULL;
+  }
+  using RequesterType = connext::Requester<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_
+  >;
+  RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
+  return requester->get_reply_datareader();
+}
+
+void *
+get_request_datareader__@(spec.srv_name)(void * untyped_replier)
+{
+  if (!untyped_replier) {
+    return NULL;
+  }
+  using ReplierType = connext::Replier<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_
+  >;
+  ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
+  return replier->get_request_datareader();
+}
+
+void *
+get_reply_datawriter__@(spec.srv_name)(void * untyped_replier)
+{
+  if (!untyped_replier) {
+    return NULL;
+  }
+  using ReplierType = connext::Replier<
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_
+  >;
+  ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
+  return replier->get_reply_datawriter();
 }
 
 static service_type_support_callbacks_t callbacks = {
@@ -315,7 +357,10 @@ static service_type_support_callbacks_t callbacks = {
   &take_request__@(spec.srv_name),
   &send_response__@(spec.srv_name),
   &take_response__@(spec.srv_name),
-  &get_request_topic_name__@(spec.srv_name),
+  &get_request_datawriter__@(spec.srv_name),
+  &get_reply_datareader__@(spec.srv_name),
+  &get_request_datareader__@(spec.srv_name),
+  &get_reply_datawriter__@(spec.srv_name),
 };
 
 static rosidl_service_type_support_t handle = {

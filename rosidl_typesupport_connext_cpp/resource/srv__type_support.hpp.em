@@ -91,8 +91,20 @@ send_response__@(spec.srv_name)(
   const void * untyped_ros_response);
 
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
-const char *
-get_request_topic_name__@(spec.srv_name)(void * untyped_requester);
+void *
+get_request_datawriter__@(spec.srv_name)(void * untyped_requester);
+
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
+void *
+get_reply_datareader__@(spec.srv_name)(void * untyped_requester);
+
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
+void *
+get_request_datareader__@(spec.srv_name)(void * untyped_replier);
+
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC
+void *
+get_reply_datawriter__@(spec.srv_name)(void * untyped_replier);
 
 }  // namespace typesupport_connext_cpp
 
