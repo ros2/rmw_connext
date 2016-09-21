@@ -21,6 +21,9 @@
 
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 
+// Uncomment this to get extra console output about discovery.
+// #define DISCOVERY_DEBUG_LOGGING 1
+
 void CustomDataReaderListener::add_information(
   const DDS_SampleInfo & sample_info,
   const std::string & topic_name,
@@ -35,6 +38,12 @@ void CustomDataReaderListener::add_information(
   topic_descriptor.name = topic_name;
   topic_descriptor.type = type_name;
   topic_descriptors.push_back(topic_descriptor);
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf("+%s %s <%s>\n",
+    entity_type == EntityType::Publisher ? "P" : "S",
+    topic_name.c_str(),
+    type_name.c_str());
+#endif
 }
 
 void CustomDataReaderListener::remove_information(
@@ -44,6 +53,12 @@ void CustomDataReaderListener::remove_information(
   for (auto it = topic_descriptors.begin(); it != topic_descriptors.end(); ++it) {
     if (DDS_InstanceHandle_equals(&it->instance_handle, &sample_info.instance_handle)) {
       // remove entries
+#ifdef DISCOVERY_DEBUG_LOGGING
+      printf("-%s %s <%s>\n",
+        entity_type == EntityType::Publisher ? "P" : "S",
+        it->name.c_str(),
+        it->type.c_str());
+#endif
       auto & topic_types = topic_names_and_types[it->name];
       topic_types.erase(topic_types.find(it->type));
       if (topic_types.empty()) {

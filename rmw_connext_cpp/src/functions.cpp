@@ -14,6 +14,7 @@
 
 #include <cassert>
 #include <exception>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <list>
@@ -54,6 +55,11 @@
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
+// Uncomment this to get extra console output about discovery.
+// This affects code in this file, but there is a similar variable in:
+//   rmw_connext_shared_cpp/shared_functions.cpp
+// #define DISCOVERY_DEBUG_LOGGING 1
+
 // Pass an object with a typesupport identifier member to compare
 #define RMW_CONNEXT_CHECK_TYPESUPPORT_IDENTIFIER(TYPESUPPORT) \
   if (TYPESUPPORT->typesupport_identifier !=  /* NOLINT */ \
@@ -85,6 +91,22 @@ _create_type_name(
     std::string(callbacks->package_name) +
     "::" + sep + "::dds_::" + callbacks->message_name + "_";
 }
+
+namespace std
+{
+std::string
+to_string(DDS_InstanceHandle_t val)
+{
+  std::stringstream ss;
+  for (size_t i = 0; i < val.keyHash.length; i++) {
+    ss << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(val.keyHash.value[i]);
+    if (i + 1 < val.keyHash.length) {
+      ss << ":";
+    }
+  }
+  return ss.str();
+}
+}  // namespace std
 
 extern "C"
 {
@@ -176,7 +198,7 @@ rmw_create_publisher(
     return nullptr;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  ConnextNodeInfo * node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
@@ -472,7 +494,7 @@ rmw_create_subscription(const rmw_node_t * node,
     return nullptr;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  ConnextNodeInfo * node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
@@ -1609,6 +1631,12 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf("Checking for service server:\n");
+  printf(" - %s: %zu\n",
+    request_topic_name,
+    number_of_request_subscribers);
+#endif
   if (number_of_request_subscribers == 0) {
     // not ready
     return RMW_RET_OK;
@@ -1623,6 +1651,11 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf(" - %s: %zu\n",
+    client_info->response_datareader_->get_topicdescription()->get_name(),
+    number_of_response_publishers);
+#endif
   if (number_of_response_publishers == 0) {
     // not ready
     return RMW_RET_OK;
