@@ -31,6 +31,11 @@
 # pragma GCC diagnostic pop
 #endif
 
+// Provides the definition of the service_type_support_callbacks_t struct.
+#include <rosidl_typesupport_connext_cpp/service_type_support.h>
+// Provides the definition of the message_type_support_callbacks_t struct.
+#include <rosidl_typesupport_connext_cpp/message_type_support.h>
+
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
 #include "rosidl_generator_cpp/service_type_support.hpp"
@@ -38,10 +43,6 @@
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
 #include "rosidl_generator_c/message_type_support.h"
 #include "rosidl_typesupport_connext_c/identifier.h"
-// Provides the definition of the service_type_support_callbacks_t struct.
-#include <rosidl_typesupport_connext_cpp/service_type_support.h>
-// Provides the definition of the message_type_support_callbacks_t struct.
-#include <rosidl_typesupport_connext_cpp/message_type_support.h>
 
 @{req_header_file_name = get_header_filename_from_msg_name(spec.srv_name + '__request')}@
 @{res_header_file_name = get_header_filename_from_msg_name(spec.srv_name + '__response')}@
@@ -94,8 +95,8 @@ int64_t send_request__@(spec.srv_name)(
   const void * untyped_ros_request)
 {
   using RequesterType = connext::Requester<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   connext::WriteSample<
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   const rosidl_message_type_support_t * ts =
@@ -103,7 +104,7 @@ int64_t send_request__@(spec.srv_name)(
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(ts->data);
   bool converted = callbacks->convert_ros_to_dds(
-    untyped_ros_request, static_cast<void*>(&request.data()));
+    untyped_ros_request, static_cast<void *>(&request.data()));
   if (!converted) {
     fprintf(stderr, "Unable to convert request!\n");
     return -1;
@@ -148,8 +149,8 @@ bool take_request__@(spec.srv_name)(
   void * untyped_ros_request)
 {
   using ReplierType = connext::Replier<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   if (!untyped_replier || !request_header || !untyped_ros_request) {
     return false;
   }
