@@ -2332,10 +2332,6 @@ rmw_service_server_is_available(
   const rmw_client_t * client,
   bool * is_available)
 {
-  // TODO(wjwwood): remove this once local graph changes are detected.
-  RMW_SET_ERROR_MSG("not implemented");
-  return RMW_RET_ERROR;
-
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
     return RMW_RET_ERROR;
@@ -2378,6 +2374,12 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf("Checking for service server:\n");
+  printf(" - %s: %zu\n",
+    client_info->requester_->get_request_datawriter()->get_topic()->get_name(),
+    number_of_request_subscribers);
+#endif
   if (number_of_request_subscribers == 0) {
     // not ready
     return RMW_RET_OK;
@@ -2392,6 +2394,11 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf(" - %s: %zu\n",
+    client_info->response_datareader_->get_topicdescription()->get_name(),
+    number_of_response_publishers);
+#endif
   if (number_of_response_publishers == 0) {
     // not ready
     return RMW_RET_OK;
