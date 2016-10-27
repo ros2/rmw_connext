@@ -17,6 +17,7 @@
 #include <string>
 
 #include "rmw/allocators.h"
+#include "rmw/sanity_checks.h"
 
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 
@@ -734,6 +735,9 @@ get_topic_names_and_types(const char * implementation_identifier,
   }
   if (node->implementation_identifier != implementation_identifier) {
     RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if(rmw_check_zero_rmw_topic_names_and_types(topic_names_and_types) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
