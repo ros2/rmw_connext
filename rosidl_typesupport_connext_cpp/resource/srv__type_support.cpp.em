@@ -311,9 +311,8 @@ get_reply_datareader__@(spec.srv_name)(void * untyped_requester)
     return NULL;
   }
   using RequesterType = connext::Requester<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_
-  >;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
   return requester->get_reply_datareader();
 }
@@ -325,9 +324,8 @@ get_request_datareader__@(spec.srv_name)(void * untyped_replier)
     return NULL;
   }
   using ReplierType = connext::Replier<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_
-  >;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
   return replier->get_request_datareader();
 }
@@ -339,9 +337,8 @@ get_reply_datawriter__@(spec.srv_name)(void * untyped_replier)
     return NULL;
   }
   using ReplierType = connext::Replier<
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_
-  >;
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
   return replier->get_reply_datawriter();
 }
