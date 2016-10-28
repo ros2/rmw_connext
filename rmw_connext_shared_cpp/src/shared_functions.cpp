@@ -17,6 +17,7 @@
 #include <string>
 
 #include "rmw/allocators.h"
+#include "rmw/sanity_checks.h"
 
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 
@@ -736,20 +737,7 @@ get_topic_names_and_types(const char * implementation_identifier,
     RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
     return RMW_RET_ERROR;
   }
-  if (!topic_names_and_types) {
-    RMW_SET_ERROR_MSG("topics handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (topic_names_and_types->topic_count) {
-    RMW_SET_ERROR_MSG("topic count is not zero");
-    return RMW_RET_ERROR;
-  }
-  if (topic_names_and_types->topic_names) {
-    RMW_SET_ERROR_MSG("topic names is not null");
-    return RMW_RET_ERROR;
-  }
-  if (topic_names_and_types->type_names) {
-    RMW_SET_ERROR_MSG("type names is not null");
+  if (rmw_check_zero_rmw_topic_names_and_types(topic_names_and_types) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
