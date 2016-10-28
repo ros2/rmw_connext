@@ -996,6 +996,8 @@ rmw_create_client(
     response_datareader->get_topicdescription()->get_name(),
     response_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
+  node_info->subscriber_listener->trigger_graph_guard_condition();
+
   request_datawriter =
     static_cast<DDS::DataWriter *>(callbacks->get_request_datawriter(requester));
   node_info->publisher_listener->add_information(
@@ -1003,7 +1005,6 @@ rmw_create_client(
     request_datawriter->get_topic()->get_name(),
     request_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
-  // Only trigger one of the graph condition's, as it's the same guard condition.
   node_info->publisher_listener->trigger_graph_guard_condition();
 
   return client;
@@ -1055,10 +1056,11 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
       client_info->response_datareader_->get_instance_handle(), EntityType::Subscriber);
     DDS::DataWriter * request_datawriter = static_cast<DDS::DataWriter *>(
       client_info->callbacks_->get_request_datawriter(client_info->requester_));
+    node_info->subscriber_listener->trigger_graph_guard_condition();
+
     node_info->publisher_listener->remove_information(
       request_datawriter->get_instance_handle(),
       EntityType::Publisher);
-    // Only trigger one of the graph condition's, as it's the same guard condition.
     node_info->publisher_listener->trigger_graph_guard_condition();
 
     if (response_datareader) {
@@ -1254,6 +1256,8 @@ rmw_create_service(
     request_datareader->get_topicdescription()->get_name(),
     request_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
+  node_info->subscriber_listener->trigger_graph_guard_condition();
+
   reply_datawriter =
     static_cast<DDS::DataWriter *>(callbacks->get_reply_datawriter(replier));
   node_info->publisher_listener->add_information(
@@ -1261,7 +1265,6 @@ rmw_create_service(
     reply_datawriter->get_topic()->get_name(),
     reply_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
-  // Only trigger one of the graph condition's, as it's the same guard condition.
   node_info->publisher_listener->trigger_graph_guard_condition();
 
   return service;
@@ -1319,12 +1322,13 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
     node_info->subscriber_listener->remove_information(
       service_info->request_datareader_->get_instance_handle(),
       EntityType::Subscriber);
+    node_info->subscriber_listener->trigger_graph_guard_condition();
+
     DDS::DataWriter * reply_datawriter = static_cast<DDS::DataWriter *>(
       service_info->callbacks_->get_reply_datawriter(service_info->replier_));
     node_info->publisher_listener->remove_information(
       reply_datawriter->get_instance_handle(),
       EntityType::Publisher);
-    // Only trigger one of the graph condition's, as it's the same guard condition.
     node_info->publisher_listener->trigger_graph_guard_condition();
 
     if (request_datareader) {
