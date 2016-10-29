@@ -253,11 +253,32 @@ bool send_response__@(spec.srv_name)(
   return true;
 }
 
-const char *
-get_request_topic_name__@(spec.srv_name)(void * untyped_requester)
+void *
+get_request_datawriter__@(spec.srv_name)(void * untyped_requester)
 {
-  return @(spec.pkg_name)::srv::typesupport_connext_cpp::get_request_topic_name__@(spec.srv_name)(
+  return @(spec.pkg_name)::srv::typesupport_connext_cpp::get_request_datawriter__@(spec.srv_name)(
     untyped_requester);
+}
+
+void *
+get_reply_datareader__@(spec.srv_name)(void * untyped_requester)
+{
+  return @(spec.pkg_name)::srv::typesupport_connext_cpp::get_reply_datareader__@(spec.srv_name)(
+    untyped_requester);
+}
+
+void *
+get_request_datareader__@(spec.srv_name)(void * untyped_replier)
+{
+  return @(spec.pkg_name)::srv::typesupport_connext_cpp::get_request_datareader__@(spec.srv_name)(
+    untyped_replier);
+}
+
+void *
+get_reply_datawriter__@(spec.srv_name)(void * untyped_replier)
+{
+  return @(spec.pkg_name)::srv::typesupport_connext_cpp::get_reply_datawriter__@(spec.srv_name)(
+    untyped_replier);
 }
 
 static service_type_support_callbacks_t __callbacks = {
@@ -271,7 +292,10 @@ static service_type_support_callbacks_t __callbacks = {
   &take_request__@(spec.srv_name),
   &send_response__@(spec.srv_name),
   &take_response__@(spec.srv_name),
-  &get_request_topic_name__@(spec.srv_name),
+  &get_request_datawriter__@(spec.srv_name),
+  &get_reply_datareader__@(spec.srv_name),
+  &get_request_datareader__@(spec.srv_name),
+  &get_reply_datawriter__@(spec.srv_name),
 };
 
 static rosidl_service_type_support_t __type_support = {

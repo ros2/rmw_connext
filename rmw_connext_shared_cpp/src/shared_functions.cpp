@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <map>
+#include <mutex>
 #include <set>
 #include <string>
 
@@ -21,29 +22,50 @@
 
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 
+// Uncomment this to get extra console output about discovery.
+// #define DISCOVERY_DEBUG_LOGGING 1
+
 void CustomDataReaderListener::add_information(
-  const DDS_SampleInfo & sample_info,
+  const DDS_InstanceHandle_t & instance_handle,
   const std::string & topic_name,
-  const std::string & type_name)
+  const std::string & type_name,
+  EntityType entity_type)
 {
+  (void)entity_type;
+  std::lock_guard<std::mutex> topic_descriptor_lock(topic_descriptor_mutex_);
   // store topic name and type name
   auto & topic_types = topic_names_and_types[topic_name];
   topic_types.insert(type_name);
   // store mapping to instance handle
   TopicDescriptor topic_descriptor;
-  topic_descriptor.instance_handle = sample_info.instance_handle;
+  topic_descriptor.instance_handle = instance_handle;
   topic_descriptor.name = topic_name;
   topic_descriptor.type = type_name;
   topic_descriptors.push_back(topic_descriptor);
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf("+%s %s <%s>\n",
+    entity_type == EntityType::Publisher ? "P" : "S",
+    topic_name.c_str(),
+    type_name.c_str());
+#endif
 }
 
 void CustomDataReaderListener::remove_information(
-  const DDS_SampleInfo & sample_info)
+  const DDS_InstanceHandle_t & instance_handle,
+  EntityType entity_type)
 {
+  (void)entity_type;
+  std::lock_guard<std::mutex> topic_descriptor_lock(topic_descriptor_mutex_);
   // find entry by instance handle
   for (auto it = topic_descriptors.begin(); it != topic_descriptors.end(); ++it) {
-    if (DDS_InstanceHandle_equals(&it->instance_handle, &sample_info.instance_handle)) {
+    if (DDS_InstanceHandle_equals(&it->instance_handle, &instance_handle)) {
       // remove entries
+#ifdef DISCOVERY_DEBUG_LOGGING
+      printf("-%s %s <%s>\n",
+        entity_type == EntityType::Publisher ? "P" : "S",
+        it->name.c_str(),
+        it->type.c_str());
+#endif
       auto & topic_types = topic_names_and_types[it->name];
       topic_types.erase(topic_types.find(it->type));
       if (topic_types.empty()) {
@@ -52,6 +74,17 @@ void CustomDataReaderListener::remove_information(
       topic_descriptors.erase(it);
       break;
     }
+  }
+}
+
+void CustomDataReaderListener::trigger_graph_guard_condition()
+{
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf("graph guard condition triggered...\n");
+#endif
+  rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
+  if (ret != RMW_RET_OK) {
+    fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string_safe());
   }
 }
 
@@ -76,17 +109,18 @@ void CustomPublisherListener::on_data_available(DDSDataReader * reader)
 
   for (auto i = 0; i < data_seq.length(); ++i) {
     if (info_seq[i].valid_data) {
-      add_information(info_seq[i], data_seq[i].topic_name, data_seq[i].type_name);
+      add_information(
+        info_seq[i].instance_handle,
+        data_seq[i].topic_name,
+        data_seq[i].type_name,
+        EntityType::Publisher);
     } else {
-      remove_information(info_seq[i]);
+      remove_information(info_seq[i].instance_handle, EntityType::Publisher);
     }
   }
 
   if (data_seq.length() > 0) {
-    rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
-    if (ret != RMW_RET_OK) {
-      fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string_safe());
-    }
+    this->trigger_graph_guard_condition();
   }
 
   builtin_reader->return_loan(data_seq, info_seq);
@@ -113,17 +147,18 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
 
   for (auto i = 0; i < data_seq.length(); ++i) {
     if (info_seq[i].valid_data) {
-      add_information(info_seq[i], data_seq[i].topic_name, data_seq[i].type_name);
+      add_information(
+        info_seq[i].instance_handle,
+        data_seq[i].topic_name,
+        data_seq[i].type_name,
+        EntityType::Subscriber);
     } else {
-      remove_information(info_seq[i]);
+      remove_information(info_seq[i].instance_handle, EntityType::Subscriber);
     }
   }
 
   if (data_seq.length() > 0) {
-    rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
-    if (ret != RMW_RET_OK) {
-      fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string_safe());
-    }
+    this->trigger_graph_guard_condition();
   }
 
   builtin_reader->return_loan(data_seq, info_seq);

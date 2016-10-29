@@ -440,6 +440,10 @@ rmw_create_publisher(
   }
   memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
+  node_info->publisher_listener->add_information(
+    dds_publisher->get_instance_handle(), topic_name, type_name, EntityType::Publisher);
+  node_info->publisher_listener->trigger_graph_guard_condition();
+
   return publisher;
 fail:
   // Something went wrong, unwind anything that's already been done.
@@ -564,6 +568,9 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 
   auto custom_publisher_info = static_cast<CustomPublisherInfo *>(publisher->data);
   if (custom_publisher_info) {
+    node_info->publisher_listener->remove_information(
+      custom_publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
+    node_info->publisher_listener->trigger_graph_guard_condition();
     DDSDynamicDataTypeSupport * ddts = custom_publisher_info->dynamic_data_type_support_;
     if (ddts) {
       if (custom_publisher_info->dynamic_data) {
@@ -889,6 +896,11 @@ rmw_create_subscription(
     goto fail;
   }
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
+
+  node_info->subscriber_listener->add_information(
+    dds_subscriber->get_instance_handle(), topic_name, type_name, EntityType::Subscriber);
+  node_info->subscriber_listener->trigger_graph_guard_condition();
+
   return subscription;
 fail:
   // Something has gone wrong, unroll what has been done.
@@ -1021,6 +1033,9 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 
   auto custom_subscription_info = static_cast<CustomSubscriberInfo *>(subscription->data);
   if (custom_subscription_info) {
+    node_info->subscriber_listener->remove_information(
+      custom_subscription_info->dds_subscriber_->get_instance_handle(), EntityType::Subscriber);
+    node_info->subscriber_listener->trigger_graph_guard_condition();
     DDSDynamicDataTypeSupport * ddts = custom_subscription_info->dynamic_data_type_support_;
     if (ddts) {
       if (custom_subscription_info->dynamic_data) {
@@ -1540,8 +1555,9 @@ fail:
 }
 
 rmw_ret_t
-rmw_destroy_client(rmw_client_t * client)
+rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
 {
+  (void)node;
   if (!client) {
     RMW_SET_ERROR_MSG("client handle is null");
     return RMW_RET_ERROR;
@@ -1923,8 +1939,9 @@ fail:
 }
 
 rmw_ret_t
-rmw_destroy_service(rmw_service_t * service)
+rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
+  (void)node;
   if (!service) {
     RMW_SET_ERROR_MSG("service handle is null");
     return RMW_RET_ERROR;
@@ -2376,6 +2393,12 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf("Checking for service server:\n");
+  printf(" - %s: %zu\n",
+    client_info->requester_->get_request_datawriter()->get_topic()->get_name(),
+    number_of_request_subscribers);
+#endif
   if (number_of_request_subscribers == 0) {
     // not ready
     return RMW_RET_OK;
@@ -2390,6 +2413,11 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf(" - %s: %zu\n",
+    client_info->response_datareader_->get_topicdescription()->get_name(),
+    number_of_response_publishers);
+#endif
   if (number_of_response_publishers == 0) {
     // not ready
     return RMW_RET_OK;

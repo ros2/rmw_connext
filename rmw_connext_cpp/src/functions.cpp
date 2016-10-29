@@ -14,6 +14,7 @@
 
 #include <cassert>
 #include <exception>
+#include <iomanip>
 #include <iostream>
 #include <limits>
 #include <list>
@@ -54,6 +55,11 @@
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
+// Uncomment this to get extra console output about discovery.
+// This affects code in this file, but there is a similar variable in:
+//   rmw_connext_shared_cpp/shared_functions.cpp
+// #define DISCOVERY_DEBUG_LOGGING 1
+
 // Pass an object with a typesupport identifier member to compare
 #define RMW_CONNEXT_CHECK_TYPESUPPORT_IDENTIFIER(TYPESUPPORT) \
   if (TYPESUPPORT->typesupport_identifier !=  /* NOLINT */ \
@@ -85,6 +91,22 @@ _create_type_name(
     std::string(callbacks->package_name) +
     "::" + sep + "::dds_::" + callbacks->message_name + "_";
 }
+
+namespace std
+{
+std::string
+to_string(DDS_InstanceHandle_t val)
+{
+  std::stringstream ss;
+  for (size_t i = 0; i < val.keyHash.length; i++) {
+    ss << std::setfill('0') << std::setw(2) << std::hex << static_cast<int>(val.keyHash.value[i]);
+    if (i + 1 < val.keyHash.length) {
+      ss << ":";
+    }
+  }
+  return ss.str();
+}
+}  // namespace std
 
 extern "C"
 {
@@ -303,6 +325,10 @@ rmw_create_publisher(
   }
   memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
+  node_info->publisher_listener->add_information(
+    dds_publisher->get_instance_handle(), topic_name, type_name, EntityType::Publisher);
+  node_info->publisher_listener->trigger_graph_guard_condition();
+
   return publisher;
 fail:
   if (publisher) {
@@ -371,6 +397,9 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   ConnextStaticPublisherInfo * publisher_info =
     static_cast<ConnextStaticPublisherInfo *>(publisher->data);
   if (publisher_info) {
+    node_info->publisher_listener->remove_information(
+      publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
+    node_info->publisher_listener->trigger_graph_guard_condition();
     DDSPublisher * dds_publisher = publisher_info->dds_publisher_;
     if (dds_publisher) {
       if (publisher_info->topic_writer_) {
@@ -597,6 +626,11 @@ rmw_create_subscription(const rmw_node_t * node,
     goto fail;
   }
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
+
+  node_info->subscriber_listener->add_information(
+    dds_subscriber->get_instance_handle(), topic_name, type_name, EntityType::Subscriber);
+  node_info->subscriber_listener->trigger_graph_guard_condition();
+
   return subscription;
 fail:
   if (subscription) {
@@ -674,6 +708,9 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   ConnextStaticSubscriberInfo * subscriber_info =
     static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
   if (subscriber_info) {
+    node_info->subscriber_listener->remove_information(
+      subscriber_info->dds_subscriber_->get_instance_handle(), EntityType::Subscriber);
+    node_info->subscriber_listener->trigger_graph_guard_condition();
     auto dds_subscriber = subscriber_info->dds_subscriber_;
     if (dds_subscriber) {
       auto topic_reader = subscriber_info->topic_reader_;
@@ -894,6 +931,7 @@ rmw_create_client(
   void * requester = nullptr;
   void * buf = nullptr;
   ConnextStaticClientInfo * client_info = nullptr;
+  DDS::DataWriter * request_datawriter = nullptr;
 
   // Begin inializing elements.
   client = rmw_client_allocate();
@@ -952,6 +990,23 @@ rmw_create_client(
     goto fail;
   }
   memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
+
+  node_info->subscriber_listener->add_information(
+    response_datareader->get_instance_handle(),
+    response_datareader->get_topicdescription()->get_name(),
+    response_datareader->get_topicdescription()->get_type_name(),
+    EntityType::Subscriber);
+  node_info->subscriber_listener->trigger_graph_guard_condition();
+
+  request_datawriter =
+    static_cast<DDS::DataWriter *>(callbacks->get_request_datawriter(requester));
+  node_info->publisher_listener->add_information(
+    request_datawriter->get_instance_handle(),
+    request_datawriter->get_topic()->get_name(),
+    request_datawriter->get_topic()->get_type_name(),
+    EntityType::Publisher);
+  node_info->publisher_listener->trigger_graph_guard_condition();
+
   return client;
 fail:
   if (client) {
@@ -978,7 +1033,7 @@ fail:
 }
 
 rmw_ret_t
-rmw_destroy_client(rmw_client_t * client)
+rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
 {
   if (!client) {
     RMW_SET_ERROR_MSG("client handle is null");
@@ -992,8 +1047,22 @@ rmw_destroy_client(rmw_client_t * client)
   auto result = RMW_RET_OK;
   ConnextStaticClientInfo * client_info = static_cast<ConnextStaticClientInfo *>(client->data);
 
+  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+
   if (client_info) {
     auto response_datareader = client_info->response_datareader_;
+
+    node_info->subscriber_listener->remove_information(
+      client_info->response_datareader_->get_instance_handle(), EntityType::Subscriber);
+    DDS::DataWriter * request_datawriter = static_cast<DDS::DataWriter *>(
+      client_info->callbacks_->get_request_datawriter(client_info->requester_));
+    node_info->subscriber_listener->trigger_graph_guard_condition();
+
+    node_info->publisher_listener->remove_information(
+      request_datawriter->get_instance_handle(),
+      EntityType::Publisher);
+    node_info->publisher_listener->trigger_graph_guard_condition();
+
     if (response_datareader) {
       auto read_condition = client_info->read_condition_;
       if (read_condition) {
@@ -1123,6 +1192,7 @@ rmw_create_service(
   void * buf = nullptr;
   ConnextStaticServiceInfo * service_info = nullptr;
   rmw_service_t * service = nullptr;
+  DDS::DataWriter * reply_datawriter = nullptr;
   // Begin initializing elements.
   service = rmw_service_allocate();
   if (!service) {
@@ -1180,6 +1250,23 @@ rmw_create_service(
     goto fail;
   }
   memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
+
+  node_info->subscriber_listener->add_information(
+    request_datareader->get_instance_handle(),
+    request_datareader->get_topicdescription()->get_name(),
+    request_datareader->get_topicdescription()->get_type_name(),
+    EntityType::Subscriber);
+  node_info->subscriber_listener->trigger_graph_guard_condition();
+
+  reply_datawriter =
+    static_cast<DDS::DataWriter *>(callbacks->get_reply_datawriter(replier));
+  node_info->publisher_listener->add_information(
+    reply_datawriter->get_instance_handle(),
+    reply_datawriter->get_topic()->get_name(),
+    reply_datawriter->get_topic()->get_type_name(),
+    EntityType::Publisher);
+  node_info->publisher_listener->trigger_graph_guard_condition();
+
   return service;
 fail:
   if (service) {
@@ -1213,7 +1300,7 @@ fail:
 }
 
 rmw_ret_t
-rmw_destroy_service(rmw_service_t * service)
+rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
   if (!service) {
     RMW_SET_ERROR_MSG("service handle is null");
@@ -1227,8 +1314,23 @@ rmw_destroy_service(rmw_service_t * service)
   auto result = RMW_RET_OK;
   ConnextStaticServiceInfo * service_info = static_cast<ConnextStaticServiceInfo *>(service->data);
 
+  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+
   if (service_info) {
     auto request_datareader = service_info->request_datareader_;
+
+    node_info->subscriber_listener->remove_information(
+      service_info->request_datareader_->get_instance_handle(),
+      EntityType::Subscriber);
+    node_info->subscriber_listener->trigger_graph_guard_condition();
+
+    DDS::DataWriter * reply_datawriter = static_cast<DDS::DataWriter *>(
+      service_info->callbacks_->get_reply_datawriter(service_info->replier_));
+    node_info->publisher_listener->remove_information(
+      reply_datawriter->get_instance_handle(),
+      EntityType::Publisher);
+    node_info->publisher_listener->trigger_graph_guard_condition();
+
     if (request_datareader) {
       auto read_condition = service_info->read_condition_;
       if (read_condition) {
@@ -1542,15 +1644,75 @@ rmw_node_get_graph_guard_condition(const rmw_node_t * node)
 }
 
 rmw_ret_t
+_publisher_count_matched_subscriptions(DDS::DataWriter * datawriter, size_t * count)
+{
+  DDS_ReturnCode_t ret;
+  DDS_PublicationMatchedStatus s;
+  ret = datawriter->get_publication_matched_status(s);
+  if (ret != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to get publication matched status");
+    return RMW_RET_ERROR;
+  }
+
+#ifdef DISCOVERY_DEBUG_LOGGING
+  using std::to_string;
+  using std::stringstream;
+  std::stringstream ss;
+  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+  ss << "DDS_PublicationMatchedStatus:\n"
+     << "  topic name:               " << datawriter->get_topic()->get_name() << "\n"
+     << "  current_count:            " << to_string(s.current_count) << "\n"
+     << "  current_count_change:     " << to_string(s.current_count_change) << "\n"
+     << "  current_count_peak:       " << to_string(s.current_count_peak) << "\n"
+     << "  total_count:              " << to_string(s.total_count) << "\n"
+     << "  total_count_change:       " << to_string(s.total_count_change) << "\n"
+     << "  last_subscription_handle: " << to_string(s.last_subscription_handle) << "\n";
+  // *INDENT-ON*
+  printf("%s", ss.str().c_str());
+#endif
+
+  *count = s.current_count;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+_subscription_count_matched_publishers(DDS::DataReader * datareader, size_t * count)
+{
+  DDS_ReturnCode_t ret;
+  DDS_SubscriptionMatchedStatus s;
+  ret = datareader->get_subscription_matched_status(s);
+  if (ret != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to get subscription matched status");
+    return RMW_RET_ERROR;
+  }
+
+#ifdef DISCOVERY_DEBUG_LOGGING
+  using std::to_string;
+  using std::stringstream;
+  std::stringstream ss;
+  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
+  ss << "DDS_SubscriptionMatchedStatus:\n"
+     << "  topic name:               " << datareader->get_topicdescription()->get_name() << "\n"
+     << "  current_count:            " << to_string(s.current_count) << "\n"
+     << "  current_count_change:     " << to_string(s.current_count_change) << "\n"
+     << "  current_count_peak:       " << to_string(s.current_count_peak) << "\n"
+     << "  total_count:              " << to_string(s.total_count) << "\n"
+     << "  total_count_change:       " << to_string(s.total_count_change) << "\n"
+     << "  last_publication_handle:  " << to_string(s.last_publication_handle) << "\n";
+  // *INDENT-ON*
+  printf("%s", ss.str().c_str());
+#endif
+
+  *count = s.current_count;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
 rmw_service_server_is_available(
   const rmw_node_t * node,
   const rmw_client_t * client,
   bool * is_available)
 {
-  // TODO(wjwwood): remove this once local graph changes are detected.
-  RMW_SET_ERROR_MSG("not implemented");
-  return RMW_RET_ERROR;
-
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
     return RMW_RET_ERROR;
@@ -1590,7 +1752,9 @@ rmw_service_server_is_available(
     RMW_SET_ERROR_MSG("requester handle is null");
     return RMW_RET_ERROR;
   }
-  const char * request_topic_name = callbacks->get_request_topic_name(requester);
+  DDS::DataWriter * request_datawriter =
+    static_cast<DDS::DataWriter *>(callbacks->get_request_datawriter(requester));
+  const char * request_topic_name = request_datawriter->get_topic()->get_name();
   if (!request_topic_name) {
     RMW_SET_ERROR_MSG("could not get request topic name");
     return RMW_RET_ERROR;
@@ -1598,31 +1762,38 @@ rmw_service_server_is_available(
 
   *is_available = false;
   // In the Connext RPC implementation, a server is ready when:
-  //   - At least one server is subscribed to the request topic.
-  //   - At least one server is publishing to the reponse topic.
+  //   - At least one subscriber is matched to the request publisher.
+  //   - At least one publisher is matched to the reponse subscription.
   size_t number_of_request_subscribers = 0;
-  rmw_ret_t ret = rmw_count_subscribers(
-    node,
-    request_topic_name,
-    &number_of_request_subscribers);
+  rmw_ret_t ret = _publisher_count_matched_subscriptions(
+    request_datawriter, &number_of_request_subscribers);
   if (ret != RMW_RET_OK) {
     // error string already set
     return ret;
   }
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf("Checking for service server:\n");
+  printf(" - %s: %zu\n",
+    request_topic_name,
+    number_of_request_subscribers);
+#endif
   if (number_of_request_subscribers == 0) {
     // not ready
     return RMW_RET_OK;
   }
 
   size_t number_of_response_publishers = 0;
-  ret = rmw_count_publishers(
-    node,
-    client_info->response_datareader_->get_topicdescription()->get_name(),
-    &number_of_response_publishers);
+  ret = _subscription_count_matched_publishers(
+    client_info->response_datareader_, &number_of_response_publishers);
   if (ret != RMW_RET_OK) {
     // error string already set
     return ret;
   }
+#ifdef DISCOVERY_DEBUG_LOGGING
+  printf(" - %s: %zu\n",
+    client_info->response_datareader_->get_topicdescription()->get_name(),
+    number_of_response_publishers);
+#endif
   if (number_of_response_publishers == 0) {
     // not ready
     return RMW_RET_OK;
@@ -1631,5 +1802,61 @@ rmw_service_server_is_available(
   // all conditions met, there is a service server available
   *is_available = true;
   return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_publisher_count_matched_subscriptions(
+  const rmw_publisher_t * publisher,
+  size_t * count)
+{
+  if (!publisher) {
+    RMW_SET_ERROR_MSG("publisher handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher handle,
+    publisher->implementation_identifier, rti_connext_identifier,
+    return RMW_RET_ERROR)
+  if (!count) {
+    RMW_SET_ERROR_MSG("count handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  ConnextStaticPublisherInfo * publisher_info =
+    static_cast<ConnextStaticPublisherInfo *>(publisher->data);
+  if (!publisher_info) {
+    RMW_SET_ERROR_MSG("publisher info handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  return _publisher_count_matched_subscriptions(publisher_info->topic_writer_, count);
+}
+
+rmw_ret_t
+rmw_subscription_count_matched_publishers(
+  const rmw_subscription_t * subscription,
+  size_t * count)
+{
+  if (!subscription) {
+    RMW_SET_ERROR_MSG("subscription handle is null");
+    return RMW_RET_ERROR;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription handle,
+    subscription->implementation_identifier, rti_connext_identifier,
+    return RMW_RET_ERROR)
+  if (!count) {
+    RMW_SET_ERROR_MSG("count handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  ConnextStaticSubscriberInfo * subscription_info =
+    static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
+  if (!subscription_info) {
+    RMW_SET_ERROR_MSG("subscription info handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  return _subscription_count_matched_publishers(subscription_info->topic_reader_, count);
 }
 }  // extern "C"
