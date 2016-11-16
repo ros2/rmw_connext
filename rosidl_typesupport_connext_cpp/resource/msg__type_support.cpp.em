@@ -323,7 +323,7 @@ static message_type_support_callbacks_t callbacks = {
 };
 
 static rosidl_message_type_support_t handle = {
-  rosidl_typesupport_connext_cpp::typesupport_connext_identifier,
+  rosidl_typesupport_connext_cpp::typesupport_identifier,
   &callbacks
 };
 
@@ -339,7 +339,7 @@ namespace rosidl_typesupport_connext_cpp
 template<>
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
 const rosidl_message_type_support_t *
-get_message_type_support_handle_connext<@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type)>()
+get_message_type_support_handle<@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type)>()
 {
   return &@(spec.base_type.pkg_name)::@(subfolder)::typesupport_connext_cpp::handle;
 }

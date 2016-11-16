@@ -21,7 +21,7 @@ namespace rosidl_typesupport_connext_cpp
 {
 
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_IMPORT
-extern const char * typesupport_connext_identifier;
+extern const char * typesupport_identifier;
 
 }  // namespace rosidl_typesupport_connext_cpp
 
