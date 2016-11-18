@@ -63,7 +63,7 @@
 // Pass an object with a typesupport identifier member to compare
 #define RMW_CONNEXT_CHECK_TYPESUPPORT_IDENTIFIER(TYPESUPPORT) \
   if (TYPESUPPORT->typesupport_identifier !=  /* NOLINT */ \
-    rosidl_typesupport_connext_cpp::typesupport_connext_identifier && \
+    rosidl_typesupport_connext_cpp::typesupport_identifier && \
     TYPESUPPORT->typesupport_identifier != rosidl_typesupport_connext_c__identifier) \
   { \
     char __msg[1024]; \
@@ -73,8 +73,8 @@
       "('%s' (%p), '%s' (%p))", \
       TYPESUPPORT->typesupport_identifier, \
       TYPESUPPORT->typesupport_identifier, \
-      rosidl_typesupport_connext_cpp::typesupport_connext_identifier, \
-      rosidl_typesupport_connext_cpp::typesupport_connext_identifier, \
+      rosidl_typesupport_connext_cpp::typesupport_identifier, \
+      rosidl_typesupport_connext_cpp::typesupport_identifier, \
       rosidl_typesupport_connext_c__identifier, \
       rosidl_typesupport_connext_c__identifier); \
     RMW_SET_ERROR_MSG(__msg); \

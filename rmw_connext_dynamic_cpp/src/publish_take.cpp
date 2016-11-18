@@ -23,7 +23,7 @@ bool using_introspection_c_typesupport(const char * typesupport_identifier)
 bool using_introspection_cpp_typesupport(const char * typesupport_identifier)
 {
   return typesupport_identifier ==
-         rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier;
+         rosidl_typesupport_introspection_cpp::typesupport_identifier;
 }
 
 bool _publish(DDS_DynamicData * dynamic_data, const void * ros_message,
