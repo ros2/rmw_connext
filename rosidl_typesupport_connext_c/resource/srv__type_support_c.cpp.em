@@ -38,7 +38,7 @@
 
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
-#include "rosidl_generator_cpp/service_type_support.hpp"
+#include "rosidl_typesupport_cpp/service_type_support.hpp"
 // this is defined in the rosidl_typesupport_connext_cpp package and
 // is in the include/rosidl_typesupport_connext_cpp/impl folder
 #include "rosidl_generator_c/message_type_support.h"

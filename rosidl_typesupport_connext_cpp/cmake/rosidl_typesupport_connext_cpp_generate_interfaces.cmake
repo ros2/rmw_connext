@@ -275,7 +275,7 @@ if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
     RUNTIME DESTINATION bin
   )
 
-  ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix} ${Connext_LIBRARIES})
+  ament_export_libraries(${rosidl_generate_interfaces_TARGET}${_target_suffix})
 endif()
 
 if(BUILD_TESTING AND rosidl_generate_interfaces_ADD_LINTER_TESTS)

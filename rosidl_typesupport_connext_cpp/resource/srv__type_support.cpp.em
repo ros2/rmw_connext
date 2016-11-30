@@ -34,11 +34,10 @@
 #endif
 
 #include "rmw/error_handling.h"
-// this is defined in the rosidl_typesupport_connext_cpp package and
-// is in the include/rosidl_typesupport_connext_cpp/impl folder
-#include "rosidl_generator_cpp/service_type_support.hpp"
+#include "rosidl_typesupport_cpp/service_type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
+#include "rosidl_typesupport_connext_cpp/service_type_support_decl.hpp"
 #include "rosidl_typesupport_connext_cpp/visibility_control.h"
 
 #include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__struct.hpp"

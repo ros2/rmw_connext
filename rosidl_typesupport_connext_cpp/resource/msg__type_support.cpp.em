@@ -19,13 +19,12 @@
 #include <stdexcept>
 
 #include "rosidl_generator_c/message_type_support_struct.h"
-// this is defined in the rosidl_typesupport_connext_cpp package and
-// is in the include/rosidl_typesupport_connext_cpp/impl folder
-#include "rosidl_generator_cpp/message_type_support.hpp"
+#include "rosidl_typesupport_cpp/message_type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/visibility_control.h"
 
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
+#include "rosidl_typesupport_connext_cpp/message_type_support_decl.hpp"
 
 // forward declaration of message dependencies and their conversion functions
 @[for field in spec.fields]@
