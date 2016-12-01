@@ -569,17 +569,14 @@ static message_type_support_callbacks_t __callbacks = {
 };
 
 static rosidl_message_type_support_t __type_support = {
-  // Cannot be set since it is not a constexpr, it is set in the get type support function below.
-  0,
-  &__callbacks
+  rosidl_typesupport_connext_c__identifier,
+  &__callbacks,
+  get_message_typesupport_handle_function,
 };
 
 ROSIDL_GENERATOR_C_EXPORT_@(spec.base_type.pkg_name)
 const rosidl_message_type_support_t *
 ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(pkg), @(subfolder), @(msg))() {
-  if (!__type_support.typesupport_identifier) {
-    __type_support.typesupport_identifier = rosidl_typesupport_connext_c__identifier;
-  }
   return &__type_support;
 }
 

@@ -217,7 +217,8 @@ target_include_directories(${rosidl_generate_interfaces_TARGET}${_target_suffix}
 ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   "Connext"
   "rmw"
-  "rosidl_typesupport_connext_cpp")
+  "rosidl_typesupport_connext_cpp"
+  "rosidl_typesupport_interface")
 foreach(_pkg_name ${rosidl_generate_interfaces_DEPENDENCY_PACKAGE_NAMES})
   set(_msg_include_dir "${${_pkg_name}_DIR}/../../../include/${_pkg_name}/msg/dds_connext")
   set(_srv_include_dir "${${_pkg_name}_DIR}/../../../include/${_pkg_name}/srv/dds_connext")

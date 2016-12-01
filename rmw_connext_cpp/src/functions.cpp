@@ -52,9 +52,6 @@
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
 
-#include "rosidl_typesupport_cpp/message_type_support_dispatch.hpp"
-#include "rosidl_typesupport_cpp/service_type_support_dispatch.hpp"
-
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
@@ -69,11 +66,11 @@
     return NULL; \
   } \
   const rosidl_message_type_support_t * TYPE_SUPPORT = \
-    rosidl_typesupport_cpp::dispatch_message_type_support_handle( \
-    rosidl_typesupport_connext_c__identifier, TYPE_SUPPORTS); \
+    get_message_typesupport_handle( \
+    TYPE_SUPPORTS, rosidl_typesupport_connext_c__identifier); \
   if (!TYPE_SUPPORT) { \
-    TYPE_SUPPORT = rosidl_typesupport_cpp::dispatch_message_type_support_handle( \
-      rosidl_typesupport_connext_cpp::typesupport_identifier, TYPE_SUPPORTS); \
+    TYPE_SUPPORT = get_message_typesupport_handle( \
+      TYPE_SUPPORTS, rosidl_typesupport_connext_cpp::typesupport_identifier); \
     if (!TYPE_SUPPORT) { \
       char __msg[1024]; \
       snprintf( \
@@ -97,11 +94,11 @@
     return NULL; \
   } \
   const rosidl_service_type_support_t * TYPE_SUPPORT = \
-    rosidl_typesupport_cpp::dispatch_service_type_support_handle( \
-    rosidl_typesupport_connext_c__identifier, TYPE_SUPPORTS); \
+    get_service_typesupport_handle( \
+    TYPE_SUPPORTS, rosidl_typesupport_connext_c__identifier); \
   if (!TYPE_SUPPORT) { \
-    TYPE_SUPPORT = rosidl_typesupport_cpp::dispatch_service_type_support_handle( \
-      rosidl_typesupport_connext_cpp::typesupport_identifier, TYPE_SUPPORTS); \
+    TYPE_SUPPORT = get_service_typesupport_handle( \
+      TYPE_SUPPORTS, rosidl_typesupport_connext_cpp::typesupport_identifier); \
     if (!TYPE_SUPPORT) { \
       char __msg[1024]; \
       snprintf( \

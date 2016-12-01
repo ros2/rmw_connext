@@ -26,6 +26,8 @@
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/message_type_support_decl.hpp"
 
+#include "rosidl_typesupport_interface/macros.h"
+
 // forward declaration of message dependencies and their conversion functions
 @[for field in spec.fields]@
 @[  if not field.type.is_primitive_type()]@
@@ -323,7 +325,8 @@ static message_type_support_callbacks_t callbacks = {
 
 static rosidl_message_type_support_t handle = {
   rosidl_typesupport_connext_cpp::typesupport_identifier,
-  &callbacks
+  &callbacks,
+  get_message_typesupport_handle_function,
 };
 
 }  // namespace typesupport_connext_cpp
@@ -344,3 +347,18 @@ get_message_type_support_handle<@(spec.base_type.pkg_name)::@(subfolder)::@(spec
 }
 
 }  // namespace rosidl_typesupport_connext_cpp
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
+const rosidl_message_type_support_t *
+ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_cpp, @(spec.base_type.pkg_name), @(subfolder), @(spec.base_type.type))() {
+  return &@(spec.base_type.pkg_name)::@(subfolder)::typesupport_connext_cpp::handle;
+}
+
+#ifdef __cplusplus
+}
+#endif
