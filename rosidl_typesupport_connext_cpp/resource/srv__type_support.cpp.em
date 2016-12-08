@@ -34,12 +34,13 @@
 #endif
 
 #include "rmw/error_handling.h"
-// this is defined in the rosidl_typesupport_connext_cpp package and
-// is in the include/rosidl_typesupport_connext_cpp/impl folder
-#include "rosidl_generator_cpp/service_type_support.hpp"
+#include "rosidl_typesupport_cpp/service_type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
+#include "rosidl_typesupport_connext_cpp/service_type_support_decl.hpp"
 #include "rosidl_typesupport_connext_cpp/visibility_control.h"
+
+#include "rosidl_typesupport_interface/macros.h"
 
 #include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__struct.hpp"
 #include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_Support.h"
@@ -362,7 +363,8 @@ static service_type_support_callbacks_t callbacks = {
 
 static rosidl_service_type_support_t handle = {
   rosidl_typesupport_connext_cpp::typesupport_identifier,
-  &callbacks
+  &callbacks,
+  get_service_typesupport_handle_function,
 };
 
 }  // namespace typesupport_connext_cpp
@@ -383,3 +385,18 @@ get_service_type_support_handle<@(spec.pkg_name)::srv::@(spec.srv_name)>()
 }
 
 }  // namespace rosidl_typesupport_connext_cpp
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
+const rosidl_service_type_support_t *
+ROSIDL_TYPESUPPORT_INTERFACE__SERVICE_SYMBOL_NAME(rosidl_typesupport_connext_cpp, @(spec.pkg_name), @(spec.srv_name))() {
+  return &@(spec.pkg_name)::srv::typesupport_connext_cpp::handle;
+}
+
+#ifdef __cplusplus
+}
+#endif

@@ -39,27 +39,33 @@ endif()
 
 find_package(rmw REQUIRED)
 find_package(rmw_connext_shared_cpp REQUIRED)
+find_package(rosidl_generator_c REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
+find_package(rosidl_typesupport_cpp REQUIRED)
 
 ament_export_dependencies(
   rmw
   rmw_connext_shared_cpp
+  rosidl_generator_c
   rosidl_generator_cpp
   rosidl_typesupport_connext_c
-  rosidl_typesupport_connext_cpp)
+  rosidl_typesupport_connext_cpp
+  rosidl_typesupport_cpp)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_connext_c"
-  "cpp:rosidl_typesupport_connext_cpp"
+  "cpp:rosidl_typesupport_connext_cpp:rosidl_typesupport_cpp"
 )
 
 add_library(rmw_connext_cpp SHARED src/functions.cpp)
 ament_target_dependencies(rmw_connext_cpp
   "rmw"
   "rmw_connext_shared_cpp"
+  "rosidl_generator_c"
   "rosidl_generator_cpp"
   "rosidl_typesupport_connext_c"
   "rosidl_typesupport_connext_cpp"
+  "rosidl_typesupport_cpp"
   "Connext")
 ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
 

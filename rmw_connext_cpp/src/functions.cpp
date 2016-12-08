@@ -60,25 +60,60 @@
 //   rmw_connext_shared_cpp/shared_functions.cpp
 // #define DISCOVERY_DEBUG_LOGGING 1
 
-// Pass an object with a typesupport identifier member to compare
-#define RMW_CONNEXT_CHECK_TYPESUPPORT_IDENTIFIER(TYPESUPPORT) \
-  if (TYPESUPPORT->typesupport_identifier !=  /* NOLINT */ \
-    rosidl_typesupport_connext_cpp::typesupport_identifier && \
-    TYPESUPPORT->typesupport_identifier != rosidl_typesupport_connext_c__identifier) \
-  { \
-    char __msg[1024]; \
-    snprintf( \
-      __msg, 1024, \
-      "type support handle implementation '%s' (%p) does not match valid type supports " \
-      "('%s' (%p), '%s' (%p))", \
-      TYPESUPPORT->typesupport_identifier, \
-      TYPESUPPORT->typesupport_identifier, \
-      rosidl_typesupport_connext_cpp::typesupport_identifier, \
-      rosidl_typesupport_connext_cpp::typesupport_identifier, \
-      rosidl_typesupport_connext_c__identifier, \
-      rosidl_typesupport_connext_c__identifier); \
-    RMW_SET_ERROR_MSG(__msg); \
+#define RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(TYPE_SUPPORTS, TYPE_SUPPORT) \
+  if (!TYPE_SUPPORTS) { \
+    RMW_SET_ERROR_MSG("type supports handle is null"); \
     return NULL; \
+  } \
+  const rosidl_message_type_support_t * TYPE_SUPPORT = \
+    get_message_typesupport_handle( \
+    TYPE_SUPPORTS, rosidl_typesupport_connext_c__identifier); \
+  if (!TYPE_SUPPORT) { \
+    TYPE_SUPPORT = get_message_typesupport_handle( \
+      TYPE_SUPPORTS, rosidl_typesupport_connext_cpp::typesupport_identifier); \
+    if (!TYPE_SUPPORT) { \
+      char __msg[1024]; \
+      snprintf( \
+        __msg, 1024, \
+        "type support handle implementation '%s' (%p) does not match valid type supports " \
+        "('%s' (%p), '%s' (%p))", \
+        TYPE_SUPPORTS->typesupport_identifier, \
+        TYPE_SUPPORTS->typesupport_identifier, \
+        rosidl_typesupport_connext_cpp::typesupport_identifier, \
+        rosidl_typesupport_connext_cpp::typesupport_identifier, \
+        rosidl_typesupport_connext_c__identifier, \
+        rosidl_typesupport_connext_c__identifier); \
+      RMW_SET_ERROR_MSG(__msg); \
+      return NULL; \
+    } \
+  }
+
+#define RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(TYPE_SUPPORTS, TYPE_SUPPORT) \
+  if (!TYPE_SUPPORTS) { \
+    RMW_SET_ERROR_MSG("type supports handle is null"); \
+    return NULL; \
+  } \
+  const rosidl_service_type_support_t * TYPE_SUPPORT = \
+    get_service_typesupport_handle( \
+    TYPE_SUPPORTS, rosidl_typesupport_connext_c__identifier); \
+  if (!TYPE_SUPPORT) { \
+    TYPE_SUPPORT = get_service_typesupport_handle( \
+      TYPE_SUPPORTS, rosidl_typesupport_connext_cpp::typesupport_identifier); \
+    if (!TYPE_SUPPORT) { \
+      char __msg[1024]; \
+      snprintf( \
+        __msg, 1024, \
+        "type support handle implementation '%s' (%p) does not match valid type supports " \
+        "('%s' (%p), '%s' (%p))", \
+        TYPE_SUPPORTS->typesupport_identifier, \
+        TYPE_SUPPORTS->typesupport_identifier, \
+        rosidl_typesupport_connext_cpp::typesupport_identifier, \
+        rosidl_typesupport_connext_cpp::typesupport_identifier, \
+        rosidl_typesupport_connext_c__identifier, \
+        rosidl_typesupport_connext_c__identifier); \
+      RMW_SET_ERROR_MSG(__msg); \
+      return NULL; \
+    } \
   }
 
 
@@ -174,7 +209,7 @@ rmw_destroy_node(rmw_node_t * node)
 rmw_publisher_t *
 rmw_create_publisher(
   const rmw_node_t * node,
-  const rosidl_message_type_support_t * type_support,
+  const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_profile)
 {
@@ -187,11 +222,7 @@ rmw_create_publisher(
     node->implementation_identifier, rti_connext_identifier,
     return NULL)
 
-  if (!type_support) {
-    RMW_SET_ERROR_MSG("type support handle is null");
-    return NULL;
-  }
-  RMW_CONNEXT_CHECK_TYPESUPPORT_IDENTIFIER(type_support)
+  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
@@ -475,7 +506,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 
 rmw_subscription_t *
 rmw_create_subscription(const rmw_node_t * node,
-  const rosidl_message_type_support_t * type_support,
+  const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_profile,
   bool ignore_local_publications)
@@ -489,12 +520,7 @@ rmw_create_subscription(const rmw_node_t * node,
     node->implementation_identifier, rti_connext_identifier,
     return NULL)
 
-  if (!type_support) {
-    RMW_SET_ERROR_MSG("type support handle is null");
-    return NULL;
-  }
-
-  RMW_CONNEXT_CHECK_TYPESUPPORT_IDENTIFIER(type_support)
+  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
@@ -880,7 +906,7 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
 rmw_client_t *
 rmw_create_client(
   const rmw_node_t * node,
-  const rosidl_service_type_support_t * type_support,
+  const rosidl_service_type_support_t * type_supports,
   const char * service_name,
   const rmw_qos_profile_t * qos_profile)
 {
@@ -893,12 +919,7 @@ rmw_create_client(
     node->implementation_identifier, rti_connext_identifier,
     return NULL)
 
-  if (!type_support) {
-    RMW_SET_ERROR_MSG("type support handle is null");
-    return NULL;
-  }
-
-  RMW_CONNEXT_CHECK_TYPESUPPORT_IDENTIFIER(type_support)
+  RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(type_supports, type_support)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
@@ -1140,7 +1161,7 @@ rmw_send_request(
 rmw_service_t *
 rmw_create_service(
   const rmw_node_t * node,
-  const rosidl_service_type_support_t * type_support,
+  const rosidl_service_type_support_t * type_supports,
   const char * service_name,
   const rmw_qos_profile_t * qos_profile)
 {
@@ -1153,12 +1174,7 @@ rmw_create_service(
     node->implementation_identifier, rti_connext_identifier,
     return NULL)
 
-  if (!type_support) {
-    RMW_SET_ERROR_MSG("type support handle is null");
-    return NULL;
-  }
-
-  RMW_CONNEXT_CHECK_TYPESUPPORT_IDENTIFIER(type_support)
+  RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(type_supports, type_support)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
