@@ -175,7 +175,7 @@ add_custom_command(
 set(_target_suffix "__rosidl_typesupport_connext_cpp")
 
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 endif()
 
 link_directories(${Connext_LIBRARY_DIRS})
