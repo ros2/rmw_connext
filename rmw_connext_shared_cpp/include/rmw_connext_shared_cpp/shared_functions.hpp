@@ -70,10 +70,10 @@ bool set_entity_qos_from_profile(const rmw_qos_profile_t & qos_profile,
 {
   // Read properties from the rmw profile
   switch (qos_profile.history) {
-    case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
+    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
       entity_qos.history.kind = DDS_KEEP_LAST_HISTORY_QOS;
       break;
-    case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
+    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
       entity_qos.history.kind = DDS_KEEP_ALL_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
@@ -84,10 +84,10 @@ bool set_entity_qos_from_profile(const rmw_qos_profile_t & qos_profile,
   }
 
   switch (qos_profile.reliability) {
-    case RMW_QOS_POLICY_BEST_EFFORT:
+    case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
       entity_qos.reliability.kind = DDS_BEST_EFFORT_RELIABILITY_QOS;
       break;
-    case RMW_QOS_POLICY_RELIABLE:
+    case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
       entity_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
@@ -98,10 +98,10 @@ bool set_entity_qos_from_profile(const rmw_qos_profile_t & qos_profile,
   }
 
   switch (qos_profile.durability) {
-    case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
+    case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
       entity_qos.durability.kind = DDS_TRANSIENT_LOCAL_DURABILITY_QOS;
       break;
-    case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+    case RMW_QOS_POLICY_DURABILITY_VOLATILE:
       entity_qos.durability.kind = DDS_VOLATILE_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
