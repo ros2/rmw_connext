@@ -23,6 +23,8 @@
 
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 
+#include "c_utilities/filesystem.h"
+
 // Uncomment this to get extra console output about discovery.
 // #define DISCOVERY_DEBUG_LOGGING 1
 
@@ -306,7 +308,8 @@ create_node(
   const char * implementation_identifier,
   const char * name,
   const char * namespace_,
-  size_t domain_id)
+  size_t domain_id,
+  const char * security_root_path)
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
@@ -346,6 +349,103 @@ create_node(
     return NULL;
   }
 
+  if (security_root_path) {
+    // enable some security stuff
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.load_plugin",
+      "com.rti.serv.secure",
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.secure.library",
+      "nddssecurity",
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.secure.create_function",
+      "RTI_Security_PluginSuite_create",
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+
+    const char * srp = security_root_path;  // save some typing
+    std::string ca_cert_fn = utilities_join_path(srp, "ca.cert.pem");
+    std::string cert_fn = utilities_join_path(srp, "cert.pem");
+    std::string key_fn = utilities_join_path(srp, "key.pem");
+    std::string gov_fn = utilities_join_path(srp, "governance.p7s");
+    std::string perm_fn = utilities_join_path(srp, "permissions.p7s");
+
+    // now try to pass these filenames to the Authentication plugin
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.secure.authentication.ca_file",
+      ca_cert_fn.c_str(),
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.secure.authentication.certificate_file",
+      cert_fn.c_str(),
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.secure.authentication.private_key_file",
+      key_fn.c_str(),
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+
+    // pass filenames to the Access Control plugin
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.secure.access_control.permissions_authority_file",
+      ca_cert_fn.c_str(),
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.secure.access_control.governance_file",
+      gov_fn.c_str(),
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+
+    status = DDSPropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "com.rti.serv.secure.access_control.permissions_file",
+      perm_fn.c_str(),
+      DDS_BOOLEAN_FALSE);
+    if (status != DDS_RETCODE_OK) {
+      RMW_SET_ERROR_MSG("failed to add security property");
+      return NULL;
+    }
+  }
   DDS_DomainId_t domain = static_cast<DDS_DomainId_t>(domain_id);
 
   DDSDomainParticipant * participant = dpf_->create_participant(

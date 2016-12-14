@@ -12,6 +12,7 @@
 
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
 
+  <build_depend>c_utilities</build_depend>
   <build_depend>connext_cmake_module</build_depend>
   <build_depend>libndds52-dev</build_depend>
   <build_depend>rmw</build_depend>
