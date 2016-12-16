@@ -33,6 +33,62 @@
 # pragma GCC diagnostic pop
 #endif
 
+#define RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(TYPE_SUPPORTS, TYPE_SUPPORT) \
+  if (!TYPE_SUPPORTS) { \
+    RMW_SET_ERROR_MSG("type supports handle is null"); \
+    return NULL; \
+  } \
+  const rosidl_message_type_support_t * TYPE_SUPPORT = \
+    get_message_typesupport_handle( \
+    TYPE_SUPPORTS, rosidl_typesupport_introspection_c__identifier); \
+  if (!TYPE_SUPPORT) { \
+    TYPE_SUPPORT = get_message_typesupport_handle( \
+      TYPE_SUPPORTS, rosidl_typesupport_introspection_cpp::typesupport_identifier); \
+    if (!TYPE_SUPPORT) { \
+      char __msg[1024]; \
+      snprintf( \
+        __msg, 1024, \
+        "type support handle implementation '%s' (%p) does not match valid type supports " \
+        "('%s' (%p), '%s' (%p))", \
+        TYPE_SUPPORTS->typesupport_identifier, \
+        TYPE_SUPPORTS->typesupport_identifier, \
+        rosidl_typesupport_introspection_cpp::typesupport_identifier, \
+        rosidl_typesupport_introspection_cpp::typesupport_identifier, \
+        rosidl_typesupport_introspection_c__identifier, \
+        rosidl_typesupport_introspection_c__identifier); \
+      RMW_SET_ERROR_MSG(__msg); \
+      return NULL; \
+    } \
+  }
+
+#define RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(TYPE_SUPPORTS, TYPE_SUPPORT) \
+  if (!TYPE_SUPPORTS) { \
+    RMW_SET_ERROR_MSG("type supports handle is null"); \
+    return NULL; \
+  } \
+  const rosidl_service_type_support_t * TYPE_SUPPORT = \
+    get_service_typesupport_handle( \
+    TYPE_SUPPORTS, rosidl_typesupport_introspection_c__identifier); \
+  if (!TYPE_SUPPORT) { \
+    TYPE_SUPPORT = get_service_typesupport_handle( \
+      TYPE_SUPPORTS, rosidl_typesupport_introspection_cpp::typesupport_identifier); \
+    if (!TYPE_SUPPORT) { \
+      char __msg[1024]; \
+      snprintf( \
+        __msg, 1024, \
+        "type support handle implementation '%s' (%p) does not match valid type supports " \
+        "('%s' (%p), '%s' (%p))", \
+        TYPE_SUPPORTS->typesupport_identifier, \
+        TYPE_SUPPORTS->typesupport_identifier, \
+        rosidl_typesupport_introspection_cpp::typesupport_identifier, \
+        rosidl_typesupport_introspection_cpp::typesupport_identifier, \
+        rosidl_typesupport_introspection_c__identifier, \
+        rosidl_typesupport_introspection_c__identifier); \
+      RMW_SET_ERROR_MSG(__msg); \
+      return NULL; \
+    } \
+  }
+
 #define DEFINE_DYNAMIC_DATA_METHODS(TYPE, DDSTYPE, METHOD_TYPE) \
   template<> \
   DDS_ReturnCode_t set_dynamic_data<TYPE, DDSTYPE>( \

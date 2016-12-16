@@ -50,9 +50,6 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
-// This header is in the rosidl_typesupport_connext_cpp package and
-// is in the include/rosidl_typesupport_connext_cpp/impl folder.
-#include "rosidl_generator_cpp/message_type_support.hpp"
 
 #include "rosidl_generator_c/primitives_array_functions.h"
 #include "rosidl_generator_c/string.h"
@@ -247,7 +244,7 @@ DDS_TypeCode * _create_type_code(
 rmw_publisher_t *
 rmw_create_publisher(
   const rmw_node_t * node,
-  const rosidl_message_type_support_t * type_support,
+  const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_profile)
 {
@@ -259,10 +256,7 @@ rmw_create_publisher(
     node handle,
     node->implementation_identifier, rti_connext_dynamic_identifier,
     return NULL)
-  if (!type_support) {
-    RMW_SET_ERROR_MSG("type support handle is null");
-    return NULL;
-  }
+  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
@@ -703,7 +697,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 rmw_subscription_t *
 rmw_create_subscription(
   const rmw_node_t * node,
-  const rosidl_message_type_support_t * type_support,
+  const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_profile,
   bool ignore_local_publications)
@@ -717,10 +711,7 @@ rmw_create_subscription(
     node->implementation_identifier, rti_connext_dynamic_identifier,
     return NULL)
 
-  if (!type_support) {
-    RMW_SET_ERROR_MSG("type support handle is null");
-    return NULL;
-  }
+  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
@@ -1289,7 +1280,7 @@ rmw_wait(
 rmw_client_t *
 rmw_create_client(
   const rmw_node_t * node,
-  const rosidl_service_type_support_t * type_support,
+  const rosidl_service_type_support_t * type_supports,
   const char * service_name,
   const rmw_qos_profile_t * qos_profile)
 {
@@ -1302,10 +1293,7 @@ rmw_create_client(
     node->implementation_identifier, rti_connext_dynamic_identifier,
     return NULL)
 
-  if (!type_support) {
-    RMW_SET_ERROR_MSG("type support handle is null");
-    return NULL;
-  }
+  RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(type_supports, type_support)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
@@ -1697,7 +1685,7 @@ rmw_send_request(
 rmw_service_t *
 rmw_create_service(
   const rmw_node_t * node,
-  const rosidl_service_type_support_t * type_support,
+  const rosidl_service_type_support_t * type_supports,
   const char * service_name,
   const rmw_qos_profile_t * qos_profile)
 {
@@ -1714,10 +1702,7 @@ rmw_create_service(
     return NULL;
   }
 
-  if (!type_support) {
-    RMW_SET_ERROR_MSG("type support handle is null");
-    return NULL;
-  }
+  RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(type_supports, type_support)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
