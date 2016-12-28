@@ -15,7 +15,6 @@
   <build_depend>rmw_connext_shared_cpp</build_depend>
   <build_depend>rosidl_generator_c</build_depend>
   <build_depend>rosidl_generator_cpp</build_depend>
-  <build_depend>rosidl_typesupport_cpp</build_depend>
   <build_depend>rosidl_typesupport_introspection_c</build_depend>
   <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
 
@@ -23,7 +22,6 @@
   <build_export_depend>libndds51</build_export_depend>
   <build_export_depend>rosidl_generator_c</build_export_depend>
   <build_export_depend>rosidl_generator_cpp</build_export_depend>
-  <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
   <build_export_depend>rosidl_typesupport_introspection_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_introspection_cpp</build_export_depend>
 

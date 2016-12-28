@@ -23,7 +23,6 @@ if(NOT Connext_FOUND OR CONNEXT_DYNAMIC_DISABLE)
   return()
 endif()
 
-find_package(rosidl_typesupport_cpp REQUIRED)
 find_package(rosidl_typesupport_introspection_c)
 find_package(rosidl_typesupport_introspection_cpp)
 if(NOT rosidl_typesupport_introspection_c_FOUND AND NOT rosidl_typesupport_introspection_cpp_FOUND)
@@ -41,7 +40,6 @@ ament_export_dependencies(
   rmw rmw_connext_shared_cpp
   rosidl_generator_c
   rosidl_generator_cpp
-  rosidl_typesupport_cpp
   rosidl_typesupport_introspection_c
   rosidl_typesupport_introspection_cpp
 )
@@ -59,7 +57,6 @@ ament_target_dependencies(rmw_connext_dynamic_cpp
   "rmw_connext_shared_cpp"
   "rosidl_generator_c"
   "rosidl_generator_cpp"
-  "rosidl_typesupport_cpp"
   "Connext")
 if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
   target_compile_definitions(rmw_connext_dynamic_cpp

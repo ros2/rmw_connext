@@ -21,7 +21,6 @@
   <build_depend>rosidl_generator_cpp</build_depend>
   <build_depend>rosidl_typesupport_connext_c</build_depend>
   <build_depend>rosidl_typesupport_connext_cpp</build_depend>
-  <build_depend>rosidl_typesupport_cpp</build_depend>
   <build_depend>rosidl_generator_dds_idl</build_depend>
 
   <build_export_depend>connext_cmake_module</build_export_depend>
@@ -30,7 +29,6 @@
   <build_export_depend>rosidl_generator_cpp</build_export_depend>
   <build_export_depend>rosidl_typesupport_connext_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_connext_cpp</build_export_depend>
-  <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
 
   <exec_depend>rmw</exec_depend>
   <exec_depend>rmw_connext_shared_cpp</exec_depend>
