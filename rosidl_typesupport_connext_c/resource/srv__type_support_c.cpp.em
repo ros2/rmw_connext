@@ -39,11 +39,9 @@
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
 #include "rosidl_typesupport_cpp/service_type_support.hpp"
-// this is defined in the rosidl_typesupport_connext_cpp package and
-// is in the include/rosidl_typesupport_connext_cpp/impl folder
-#include "rosidl_generator_c/message_type_support.h"
 #include "rosidl_typesupport_connext_c/identifier.h"
 
+#include "@(spec.pkg_name)/msg/rosidl_typesupport_connext_c__visibility_control.h"
 @{req_header_file_name = get_header_filename_from_msg_name(spec.srv_name + '__request')}@
 @{res_header_file_name = get_header_filename_from_msg_name(spec.srv_name + '__response')}@
 #include "@(spec.pkg_name)/srv/@(req_header_file_name).h"
@@ -65,6 +63,12 @@ struct DDS_SampleIdentity_t;
 extern "C"
 {
 #endif
+
+// forward declare type support functions
+const rosidl_message_type_support_t *
+  ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(spec.pkg_name), srv, @(spec.srv_name)_Request)();
+const rosidl_message_type_support_t *
+  ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(spec.pkg_name), srv, @(spec.srv_name)_Response)();
 
 void * create_requester__@(spec.srv_name)(
   void * untyped_participant,
@@ -100,7 +104,7 @@ int64_t send_request__@(spec.srv_name)(
   connext::WriteSample<
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   const rosidl_message_type_support_t * ts =
-    ROSIDL_GET_TYPE_SUPPORT(@(spec.pkg_name), srv, @(spec.srv_name)_Request);
+    ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(spec.pkg_name), srv, @(spec.srv_name)_Request)();
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(ts->data);
   bool converted = callbacks->convert_ros_to_dds(
@@ -167,7 +171,7 @@ bool take_request__@(spec.srv_name)(
   }
 
   const rosidl_message_type_support_t * ts =
-    ROSIDL_GET_TYPE_SUPPORT(@(spec.pkg_name), srv, @(spec.srv_name)_Request);
+    ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(spec.pkg_name), srv, @(spec.srv_name)_Request)();
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(ts->data);
   bool converted = callbacks->convert_dds_to_ros(
@@ -210,7 +214,7 @@ bool take_response__@(spec.srv_name)(
   request_header->sequence_number = sequence_number;
 
   const rosidl_message_type_support_t * ts =
-    ROSIDL_GET_TYPE_SUPPORT(@(spec.pkg_name), srv, @(spec.srv_name)_Response);
+    ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(spec.pkg_name), srv, @(spec.srv_name)_Response)();
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(ts->data);
   bool converted = callbacks->convert_dds_to_ros(
@@ -230,7 +234,7 @@ bool send_response__@(spec.srv_name)(
 
   connext::WriteSample<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> response;
   const rosidl_message_type_support_t * ts =
-    ROSIDL_GET_TYPE_SUPPORT(@(spec.pkg_name), srv, @(spec.srv_name)_Response);
+    ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(spec.pkg_name), srv, @(spec.srv_name)_Response)();
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(ts->data);
   bool converted = callbacks->convert_ros_to_dds(
@@ -305,9 +309,9 @@ static rosidl_service_type_support_t __type_support = {
 };
 
 
-ROSIDL_GENERATOR_C_EXPORT_@(spec.pkg_name)
+ROSIDL_TYPESUPPORT_CONNEXT_C_EXPORT_@(spec.pkg_name)
 const rosidl_service_type_support_t *
-ROSIDL_GET_TYPE_SUPPORT_FUNCTION(@(spec.pkg_name), srv, @(spec.srv_name))() {
+ROSIDL_TYPESUPPORT_INTERFACE__SERVICE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(spec.pkg_name), @(spec.srv_name))() {
   return &__type_support;
 }
 

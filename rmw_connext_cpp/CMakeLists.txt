@@ -53,8 +53,8 @@ ament_export_dependencies(
   rosidl_typesupport_cpp)
 
 register_rmw_implementation(
-  "c:rosidl_typesupport_connext_c"
-  "cpp:rosidl_typesupport_connext_cpp:rosidl_typesupport_cpp"
+  "c:rosidl_typesupport_c:rosidl_typesupport_connext_c"
+  "cpp:rosidl_typesupport_cpp:rosidl_typesupport_connext_cpp"
 )
 
 add_library(rmw_connext_cpp SHARED src/functions.cpp)
@@ -78,8 +78,7 @@ if(WIN32)
   target_compile_definitions(rmw_connext_cpp
     PRIVATE "_CRT_NONSTDC_NO_DEPRECATE")
   target_compile_definitions(rmw_connext_cpp
-    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL"
-            "RMW_CONNEXT_SHARED_BUILDING_DLL")
+    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
 endif()
 
 if(BUILD_TESTING)

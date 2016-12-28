@@ -150,6 +150,16 @@ add_custom_command(
   VERBATIM
 )
 
+# generate header to switch between export and import for a specific package
+set(_visibility_control_file
+"${_output_path}/msg/rosidl_typesupport_connext_c__visibility_control.h")
+string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+configure_file(
+  "${rosidl_typesupport_connext_c_TEMPLATE_DIR}/rosidl_typesupport_connext_c__visibility_control.h.in"
+  "${_visibility_control_file}"
+  @ONLY
+)
+
 set(_target_suffix "__rosidl_typesupport_connext_c")
 
 link_directories(${Connext_LIBRARY_DIRS})
@@ -167,18 +177,14 @@ endif()
 ament_target_dependencies(${rosidl_generate_interfaces_TARGET}${_target_suffix}
   "rmw"
   "rosidl_typesupport_connext_cpp"
-  "rosidl_generator_c")
+  "rosidl_generator_c"
+  "rosidl_typesupport_interface")
 if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-    PRIVATE "ROSIDL_BUILDING_DLL")
-  target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-    PRIVATE "ROSIDL_GENERATOR_C_BUILDING_DLL_${PROJECT_NAME}")
+    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_C_BUILDING_DLL_${PROJECT_NAME}")
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "NDDS_USER_DLL_EXPORT_${PROJECT_NAME}")
 endif()
-# The following still uses CPP because the Connext code which uses it was generated for CPP.
-target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-  PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL_${PROJECT_NAME}")
 
 if(NOT WIN32)
   set(_target_compile_flags "-Wall -Wextra")

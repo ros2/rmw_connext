@@ -22,7 +22,7 @@ extern "C"
 #endif
 
 const char *
-  rosidl_typesupport_connext_c__identifier = "connext_static_c";
+  rosidl_typesupport_connext_c__identifier = "rosidl_typesupport_connext_c";
 
 #if defined(__cplusplus)
 }
