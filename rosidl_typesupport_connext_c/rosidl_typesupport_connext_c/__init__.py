@@ -26,11 +26,17 @@ from rosidl_parser import validate_field_types
 def generate_typesupport_connext_c(args):
     template_dir = args['template_dir']
     mapping_msgs = {
-        os.path.join(template_dir, 'msg__type_support_c.cpp.em'): '%s__type_support_c.cpp',
+        os.path.join(template_dir, 'msg__rosidl_typesupport_connext_c.h.em'):
+        '%s__rosidl_typesupport_connext_c.h',
+        os.path.join(template_dir, 'msg__type_support_c.cpp.em'):
+        '%s__type_support_c.cpp',
     }
 
     mapping_srvs = {
-        os.path.join(template_dir, 'srv__type_support_c.cpp.em'): '%s__type_support_c.cpp',
+        os.path.join(template_dir, 'srv__rosidl_typesupport_connext_c.h.em'):
+        '%s__rosidl_typesupport_connext_c.h',
+        os.path.join(template_dir, 'srv__type_support_c.cpp.em'):
+        '%s__type_support_c.cpp',
     }
 
     for template_file in mapping_msgs.keys():
@@ -58,8 +64,11 @@ def generate_typesupport_connext_c(args):
             validate_field_types(spec, known_msg_types)
             subfolder = os.path.basename(os.path.dirname(idl_file))
             for template_file, generated_filename in mapping_msgs.items():
+                generated_file = os.path.join(args['output_dir'], subfolder)
+                if generated_filename.endswith('.cpp'):
+                    generated_file = os.path.join(generated_file, 'dds_connext_c')
                 generated_file = os.path.join(
-                    args['output_dir'], subfolder, 'dds_connext_c', generated_filename %
+                    generated_file, generated_filename %
                     convert_camel_case_to_lower_case_underscore(spec.base_type.type))
 
                 data = {
@@ -78,8 +87,11 @@ def generate_typesupport_connext_c(args):
             spec = parse_service_file(pkg_name, idl_file)
             validate_field_types(spec, known_msg_types)
             for template_file, generated_filename in mapping_srvs.items():
+                generated_file = os.path.join(args['output_dir'], 'srv')
+                if generated_filename.endswith('.cpp'):
+                    generated_file = os.path.join(generated_file, 'dds_connext_c')
                 generated_file = os.path.join(
-                    args['output_dir'], 'srv', 'dds_connext_c', generated_filename %
+                    generated_file, generated_filename %
                     convert_camel_case_to_lower_case_underscore(spec.srv_name))
 
                 data = {'spec': spec}

@@ -19,6 +19,8 @@
 @#  - get_header_filename_from_msg_name (function)
 @##########################################################################
 @
+#include "@(spec.base_type.pkg_name)/@(subfolder)/@(get_header_filename_from_msg_name(spec.base_type.type))__rosidl_typesupport_connext_c.h"
+
 #include <cassert>
 #include <limits>
 
@@ -570,7 +572,6 @@ static rosidl_message_type_support_t __type_support = {
   get_message_typesupport_handle_function,
 };
 
-ROSIDL_TYPESUPPORT_CONNEXT_C_EXPORT_@(spec.base_type.pkg_name)
 const rosidl_message_type_support_t *
 ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(pkg), @(subfolder), @(msg))() {
   return &__type_support;

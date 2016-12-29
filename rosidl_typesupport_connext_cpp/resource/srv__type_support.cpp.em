@@ -10,7 +10,7 @@
 @#  - get_header_filename_from_msg_name (function)
 @#######################################################################
 @
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name))__type_support.hpp"
+#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__rosidl_typesupport_connext_cpp.hpp"
 
 #ifdef Connext_GLIBCXX_USE_CXX11_ABI_ZERO
 #define _GLIBCXX_USE_CXX11_ABI 0
@@ -34,19 +34,15 @@
 #endif
 
 #include "rmw/error_handling.h"
-#include "rosidl_typesupport_cpp/service_type_support.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
 #include "rosidl_typesupport_connext_cpp/service_type_support_decl.hpp"
-#include "rosidl_typesupport_connext_cpp/visibility_control.h"
-
-#include "rosidl_typesupport_interface/macros.h"
 
 #include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__struct.hpp"
 #include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_Support.h"
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__type_support.hpp"
+#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__rosidl_typesupport_connext_cpp.hpp"
 #include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Response_Support.h"
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Response'))__type_support.hpp"
+#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name + '_Response'))__rosidl_typesupport_connext_cpp.hpp"
 
 class DDSDomainParticipant;
 class DDSDataReader;
@@ -377,7 +373,7 @@ namespace rosidl_typesupport_connext_cpp
 {
 
 template<>
-ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT_@(spec.pkg_name)
 const rosidl_service_type_support_t *
 get_service_type_support_handle<@(spec.pkg_name)::srv::@(spec.srv_name)>()
 {
@@ -391,7 +387,6 @@ extern "C"
 {
 #endif
 
-ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
 const rosidl_service_type_support_t *
 ROSIDL_TYPESUPPORT_INTERFACE__SERVICE_SYMBOL_NAME(rosidl_typesupport_connext_cpp, @(spec.pkg_name), @(spec.srv_name))() {
   return &@(spec.pkg_name)::srv::typesupport_connext_cpp::handle;

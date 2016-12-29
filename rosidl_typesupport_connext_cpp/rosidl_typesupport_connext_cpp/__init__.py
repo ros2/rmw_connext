@@ -138,14 +138,16 @@ def _modify(filename, pkg_name, msg_name, callback):
 def generate_cpp(args, message_specs, service_specs, known_msg_types):
     template_dir = args['template_dir']
     mapping_msgs = {
-        os.path.join(template_dir, 'msg__type_support.hpp.em'): '%s__type_support.hpp',
-        os.path.join(template_dir, 'msg__type_support.cpp.em'): '%s__type_support.cpp',
+        os.path.join(template_dir, 'msg__rosidl_typesupport_connext_cpp.hpp.em'):
+        '%s__rosidl_typesupport_connext_cpp.hpp',
+        os.path.join(template_dir, 'msg__type_support.cpp.em'):
+        '%s__type_support.cpp',
     }
     mapping_srvs = {
+        os.path.join(template_dir, 'srv__rosidl_typesupport_connext_cpp.hpp.em'):
+        '%s__rosidl_typesupport_connext_cpp.hpp',
         os.path.join(template_dir, 'srv__type_support.cpp.em'):
         '%s__type_support.cpp',
-        os.path.join(template_dir, 'srv__type_support.hpp.em'):
-        '%s__type_support.hpp',
     }
 
     for template_file in mapping_msgs.keys():
@@ -165,8 +167,11 @@ def generate_cpp(args, message_specs, service_specs, known_msg_types):
         validate_field_types(spec, known_msg_types)
         subfolder = os.path.basename(os.path.dirname(idl_file))
         for template_file, generated_filename in mapping_msgs.items():
+            generated_file = os.path.join(args['output_dir'], subfolder)
+            if generated_filename.endswith('.cpp'):
+                generated_file = os.path.join(generated_file, 'dds_connext')
             generated_file = os.path.join(
-                args['output_dir'], subfolder, 'dds_connext', generated_filename %
+                generated_file, generated_filename %
                 convert_camel_case_to_lower_case_underscore(spec.base_type.type))
 
             data = {'spec': spec, 'subfolder': subfolder}
@@ -178,8 +183,11 @@ def generate_cpp(args, message_specs, service_specs, known_msg_types):
     for spec in service_specs:
         validate_field_types(spec, known_msg_types)
         for template_file, generated_filename in mapping_srvs.items():
+            generated_file = os.path.join(args['output_dir'], 'srv')
+            if generated_filename.endswith('.cpp'):
+                generated_file = os.path.join(generated_file, 'dds_connext')
             generated_file = os.path.join(
-                args['output_dir'], 'srv', 'dds_connext', generated_filename %
+                generated_file, generated_filename %
                 convert_camel_case_to_lower_case_underscore(spec.srv_name))
 
             data = {'spec': spec}
