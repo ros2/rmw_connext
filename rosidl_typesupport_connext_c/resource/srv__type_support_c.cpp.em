@@ -10,6 +10,8 @@
 @#  - get_header_filename_from_msg_name (function)
 @#######################################################################
 @
+#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__rosidl_typesupport_connext_c.h"
+
 #ifdef Connext_GLIBCXX_USE_CXX11_ABI_ZERO
 #define _GLIBCXX_USE_CXX11_ABI 0
 #endif
@@ -48,12 +50,12 @@
 #include "@(spec.pkg_name)/srv/@(res_header_file_name).h"
 
 #include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Request_Support.h"
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__type_support.hpp"
+#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name + '_Request'))__rosidl_typesupport_connext_c.h"
 #include "@(spec.pkg_name)/srv/dds_connext/@(spec.srv_name)_Response_Support.h"
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name + '_Response'))__type_support.hpp"
+#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name + '_Response'))__rosidl_typesupport_connext_c.h"
 
 // Re-use most of the functions from C++ typesupport
-#include "@(spec.pkg_name)/srv/dds_connext/@(get_header_filename_from_msg_name(spec.srv_name))__type_support.hpp"
+#include "@(spec.pkg_name)/srv/@(get_header_filename_from_msg_name(spec.srv_name))__rosidl_typesupport_connext_cpp.hpp"
 
 class DDSDomainParticipant;
 class DDSDataReader;
@@ -309,7 +311,6 @@ static rosidl_service_type_support_t __type_support = {
 };
 
 
-ROSIDL_TYPESUPPORT_CONNEXT_C_EXPORT_@(spec.pkg_name)
 const rosidl_service_type_support_t *
 ROSIDL_TYPESUPPORT_INTERFACE__SERVICE_SYMBOL_NAME(rosidl_typesupport_connext_c, @(spec.pkg_name), @(spec.srv_name))() {
   return &__type_support;

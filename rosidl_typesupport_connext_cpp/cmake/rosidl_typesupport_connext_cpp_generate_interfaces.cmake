@@ -69,11 +69,11 @@ foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
     list(APPEND ${_var1} "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Plugin.cxx")
     list(APPEND ${_var1} "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.h")
     list(APPEND ${_var1} "${_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.cxx")
-    list(APPEND ${_var2} "${_output_path}/${_parent_folder}/dds_connext/${_header_name}__type_support.hpp")
+    list(APPEND ${_var2} "${_output_path}/${_parent_folder}/${_header_name}__rosidl_typesupport_connext_cpp.hpp")
     list(APPEND ${_var2} "${_output_path}/${_parent_folder}/dds_connext/${_header_name}__type_support.cpp")
   elseif(_extension STREQUAL ".srv")
+    list(APPEND _generated_srv_files "${_output_path}/srv/${_header_name}__rosidl_typesupport_connext_cpp.hpp")
     list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext/${_header_name}__type_support.cpp")
-    list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext/${_header_name}__type_support.hpp")
   else()
     message(FATAL_ERROR "Interface file with unknown extension: ${_idl_file}")
   endif()
@@ -132,9 +132,9 @@ endforeach()
 set(target_dependencies
   "${rosidl_typesupport_connext_cpp_BIN}"
   ${rosidl_typesupport_connext_cpp_GENERATOR_FILES}
-  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg__type_support.hpp.em"
+  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg__rosidl_typesupport_connext_cpp.hpp.em"
   "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/msg__type_support.cpp.em"
-  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/srv__type_support.hpp.em"
+  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/srv__rosidl_typesupport_connext_cpp.hpp.em"
   "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/srv__type_support.cpp.em"
   ${_dependency_files})
 foreach(dep ${target_dependencies})
@@ -172,6 +172,16 @@ add_custom_command(
   VERBATIM
 )
 
+# generate header to switch between export and import for a specific package
+set(_visibility_control_file
+"${_output_path}/msg/rosidl_typesupport_connext_cpp__visibility_control.h")
+string(TOUPPER "${PROJECT_NAME}" PROJECT_NAME_UPPER)
+configure_file(
+  "${rosidl_typesupport_connext_cpp_TEMPLATE_DIR}/rosidl_typesupport_connext_cpp__visibility_control.h.in"
+  "${_visibility_control_file}"
+  @ONLY
+)
+
 set(_target_suffix "__rosidl_typesupport_connext_cpp")
 
 if(NOT WIN32)
@@ -191,7 +201,7 @@ if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
 endif()
 if(WIN32)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
-    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
+    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL_${PROJECT_NAME}")
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE "NDDS_USER_DLL_EXPORT_${PROJECT_NAME}")
 endif()
@@ -249,18 +259,11 @@ add_dependencies(
 )
 
 if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
-  if(NOT _generated_msg_files STREQUAL "" OR NOT _generated_external_msg_files STREQUAL "")
-    install(
-      FILES ${_generated_msg_files} ${_generated_external_msg_files}
-      DESTINATION "include/${PROJECT_NAME}/msg/dds_connext"
-    )
-  endif()
-  if(NOT _generated_srv_files STREQUAL "" OR NOT _generated_external_srv_files STREQUAL "")
-    install(
-      FILES ${_generated_srv_files} ${_generated_external_srv_files}
-      DESTINATION "include/${PROJECT_NAME}/srv/dds_connext"
-    )
-  endif()
+  install(
+    DIRECTORY "${_output_path}/"
+    DESTINATION "include/${PROJECT_NAME}"
+    PATTERN "*.cpp" EXCLUDE
+  )
 
   if(
     NOT _generated_msg_files STREQUAL "" OR

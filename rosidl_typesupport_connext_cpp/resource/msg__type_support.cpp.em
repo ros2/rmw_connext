@@ -13,20 +13,16 @@
 @#  - get_header_filename_from_msg_name (function)
 @#######################################################################
 @
-#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(get_header_filename_from_msg_name(spec.base_type.type))__type_support.hpp"
+#include "@(spec.base_type.pkg_name)/@(subfolder)/@(get_header_filename_from_msg_name(spec.base_type.type))__rosidl_typesupport_connext_cpp.hpp"
 
 #include <limits>
 #include <stdexcept>
 
-#include "rosidl_generator_c/message_type_support_struct.h"
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
-#include "rosidl_typesupport_connext_cpp/visibility_control.h"
 
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/message_type_support_decl.hpp"
-
-#include "rosidl_typesupport_interface/macros.h"
 
 // forward declaration of message dependencies and their conversion functions
 @[for field in spec.fields]@
@@ -339,7 +335,7 @@ namespace rosidl_typesupport_connext_cpp
 {
 
 template<>
-ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
+ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT_@(spec.base_type.pkg_name)
 const rosidl_message_type_support_t *
 get_message_type_support_handle<@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type)>()
 {
@@ -353,7 +349,6 @@ extern "C"
 {
 #endif
 
-ROSIDL_TYPESUPPORT_CONNEXT_CPP_EXPORT
 const rosidl_message_type_support_t *
 ROSIDL_TYPESUPPORT_INTERFACE__MESSAGE_SYMBOL_NAME(rosidl_typesupport_connext_cpp, @(spec.base_type.pkg_name), @(subfolder), @(spec.base_type.type))() {
   return &@(spec.base_type.pkg_name)::@(subfolder)::typesupport_connext_cpp::handle;

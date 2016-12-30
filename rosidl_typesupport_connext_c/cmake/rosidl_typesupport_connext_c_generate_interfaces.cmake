@@ -55,8 +55,10 @@ foreach(_idl_file ${rosidl_generate_interfaces_IDL_FILES})
     list(APPEND _generated_external_msg_files "${_dds_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Plugin.cxx")
     list(APPEND _generated_external_msg_files "${_dds_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.h")
     list(APPEND _generated_external_msg_files "${_dds_output_path}/${_parent_folder}/dds_connext/${_msg_name}_Support.cxx")
+    list(APPEND _generated_msg_files "${_output_path}/msg/${_header_name}__rosidl_typesupport_connext_c.h")
     list(APPEND _generated_msg_files "${_output_path}/msg/dds_connext_c/${_header_name}__type_support_c.cpp")
   elseif(_extension STREQUAL ".srv")
+    list(APPEND _generated_srv_files "${_output_path}/srv/${_header_name}__rosidl_typesupport_connext_c.h")
     list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext_c/${_header_name}__type_support_c.cpp")
     list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext_c/${_header_name}__request__type_support_c.cpp")
     list(APPEND _generated_srv_files "${_output_path}/srv/dds_connext_c/${_header_name}__response__type_support_c.cpp")
@@ -248,18 +250,11 @@ add_dependencies(
 )
 
 if(NOT rosidl_generate_interfaces_SKIP_INSTALL)
-  if(NOT _generated_msg_files STREQUAL "")
-    install(
-      FILES ${_generated_msg_files}
-      DESTINATION "include/${PROJECT_NAME}/msg/dds_connext_c"
-    )
-  endif()
-  if(NOT _generated_srv_files STREQUAL "")
-    install(
-      FILES ${_generated_srv_files}
-      DESTINATION "include/${PROJECT_NAME}/srv/dds_connext_c"
-    )
-  endif()
+  install(
+    DIRECTORY "${_output_path}/"
+    DESTINATION "include/${PROJECT_NAME}"
+    PATTERN "*.cpp" EXCLUDE
+  )
 
   if(NOT _generated_msg_files STREQUAL "" OR NOT _generated_srv_files STREQUAL "")
     ament_export_include_directories(include)
