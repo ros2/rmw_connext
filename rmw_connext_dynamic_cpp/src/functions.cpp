@@ -401,7 +401,7 @@ rmw_create_publisher(
     goto fail;
   }
   // Use a placement new to construct the CustomPublisherInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(custom_publisher_info, buf, goto fail, CustomPublisherInfo);
+  RMW_TRY_PLACEMENT_NEW(custom_publisher_info, buf, goto fail, CustomPublisherInfo,);
   buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   custom_publisher_info->dynamic_data_type_support_ = ddts;
   custom_publisher_info->dds_publisher_ = dds_publisher;
@@ -865,7 +865,7 @@ rmw_create_subscription(
     goto fail;
   }
   // Use a placement new to construct the CustomSubscriberInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(custom_subscriber_info, buf, goto fail, CustomSubscriberInfo);
+  RMW_TRY_PLACEMENT_NEW(custom_subscriber_info, buf, goto fail, CustomSubscriberInfo,);
   buf = nullptr;  // Only free the casted pointer; don't need the buf anymore.
   custom_subscriber_info->dynamic_data_type_support_ = ddts;
   custom_subscriber_info->dynamic_reader_ = dynamic_reader;
@@ -1461,7 +1461,7 @@ rmw_create_client(
     goto fail;
   }
   // Use a placement new to construct the ConnextDynamicClientInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextDynamicClientInfo)
+  RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextDynamicClientInfo,)
   buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   client_info->requester_ = requester;
   client_info->response_datareader_ = response_datareader;
@@ -1845,7 +1845,7 @@ rmw_create_service(
     goto fail;
   }
   // Use a placement new to construct the ConnextDynamicServiceInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(server_info, buf, goto fail, ConnextDynamicServiceInfo)
+  RMW_TRY_PLACEMENT_NEW(server_info, buf, goto fail, ConnextDynamicServiceInfo,)
   buf = nullptr;  // Only free the casted pointer; don't need the buf pointer anymore.
   server_info->replier_ = replier;
   server_info->request_datareader_ = request_datareader;

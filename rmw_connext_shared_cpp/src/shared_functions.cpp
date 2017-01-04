@@ -435,7 +435,7 @@ create_node(const char * implementation_identifier, const char * name, size_t do
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
-  RMW_TRY_PLACEMENT_NEW(node_info, buf, goto fail, ConnextNodeInfo)
+  RMW_TRY_PLACEMENT_NEW(node_info, buf, goto fail, ConnextNodeInfo,)
   buf = nullptr;
   node_info->participant = participant;
   node_info->publisher_listener = publisher_listener;
@@ -576,7 +576,7 @@ create_guard_condition(const char * implementation_identifier)
     goto fail;
   }
   // Use a placement new to construct the DDSGuardCondition in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(dds_guard_condition, buf, goto fail, DDSGuardCondition)
+  RMW_TRY_PLACEMENT_NEW(dds_guard_condition, buf, goto fail, DDSGuardCondition,)
   buf = nullptr;  // Only free the dds_guard_condition pointer; don't need the buf pointer anymore.
   guard_condition->implementation_identifier = implementation_identifier;
   guard_condition->data = dds_guard_condition;
@@ -641,7 +641,7 @@ create_waitset(const char * implementation_identifier, size_t max_conditions)
   }
 
   RMW_TRY_PLACEMENT_NEW(
-    waitset_info->waitset, waitset_info->waitset, goto fail, DDSWaitSet)
+    waitset_info->waitset, waitset_info->waitset, goto fail, DDSWaitSet,)
 
   // Now allocate storage for the ConditionSeq objects
   waitset_info->active_conditions =
@@ -672,11 +672,11 @@ create_waitset(const char * implementation_identifier, size_t max_conditions)
     // Else, don't preallocate: the vectors will size dynamically when rmw_wait is called.
     // Default-construct the ConditionSeqs.
     RMW_TRY_PLACEMENT_NEW(
-      waitset_info->active_conditions, waitset_info->active_conditions, goto fail, DDSConditionSeq)
+      waitset_info->active_conditions, waitset_info->active_conditions, goto fail, DDSConditionSeq,)
 
     RMW_TRY_PLACEMENT_NEW(
       waitset_info->attached_conditions, waitset_info->attached_conditions, goto fail,
-      DDSConditionSeq)
+      DDSConditionSeq,)
   }
 
   return waitset;

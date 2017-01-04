@@ -328,7 +328,7 @@ rmw_create_publisher(
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticPublisherInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(publisher_info, buf, goto fail, ConnextStaticPublisherInfo)
+  RMW_TRY_PLACEMENT_NEW(publisher_info, buf, goto fail, ConnextStaticPublisherInfo,)
   buf = nullptr;  // Only free the publisher_info pointer; don't need the buf pointer anymore.
   publisher_info->dds_publisher_ = dds_publisher;
   publisher_info->topic_writer_ = topic_writer;
@@ -634,7 +634,7 @@ rmw_create_subscription(const rmw_node_t * node,
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticSubscriberInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(subscriber_info, buf, goto fail, ConnextStaticSubscriberInfo)
+  RMW_TRY_PLACEMENT_NEW(subscriber_info, buf, goto fail, ConnextStaticSubscriberInfo,)
   buf = nullptr;  // Only free the subscriber_info pointer; don't need the buf pointer anymore.
   subscriber_info->dds_subscriber_ = dds_subscriber;
   subscriber_info->topic_reader_ = topic_reader;
@@ -996,7 +996,7 @@ rmw_create_client(
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticClientInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextStaticClientInfo)
+  RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextStaticClientInfo,)
   buf = nullptr;  // Only free the client_info pointer; don't need the buf pointer anymore.
   client_info->requester_ = requester;
   client_info->callbacks_ = callbacks;
@@ -1255,7 +1255,7 @@ rmw_create_service(
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticServiceInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(service_info, buf, goto fail, ConnextStaticServiceInfo)
+  RMW_TRY_PLACEMENT_NEW(service_info, buf, goto fail, ConnextStaticServiceInfo,)
   buf = nullptr;  // Only free the service_info pointer; don't need the buf pointer anymore.
   service_info->replier_ = replier;
   service_info->callbacks_ = callbacks;
