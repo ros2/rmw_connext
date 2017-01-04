@@ -206,7 +206,7 @@ if(WIN32)
     PRIVATE "NDDS_USER_DLL_EXPORT_${PROJECT_NAME}")
 endif()
 if(NOT WIN32)
-  set(_target_compile_flags "-Wall -Wextra")
+  set(_target_compile_flags "-Wall -Wextra -Wpedantic")
 else()
   set(_target_compile_flags
     "/W4"

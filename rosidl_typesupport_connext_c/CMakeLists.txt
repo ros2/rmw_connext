@@ -6,8 +6,8 @@ set(CONNEXT_STATIC_DISABLE $ENV{CONNEXT_STATIC_DISABLE}
   CACHE BOOL "If Connext Static should be disabled.")
 
 if(NOT WIN32)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wpedantic")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wpedantic")
 endif()
 
 find_package(ament_cmake REQUIRED)

@@ -189,7 +189,7 @@ if(WIN32)
 endif()
 
 if(NOT WIN32)
-  set(_target_compile_flags "-Wall -Wextra")
+  set(_target_compile_flags "-Wall -Wextra -Wpedantic")
 else()
   set(_target_compile_flags
     "/W4"  # Enable level 3 warnings
