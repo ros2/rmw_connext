@@ -542,9 +542,9 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
     node_info->subscriber_listener = nullptr;
   }
   if (node_info->graph_guard_condition) {
-    rmw_ret_t ret =
+    rmw_ret_t rmw_ret =
       destroy_guard_condition(implementation_identifier, node_info->graph_guard_condition);
-    if (ret != RMW_RET_OK) {
+    if (rmw_ret != RMW_RET_OK) {
       RMW_SET_ERROR_MSG("failed to delete graph guard condition");
       return RMW_RET_ERROR;
     }
