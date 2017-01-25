@@ -286,6 +286,15 @@ destroy_topic_names_and_types(
   }
 }
 
+rmw_ret_t
+rmw_destroy_node_names(
+  rmw_node_names_t * node_names)
+{
+  // TODO(karsten1987): implement
+  RMW_SET_ERROR_MSG("Connext support not implemented.");
+  return RMW_RET_ERROR;
+}
+
 rmw_node_t *
 create_node(const char * implementation_identifier, const char * name, size_t domain_id)
 {
@@ -860,6 +869,16 @@ get_topic_names_and_types(const char * implementation_identifier,
   return RMW_RET_OK;
 fail:
   destroy_topic_names_and_types(topic_names_and_types);
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_get_node_names(
+  const rmw_node_t * node,
+  rmw_node_names_t * node_names)
+{
+  // TODO(karsten1987): implement
+  RMW_SET_ERROR_MSG("Connext support not implemented.");
   return RMW_RET_ERROR;
 }
 
