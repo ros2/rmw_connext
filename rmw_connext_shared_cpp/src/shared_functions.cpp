@@ -286,13 +286,21 @@ destroy_topic_names_and_types(
   }
 }
 
-rmw_ret_t
-rmw_destroy_node_names(
+void
+destroy_node_names(
   rmw_node_names_t * node_names)
 {
-  // TODO(karsten1987): implement
-  RMW_SET_ERROR_MSG("Connext support not implemented.");
-  return RMW_RET_ERROR;
+  if (node_names->node_count > 0) {
+    for (size_t i = 0; i < node_names->node_count; ++i) {
+      rmw_free(node_names->names[i]);
+      node_names->names[i] = nullptr;
+    }
+    if (node_names->names) {
+      rmw_free(node_names->names);
+      node_names->names = nullptr;
+    }
+    node_names->node_count = 0;
+  }
 }
 
 rmw_node_t *
@@ -769,7 +777,8 @@ trigger_guard_condition(const char * implementation_identifier,
 }
 
 rmw_ret_t
-get_topic_names_and_types(const char * implementation_identifier,
+get_topic_names_and_types(
+  const char * implementation_identifier,
   const rmw_node_t * node,
   rmw_topic_names_and_types_t * topic_names_and_types)
 {
@@ -873,13 +882,40 @@ fail:
 }
 
 rmw_ret_t
-rmw_get_node_names(
+get_node_names(const char * implementation_identifier,
   const rmw_node_t * node,
   rmw_node_names_t * node_names)
 {
-  // TODO(karsten1987): implement
-  RMW_SET_ERROR_MSG("Connext support not implemented.");
-  return RMW_RET_ERROR;
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (node->implementation_identifier != implementation_identifier) {
+    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
+    return RMW_RET_ERROR;
+  }
+  if (rmw_check_zero_rmw_node_names(node_names) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+
+  DDSDomainParticipant * participant = static_cast<ConnextNodeInfo *>(node->data)->participant;
+  DDS_InstanceHandleSeq handles;
+  participant->get_discovered_participants(handles);
+  int length = handles.length();
+  node_names->node_count = length;
+  node_names->names = static_cast<char **>(rmw_allocate(length * sizeof(char *)));
+  for (auto i = 0; i < length; ++i)
+  {
+    ParticipantBuiltinTopicData pbtd;
+    participant->get_discovered_participant_data(pbtd, handles[i]);
+    char * name = pbtd.participant_name.name;
+    if (!name) {
+      name = (char*)"(no name)";
+    }
+    node_names->names[i] = static_cast<char *>(rmw_allocate(strlen(name) * sizeof(char)));
+    node_names->names[i] = strdup(name);
+  }
+  return RMW_RET_OK;
 }
 
 rmw_ret_t

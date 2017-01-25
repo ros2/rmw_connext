@@ -1570,18 +1570,20 @@ rmw_get_node_names(
   const rmw_node_t * node,
   rmw_node_names_t * node_names)
 {
-  // TODO(karsten1987): implement
-  RMW_SET_ERROR_MSG("Connext support not implemented.");
-  return RMW_RET_ERROR;
+  return get_node_names(rti_connext_identifier, node,
+      node_names);
 }
 
 rmw_ret_t
 rmw_destroy_node_names(
   rmw_node_names_t * node_names)
 {
-  // TODO(karsten1987): implement
-  RMW_SET_ERROR_MSG("Connext support not implemented.");
-  return RMW_RET_ERROR;
+  if (!node_names) {
+    RMW_SET_ERROR_MSG("node_names handle is null");
+    return RMW_RET_ERROR;
+  }
+  destroy_node_names(node_names);
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
