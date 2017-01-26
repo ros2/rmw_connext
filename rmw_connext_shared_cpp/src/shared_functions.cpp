@@ -319,8 +319,8 @@ create_node(const char * implementation_identifier, const char * name, size_t do
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
   }
-  participant_qos.participant_name.name
-    = static_cast<char *>(rmw_allocate(strlen(name) * sizeof(char)));
+  participant_qos.participant_name.name =
+    static_cast<char *>(rmw_allocate(strlen(name) * sizeof(char)));
   participant_qos.participant_name.name = strdup(name);
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
@@ -907,13 +907,12 @@ get_node_names(const char * implementation_identifier,
   int length = handles.length();
   node_names->node_count = length;
   node_names->names = static_cast<char **>(rmw_allocate(length * sizeof(char *)));
-  for (auto i = 0; i < length; ++i)
-  {
+  for (auto i = 0; i < length; ++i) {
     ParticipantBuiltinTopicData pbtd;
     participant->get_discovered_participant_data(pbtd, handles[i]);
     char * name = pbtd.participant_name.name;
     if (!name) {
-      name = (char*)"(no name)";
+      name = (char *)"(no name)";
     }
     node_names->names[i] = static_cast<char *>(rmw_allocate(strlen(name) * sizeof(char)));
     node_names->names[i] = strdup(name);

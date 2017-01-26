@@ -1571,7 +1571,7 @@ rmw_get_node_names(
   rmw_node_names_t * node_names)
 {
   return get_node_names(rti_connext_identifier, node,
-      node_names);
+           node_names);
 }
 
 rmw_ret_t
