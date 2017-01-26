@@ -2229,8 +2229,8 @@ rmw_get_node_names(
   const rmw_node_t * node,
   rmw_string_array_t * node_names)
 {
-  return get_node_names(rti_connext_identifier, node,
-           node_names);
+  return get_node_names(
+    rti_connext_dynamic_identifier, node, node_names);
 }
 
 rmw_ret_t
