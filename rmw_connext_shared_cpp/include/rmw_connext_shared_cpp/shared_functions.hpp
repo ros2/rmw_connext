@@ -140,7 +140,7 @@ destroy_topic_names_and_types(
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 void
 destroy_node_names(
-  rmw_node_names_t * node_names);
+  rmw_string_array_t * node_names);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_node_t *
@@ -513,7 +513,7 @@ RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
 get_node_names(const char * implementation_identifier,
   const rmw_node_t * node,
-  rmw_node_names_t * node_names);
+  rmw_string_array_t * node_names);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t

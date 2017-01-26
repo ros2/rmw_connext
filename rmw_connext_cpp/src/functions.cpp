@@ -1568,7 +1568,7 @@ rmw_destroy_topic_names_and_types(
 rmw_ret_t
 rmw_get_node_names(
   const rmw_node_t * node,
-  rmw_node_names_t * node_names)
+  rmw_string_array_t * node_names)
 {
   return get_node_names(rti_connext_identifier, node,
            node_names);
@@ -1576,7 +1576,7 @@ rmw_get_node_names(
 
 rmw_ret_t
 rmw_destroy_node_names(
-  rmw_node_names_t * node_names)
+  rmw_string_array_t * node_names)
 {
   if (!node_names) {
     RMW_SET_ERROR_MSG("node_names handle is null");

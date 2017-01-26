@@ -288,19 +288,17 @@ destroy_topic_names_and_types(
 
 void
 destroy_node_names(
-  rmw_node_names_t * node_names)
+  rmw_string_array_t * node_names)
 {
-  if (node_names->node_count > 0) {
-    for (size_t i = 0; i < node_names->node_count; ++i) {
-      rmw_free(node_names->names[i]);
-      node_names->names[i] = nullptr;
-    }
-    if (node_names->names) {
-      rmw_free(node_names->names);
-      node_names->names = nullptr;
-    }
-    node_names->node_count = 0;
+  for (size_t i = 0; i < node_names->size; ++i) {
+    rmw_free(node_names->data[i]);
+    node_names->data[i] = nullptr;
   }
+  if (node_names->data) {
+    rmw_free(node_names->data);
+    node_names->data = nullptr;
+  }
+  node_names->size = 0;
 }
 
 rmw_node_t *
@@ -887,7 +885,7 @@ fail:
 rmw_ret_t
 get_node_names(const char * implementation_identifier,
   const rmw_node_t * node,
-  rmw_node_names_t * node_names)
+  rmw_string_array_t * node_names)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -897,25 +895,29 @@ get_node_names(const char * implementation_identifier,
     RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
     return RMW_RET_ERROR;
   }
-  if (rmw_check_zero_rmw_node_names(node_names) != RMW_RET_OK) {
+  if (rmw_check_zero_rmw_string_array(node_names) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
   DDSDomainParticipant * participant = static_cast<ConnextNodeInfo *>(node->data)->participant;
   DDS_InstanceHandleSeq handles;
-  participant->get_discovered_participants(handles);
-  int length = handles.length();
-  node_names->node_count = length;
-  node_names->names = static_cast<char **>(rmw_allocate(length * sizeof(char *)));
+  if (participant->get_discovered_participants(handles) != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("unable to fetch discovered participants.");
+    return RMW_RET_ERROR;
+  }
+  auto length = handles.length();
+  node_names->size = length;
+  node_names->data = static_cast<char **>(rmw_allocate(length * sizeof(char *)));
   for (auto i = 0; i < length; ++i) {
     ParticipantBuiltinTopicData pbtd;
-    participant->get_discovered_participant_data(pbtd, handles[i]);
+    auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i]);
     char * name = pbtd.participant_name.name;
-    if (!name) {
+    if (!name || dds_ret != DDS_RETCODE_OK) {
       name = const_cast<char *>("(no name)");
     }
-    node_names->names[i] = static_cast<char *>(rmw_allocate(strlen(name) * sizeof(char)));
-    node_names->names[i] = strdup(name);
+    size_t name_length = strlen(name) + 1;
+    node_names->data[i] = static_cast<char *>(rmw_allocate(name_length * sizeof(char)));
+    snprintf(node_names->data[i], name_length, "%s", name);
   }
   return RMW_RET_OK;
 }
