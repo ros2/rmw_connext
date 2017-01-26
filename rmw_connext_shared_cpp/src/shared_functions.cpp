@@ -319,6 +319,9 @@ create_node(const char * implementation_identifier, const char * name, size_t do
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
   }
+  participant_qos.participant_name.name
+    = static_cast<char *>(rmw_allocate(strlen(name) * sizeof(char)));
+  participant_qos.participant_name.name = strdup(name);
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
   // (in which case traffic will be sent over both transports)
