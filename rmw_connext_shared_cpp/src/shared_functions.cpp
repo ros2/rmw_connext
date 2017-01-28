@@ -905,7 +905,7 @@ get_node_names(const char * implementation_identifier,
     RMW_SET_ERROR_MSG("unable to fetch discovered participants.");
     return RMW_RET_ERROR;
   }
-  auto length = handles.length()+1; // add yourself
+  auto length = handles.length() + 1; // add yourself
   node_names->size = length;
   node_names->data = static_cast<char **>(rmw_allocate(length * sizeof(char *)));
 
@@ -918,12 +918,13 @@ get_node_names(const char * implementation_identifier,
   auto participant_name_length = strlen(participant_qos.participant_name.name) + 1;
   node_names->data[0] =
     static_cast<char *>(rmw_allocate(participant_name_length * sizeof(char)));
-  snprintf(node_names->data[0], participant_name_length, "%s", participant_qos.participant_name.name);
+  snprintf(node_names->data[0], participant_name_length, "%s",
+    participant_qos.participant_name.name);
 
 
   for (auto i = 1; i < length; ++i) {
     ParticipantBuiltinTopicData pbtd;
-    auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i-1]);
+    auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i - 1]);
     char * name = pbtd.participant_name.name;
     if (!name || dds_ret != DDS_RETCODE_OK) {
       name = const_cast<char *>("(no name)");
