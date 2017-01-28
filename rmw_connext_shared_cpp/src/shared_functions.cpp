@@ -905,12 +905,25 @@ get_node_names(const char * implementation_identifier,
     RMW_SET_ERROR_MSG("unable to fetch discovered participants.");
     return RMW_RET_ERROR;
   }
-  auto length = handles.length();
+  auto length = handles.length()+1; // add yourself
   node_names->size = length;
   node_names->data = static_cast<char **>(rmw_allocate(length * sizeof(char *)));
-  for (auto i = 0; i < length; ++i) {
+
+  DDS_DomainParticipantQos participant_qos;
+  DDS_ReturnCode_t status = participant->get_qos(participant_qos);
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to get default participant qos");
+    return RMW_RET_ERROR;
+  }
+  auto participant_name_length = strlen(participant_qos.participant_name.name) + 1;
+  node_names->data[0] =
+    static_cast<char *>(rmw_allocate(participant_name_length * sizeof(char)));
+  snprintf(node_names->data[0], participant_name_length, "%s", participant_qos.participant_name.name);
+
+
+  for (auto i = 1; i < length; ++i) {
     ParticipantBuiltinTopicData pbtd;
-    auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i]);
+    auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i-1]);
     char * name = pbtd.participant_name.name;
     if (!name || dds_ret != DDS_RETCODE_OK) {
       name = const_cast<char *>("(no name)");
@@ -919,6 +932,7 @@ get_node_names(const char * implementation_identifier,
     node_names->data[i] = static_cast<char *>(rmw_allocate(name_length * sizeof(char)));
     snprintf(node_names->data[i], name_length, "%s", name);
   }
+
   return RMW_RET_OK;
 }
 
