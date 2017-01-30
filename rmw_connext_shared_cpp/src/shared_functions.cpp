@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2015-2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -905,7 +905,7 @@ get_node_names(const char * implementation_identifier,
     RMW_SET_ERROR_MSG("unable to fetch discovered participants.");
     return RMW_RET_ERROR;
   }
-  auto length = handles.length() + 1; // add yourself
+  auto length = handles.length() + 1;  // add yourself
   node_names->size = length;
   node_names->data = static_cast<char **>(rmw_allocate(length * sizeof(char *)));
 
