@@ -1,4 +1,4 @@
-// Copyright 2015 Open Source Robotics Foundation, Inc.
+// Copyright 2015-2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -136,6 +136,11 @@ RMW_CONNEXT_SHARED_CPP_PUBLIC
 void
 destroy_topic_names_and_types(
   rmw_topic_names_and_types_t * topic_names_and_types);
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+void
+destroy_node_names(
+  rmw_string_array_t * node_names);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_node_t *
@@ -503,6 +508,12 @@ rmw_ret_t
 get_topic_names_and_types(const char * implementation_identifier,
   const rmw_node_t * node,
   rmw_topic_names_and_types_t * topic_names_and_types);
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+rmw_ret_t
+get_node_names(const char * implementation_identifier,
+  const rmw_node_t * node,
+  rmw_string_array_t * node_names);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
