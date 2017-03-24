@@ -51,11 +51,11 @@
         "type support handle implementation '%s' (%p) does not match valid type supports " \
         "('%s' (%p), '%s' (%p))", \
         TYPE_SUPPORTS->typesupport_identifier, \
-        reinterpret_cast<const void *>(TYPE_SUPPORTS->typesupport_identifier), \
+        static_cast<const void *>(TYPE_SUPPORTS->typesupport_identifier), \
         rosidl_typesupport_introspection_cpp::typesupport_identifier, \
-        reinterpret_cast<const void *>(rosidl_typesupport_introspection_cpp::typesupport_identifier), \
+        static_cast<const void *>(rosidl_typesupport_introspection_cpp::typesupport_identifier), \
         rosidl_typesupport_introspection_c__identifier, \
-        reinterpret_cast<const void *>(rosidl_typesupport_introspection_c__identifier)); \
+        static_cast<const void *>(rosidl_typesupport_introspection_c__identifier)); \
       RMW_SET_ERROR_MSG(__msg); \
       return NULL; \
     } \
@@ -79,11 +79,11 @@
         "type support handle implementation '%s' (%p) does not match valid type supports " \
         "('%s' (%p), '%s' (%p))", \
         TYPE_SUPPORTS->typesupport_identifier, \
-        reinterpret_cast<const void *>(TYPE_SUPPORTS->typesupport_identifier), \
+        static_cast<const void *>(TYPE_SUPPORTS->typesupport_identifier), \
         rosidl_typesupport_introspection_cpp::typesupport_identifier, \
-        reinterpret_cast<const void *>(rosidl_typesupport_introspection_cpp::typesupport_identifier), \
+        static_cast<const void *>(rosidl_typesupport_introspection_cpp::typesupport_identifier), \
         rosidl_typesupport_introspection_c__identifier, \
-        reinterpret_cast<const void *>(rosidl_typesupport_introspection_c__identifier)); \
+        static_cast<const void *>(rosidl_typesupport_introspection_c__identifier)); \
       RMW_SET_ERROR_MSG(__msg); \
       return NULL; \
     } \
