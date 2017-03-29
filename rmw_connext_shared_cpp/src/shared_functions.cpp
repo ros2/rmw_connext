@@ -302,7 +302,11 @@ destroy_node_names(
 }
 
 rmw_node_t *
-create_node(const char * implementation_identifier, const char * name, size_t domain_id)
+create_node(
+  const char * implementation_identifier,
+  const char * name,
+  const char * name_space,
+  size_t domain_id)
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
@@ -319,6 +323,10 @@ create_node(const char * implementation_identifier, const char * name, size_t do
   }
   participant_qos.participant_name.name =
     static_cast<char *>(rmw_allocate((strlen(name) + 1) * sizeof(char)));
+  if (!participant_qos.participant_name.name) {
+    RMW_SET_ERROR_MSG("failed to allocate memory");
+    return NULL;
+  }
   participant_qos.participant_name.name = strdup(name);
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
@@ -430,6 +438,14 @@ create_node(const char * implementation_identifier, const char * name, size_t do
   }
   memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
+  node_handle->name_space =
+    reinterpret_cast<const char *>(rmw_allocate(sizeof(char) * strlen(name_space) + 1));
+  if (!node_handle->name_space) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(node_handle->name_space), name_space, strlen(name_space) + 1);
+
   buf = rmw_allocate(sizeof(ConnextNodeInfo));
   if (!buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
@@ -475,6 +491,9 @@ fail:
   if (node_handle) {
     if (node_handle->name) {
       rmw_free(const_cast<char *>(node_handle->name));
+    }
+    if (node_handle->name_space) {
+      rmw_free(const_cast<char *>(node_handle->name_space));
     }
     rmw_free(node_handle);
   }
@@ -555,6 +574,8 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
   node->data = nullptr;
   rmw_free(const_cast<char *>(node->name));
   node->name = nullptr;
+  rmw_free(const_cast<char *>(node->name_space));
+  node->name_space = nullptr;
   rmw_node_free(node);
 
   return RMW_RET_OK;

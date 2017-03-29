@@ -144,7 +144,11 @@ destroy_node_names(
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_node_t *
-create_node(const char * implementation_identifier, const char * name, size_t domain_id);
+create_node(
+  const char * implementation_identifier,
+  const char * name,
+  const char * name_space,
+  size_t domain_id);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
