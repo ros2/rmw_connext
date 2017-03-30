@@ -196,9 +196,9 @@ rmw_init()
 }
 
 rmw_node_t *
-rmw_create_node(const char * name, size_t domain_id)
+rmw_create_node(const char * name, const char * namespace_, size_t domain_id)
 {
-  return create_node(rti_connext_dynamic_identifier, name, domain_id);
+  return create_node(rti_connext_dynamic_identifier, name, namespace_, domain_id);
 }
 
 rmw_ret_t
