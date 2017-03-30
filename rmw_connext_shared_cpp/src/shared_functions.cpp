@@ -441,7 +441,7 @@ create_node(
   node_handle->namespace_ =
     reinterpret_cast<const char *>(rmw_allocate(sizeof(char) * strlen(namespace_) + 1));
   if (!node_handle->namespace_) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    RMW_SET_ERROR_MSG("failed to allocate memory for node namespace");
     goto fail;
   }
   memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
