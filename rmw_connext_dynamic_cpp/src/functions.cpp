@@ -46,7 +46,9 @@
 # pragma GCC diagnostic pop
 #endif
 
-#include "rcutils/types/string_array.h"
+// TODO(karsten1987): Introduce c_utilities.h
+#include "rcutils/types.h"
+#include "rcutils/split.h"
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -298,6 +300,12 @@ rmw_create_publisher(
   CustomPublisherInfo * custom_publisher_info = nullptr;
   std::string type_name = _create_type_name(type_support->data, "msg",
       type_support->typesupport_identifier);
+
+  // memory allocations for namespacing
+  utilities_string_array_t name_tokens;
+  char * partition_str = nullptr;
+  char * topic_str = nullptr;
+
   // Start initializing elements.
   publisher = rmw_publisher_allocate();
   if (!publisher) {
@@ -341,6 +349,30 @@ rmw_create_publisher(
     goto fail;
   }
 
+  // allocates memory, but doesn't have to be freed.
+  // partition operater takes ownership of it.
+  printf("Original publisher topic name: %s\n", topic_name);
+  name_tokens = utilities_split_last(topic_name, '/');
+  partition_str = NULL;
+  topic_str = NULL;
+  if (name_tokens.size == 2) {
+    partition_str = name_tokens.data[0];
+    topic_str = name_tokens.data[1];
+  } else {
+    // We want to make sure at this point that the topic name
+    // has already been prefixed with the appropriate token `rt`, etc.
+    // In this case, even without specifying an explicit namespace
+    // the given topic name should have at least one slash.
+    RMW_SET_ERROR_MSG("Split function on topic name failed.");
+    goto fail;
+  }
+
+  // we have to set the partition array to length 1
+  // and then set the partition_str in it
+  printf("Creating DDS Partition with %s\n", partition_str);
+  publisher_qos.partition.name.ensure_length(1, 1);
+  publisher_qos.partition.name[0] = partition_str;
+
   dds_publisher = participant->create_publisher(
     publisher_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!dds_publisher) {
@@ -348,7 +380,7 @@ rmw_create_publisher(
     goto fail;
   }
 
-  topic_description = participant->lookup_topicdescription(topic_name);
+  topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
@@ -358,14 +390,14 @@ rmw_create_publisher(
     }
 
     topic = participant->create_topic(
-      topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
+      topic_str, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to create topic");
       goto fail;
     }
   } else {
     DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
-    topic = participant->find_topic(topic_name, timeout);
+    topic = participant->find_topic(topic_str, timeout);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to find topic");
       goto fail;
@@ -527,6 +559,12 @@ fail:
   if (buf) {
     rmw_free(buf);
   }
+
+  // cleanup namespacing
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+
   return NULL;
 }
 

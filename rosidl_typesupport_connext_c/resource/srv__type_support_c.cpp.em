@@ -78,6 +78,7 @@ void * create_requester__@(spec.srv_name)(
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
+  void ** untyped_writer,
   void * (*allocator)(size_t))
 {
   return @(spec.pkg_name)::srv::typesupport_connext_cpp::create_requester__@(spec.srv_name)(
@@ -86,6 +87,7 @@ void * create_requester__@(spec.srv_name)(
     untyped_datareader_qos,
     untyped_datawriter_qos,
     untyped_reader,
+    untyped_writer,
     allocator);
 }
 const char * destroy_requester__@(spec.srv_name)(

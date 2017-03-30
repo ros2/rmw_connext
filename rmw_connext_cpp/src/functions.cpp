@@ -40,7 +40,10 @@
 # pragma GCC diagnostic pop
 #endif
 
-#include "rcutils/types/string_array.h"
+// TODO(karsten1987): Introduce c_utilities.h
+#include "rcutils/types.h"
+#include "rcutils/split.h"
+
 #include "rmw/rmw.h"
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -225,9 +228,13 @@ rmw_create_publisher(
 
   RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support)
 
+  if (!topic_name || strlen(topic_name) == 0) {
+    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+  }
+
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
-    return nullptr;
+    return NULL;
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
@@ -260,6 +267,12 @@ rmw_create_publisher(
   DDSDataWriter * topic_writer = nullptr;
   void * buf = nullptr;
   ConnextStaticPublisherInfo * publisher_info = nullptr;
+
+  // memory allocations for namespacing
+  utilities_string_array_t name_tokens;
+  char * partition_str = nullptr;
+  char * topic_str = nullptr;
+
   // Begin initializing elements
   publisher = rmw_publisher_allocate();
   if (!publisher) {
@@ -279,14 +292,45 @@ rmw_create_publisher(
     goto fail;
   }
 
-  dds_publisher = participant->create_publisher(
-    publisher_qos, NULL, DDS_STATUS_MASK_NONE);
-  if (!dds_publisher) {
-    RMW_SET_ERROR_MSG("failed to create publisher");
-    goto fail;
+  // allocates memory, but doesn't have to be freed.
+  // partition operater takes ownership of it.
+  printf("Original publisher topic name: %s\n", topic_name);
+  name_tokens = utilities_split_last(topic_name, '/');
+  partition_str = NULL;
+  topic_str = NULL;
+  if (name_tokens.size == 2) {
+    partition_str = name_tokens.data[0];
+    topic_str = name_tokens.data[1];
+  } else {
+    topic_str = name_tokens.data[0];
+    // We want to make sure at this point that the topic name
+    // has already been prefixed with the appropriate token `rt`, etc.
+    // In this case, even without specifying an explicit namespace
+    // the given topic name should have at least one slash.
+    RMW_SET_ERROR_MSG("Split function on topic name failed.");
+    //goto fail;
   }
 
-  topic_description = participant->lookup_topicdescription(topic_name);
+  if (partition_str) {
+    // we have to set the partition array to length 1
+    // and then set the partition_str in it
+    printf("Creating DDS Partition with %s\n", partition_str);
+    publisher_qos.partition.name.ensure_length(1, 1);
+    publisher_qos.partition.name[0] = partition_str;
+
+    dds_publisher = participant->create_publisher(
+      publisher_qos, NULL, DDS_STATUS_MASK_NONE);
+    if (!dds_publisher) {
+      RMW_SET_ERROR_MSG("failed to create publisher");
+      goto fail;
+    }
+  }
+
+  // TODO(karsten1987): I have to verify how this topic gets found
+  // wo/ any partitions set yet.
+  // In the example of spawning two cameras with /left/image and /right/image
+  // the topic image is found twice.
+  topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
@@ -295,15 +339,17 @@ rmw_create_publisher(
       goto fail;
     }
 
+    printf("Creating DDS topic with %s\n", topic_str);
     topic = participant->create_topic(
-      topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
+      topic_str, type_name.c_str(),
+      default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to create topic");
       goto fail;
     }
   } else {
     DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
-    topic = participant->find_topic(topic_name, timeout);
+    topic = participant->find_topic(topic_str, timeout);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to find topic");
       goto fail;
@@ -391,6 +437,12 @@ fail:
   if (buf) {
     rmw_free(buf);
   }
+
+  // cleanup namespacing
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+
   return NULL;
 }
 
@@ -559,6 +611,12 @@ rmw_create_subscription(const rmw_node_t * node,
   DDSReadCondition * read_condition = nullptr;
   void * buf = nullptr;
   ConnextStaticSubscriberInfo * subscriber_info = nullptr;
+
+  // memory allocations for namespacing
+  utilities_string_array_t name_tokens;
+  char * partition_str = nullptr;
+  char * topic_str = nullptr;
+
   // Begin initializing elements.
   subscription = rmw_subscription_allocate();
   if (!subscription) {
@@ -578,13 +636,45 @@ rmw_create_subscription(const rmw_node_t * node,
     goto fail;
   }
 
-  dds_subscriber = participant->create_subscriber(subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
-  if (!dds_subscriber) {
-    RMW_SET_ERROR_MSG("failed to create subscriber");
-    goto fail;
+  // allocates memory, but doesn't have to be freed.
+  // partition operater takes ownership of it.
+  printf("Original subscriber topic name: %s\n", topic_name);
+  name_tokens = utilities_split_last(topic_name, '/');
+  partition_str = NULL;
+  topic_str = NULL;
+  if (name_tokens.size == 2) {
+    partition_str = name_tokens.data[0];
+    topic_str = name_tokens.data[1];
+  } else {
+    topic_str = name_tokens.data[0];
+    // We want to make sure at this point that the topic name
+    // has already been prefixed with the appropriate token `rt`, etc.
+    // In this case, even without specifying an explicit namespace
+    // the given topic name should have at least one slash.
+    RMW_SET_ERROR_MSG("Split function on topic name failed.");
+    //goto fail;
   }
 
-  topic_description = participant->lookup_topicdescription(topic_name);
+  if (partition_str) {
+    // we have to set the partition array to length 1
+    // and then set the partition_str in it
+    printf("Creating DDS Partition with %s\n", partition_str);
+    subscriber_qos.partition.name.ensure_length(1, 1);
+    subscriber_qos.partition.name[0] = partition_str;
+
+    dds_subscriber = participant->create_subscriber(
+      subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
+    if (!dds_subscriber) {
+      RMW_SET_ERROR_MSG("failed to create subscriber");
+      goto fail;
+    }
+  }
+
+  // TODO(karsten1987): I have to verify how this topic gets found
+  // wo/ any partitions set yet.
+  // In the example of spawning two cameras with /left/image and /right/image
+  // the topic image is found twice.
+  topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
@@ -594,14 +684,15 @@ rmw_create_subscription(const rmw_node_t * node,
     }
 
     topic = participant->create_topic(
-      topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
+      topic_str, type_name.c_str(),
+      default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to create topic");
       goto fail;
     }
   } else {
     DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
-    topic = participant->find_topic(topic_name, timeout);
+    topic = participant->find_topic(topic_str, timeout);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to find topic");
       goto fail;
@@ -696,6 +787,12 @@ fail:
   if (buf) {
     rmw_free(buf);
   }
+
+  // cleanup namespacing
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+
   return NULL;
 }
 
@@ -946,14 +1043,24 @@ rmw_create_client(
   }
   // Past this point, a failure results in unrolling code in the goto fail block.
   rmw_client_t * client = nullptr;
+  DDS_SubscriberQos subscriber_qos;
+  DDS_ReturnCode_t status;
+  DDS_PublisherQos publisher_qos;
   DDS_DataReaderQos datareader_qos;
   DDS_DataWriterQos datawriter_qos;
+  DDSPublisher * dds_publisher = nullptr;
+  DDSSubscriber * dds_subscriber = nullptr;
   DDSDataReader * response_datareader = nullptr;
   DDSReadCondition * read_condition = nullptr;
   void * requester = nullptr;
   void * buf = nullptr;
   ConnextStaticClientInfo * client_info = nullptr;
   DDS::DataWriter * request_datawriter = nullptr;
+
+  // memory allocations for namespacing
+  utilities_string_array_t name_tokens;
+  char * partition_str = nullptr;
+  char * service_str = nullptr;
 
   // Begin inializing elements.
   client = rmw_client_allocate();
@@ -972,9 +1079,15 @@ rmw_create_client(
     goto fail;
   }
 
+  // TODO(karsten1987): For now, I'll expose the datawriter
+  // to access the respective DDSPublisher object.
+  // This has to be evaluated whether or not to provide a
+  // Subscriber/Publisher object directly with preset partitions.
   requester = callbacks->create_requester(
-    participant, service_name, &datareader_qos, &datawriter_qos,
-    reinterpret_cast<void **>(&response_datareader), &rmw_allocate);
+    participant, service_str, &datareader_qos, &datawriter_qos,
+    reinterpret_cast<void **>(&response_datareader),
+    reinterpret_cast<void **>(&request_datawriter),
+    &rmw_allocate);
   if (!requester) {
     RMW_SET_ERROR_MSG("failed to create requester");
     goto fail;
@@ -982,6 +1095,59 @@ rmw_create_client(
   if (!response_datareader) {
     RMW_SET_ERROR_MSG("data reader handle is null");
     goto fail;
+  }
+  if (!request_datawriter) {
+    RMW_SET_ERROR_MSG("data request handle is null");
+    goto fail;
+  }
+
+  dds_subscriber = response_datareader->get_subscriber();
+  status = participant->get_default_subscriber_qos(subscriber_qos);
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to get default subscriber qos");
+    goto fail;
+  }
+
+  dds_publisher = request_datawriter->get_publisher();
+  status = participant->get_default_publisher_qos(publisher_qos);
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to get default subscriber qos");
+    goto fail;
+  }
+
+  // get actual data subsription object
+  // allocates memory, but doesn't have to be freed.
+  // partition operater takes ownership of it.
+  printf("Original service client name: %s\n", service_name);
+  name_tokens = utilities_split_last(service_name, '/');
+  partition_str = NULL;
+  service_str = NULL;
+  if (name_tokens.size == 2) {
+    partition_str = name_tokens.data[0];
+    service_str = name_tokens.data[1];
+  } else {
+    service_str = name_tokens.data[0];
+    // We want to make sure at this point that the topic name
+    // has already been prefixed with the appropriate token `rt`, etc.
+    // In this case, even without specifying an explicit namespace
+    // the given topic name should have at least one slash.
+    RMW_SET_ERROR_MSG("Split function on topic name failed.");
+    // goto fail;
+  }
+
+  if (partition_str) {
+    // we have to set the partition array to length 1
+    // and then set the partition_str in it
+    printf("Creating DDS Partition with %s\n", partition_str);
+    subscriber_qos.partition.name.ensure_length(1, 1);
+    subscriber_qos.partition.name[0] = partition_str;
+    // update attached subscriber
+    dds_subscriber->set_qos(subscriber_qos);
+
+    publisher_qos.partition.name.ensure_length(1, 1);
+    publisher_qos.partition.name[0] = partition_str;
+    // update attached publisher
+    dds_publisher->set_qos(publisher_qos);
   }
 
   read_condition = response_datareader->create_readcondition(
@@ -1008,7 +1174,7 @@ rmw_create_client(
   client->data = client_info;
   client->service_name = reinterpret_cast<const char *>(rmw_allocate(strlen(service_name) + 1));
   if (!client->service_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    RMW_SET_ERROR_MSG("failed to allocate memory for service name");
     goto fail;
   }
   memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
@@ -1020,8 +1186,9 @@ rmw_create_client(
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
-  request_datawriter =
-    static_cast<DDS::DataWriter *>(callbacks->get_request_datawriter(requester));
+  // This is getting exposed above already
+  //request_datawriter =
+  //  static_cast<DDS::DataWriter *>(callbacks->get_request_datawriter(requester));
   node_info->publisher_listener->add_information(
     request_datawriter->get_instance_handle(),
     request_datawriter->get_topic()->get_name(),
@@ -1051,6 +1218,12 @@ fail:
   if (buf) {
     rmw_free(buf);
   }
+
+  // cleanup namespacing
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+
   return NULL;
 }
 

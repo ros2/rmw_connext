@@ -63,6 +63,7 @@ void * create_requester__@(spec.srv_name)(
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
+  void ** untyped_writer,
   void * (*allocator)(size_t))
 {
   using RequesterType = connext::Requester<
@@ -90,6 +91,7 @@ void * create_requester__@(spec.srv_name)(
   }
 
   *untyped_reader = requester->get_reply_datareader();
+  *untyped_writer = requester->get_request_datawriter();
   return requester;
 }
 

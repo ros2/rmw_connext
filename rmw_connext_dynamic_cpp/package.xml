@@ -10,6 +10,7 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <build_depend>connext_cmake_module</build_depend>
+  <build_depend>c_utilities</build_depend>
   <build_depend>libndds51-dev</build_depend>
   <build_depend>rmw</build_depend>
   <build_depend>rmw_connext_shared_cpp</build_depend>
@@ -25,6 +26,7 @@
   <build_export_depend>rosidl_typesupport_introspection_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_introspection_cpp</build_export_depend>
 
+  <exec_depend>c_utilities</exec_depend>
   <exec_depend>rmw</exec_depend>
   <exec_depend>rmw_connext_shared_cpp</exec_depend>
 
