@@ -305,7 +305,7 @@ rmw_node_t *
 create_node(
   const char * implementation_identifier,
   const char * name,
-  const char * name_space,
+  const char * namespace_,
   size_t domain_id)
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
@@ -438,13 +438,13 @@ create_node(
   }
   memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
-  node_handle->name_space =
-    reinterpret_cast<const char *>(rmw_allocate(sizeof(char) * strlen(name_space) + 1));
-  if (!node_handle->name_space) {
+  node_handle->namespace_ =
+    reinterpret_cast<const char *>(rmw_allocate(sizeof(char) * strlen(namespace_) + 1));
+  if (!node_handle->namespace_) {
     RMW_SET_ERROR_MSG("failed to allocate memory for node name");
     goto fail;
   }
-  memcpy(const_cast<char *>(node_handle->name_space), name_space, strlen(name_space) + 1);
+  memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
 
   buf = rmw_allocate(sizeof(ConnextNodeInfo));
   if (!buf) {
@@ -492,8 +492,8 @@ fail:
     if (node_handle->name) {
       rmw_free(const_cast<char *>(node_handle->name));
     }
-    if (node_handle->name_space) {
-      rmw_free(const_cast<char *>(node_handle->name_space));
+    if (node_handle->namespace_) {
+      rmw_free(const_cast<char *>(node_handle->namespace_));
     }
     rmw_free(node_handle);
   }
@@ -574,8 +574,8 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
   node->data = nullptr;
   rmw_free(const_cast<char *>(node->name));
   node->name = nullptr;
-  rmw_free(const_cast<char *>(node->name_space));
-  node->name_space = nullptr;
+  rmw_free(const_cast<char *>(node->namespace_));
+  node->namespace_ = nullptr;
   rmw_node_free(node);
 
   return RMW_RET_OK;
