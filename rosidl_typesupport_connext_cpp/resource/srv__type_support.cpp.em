@@ -139,6 +139,7 @@ void * create_replier__@(spec.srv_name)(
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
+  void ** untyped_writer,
   void * (*allocator)(size_t))
 {
   using ReplierType = connext::Replier<
@@ -166,6 +167,7 @@ void * create_replier__@(spec.srv_name)(
   }
 
   *untyped_reader = replier->get_request_datareader();
+  *untyped_writer = replier->get_reply_datawriter();
   return replier;
 }
 

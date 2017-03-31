@@ -35,7 +35,7 @@ typedef struct service_type_support_callbacks_t
   void * (*create_replier)(
     void * participant, const char * service_name,
     const void * datareader_qos, const void * datawriter_qos,
-    void ** reader, void * (*allocator)(size_t));
+    void ** reader, void ** writer, void * (*allocator)(size_t));
   // Function to destroy a replier
   const char * (*destroy_replier)(
     void * untyped_replier, void (* deallocator)(void *));

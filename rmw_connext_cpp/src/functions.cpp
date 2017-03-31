@@ -41,6 +41,7 @@
 #endif
 
 // TODO(karsten1987): Introduce c_utilities.h
+#include "rcutils/concat.h"
 #include "rcutils/types.h"
 #include "rcutils/split.h"
 
@@ -149,8 +150,11 @@ to_string(DDS_InstanceHandle_t val)
 
 extern "C"
 {
-const char * rti_connext_identifier = "rmw_connext_cpp";
-
+// static for internal linkage
+static const char * const rti_connext_identifier = "rmw_connext_cpp";
+static const char * const ros_topics_prefix = "rt";
+static const char * const ros_service_requester_prefix = "rq";
+static const char * const ros_service_response_prefix = "rr";
 
 struct ConnextStaticPublisherInfo
 {
@@ -256,17 +260,17 @@ rmw_create_publisher(
   }
   std::string type_name = _create_type_name(callbacks, "msg");
   // Past this point, a failure results in unrolling code in the goto fail block.
-  rmw_publisher_t * publisher = nullptr;
   bool registered;
+  DDS_DataWriterQos datawriter_qos;
   DDS_PublisherQos publisher_qos;
   DDS_ReturnCode_t status;
   DDSPublisher * dds_publisher = nullptr;
-  DDSTopic * topic;
-  DDSTopicDescription * topic_description = nullptr;
-  DDS_DataWriterQos datawriter_qos;
   DDSDataWriter * topic_writer = nullptr;
+  DDSTopic * topic = nullptr;
+  DDSTopicDescription * topic_description = nullptr;
   void * buf = nullptr;
   ConnextStaticPublisherInfo * publisher_info = nullptr;
+  rmw_publisher_t * publisher = nullptr;
 
   // memory allocations for namespacing
   utilities_string_array_t name_tokens;
@@ -294,42 +298,38 @@ rmw_create_publisher(
 
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
-  printf("Original publisher topic name: %s\n", topic_name);
   name_tokens = utilities_split_last(topic_name, '/');
-  partition_str = NULL;
-  topic_str = NULL;
   if (name_tokens.size == 2) {
-    partition_str = name_tokens.data[0];
+    //TODO(Karsten1987): Fix malloc for rmw_alloc inside concat function
+    partition_str = utilities_concat(ros_topics_prefix, name_tokens.data[0], "/");
     topic_str = name_tokens.data[1];
   } else {
+    partition_str = ros_topics_prefix;
     topic_str = name_tokens.data[0];
-    // We want to make sure at this point that the topic name
-    // has already been prefixed with the appropriate token `rt`, etc.
-    // In this case, even without specifying an explicit namespace
-    // the given topic name should have at least one slash.
-    RMW_SET_ERROR_MSG("Split function on topic name failed.");
-    //goto fail;
   }
 
-  if (partition_str) {
-    // we have to set the partition array to length 1
-    // and then set the partition_str in it
-    printf("Creating DDS Partition with %s\n", partition_str);
-    publisher_qos.partition.name.ensure_length(1, 1);
-    publisher_qos.partition.name[0] = partition_str;
+  // we have to set the partition array to length 1
+  // and then set the partition_str in it
+  publisher_qos.partition.name.ensure_length(1, 1);
+  publisher_qos.partition.name[0] = DDS_String_dup(partition_str);
+  // TODO(Karsten1987): Shift allocator to c_utlities
+  // and call free over there
+  //rmw_free(&partition_str);
 
-    dds_publisher = participant->create_publisher(
-      publisher_qos, NULL, DDS_STATUS_MASK_NONE);
-    if (!dds_publisher) {
-      RMW_SET_ERROR_MSG("failed to create publisher");
-      goto fail;
-    }
+  dds_publisher = participant->create_publisher(
+    publisher_qos, NULL, DDS_STATUS_MASK_NONE);
+  if (!dds_publisher) {
+    RMW_SET_ERROR_MSG("failed to create publisher");
+    goto fail;
   }
 
   // TODO(karsten1987): I have to verify how this topic gets found
   // wo/ any partitions set yet.
   // In the example of spawning two cameras with /left/image and /right/image
   // the topic image is found twice.
+  // TODO(karsten1987): I assign the topic_str not as with the partitions
+  // where I copy the partition_str with str_dup and free it after
+  // Here, I'll use the topic_str directly.
   topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
@@ -339,7 +339,6 @@ rmw_create_publisher(
       goto fail;
     }
 
-    printf("Creating DDS topic with %s\n", topic_str);
     topic = participant->create_topic(
       topic_str, type_name.c_str(),
       default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
@@ -441,6 +440,9 @@ fail:
   // cleanup namespacing
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+  if (partition_str) {
+    rmw_free(&partition_str);
   }
 
   return NULL;
@@ -599,18 +601,18 @@ rmw_create_subscription(const rmw_node_t * node,
   }
   std::string type_name = _create_type_name(callbacks, "msg");
   // Past this point, a failure results in unrolling code in the goto fail block.
-  rmw_subscription_t * subscription = nullptr;
   bool registered;
+  DDS_DataReaderQos datareader_qos;
   DDS_SubscriberQos subscriber_qos;
   DDS_ReturnCode_t status;
   DDSSubscriber * dds_subscriber = nullptr;
-  DDSTopic * topic;
+  DDSTopic * topic = nullptr;
   DDSTopicDescription * topic_description = nullptr;
-  DDS_DataReaderQos datareader_qos;
   DDSDataReader * topic_reader = nullptr;
   DDSReadCondition * read_condition = nullptr;
   void * buf = nullptr;
   ConnextStaticSubscriberInfo * subscriber_info = nullptr;
+  rmw_subscription_t * subscription = nullptr;
 
   // memory allocations for namespacing
   utilities_string_array_t name_tokens;
@@ -638,36 +640,29 @@ rmw_create_subscription(const rmw_node_t * node,
 
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
-  printf("Original subscriber topic name: %s\n", topic_name);
   name_tokens = utilities_split_last(topic_name, '/');
-  partition_str = NULL;
-  topic_str = NULL;
   if (name_tokens.size == 2) {
-    partition_str = name_tokens.data[0];
+    // TODO(karsten1987): Fix malloc for rmw_alloc inside concat function
+    partition_str = utilities_concat(ros_topics_prefix, name_tokens.data[0], "/");
     topic_str = name_tokens.data[1];
   } else {
+    partition_str = ros_topics_prefix;
     topic_str = name_tokens.data[0];
-    // We want to make sure at this point that the topic name
-    // has already been prefixed with the appropriate token `rt`, etc.
-    // In this case, even without specifying an explicit namespace
-    // the given topic name should have at least one slash.
-    RMW_SET_ERROR_MSG("Split function on topic name failed.");
-    //goto fail;
   }
 
-  if (partition_str) {
-    // we have to set the partition array to length 1
-    // and then set the partition_str in it
-    printf("Creating DDS Partition with %s\n", partition_str);
-    subscriber_qos.partition.name.ensure_length(1, 1);
-    subscriber_qos.partition.name[0] = partition_str;
+  // we have to set the partition array to length 1
+  // and then set the partition_str in it
+  subscriber_qos.partition.name.ensure_length(1, 1);
+  subscriber_qos.partition.name[0] = DDS_String_dup(partition_str);
+  // TODO(karsten1987): Shift allocator to c_utilities
+  // and call free over there
+  //rmw_free(&partition_str);
 
-    dds_subscriber = participant->create_subscriber(
+  dds_subscriber = participant->create_subscriber(
       subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
-    if (!dds_subscriber) {
-      RMW_SET_ERROR_MSG("failed to create subscriber");
-      goto fail;
-    }
+  if (!dds_subscriber) {
+    RMW_SET_ERROR_MSG("failed to create subscriber");
+    goto fail;
   }
 
   // TODO(karsten1987): I have to verify how this topic gets found
@@ -791,6 +786,9 @@ fail:
   // cleanup namespacing
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+  if (partition_str) {
+    rmw_free(&partition_str);
   }
 
   return NULL;
@@ -1042,7 +1040,6 @@ rmw_create_client(
     return NULL;
   }
   // Past this point, a failure results in unrolling code in the goto fail block.
-  rmw_client_t * client = nullptr;
   DDS_SubscriberQos subscriber_qos;
   DDS_ReturnCode_t status;
   DDS_PublisherQos publisher_qos;
@@ -1051,11 +1048,12 @@ rmw_create_client(
   DDSPublisher * dds_publisher = nullptr;
   DDSSubscriber * dds_subscriber = nullptr;
   DDSDataReader * response_datareader = nullptr;
+  DDSDataWriter * request_datawriter = nullptr;
   DDSReadCondition * read_condition = nullptr;
   void * requester = nullptr;
   void * buf = nullptr;
   ConnextStaticClientInfo * client_info = nullptr;
-  DDS::DataWriter * request_datawriter = nullptr;
+  rmw_client_t * client = nullptr;
 
   // memory allocations for namespacing
   utilities_string_array_t name_tokens;
@@ -1077,6 +1075,22 @@ rmw_create_client(
   if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
     // error string was set within the function
     goto fail;
+  }
+
+  // get actual data subsription object
+  // allocates memory, but doesn't have to be freed.
+  // partition operater takes ownership of it.
+  name_tokens = utilities_split_last(service_name, '/');
+  if (name_tokens.size == 2) {
+    request_partition_str =
+      utilities_concat(ros_service_requester_prefix, name_tokens.data[0], "/");
+    response_partition_str =
+      utilities_concat(ros_service_response_prefix, name_tokens.data[0], "/");
+    service_str = name_tokens.data[1];
+  } else {
+    request_partition_str = ros_service_requester_prefix;
+    response_partition_str = ros_service_response_prefix;
+    service_str = name_tokens.data[0];
   }
 
   // TODO(karsten1987): For now, I'll expose the datawriter
@@ -1115,40 +1129,19 @@ rmw_create_client(
     goto fail;
   }
 
-  // get actual data subsription object
-  // allocates memory, but doesn't have to be freed.
-  // partition operater takes ownership of it.
-  printf("Original service client name: %s\n", service_name);
-  name_tokens = utilities_split_last(service_name, '/');
-  partition_str = NULL;
-  service_str = NULL;
-  if (name_tokens.size == 2) {
-    partition_str = name_tokens.data[0];
-    service_str = name_tokens.data[1];
-  } else {
-    service_str = name_tokens.data[0];
-    // We want to make sure at this point that the topic name
-    // has already been prefixed with the appropriate token `rt`, etc.
-    // In this case, even without specifying an explicit namespace
-    // the given topic name should have at least one slash.
-    RMW_SET_ERROR_MSG("Split function on topic name failed.");
-    // goto fail;
-  }
+  // we have to set the partition array to length 1
+  // and then set the partition_str in it
+  subscriber_qos.partition.name.ensure_length(1, 1);
+  subscriber_qos.partition.name[0] = DDS_String_dup(response_partition_str);
+  // update attached subscriber
+  dds_subscriber->set_qos(subscriber_qos);
 
-  if (partition_str) {
-    // we have to set the partition array to length 1
-    // and then set the partition_str in it
-    printf("Creating DDS Partition with %s\n", partition_str);
-    subscriber_qos.partition.name.ensure_length(1, 1);
-    subscriber_qos.partition.name[0] = partition_str;
-    // update attached subscriber
-    dds_subscriber->set_qos(subscriber_qos);
-
-    publisher_qos.partition.name.ensure_length(1, 1);
-    publisher_qos.partition.name[0] = partition_str;
-    // update attached publisher
-    dds_publisher->set_qos(publisher_qos);
-  }
+  // we cannot assign the partition_ptr again,
+  // as rti takes ownership over it.
+  publisher_qos.partition.name.ensure_length(1, 1);
+  publisher_qos.partition.name[0] = DDS_String_dup(request_partition_str);
+  // update attached publisher
+  dds_publisher->set_qos(publisher_qos);
 
   read_condition = response_datareader->create_readcondition(
     DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
@@ -1166,8 +1159,7 @@ rmw_create_client(
   RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextStaticClientInfo, )
   buf = nullptr;  // Only free the client_info pointer; don't need the buf pointer anymore.
   client_info->requester_ = requester;
-  client_info->callbacks_ = callbacks;
-  client_info->response_datareader_ = response_datareader;
+  client_info->callbacks_ = callbacks;  client_info->response_datareader_ = response_datareader;
   client_info->read_condition_ = read_condition;
 
   client->implementation_identifier = rti_connext_identifier;
@@ -1222,6 +1214,12 @@ fail:
   // cleanup namespacing
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+  if(request_partition_str) {
+    rmw_free(&request_partition_str);
+  }
+  if(response_partition_str) {
+    rmw_free(&response_partition_str);
   }
 
   return NULL;
@@ -1378,15 +1376,27 @@ rmw_create_service(
   }
 
   // Past this point, a failure results in unrolling code in the goto fail block.
-  DDSDataReader * request_datareader = nullptr;
-  DDSReadCondition * read_condition = nullptr;
   DDS_DataReaderQos datareader_qos;
   DDS_DataWriterQos datawriter_qos;
+  DDS_SubscriberQos subscriber_qos;
+  DDS_PublisherQos publisher_qos;
+  DDS_ReturnCode_t status;
+  DDSPublisher * dds_publisher = nullptr;
+  DDSSubscriber * dds_subscriber = nullptr;
+  DDSDataReader * request_datareader = nullptr;
+  DDSDataWriter * response_datawriter = nullptr;
+  DDSReadCondition * read_condition = nullptr;
   void * replier = nullptr;
   void * buf = nullptr;
   ConnextStaticServiceInfo * service_info = nullptr;
   rmw_service_t * service = nullptr;
-  DDS::DataWriter * reply_datawriter = nullptr;
+
+  // memory allocations for namespacing
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  const char * request_partition_str = nullptr;
+  const char * response_partition_str = nullptr;
+  const char * service_str = nullptr;
+
   // Begin initializing elements.
   service = rmw_service_allocate();
   if (!service) {
@@ -1404,15 +1414,37 @@ rmw_create_service(
     goto fail;
   }
 
+  // get actual data subsription object
+  // allocates memory, but doesn't have to be freed.
+  // partition operater takes ownership of it.
+  name_tokens = utilities_split_last(service_name, '/');
+  if (name_tokens.size == 2) {
+    request_partition_str =
+      utilities_concat(ros_service_requester_prefix, name_tokens.data[0], "/");
+    response_partition_str =
+      utilities_concat(ros_service_response_prefix, name_tokens.data[0], "/");
+    service_str = name_tokens.data[1];
+  } else {
+    request_partition_str = ros_service_requester_prefix;
+    response_partition_str = ros_service_response_prefix;
+    service_str = name_tokens.data[0];
+  }
+
   replier = callbacks->create_replier(
-    participant, service_name, &datareader_qos, &datawriter_qos,
-    reinterpret_cast<void **>(&request_datareader), &rmw_allocate);
+    participant, service_str, &datareader_qos, &datawriter_qos,
+    reinterpret_cast<void **>(&request_datareader),
+    reinterpret_cast<void **>(&response_datawriter),
+    &rmw_allocate);
   if (!replier) {
     RMW_SET_ERROR_MSG("failed to create replier");
     goto fail;
   }
   if (!request_datareader) {
     RMW_SET_ERROR_MSG("data reader handle is null");
+    goto fail;
+  }
+  if (!response_datawriter) {
+    RMW_SET_ERROR_MSG("data writer handle is null");
     goto fail;
   }
 
@@ -1422,6 +1454,34 @@ rmw_create_service(
     RMW_SET_ERROR_MSG("failed to create read condition");
     goto fail;
   }
+
+  dds_subscriber = request_datareader->get_subscriber();
+  status = participant->get_default_subscriber_qos(subscriber_qos);
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to get default subscriber qos");
+    goto fail;
+  }
+
+  dds_publisher = response_datawriter->get_publisher();
+  status = participant->get_default_publisher_qos(publisher_qos);
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to get default subscriber qos");
+    goto fail;
+  }
+
+  // we have to set the partition array to length 1
+  // and then set the partition_str in it
+  subscriber_qos.partition.name.ensure_length(1, 1);
+  subscriber_qos.partition.name[0] = DDS_String_dup(request_partition_str);
+  // update attached subscriber
+  dds_subscriber->set_qos(subscriber_qos);
+
+  // we cannot assign the partition_ptr again,
+  // as rti takes ownership over it.
+  publisher_qos.partition.name.ensure_length(1, 1);
+  publisher_qos.partition.name[0] = DDS_String_dup(response_partition_str);
+  // update attached publisher
+  dds_publisher->set_qos(publisher_qos);
 
   buf = rmw_allocate(sizeof(ConnextStaticServiceInfo));
   if (!buf) {
@@ -1452,12 +1512,10 @@ rmw_create_service(
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
-  reply_datawriter =
-    static_cast<DDS::DataWriter *>(callbacks->get_reply_datawriter(replier));
   node_info->publisher_listener->add_information(
-    reply_datawriter->get_instance_handle(),
-    reply_datawriter->get_topic()->get_name(),
-    reply_datawriter->get_topic()->get_type_name(),
+    response_datawriter->get_instance_handle(),
+    response_datawriter->get_topic()->get_name(),
+    response_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
@@ -1490,6 +1548,18 @@ fail:
   if (buf) {
     rmw_free(buf);
   }
+
+  // cleanup namespacing
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+  if(request_partition_str) {
+    rmw_free(&request_partition_str);
+  }
+  if(response_partition_str) {
+    rmw_free(&response_partition_str);
+  }
+
   return NULL;
 }
 
