@@ -321,7 +321,7 @@ create_node(
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
   }
-  participant_qos.participant_name.name = DDS::String_dup(name);
+  participant_qos.participant_name.name = DDS::String_dup(name);  // DDS appears to free this.
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
   // (in which case traffic will be sent over both transports)
@@ -353,9 +353,6 @@ create_node(
     RMW_SET_ERROR_MSG("failed to create participant");
     return NULL;
   }
-
-  // Assumes that DDS has copied this QoS structure in dpf_->create_participant().
-  DDS::String_free(participant_qos.participant_name.name);
 
   rmw_node_t * node_handle = nullptr;
   ConnextNodeInfo * node_info = nullptr;
