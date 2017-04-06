@@ -300,21 +300,29 @@ rmw_create_publisher(
   // partition operater takes ownership of it.
   name_tokens = utilities_split_last(topic_name, '/');
   if (name_tokens.size == 2) {
-    //TODO(Karsten1987): Fix malloc for rmw_alloc inside concat function
-    partition_str = utilities_concat(ros_topics_prefix, name_tokens.data[0], "/");
-    topic_str = name_tokens.data[1];
+    //TODO(Karsten1987): Fix utility function for this
+    size_t partition_length = strlen(ros_topics_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * concat_str = (char *)rmw_allocate(partition_length * sizeof(char));
+    snprintf(concat_str, partition_length, "%s/%s", ros_topics_prefix, name_tokens.data[0]);
+    // Connext will call deallocate on this, passing ownership to connext
+    partition_str = DDS_String_dup(concat_str);
+    topic_str = DDS_String_dup(name_tokens.data[1]);
+    // free temporary memory
+    rmw_free(concat_str);
   } else {
-    partition_str = ros_topics_prefix;
-    topic_str = name_tokens.data[0];
+    partition_str = DDS_String_dup(ros_topics_prefix);
+    topic_str = DDS_String_dup(name_tokens.data[0]);
   }
+  // all necessary strings are copied into connext
+  // free that memory
+  utilities_string_array_fini(&name_tokens);
 
+  fprintf(stderr, "Got partition %s\n", partition_str);
+  fprintf(stderr, "Got topic %s\n", topic_str);
   // we have to set the partition array to length 1
   // and then set the partition_str in it
   publisher_qos.partition.name.ensure_length(1, 1);
-  publisher_qos.partition.name[0] = DDS_String_dup(partition_str);
-  // TODO(Karsten1987): Shift allocator to c_utlities
-  // and call free over there
-  //rmw_free(&partition_str);
+  publisher_qos.partition.name[0] = partition_str;
 
   dds_publisher = participant->create_publisher(
     publisher_qos, NULL, DDS_STATUS_MASK_NONE);
@@ -327,9 +335,6 @@ rmw_create_publisher(
   // wo/ any partitions set yet.
   // In the example of spawning two cameras with /left/image and /right/image
   // the topic image is found twice.
-  // TODO(karsten1987): I assign the topic_str not as with the partitions
-  // where I copy the partition_str with str_dup and free it after
-  // Here, I'll use the topic_str directly.
   topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
@@ -440,9 +445,6 @@ fail:
   // cleanup namespacing
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
-  }
-  if (partition_str) {
-    rmw_free(&partition_str);
   }
 
   return NULL;
