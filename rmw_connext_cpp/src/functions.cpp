@@ -299,7 +299,11 @@ rmw_create_publisher(
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
   name_tokens = utilities_split_last(topic_name, '/');
-  if (name_tokens.size == 2) {
+  if (name_tokens.size == 1) {
+    partition_str = DDS_String_dup(ros_topics_prefix);
+    topic_str = DDS_String_dup(name_tokens.data[0]);
+  }
+  else if (name_tokens.size == 2) {
     //TODO(Karsten1987): Fix utility function for this
     size_t partition_length = strlen(ros_topics_prefix) + strlen(name_tokens.data[0]) + 2;
     char * concat_str = (char *)rmw_allocate(partition_length * sizeof(char));
@@ -310,15 +314,13 @@ rmw_create_publisher(
     // free temporary memory
     rmw_free(concat_str);
   } else {
-    partition_str = DDS_String_dup(ros_topics_prefix);
-    topic_str = DDS_String_dup(name_tokens.data[0]);
+    RMW_SET_ERROR_MSG("Illformated topic name");
+    goto fail;
   }
   // all necessary strings are copied into connext
   // free that memory
   utilities_string_array_fini(&name_tokens);
 
-  fprintf(stderr, "Got partition %s\n", partition_str);
-  fprintf(stderr, "Got topic %s\n", topic_str);
   // we have to set the partition array to length 1
   // and then set the partition_str in it
   publisher_qos.partition.name.ensure_length(1, 1);
@@ -643,22 +645,32 @@ rmw_create_subscription(const rmw_node_t * node,
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
   name_tokens = utilities_split_last(topic_name, '/');
-  if (name_tokens.size == 2) {
-    // TODO(karsten1987): Fix malloc for rmw_alloc inside concat function
-    partition_str = utilities_concat(ros_topics_prefix, name_tokens.data[0], "/");
-    topic_str = name_tokens.data[1];
-  } else {
-    partition_str = ros_topics_prefix;
-    topic_str = name_tokens.data[0];
+  if (name_tokens.size == 1) {
+    partition_str = DDS_String_dup(ros_topics_prefix);
+    topic_str = DDS_String_dup(name_tokens.data[0]);
   }
+  else if (name_tokens.size == 2) {
+    //TODO(Karsten1987): Fix utility function for this
+    size_t partition_length = strlen(ros_topics_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * concat_str = (char *)rmw_allocate(partition_length * sizeof(char));
+    snprintf(concat_str, partition_length, "%s/%s", ros_topics_prefix, name_tokens.data[0]);
+    // Connext will call deallocate on this, passing ownership to connext
+    partition_str = DDS_String_dup(concat_str);
+    topic_str = DDS_String_dup(name_tokens.data[1]);
+    // free temporary memory
+    rmw_free(concat_str);
+  } else {
+    RMW_SET_ERROR_MSG("Illformated topic name");
+    goto fail;
+  }
+  // all necessary strings are copied into connext
+  // free that memory
+  utilities_string_array_fini(&name_tokens);
 
   // we have to set the partition array to length 1
   // and then set the partition_str in it
   subscriber_qos.partition.name.ensure_length(1, 1);
-  subscriber_qos.partition.name[0] = DDS_String_dup(partition_str);
-  // TODO(karsten1987): Shift allocator to c_utilities
-  // and call free over there
-  //rmw_free(&partition_str);
+  subscriber_qos.partition.name[0] = partition_str;
 
   dds_subscriber = participant->create_subscriber(
       subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
@@ -789,9 +801,9 @@ fail:
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
-  if (partition_str) {
-    rmw_free(&partition_str);
-  }
+  // if (partition_str) {
+  //   rmw_free(&partition_str);
+  // }
 
   return NULL;
 }
@@ -1083,17 +1095,41 @@ rmw_create_client(
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
   name_tokens = utilities_split_last(service_name, '/');
-  if (name_tokens.size == 2) {
-    request_partition_str =
-      utilities_concat(ros_service_requester_prefix, name_tokens.data[0], "/");
-    response_partition_str =
-      utilities_concat(ros_service_response_prefix, name_tokens.data[0], "/");
-    service_str = name_tokens.data[1];
-  } else {
-    request_partition_str = ros_service_requester_prefix;
-    response_partition_str = ros_service_response_prefix;
-    service_str = name_tokens.data[0];
+  if (name_tokens.size == 1) {
+    request_partition_str = DDS_String_dup(ros_service_requester_prefix);
+    response_partition_str = DDS_String_dup(ros_service_response_prefix);
+    service_str = DDS_String_dup(name_tokens.data[0]);
   }
+  else if (name_tokens.size == 2) {
+    //TODO(Karsten1987): Fix utility function for this
+    size_t request_partition_length
+      = strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * request_concat_str = (char *)rmw_allocate(
+      request_partition_length * sizeof(char));
+    snprintf(request_concat_str, request_partition_length,
+      "%s/%s", ros_service_requester_prefix, name_tokens.data[0]);
+
+    size_t response_partition_length
+      = strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * response_concat_str = (char *)rmw_allocate(
+      response_partition_length * sizeof(char));
+    snprintf(response_concat_str, response_partition_length,
+      "%s/%s", ros_service_response_prefix, name_tokens.data[0]);
+
+    // Connext will call deallocate on this, passing ownership to connext
+    request_partition_str = DDS_String_dup(request_concat_str);
+    response_partition_str = DDS_String_dup(response_concat_str);
+    service_str = DDS_String_dup(name_tokens.data[1]);
+    // free temporary memory
+    rmw_free(request_concat_str);
+    rmw_free(response_concat_str);
+  } else {
+    RMW_SET_ERROR_MSG("Illformated service name");
+    goto fail;
+  }
+  // all necessary strings are copied into connext
+  // free that memory
+  utilities_string_array_fini(&name_tokens);
 
   // TODO(karsten1987): For now, I'll expose the datawriter
   // to access the respective DDSPublisher object.
@@ -1134,14 +1170,14 @@ rmw_create_client(
   // we have to set the partition array to length 1
   // and then set the partition_str in it
   subscriber_qos.partition.name.ensure_length(1, 1);
-  subscriber_qos.partition.name[0] = DDS_String_dup(response_partition_str);
+  subscriber_qos.partition.name[0] = response_partition_str;
   // update attached subscriber
   dds_subscriber->set_qos(subscriber_qos);
 
   // we cannot assign the partition_ptr again,
   // as rti takes ownership over it.
   publisher_qos.partition.name.ensure_length(1, 1);
-  publisher_qos.partition.name[0] = DDS_String_dup(request_partition_str);
+  publisher_qos.partition.name[0] = request_partition_str;
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
 
@@ -1217,12 +1253,12 @@ fail:
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
-  if(request_partition_str) {
-    rmw_free(&request_partition_str);
-  }
-  if(response_partition_str) {
-    rmw_free(&response_partition_str);
-  }
+  // if(request_partition_str) {
+  //   rmw_free(&request_partition_str);
+  // }
+  // if(response_partition_str) {
+  //   rmw_free(&response_partition_str);
+  // }
 
   return NULL;
 }
@@ -1395,8 +1431,8 @@ rmw_create_service(
 
   // memory allocations for namespacing
   string_array_t name_tokens = utilities_get_zero_initialized_string_array();
-  const char * request_partition_str = nullptr;
-  const char * response_partition_str = nullptr;
+  char * request_partition_str = nullptr;
+  char * response_partition_str = nullptr;
   const char * service_str = nullptr;
 
   // Begin initializing elements.
@@ -1420,17 +1456,41 @@ rmw_create_service(
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
   name_tokens = utilities_split_last(service_name, '/');
-  if (name_tokens.size == 2) {
-    request_partition_str =
-      utilities_concat(ros_service_requester_prefix, name_tokens.data[0], "/");
-    response_partition_str =
-      utilities_concat(ros_service_response_prefix, name_tokens.data[0], "/");
-    service_str = name_tokens.data[1];
-  } else {
-    request_partition_str = ros_service_requester_prefix;
-    response_partition_str = ros_service_response_prefix;
-    service_str = name_tokens.data[0];
+  if (name_tokens.size == 1) {
+    request_partition_str = DDS_String_dup(ros_service_requester_prefix);
+    response_partition_str = DDS_String_dup(ros_service_response_prefix);
+    service_str = DDS_String_dup(name_tokens.data[0]);
   }
+  else if (name_tokens.size == 2) {
+    //TODO(Karsten1987): Fix utility function for this
+    size_t request_partition_length
+      = strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * request_concat_str = (char *)rmw_allocate(
+      request_partition_length * sizeof(char));
+    snprintf(request_concat_str, request_partition_length,
+      "%s/%s", ros_service_requester_prefix, name_tokens.data[0]);
+
+    size_t response_partition_length
+      = strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * response_concat_str = (char *)rmw_allocate(
+      response_partition_length * sizeof(char));
+    snprintf(response_concat_str, response_partition_length,
+      "%s/%s", ros_service_response_prefix, name_tokens.data[0]);
+
+    // Connext will call deallocate on this, passing ownership to connext
+    request_partition_str = DDS_String_dup(request_concat_str);
+    response_partition_str = DDS_String_dup(response_concat_str);
+    service_str = DDS_String_dup(name_tokens.data[1]);
+    // free temporary memory
+    rmw_free(request_concat_str);
+    rmw_free(response_concat_str);
+  } else {
+    RMW_SET_ERROR_MSG("Illformated service name");
+    goto fail;
+  }
+  // all necessary strings are copied into connext
+  // free that memory
+  utilities_string_array_fini(&name_tokens);
 
   replier = callbacks->create_replier(
     participant, service_str, &datareader_qos, &datawriter_qos,
@@ -1474,14 +1534,14 @@ rmw_create_service(
   // we have to set the partition array to length 1
   // and then set the partition_str in it
   subscriber_qos.partition.name.ensure_length(1, 1);
-  subscriber_qos.partition.name[0] = DDS_String_dup(request_partition_str);
+  subscriber_qos.partition.name[0] = request_partition_str;
   // update attached subscriber
   dds_subscriber->set_qos(subscriber_qos);
 
   // we cannot assign the partition_ptr again,
   // as rti takes ownership over it.
   publisher_qos.partition.name.ensure_length(1, 1);
-  publisher_qos.partition.name[0] = DDS_String_dup(response_partition_str);
+  publisher_qos.partition.name[0] = response_partition_str;
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
 
@@ -1555,12 +1615,12 @@ fail:
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
-  if(request_partition_str) {
-    rmw_free(&request_partition_str);
-  }
-  if(response_partition_str) {
-    rmw_free(&response_partition_str);
-  }
+  // if(request_partition_str) {
+  //   DDS_String_free(&request_partition_str);
+  // }
+  // if(response_partition_str) {
+  //   DDS_String_free(&response_partition_str);
+  // }
 
   return NULL;
 }
