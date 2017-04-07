@@ -302,11 +302,10 @@ rmw_create_publisher(
   if (name_tokens.size == 1) {
     partition_str = DDS_String_dup(ros_topics_prefix);
     topic_str = DDS_String_dup(name_tokens.data[0]);
-  }
-  else if (name_tokens.size == 2) {
-    //TODO(Karsten1987): Fix utility function for this
+  } else if (name_tokens.size == 2) {
+    // TODO(Karsten1987): Fix utility function for this
     size_t partition_length = strlen(ros_topics_prefix) + strlen(name_tokens.data[0]) + 2;
-    char * concat_str = (char *)rmw_allocate(partition_length * sizeof(char));
+    char * concat_str = reinterpret_cast<char *>(rmw_allocate(partition_length * sizeof(char)));
     snprintf(concat_str, partition_length, "%s/%s", ros_topics_prefix, name_tokens.data[0]);
     // Connext will call deallocate on this, passing ownership to connext
     partition_str = DDS_String_dup(concat_str);
@@ -648,11 +647,10 @@ rmw_create_subscription(const rmw_node_t * node,
   if (name_tokens.size == 1) {
     partition_str = DDS_String_dup(ros_topics_prefix);
     topic_str = DDS_String_dup(name_tokens.data[0]);
-  }
-  else if (name_tokens.size == 2) {
-    //TODO(Karsten1987): Fix utility function for this
+  } else if (name_tokens.size == 2) {
+    // TODO(Karsten1987): Fix utility function for this
     size_t partition_length = strlen(ros_topics_prefix) + strlen(name_tokens.data[0]) + 2;
-    char * concat_str = (char *)rmw_allocate(partition_length * sizeof(char));
+    char * concat_str = reinterpret_cast<char *>(rmw_allocate(partition_length * sizeof(char)));
     snprintf(concat_str, partition_length, "%s/%s", ros_topics_prefix, name_tokens.data[0]);
     // Connext will call deallocate on this, passing ownership to connext
     partition_str = DDS_String_dup(concat_str);
@@ -673,7 +671,7 @@ rmw_create_subscription(const rmw_node_t * node,
   subscriber_qos.partition.name[0] = partition_str;
 
   dds_subscriber = participant->create_subscriber(
-      subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
+    subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
   if (!dds_subscriber) {
     RMW_SET_ERROR_MSG("failed to create subscriber");
     goto fail;
@@ -1099,20 +1097,19 @@ rmw_create_client(
     request_partition_str = DDS_String_dup(ros_service_requester_prefix);
     response_partition_str = DDS_String_dup(ros_service_response_prefix);
     service_str = DDS_String_dup(name_tokens.data[0]);
-  }
-  else if (name_tokens.size == 2) {
-    //TODO(Karsten1987): Fix utility function for this
-    size_t request_partition_length
-      = strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
-    char * request_concat_str = (char *)rmw_allocate(
-      request_partition_length * sizeof(char));
+  } else if (name_tokens.size == 2) {
+    // TODO(Karsten1987): Fix utility function for this
+    size_t request_partition_length =
+      strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * request_concat_str = reinterpret_cast<char *>(rmw_allocate(
+        request_partition_length * sizeof(char)));
     snprintf(request_concat_str, request_partition_length,
       "%s/%s", ros_service_requester_prefix, name_tokens.data[0]);
 
-    size_t response_partition_length
-      = strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
-    char * response_concat_str = (char *)rmw_allocate(
-      response_partition_length * sizeof(char));
+    size_t response_partition_length =
+      strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * response_concat_str = reinterpret_cast<char *>(rmw_allocate(
+        response_partition_length * sizeof(char)));
     snprintf(response_concat_str, response_partition_length,
       "%s/%s", ros_service_response_prefix, name_tokens.data[0]);
 
@@ -1216,9 +1213,6 @@ rmw_create_client(
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
-  // This is getting exposed above already
-  //request_datawriter =
-  //  static_cast<DDS::DataWriter *>(callbacks->get_request_datawriter(requester));
   node_info->publisher_listener->add_information(
     request_datawriter->get_instance_handle(),
     request_datawriter->get_topic()->get_name(),
@@ -1460,20 +1454,19 @@ rmw_create_service(
     request_partition_str = DDS_String_dup(ros_service_requester_prefix);
     response_partition_str = DDS_String_dup(ros_service_response_prefix);
     service_str = DDS_String_dup(name_tokens.data[0]);
-  }
-  else if (name_tokens.size == 2) {
-    //TODO(Karsten1987): Fix utility function for this
-    size_t request_partition_length
-      = strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
-    char * request_concat_str = (char *)rmw_allocate(
-      request_partition_length * sizeof(char));
+  } else if (name_tokens.size == 2) {
+    // TODO(Karsten1987): Fix utility function for this
+    size_t request_partition_length =
+      strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * request_concat_str = reinterpret_cast<char *>(rmw_allocate(
+        request_partition_length * sizeof(char)));
     snprintf(request_concat_str, request_partition_length,
       "%s/%s", ros_service_requester_prefix, name_tokens.data[0]);
 
-    size_t response_partition_length
-      = strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
-    char * response_concat_str = (char *)rmw_allocate(
-      response_partition_length * sizeof(char));
+    size_t response_partition_length =
+      strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+    char * response_concat_str = reinterpret_cast<char *>(rmw_allocate(
+        response_partition_length * sizeof(char)));
     snprintf(response_concat_str, response_partition_length,
       "%s/%s", ros_service_response_prefix, name_tokens.data[0]);
 
