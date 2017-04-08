@@ -302,7 +302,11 @@ destroy_node_names(
 }
 
 rmw_node_t *
-create_node(const char * implementation_identifier, const char * name, size_t domain_id)
+create_node(
+  const char * implementation_identifier,
+  const char * name,
+  const char * namespace_,
+  size_t domain_id)
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
@@ -317,9 +321,7 @@ create_node(const char * implementation_identifier, const char * name, size_t do
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
   }
-  participant_qos.participant_name.name =
-    static_cast<char *>(rmw_allocate((strlen(name) + 1) * sizeof(char)));
-  participant_qos.participant_name.name = strdup(name);
+  participant_qos.participant_name.name = DDS::String_dup(name);  // DDS appears to free this.
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
   // (in which case traffic will be sent over both transports)
@@ -430,6 +432,14 @@ create_node(const char * implementation_identifier, const char * name, size_t do
   }
   memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
+  node_handle->namespace_ =
+    reinterpret_cast<const char *>(rmw_allocate(sizeof(char) * strlen(namespace_) + 1));
+  if (!node_handle->namespace_) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for node namespace");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
+
   buf = rmw_allocate(sizeof(ConnextNodeInfo));
   if (!buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
@@ -475,6 +485,9 @@ fail:
   if (node_handle) {
     if (node_handle->name) {
       rmw_free(const_cast<char *>(node_handle->name));
+    }
+    if (node_handle->namespace_) {
+      rmw_free(const_cast<char *>(node_handle->namespace_));
     }
     rmw_free(node_handle);
   }
@@ -555,6 +568,8 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
   node->data = nullptr;
   rmw_free(const_cast<char *>(node->name));
   node->name = nullptr;
+  rmw_free(const_cast<char *>(node->namespace_));
+  node->namespace_ = nullptr;
   rmw_node_free(node);
 
   return RMW_RET_OK;
