@@ -321,7 +321,9 @@ create_node(
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
   }
-  participant_qos.participant_name.name = DDS::String_dup(name);  // DDS appears to free this.
+  // This String_dup is not matched with a String_free because DDS appears to
+  // free this automatically.
+  participant_qos.participant_name.name = DDS::String_dup(name);
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
   // (in which case traffic will be sent over both transports)
