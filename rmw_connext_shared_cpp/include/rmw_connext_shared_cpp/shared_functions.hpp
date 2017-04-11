@@ -272,11 +272,15 @@ wait(const char * implementation_identifier,
   }
 
   // add a condition for each subscriber
-  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
+  for (size_t i = 0; i < subscriptions->subscriber_count && subscriptions->subscribers; ++i) {
+    // A null entry indicates the end of the subscriptions array.
+    if (!subscriptions->subscribers[i]) {
+      break;
+    }
     SubscriberInfo * subscriber_info =
       static_cast<SubscriberInfo *>(subscriptions->subscribers[i]);
     if (!subscriber_info) {
-      RMW_SET_ERROR_MSG("subscriber info handle is null");
+      RMW_SET_ERROR_MSG("Invalid cast to a Connext SubscriberInfo struct");
       return RMW_RET_ERROR;
     }
     DDSReadCondition * read_condition = subscriber_info->read_condition_;
@@ -292,12 +296,15 @@ wait(const char * implementation_identifier,
   }
 
   // add a condition for each guard condition
-  if (guard_conditions) {
+  if (guard_conditions && guard_conditions->guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
+      if (!guard_conditions->guard_conditions[i]) {
+        break;
+      }
       DDSGuardCondition * guard_condition =
         static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
       if (!guard_condition) {
-        RMW_SET_ERROR_MSG("guard condition handle is null");
+        RMW_SET_ERROR_MSG("Invalid cast to a Connext DDSGuardCondition struct");
         return RMW_RET_ERROR;
       }
       rmw_ret_t rmw_status = check_attach_condition_error(
@@ -309,11 +316,14 @@ wait(const char * implementation_identifier,
   }
 
   // add a condition for each service
-  for (size_t i = 0; i < services->service_count; ++i) {
+  for (size_t i = 0; i < services->service_count && services->services; ++i) {
+    if (!services->services[i]) {
+      break;
+    }
     ServiceInfo * service_info =
       static_cast<ServiceInfo *>(services->services[i]);
     if (!service_info) {
-      RMW_SET_ERROR_MSG("service info handle is null");
+      RMW_SET_ERROR_MSG("Invalid cast to Connext ServiceInfo struct");
       return RMW_RET_ERROR;
     }
     DDSReadCondition * read_condition = service_info->read_condition_;
@@ -329,7 +339,10 @@ wait(const char * implementation_identifier,
   }
 
   // add a condition for each client
-  for (size_t i = 0; i < clients->client_count; ++i) {
+  for (size_t i = 0; i < clients->client_count && clients->clients; ++i) {
+    if (!clients->clients[i]) {
+      break;
+    }
     ClientInfo * client_info =
       static_cast<ClientInfo *>(clients->clients[i]);
     if (!client_info) {
@@ -370,7 +383,10 @@ wait(const char * implementation_identifier,
   }
 
   // set subscriber handles to zero for all not triggered conditions
-  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
+  for (size_t i = 0; i < subscriptions->subscriber_count && subscriptions->subscribers; ++i) {
+    if (!subscriptions->subscribers[i]) {
+      break;
+    }
     SubscriberInfo * subscriber_info =
       static_cast<SubscriberInfo *>(subscriptions->subscribers[i]);
     if (!subscriber_info) {
@@ -402,8 +418,11 @@ wait(const char * implementation_identifier,
   }
 
   // set guard condition handles to zero for all not triggered conditions
-  if (guard_conditions) {
+  if (guard_conditions && guard_conditions->guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
+      if (!guard_conditions->guard_conditions[i]) {
+        break;
+      }
       DDSCondition * condition =
         static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
       if (!condition) {
@@ -437,7 +456,10 @@ wait(const char * implementation_identifier,
   }
 
   // set service handles to zero for all not triggered conditions
-  for (size_t i = 0; i < services->service_count; ++i) {
+  for (size_t i = 0; i < services->service_count && services->services; ++i) {
+    if (!services->services[i]) {
+      break;
+    }
     ServiceInfo * service_info =
       static_cast<ServiceInfo *>(services->services[i]);
     if (!service_info) {
@@ -469,7 +491,10 @@ wait(const char * implementation_identifier,
   }
 
   // set client handles to zero for all not triggered conditions
-  for (size_t i = 0; i < clients->client_count; ++i) {
+  for (size_t i = 0; i < clients->client_count && clients->clients; ++i) {
+    if (!clients->clients[i]) {
+      break;
+    }
     ClientInfo * client_info =
       static_cast<ClientInfo *>(clients->clients[i]);
     if (!client_info) {
