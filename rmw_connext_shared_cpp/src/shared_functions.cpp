@@ -286,21 +286,6 @@ destroy_topic_names_and_types(
   }
 }
 
-void
-destroy_node_names(
-  rmw_string_array_t * node_names)
-{
-  for (size_t i = 0; i < node_names->size; ++i) {
-    rmw_free(node_names->data[i]);
-    node_names->data[i] = nullptr;
-  }
-  if (node_names->data) {
-    rmw_free(node_names->data);
-    node_names->data = nullptr;
-  }
-  node_names->size = 0;
-}
-
 rmw_node_t *
 create_node(
   const char * implementation_identifier,
@@ -903,7 +888,7 @@ fail:
 rmw_ret_t
 get_node_names(const char * implementation_identifier,
   const rmw_node_t * node,
-  rmw_string_array_t * node_names)
+  utilities_string_array_t * node_names)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
