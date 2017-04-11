@@ -70,7 +70,7 @@ struct IdTypeMap;
 SPECIALIZE_GENERIC_C_ARRAY(STRING, String, rosidl_generator_c__String)
 SPECIALIZE_GENERIC_C_ARRAY(BOOL, bool, bool)
 SPECIALIZE_GENERIC_C_ARRAY(BYTE, byte, uint8_t)
-SPECIALIZE_GENERIC_C_ARRAY(CHAR, char, char)
+SPECIALIZE_GENERIC_C_ARRAY(CHAR, char, signed char)
 SPECIALIZE_GENERIC_C_ARRAY(FLOAT32, float32, float)
 SPECIALIZE_GENERIC_C_ARRAY(FLOAT64, float64, double)
 SPECIALIZE_GENERIC_C_ARRAY(INT8, int8, int8_t)
@@ -101,7 +101,7 @@ DDS_ReturnCode_t get_dynamic_data_array(
   DDS_DynamicData * dynamic_data, DDSType * & values, size_t array_size, size_t index);
 
 DEFINE_DYNAMIC_DATA_METHODS(bool, DDS_Boolean, boolean)
-DEFINE_DYNAMIC_DATA_METHODS(char, char, char)
+DEFINE_DYNAMIC_DATA_METHODS(signed char, char, char)
 DEFINE_DYNAMIC_DATA_METHODS(float, float, float)
 DEFINE_DYNAMIC_DATA_METHODS(double, double, double)
 DEFINE_DYNAMIC_DATA_METHODS(int8_t, DDS_Octet, octet)
@@ -537,7 +537,9 @@ bool publish(
         }
         break;
       case ROS_TYPE_CHAR:
-        if (!set_value<ROS_TYPE_CHAR>(member, ros_message, dynamic_data, i)) {
+        if (!set_value_with_different_types<ROS_TYPE_CHAR, DDS_Char>(
+            member, ros_message, dynamic_data, i))
+        {
           return false;
         }
         break;
@@ -1165,7 +1167,9 @@ bool take(DDS_DynamicData * dynamic_data, void * ros_message,
         }
         break;
       case ROS_TYPE_CHAR:
-        if (!get_value<ROS_TYPE_CHAR>(member, ros_message, dynamic_data, i)) {
+        if (!get_value_with_different_types<ROS_TYPE_CHAR, DDS_Char>(
+            member, ros_message, dynamic_data, i))
+        {
           return false;
         }
         break;
