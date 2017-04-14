@@ -320,6 +320,10 @@ rmw_create_publisher(
   // free that memory
   utilities_string_array_fini(&name_tokens);
 
+  fprintf(stderr, "ros topic: %s\n", topic_name);
+  fprintf(stderr, "partition name: %s\n", partition_str);
+  fprintf(stderr, "dds topic: %s\n", topic_str);
+
   // we have to set the partition array to length 1
   // and then set the partition_str in it
   publisher_qos.partition.name.ensure_length(1, 1);
@@ -664,6 +668,10 @@ rmw_create_subscription(const rmw_node_t * node,
   // all necessary strings are copied into connext
   // free that memory
   utilities_string_array_fini(&name_tokens);
+
+  fprintf(stderr, "ros topic: %s\n", topic_name);
+  fprintf(stderr, "partition name: %s\n", partition_str);
+  fprintf(stderr, "dds topic: %s\n", topic_str);
 
   // we have to set the partition array to length 1
   // and then set the partition_str in it
