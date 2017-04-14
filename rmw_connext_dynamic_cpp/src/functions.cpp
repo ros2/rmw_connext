@@ -46,6 +46,8 @@
 # pragma GCC diagnostic pop
 #endif
 
+#include "c_utilities/types.h"
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -2227,22 +2229,10 @@ rmw_destroy_topic_names_and_types(
 rmw_ret_t
 rmw_get_node_names(
   const rmw_node_t * node,
-  rmw_string_array_t * node_names)
+  utilities_string_array_t * node_names)
 {
   return get_node_names(
     rti_connext_dynamic_identifier, node, node_names);
-}
-
-rmw_ret_t
-rmw_destroy_node_names(
-  rmw_string_array_t * node_names)
-{
-  if (!node_names) {
-    RMW_SET_ERROR_MSG("node_names handle is null");
-    return RMW_RET_ERROR;
-  }
-  destroy_node_names(node_names);
-  return RMW_RET_OK;
 }
 
 rmw_ret_t
