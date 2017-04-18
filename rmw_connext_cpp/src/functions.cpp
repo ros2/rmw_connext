@@ -1076,8 +1076,9 @@ rmw_create_client(
   rmw_client_t * client = nullptr;
 
   // memory allocations for namespacing
-  utilities_string_array_t name_tokens;
-  char * partition_str = nullptr;
+  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  char * request_partition_str = nullptr;
+  char * response_partition_str = nullptr;
   char * service_str = nullptr;
 
   // Begin inializing elements.
@@ -1432,7 +1433,7 @@ rmw_create_service(
   rmw_service_t * service = nullptr;
 
   // memory allocations for namespacing
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
   char * request_partition_str = nullptr;
   char * response_partition_str = nullptr;
   const char * service_str = nullptr;
