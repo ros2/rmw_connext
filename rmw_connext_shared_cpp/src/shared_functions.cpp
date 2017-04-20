@@ -17,13 +17,11 @@
 #include <set>
 #include <string>
 
+#include "rcutils/filesystem.h"
 #include "rcutils/types/string_array.h"
 #include "rmw/allocators.h"
 #include "rmw/sanity_checks.h"
-
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
-
-#include "c_utilities/filesystem.h"
 
 // Uncomment this to get extra console output about discovery.
 // #define DISCOVERY_DEBUG_LOGGING 1
@@ -380,11 +378,11 @@ create_node(
     }
 
     const char * srp = security_root_path;  // save some typing
-    std::string ca_cert_fn = utilities_join_path(srp, "ca.cert.pem");
-    std::string cert_fn = utilities_join_path(srp, "cert.pem");
-    std::string key_fn = utilities_join_path(srp, "key.pem");
-    std::string gov_fn = utilities_join_path(srp, "governance.p7s");
-    std::string perm_fn = utilities_join_path(srp, "permissions.p7s");
+    std::string ca_cert_fn = rcutils_join_path(srp, "ca.cert.pem");
+    std::string cert_fn = rcutils_join_path(srp, "cert.pem");
+    std::string key_fn = rcutils_join_path(srp, "key.pem");
+    std::string gov_fn = rcutils_join_path(srp, "governance.p7s");
+    std::string perm_fn = rcutils_join_path(srp, "permissions.p7s");
 
     // now try to pass these filenames to the Authentication plugin
     status = DDSPropertyQosPolicyHelper::add_property(
