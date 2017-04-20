@@ -512,7 +512,7 @@ RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
 get_node_names(const char * implementation_identifier,
   const rmw_node_t * node,
-  utilities_string_array_t * node_names);
+  rcutils_string_array_t * node_names);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t

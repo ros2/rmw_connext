@@ -17,6 +17,7 @@
 #include <set>
 #include <string>
 
+#include "rcutils/types/string_array.h"
 #include "rmw/allocators.h"
 #include "rmw/sanity_checks.h"
 
@@ -888,7 +889,7 @@ fail:
 rmw_ret_t
 get_node_names(const char * implementation_identifier,
   const rmw_node_t * node,
-  utilities_string_array_t * node_names)
+  rcutils_string_array_t * node_names)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
