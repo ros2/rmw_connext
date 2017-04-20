@@ -321,9 +321,9 @@ rmw_create_publisher(
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
-  fprintf(stderr, "ros topic: %s\n", topic_name);
-  fprintf(stderr, "partition name: %s\n", partition_str);
-  fprintf(stderr, "dds topic: %s\n", topic_str);
+  // fprintf(stderr, "ros topic: %s\n", topic_name);
+  // fprintf(stderr, "partition name: %s\n", partition_str);
+  // fprintf(stderr, "dds topic: %s\n", topic_str);
 
   // we have to set the partition array to length 1
   // and then set the partition_str in it
@@ -672,9 +672,9 @@ rmw_create_subscription(const rmw_node_t * node,
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
-  fprintf(stderr, "ros topic: %s\n", topic_name);
-  fprintf(stderr, "partition name: %s\n", partition_str);
-  fprintf(stderr, "dds topic: %s\n", topic_str);
+  // fprintf(stderr, "ros topic: %s\n", topic_name);
+  // fprintf(stderr, "partition name: %s\n", partition_str);
+  // fprintf(stderr, "dds topic: %s\n", topic_str);
 
   // we have to set the partition array to length 1
   // and then set the partition_str in it
