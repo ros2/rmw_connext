@@ -318,8 +318,9 @@ rmw_create_publisher(
   }
   // all necessary strings are copied into connext
   // free that memory
-  utilities_string_array_fini(&name_tokens);
-
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
   fprintf(stderr, "ros topic: %s\n", topic_name);
   fprintf(stderr, "partition name: %s\n", partition_str);
   fprintf(stderr, "dds topic: %s\n", topic_str);
@@ -667,7 +668,9 @@ rmw_create_subscription(const rmw_node_t * node,
   }
   // all necessary strings are copied into connext
   // free that memory
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
   fprintf(stderr, "ros topic: %s\n", topic_name);
   fprintf(stderr, "partition name: %s\n", partition_str);
@@ -807,9 +810,6 @@ fail:
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
-  // if (partition_str) {
-  //   rmw_free(&partition_str);
-  // }
 
   return NULL;
 }
@@ -1135,7 +1135,9 @@ rmw_create_client(
   }
   // all necessary strings are copied into connext
   // free that memory
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
   // TODO(karsten1987): For now, I'll expose the datawriter
   // to access the respective DDSPublisher object.
@@ -1256,12 +1258,6 @@ fail:
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
-  // if(request_partition_str) {
-  //   rmw_free(&request_partition_str);
-  // }
-  // if(response_partition_str) {
-  //   rmw_free(&response_partition_str);
-  // }
 
   return NULL;
 }
@@ -1492,7 +1488,9 @@ rmw_create_service(
   }
   // all necessary strings are copied into connext
   // free that memory
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
   replier = callbacks->create_replier(
     participant, service_str, &datareader_qos, &datawriter_qos,
@@ -1617,12 +1615,6 @@ fail:
   if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
-  // if(request_partition_str) {
-  //   DDS_String_free(&request_partition_str);
-  // }
-  // if(response_partition_str) {
-  //   DDS_String_free(&response_partition_str);
-  // }
 
   return NULL;
 }
