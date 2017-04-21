@@ -200,20 +200,13 @@ rmw_init()
 }
 
 rmw_node_t *
-rmw_create_secure_node(
+rmw_create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const char * security_files_paths)
+  const char * security_root_path)
 {
-  (void)security_files_paths;
-  return create_node(rti_connext_dynamic_identifier, name, namespace_, domain_id, NULL);
-}
-
-rmw_node_t *
-rmw_create_node(const char * name, const char * namespace_, size_t domain_id)
-{
-  return create_node(rti_connext_dynamic_identifier, name, namespace_, domain_id, NULL);
+  return create_node(rti_connext_dynamic_identifier, name, namespace_, domain_id, security_root_path);
 }
 
 rmw_ret_t
