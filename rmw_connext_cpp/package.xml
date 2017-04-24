@@ -14,7 +14,7 @@
   <buildtool_export_depend>rosidl_cmake</buildtool_export_depend>
 
   <build_depend>connext_cmake_module</build_depend>
-  <build_depend>c_utilities</build_depend>
+  <build_depend>rcutils</build_depend>
   <build_depend>libndds52-dev</build_depend>
   <build_depend>rmw</build_depend>
   <build_depend>rmw_connext_shared_cpp</build_depend>
@@ -31,7 +31,7 @@
   <build_export_depend>rosidl_typesupport_connext_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_connext_cpp</build_export_depend>
 
-  <exec_depend>c_utilities</exec_depend>
+  <exec_depend>rcutils</exec_depend>
   <exec_depend>rmw</exec_depend>
   <exec_depend>rmw_connext_shared_cpp</exec_depend>
 

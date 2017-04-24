@@ -40,7 +40,7 @@
 # pragma GCC diagnostic pop
 #endif
 
-// TODO(karsten1987): Introduce c_utilities.h
+// TODO(karsten1987): Introduce rcutils.h
 #include "rcutils/concat.h"
 #include "rcutils/types.h"
 #include "rcutils/split.h"
@@ -273,7 +273,7 @@ rmw_create_publisher(
   rmw_publisher_t * publisher = nullptr;
 
   // memory allocations for namespacing
-  utilities_string_array_t name_tokens;
+  rcutils_string_array_t name_tokens;
   char * partition_str = nullptr;
   char * topic_str = nullptr;
 
@@ -298,7 +298,7 @@ rmw_create_publisher(
 
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
-  name_tokens = utilities_split_last(topic_name, '/');
+  name_tokens = rcutils_split_last(topic_name, '/');
   if (name_tokens.size == 1) {
     partition_str = DDS_String_dup(ros_topics_prefix);
     topic_str = DDS_String_dup(name_tokens.data[0]);
@@ -318,7 +318,7 @@ rmw_create_publisher(
   }
   // all necessary strings are copied into connext
   // free that memory
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
   // fprintf(stderr, "ros topic: %s\n", topic_name);
@@ -449,7 +449,7 @@ fail:
   }
 
   // cleanup namespacing
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -623,7 +623,7 @@ rmw_create_subscription(const rmw_node_t * node,
   rmw_subscription_t * subscription = nullptr;
 
   // memory allocations for namespacing
-  utilities_string_array_t name_tokens;
+  rcutils_string_array_t name_tokens;
   char * partition_str = nullptr;
   char * topic_str = nullptr;
 
@@ -648,7 +648,7 @@ rmw_create_subscription(const rmw_node_t * node,
 
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
-  name_tokens = utilities_split_last(topic_name, '/');
+  name_tokens = rcutils_split_last(topic_name, '/');
   if (name_tokens.size == 1) {
     partition_str = DDS_String_dup(ros_topics_prefix);
     topic_str = DDS_String_dup(name_tokens.data[0]);
@@ -668,7 +668,7 @@ rmw_create_subscription(const rmw_node_t * node,
   }
   // all necessary strings are copied into connext
   // free that memory
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -807,7 +807,7 @@ fail:
   }
 
   // cleanup namespacing
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1076,7 +1076,7 @@ rmw_create_client(
   rmw_client_t * client = nullptr;
 
   // memory allocations for namespacing
-  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
   char * request_partition_str = nullptr;
   char * response_partition_str = nullptr;
   char * service_str = nullptr;
@@ -1101,7 +1101,7 @@ rmw_create_client(
   // get actual data subsription object
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
-  name_tokens = utilities_split_last(service_name, '/');
+  name_tokens = rcutils_split_last(service_name, '/');
   if (name_tokens.size == 1) {
     request_partition_str = DDS_String_dup(ros_service_requester_prefix);
     response_partition_str = DDS_String_dup(ros_service_response_prefix);
@@ -1135,7 +1135,7 @@ rmw_create_client(
   }
   // all necessary strings are copied into connext
   // free that memory
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1255,7 +1255,7 @@ fail:
   }
 
   // cleanup namespacing
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1429,7 +1429,7 @@ rmw_create_service(
   rmw_service_t * service = nullptr;
 
   // memory allocations for namespacing
-  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
   char * request_partition_str = nullptr;
   char * response_partition_str = nullptr;
   const char * service_str = nullptr;
@@ -1454,7 +1454,7 @@ rmw_create_service(
   // get actual data subsription object
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
-  name_tokens = utilities_split_last(service_name, '/');
+  name_tokens = rcutils_split_last(service_name, '/');
   if (name_tokens.size == 1) {
     request_partition_str = DDS_String_dup(ros_service_requester_prefix);
     response_partition_str = DDS_String_dup(ros_service_response_prefix);
@@ -1488,7 +1488,7 @@ rmw_create_service(
   }
   // all necessary strings are copied into connext
   // free that memory
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1612,7 +1612,7 @@ fail:
   }
 
   // cleanup namespacing
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 

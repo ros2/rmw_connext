@@ -46,7 +46,7 @@
 # pragma GCC diagnostic pop
 #endif
 
-// TODO(karsten1987): Introduce c_utilities.h
+// TODO(karsten1987): Introduce c_rcutils.h
 #include "rcutils/types.h"
 #include "rcutils/split.h"
 
@@ -302,7 +302,7 @@ rmw_create_publisher(
       type_support->typesupport_identifier);
 
   // memory allocations for namespacing
-  utilities_string_array_t name_tokens;
+  rcutils_string_array_t name_tokens;
   char * partition_str = nullptr;
   char * topic_str = nullptr;
 
@@ -352,7 +352,7 @@ rmw_create_publisher(
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
   printf("Original publisher topic name: %s\n", topic_name);
-  name_tokens = utilities_split_last(topic_name, '/');
+  name_tokens = rcutils_split_last(topic_name, '/');
   partition_str = NULL;
   topic_str = NULL;
   if (name_tokens.size == 2) {
@@ -561,7 +561,7 @@ fail:
   }
 
   // cleanup namespacing
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 

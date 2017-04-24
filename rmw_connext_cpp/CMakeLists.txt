@@ -23,7 +23,7 @@ if(NOT Connext_FOUND OR CONNEXT_STATIC_DISABLE)
   return()
 endif()
 
-find_package(c_utilities REQUIRED)
+find_package(rcutils REQUIRED)
 
 find_package(rosidl_typesupport_connext_c)
 if(NOT rosidl_typesupport_connext_c_FOUND)
@@ -45,7 +45,7 @@ find_package(rosidl_generator_c REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 
 ament_export_dependencies(
-  c_utilities
+  rcutils
   rmw
   rmw_connext_shared_cpp
   rosidl_generator_c
@@ -59,9 +59,9 @@ register_rmw_implementation(
 )
 
 add_library(rmw_connext_cpp SHARED src/functions.cpp)
-target_link_libraries(rmw_connext_cpp ${c_utilities_LIBRARIES})
+target_link_libraries(rmw_connext_cpp ${rcutils_LIBRARIES})
 ament_target_dependencies(rmw_connext_cpp
-  "c_utilities"
+  "rcutils"
   "rmw"
   "rmw_connext_shared_cpp"
   "rosidl_generator_c"
