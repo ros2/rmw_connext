@@ -144,6 +144,7 @@ create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
+  bool enforce_security,
   const char * security_root_path);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC

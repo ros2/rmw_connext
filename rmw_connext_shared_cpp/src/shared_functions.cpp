@@ -307,6 +307,7 @@ create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
+  bool enforce_security,
   const char * security_root_path)
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
@@ -354,7 +355,7 @@ create_node(
       "com.rti.serv.load_plugin",
       "com.rti.serv.secure",
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -363,7 +364,7 @@ create_node(
       "com.rti.serv.secure.library",
       "nddssecurity",
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -372,7 +373,7 @@ create_node(
       "com.rti.serv.secure.create_function",
       "RTI_Security_PluginSuite_create",
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -390,7 +391,7 @@ create_node(
       "com.rti.serv.secure.authentication.ca_file",
       ca_cert_fn.c_str(),
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -399,7 +400,7 @@ create_node(
       "com.rti.serv.secure.authentication.certificate_file",
       cert_fn.c_str(),
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -408,7 +409,7 @@ create_node(
       "com.rti.serv.secure.authentication.private_key_file",
       key_fn.c_str(),
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -419,7 +420,7 @@ create_node(
       "com.rti.serv.secure.access_control.permissions_authority_file",
       ca_cert_fn.c_str(),
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -429,7 +430,7 @@ create_node(
       "com.rti.serv.secure.access_control.governance_file",
       gov_fn.c_str(),
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -439,7 +440,7 @@ create_node(
       "com.rti.serv.secure.access_control.permissions_file",
       perm_fn.c_str(),
       DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS_RETCODE_OK && enforce_security) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
