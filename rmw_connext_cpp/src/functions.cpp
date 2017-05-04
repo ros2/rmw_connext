@@ -153,7 +153,7 @@ extern "C"
 // static for internal linkage
 static const char * const rti_connext_identifier = "rmw_connext_cpp";
 static const char * const ros_topics_prefix = "rt";
-static const char * const ros_service_requester_prefix = "rq";
+static const char * const ros_service_requester_prefix = "rqtacco";
 static const char * const ros_service_response_prefix = "rr";
 
 struct ConnextStaticPublisherInfo
@@ -1065,11 +1065,11 @@ rmw_create_client(
   DDS_PublisherQos publisher_qos;
   DDS_DataReaderQos datareader_qos;
   DDS_DataWriterQos datawriter_qos;
-  DDSPublisher * dds_publisher = nullptr;
-  DDSSubscriber * dds_subscriber = nullptr;
-  DDSDataReader * response_datareader = nullptr;
-  DDSDataWriter * request_datawriter = nullptr;
-  DDSReadCondition * read_condition = nullptr;
+  DDS::Publisher * dds_publisher = nullptr;
+  DDS::Subscriber * dds_subscriber = nullptr;
+  DDS::DataReader * response_datareader = nullptr;
+  DDS::DataWriter * request_datawriter = nullptr;
+  DDS::ReadCondition * read_condition = nullptr;
   void * requester = nullptr;
   void * buf = nullptr;
   ConnextStaticClientInfo * client_info = nullptr;
@@ -1116,7 +1116,7 @@ rmw_create_client(
       "%s/%s", ros_service_requester_prefix, name_tokens.data[0]);
 
     size_t response_partition_length =
-      strlen(ros_service_requester_prefix) + strlen(name_tokens.data[0]) + 2;
+      strlen(ros_service_response_prefix) + strlen(name_tokens.data[0]) + 2;
     char * response_concat_str = reinterpret_cast<char *>(rmw_allocate(
         response_partition_length * sizeof(char)));
     snprintf(response_concat_str, response_partition_length,
@@ -1189,6 +1189,13 @@ rmw_create_client(
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
 
+  fprintf(stderr, "Client Details:\n");
+  fprintf(stderr, "Subscriber partition %s\n", subscriber_qos.partition.name[0]);
+  fprintf(stderr, "Subscriber topic %s\n", response_datareader->get_topicdescription()->get_name());
+  fprintf(stderr, "Publisher partition %s\n", publisher_qos.partition.name[0]);
+  fprintf(stderr, "Publisher topic %s\n", request_datawriter->get_topic()->get_name());
+  fprintf(stderr, "******\n");
+
   read_condition = response_datareader->create_readcondition(
     DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
   if (!read_condition) {
@@ -1205,7 +1212,8 @@ rmw_create_client(
   RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextStaticClientInfo, )
   buf = nullptr;  // Only free the client_info pointer; don't need the buf pointer anymore.
   client_info->requester_ = requester;
-  client_info->callbacks_ = callbacks;  client_info->response_datareader_ = response_datareader;
+  client_info->callbacks_ = callbacks;
+  client_info->response_datareader_ = response_datareader;
   client_info->read_condition_ = read_condition;
 
   client->implementation_identifier = rti_connext_identifier;
@@ -1418,11 +1426,11 @@ rmw_create_service(
   DDS_SubscriberQos subscriber_qos;
   DDS_PublisherQos publisher_qos;
   DDS_ReturnCode_t status;
-  DDSPublisher * dds_publisher = nullptr;
-  DDSSubscriber * dds_subscriber = nullptr;
-  DDSDataReader * request_datareader = nullptr;
-  DDSDataWriter * response_datawriter = nullptr;
-  DDSReadCondition * read_condition = nullptr;
+  DDS::Publisher * dds_publisher = nullptr;
+  DDS::Subscriber * dds_subscriber = nullptr;
+  DDS::DataReader * request_datareader = nullptr;
+  DDS::DataWriter * response_datawriter = nullptr;
+  DDS::ReadCondition * read_condition = nullptr;
   void * replier = nullptr;
   void * buf = nullptr;
   ConnextStaticServiceInfo * service_info = nullptr;
@@ -1538,13 +1546,17 @@ rmw_create_service(
   // update attached subscriber
   dds_subscriber->set_qos(subscriber_qos);
 
-  // we cannot assign the partition_ptr again,
-  // as rti takes ownership over it.
   publisher_qos.partition.name.ensure_length(1, 1);
   publisher_qos.partition.name[0] = response_partition_str;
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
 
+  fprintf(stderr, "Service Details:\n");
+  fprintf(stderr, "Subscriber partition %s\n", subscriber_qos.partition.name[0]);
+  fprintf(stderr, "Subscriber topic %s\n", request_datareader->get_topicdescription()->get_name());
+  fprintf(stderr, "Publisher partition %s\n", publisher_qos.partition.name[0]);
+  fprintf(stderr, "Publisher topic %s\n", response_datawriter->get_topic()->get_name());
+  fprintf(stderr, "******\n");
   buf = rmw_allocate(sizeof(ConnextStaticServiceInfo));
   if (!buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
@@ -2093,6 +2105,27 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
 
+  DDSPublisher * request_publisher = request_datawriter->get_publisher();
+  DDS_PublisherQos pub_qos;
+  request_publisher->get_qos(pub_qos);
+  for (DDS_Long i = 0; i < pub_qos.partition.name.length(); ++i) {
+    fprintf(stderr, "request topic name: %s\n", request_topic_name);
+    fprintf(stderr, "request partition (should be rq) %s\n", pub_qos.partition.name[i]);
+  }
+
+  DDS::DataReader * response_datareader =
+    static_cast<DDS::DataReader *>(callbacks->get_reply_datareader(requester));
+  const char * response_topic_name = response_datareader->get_topicdescription()->get_name();
+  DDSSubscriber * response_sub = response_datareader->get_subscriber();
+  DDS_SubscriberQos sub_qos;
+  response_sub->get_qos(sub_qos);
+  for (DDS_Long i = 0; i < sub_qos.partition.name.length(); ++i) {
+    fprintf(stderr, "response topic name: %s\n", response_topic_name);
+    fprintf(stderr, "response partition (should be rr) %s\n", sub_qos.partition.name[i]);
+  }
+
+
+
   *is_available = false;
   // In the Connext RPC implementation, a server is ready when:
   //   - At least one subscriber is matched to the request publisher.
@@ -2111,6 +2144,7 @@ rmw_service_server_is_available(
     number_of_request_subscribers);
 #endif
   if (number_of_request_subscribers == 0) {
+    fprintf(stderr, "Number of request subscribers is 0\n");
     // not ready
     return RMW_RET_OK;
   }
@@ -2128,6 +2162,7 @@ rmw_service_server_is_available(
     number_of_response_publishers);
 #endif
   if (number_of_response_publishers == 0) {
+    fprintf(stderr, "Number of response publishers is 0\n");
     // not ready
     return RMW_RET_OK;
   }
