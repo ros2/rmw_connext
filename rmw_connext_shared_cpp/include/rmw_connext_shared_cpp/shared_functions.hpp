@@ -267,7 +267,6 @@ wait(const char * implementation_identifier,
   }
 
   // add a condition for each subscriber
-  fprintf(stderr, "number of subscriber conditions: %zu\n", subscriptions->subscriber_count);
   for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     SubscriberInfo * subscriber_info =
       static_cast<SubscriberInfo *>(subscriptions->subscribers[i]);
@@ -305,7 +304,6 @@ wait(const char * implementation_identifier,
   }
 
   // add a condition for each service
-  fprintf(stderr, "number of service conditions: %zu\n", services->service_count);
   for (size_t i = 0; i < services->service_count; ++i) {
     ServiceInfo * service_info =
       static_cast<ServiceInfo *>(services->services[i]);
@@ -314,19 +312,6 @@ wait(const char * implementation_identifier,
       RMW_SET_ERROR_MSG("service info handle is null");
       return RMW_RET_ERROR;
     }
-    // HACK
-    DDS::DataReader * request_datareader =
-      service_info->request_datareader_;
-    const char * request_topic_name = request_datareader->get_topicdescription()->get_name();
-    DDSSubscriber * request_sub = request_datareader->get_subscriber();
-    DDS_SubscriberQos sub_qos;
-    request_sub->get_qos(sub_qos);
-    for (DDS_Long i = 0; i < sub_qos.partition.name.length(); ++i) {
-      fprintf(stderr, "in wait: request topic name: %s\n", request_topic_name);
-      fprintf(stderr, "in wait: request partition (should be rq) %s\n", sub_qos.partition.name[i]);
-    }
-    fprintf(stderr, "******in wait end ****\n");
-  // HACK END
 
     DDSReadCondition * read_condition = service_info->read_condition_;
     if (!read_condition) {
@@ -341,7 +326,6 @@ wait(const char * implementation_identifier,
   }
 
   // add a condition for each client
-  fprintf(stderr, "number of client conditions: %zu\n", clients->client_count);
   for (size_t i = 0; i < clients->client_count; ++i) {
     ClientInfo * client_info =
       static_cast<ClientInfo *>(clients->clients[i]);
@@ -349,21 +333,8 @@ wait(const char * implementation_identifier,
       RMW_SET_ERROR_MSG("client info handle is null");
       return RMW_RET_ERROR;
     }
-    // HACK
-    DDS::DataReader * response_datareader =
-      client_info->response_datareader_;
-    const char * response_topic_name = response_datareader->get_topicdescription()->get_name();
-    DDSSubscriber * response_sub = response_datareader->get_subscriber();
-    DDS_SubscriberQos sub_qos;
-    response_sub->get_qos(sub_qos);
-    for (DDS_Long i = 0; i < sub_qos.partition.name.length(); ++i) {
-      fprintf(stderr, "in wait: response topic name: %s\n", response_topic_name);
-      fprintf(stderr, "in wait: response partition (should be rr) %s\n", sub_qos.partition.name[i]);
-    }
-    fprintf(stderr, "******in wait end ****\n");
-  // HACK END
 
-    //DDSDataReader * response_datareader = client_info->response_datareader_;
+    DDSDataReader * response_datareader = client_info->response_datareader_;
     if (!response_datareader) {
       RMW_SET_ERROR_MSG("response datareader handle is null");
       return RMW_RET_ERROR;
@@ -391,15 +362,11 @@ wait(const char * implementation_identifier,
     timeout.nanosec = static_cast<DDS_Long>(wait_timeout->nsec);
   }
 
-  fprintf(stderr, "number of active conditions %d\n", active_conditions->length());
   DDS_ReturnCode_t status = dds_waitset->wait(*active_conditions, timeout);
 
   if (status != DDS_RETCODE_OK && status != DDS_RETCODE_TIMEOUT) {
     RMW_SET_ERROR_MSG("failed to wait on waitset");
     return RMW_RET_ERROR;
-  }
-  if (status == DDS_RETCODE_TIMEOUT) {
-    fprintf(stderr, "dds_waitset->wait timed out\n");
   }
 
   // set subscriber handles to zero for all not triggered conditions

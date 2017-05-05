@@ -321,9 +321,6 @@ rmw_create_publisher(
   if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
-  // fprintf(stderr, "ros topic: %s\n", topic_name);
-  // fprintf(stderr, "partition name: %s\n", partition_str);
-  // fprintf(stderr, "dds topic: %s\n", topic_str);
 
   // we have to set the partition array to length 1
   // and then set the partition_str in it
@@ -337,10 +334,6 @@ rmw_create_publisher(
     goto fail;
   }
 
-  // TODO(karsten1987): I have to verify how this topic gets found
-  // wo/ any partitions set yet.
-  // In the example of spawning two cameras with /left/image and /right/image
-  // the topic image is found twice.
   topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
@@ -416,6 +409,14 @@ rmw_create_publisher(
   node_info->publisher_listener->add_information(
     dds_publisher->get_instance_handle(), topic_name, type_name, EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
+
+#ifdef DISCOVERY_DEBUG_LOGGING
+  fprintf(stderr, "******* Creating Publisher Details: ********\n");
+  fprintf(stderr, "Publisher partition %s\n", publisher_qos.partition.name[0]);
+  fprintf(stderr, "Publisher topic %s\n", topic_writer->get_topic()->get_name());
+  fprintf(stderr, "Publisher address %p\n", (void *)dds_publisher);
+  fprintf(stderr, "******\n");
+#endif
 
   return publisher;
 fail:
@@ -672,10 +673,6 @@ rmw_create_subscription(const rmw_node_t * node,
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
-  // fprintf(stderr, "ros topic: %s\n", topic_name);
-  // fprintf(stderr, "partition name: %s\n", partition_str);
-  // fprintf(stderr, "dds topic: %s\n", topic_str);
-
   // we have to set the partition array to length 1
   // and then set the partition_str in it
   subscriber_qos.partition.name.ensure_length(1, 1);
@@ -688,10 +685,6 @@ rmw_create_subscription(const rmw_node_t * node,
     goto fail;
   }
 
-  // TODO(karsten1987): I have to verify how this topic gets found
-  // wo/ any partitions set yet.
-  // In the example of spawning two cameras with /left/image and /right/image
-  // the topic image is found twice.
   topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
     DDS_TopicQos default_topic_qos;
@@ -766,6 +759,14 @@ rmw_create_subscription(const rmw_node_t * node,
   node_info->subscriber_listener->add_information(
     dds_subscriber->get_instance_handle(), topic_name, type_name, EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
+
+#ifdef DISCOVERY_DEBUG_LOGGING
+  fprintf(stderr, "******* Creating Subscriber Details: ********\n");
+  fprintf(stderr, "Subscriber partition %s\n", subscriber_qos.partition.name[0]);
+  fprintf(stderr, "Subscriber topic %s\n", topic_reader->get_topicdescription()->get_name());
+  fprintf(stderr, "Subscriber address %p\n", (void *)dds_subscriber);
+  fprintf(stderr, "******\n");
+#endif
 
   return subscription;
 fail:
@@ -1189,13 +1190,6 @@ rmw_create_client(
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
 
-  fprintf(stderr, "Client Details:\n");
-  fprintf(stderr, "Subscriber partition %s\n", subscriber_qos.partition.name[0]);
-  fprintf(stderr, "Subscriber topic %s\n", response_datareader->get_topicdescription()->get_name());
-  fprintf(stderr, "Publisher partition %s\n", publisher_qos.partition.name[0]);
-  fprintf(stderr, "Publisher topic %s\n", request_datawriter->get_topic()->get_name());
-  fprintf(stderr, "******\n");
-
   read_condition = response_datareader->create_readcondition(
     DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
   if (!read_condition) {
@@ -1238,6 +1232,17 @@ rmw_create_client(
     request_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
+
+#ifdef DISCOVERY_DEBUG_LOGGING
+  fprintf(stderr, "****** Creating Client Details: *********\n");
+  fprintf(stderr, "Response DataReader Subscriber partition %s\n", subscriber_qos.partition.name[0]);
+  fprintf(stderr, "Subscriber topic %s\n", response_datareader->get_topicdescription()->get_name());
+  fprintf(stderr, "Subscriber address %p\n", (void *)dds_subscriber);
+  fprintf(stderr, "Request DataWriter Publisher partition %s\n", publisher_qos.partition.name[0]);
+  fprintf(stderr, "Publisher topic %s\n", request_datawriter->get_topic()->get_name());
+  fprintf(stderr, "Publisher address %p\n", (void *)dds_publisher);
+  fprintf(stderr, "******\n");
+#endif
 
   return client;
 fail:
@@ -1551,12 +1556,6 @@ rmw_create_service(
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
 
-  fprintf(stderr, "Service Details:\n");
-  fprintf(stderr, "Subscriber partition %s\n", subscriber_qos.partition.name[0]);
-  fprintf(stderr, "Subscriber topic %s\n", request_datareader->get_topicdescription()->get_name());
-  fprintf(stderr, "Publisher partition %s\n", publisher_qos.partition.name[0]);
-  fprintf(stderr, "Publisher topic %s\n", response_datawriter->get_topic()->get_name());
-  fprintf(stderr, "******\n");
   buf = rmw_allocate(sizeof(ConnextStaticServiceInfo));
   if (!buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
@@ -1592,6 +1591,17 @@ rmw_create_service(
     response_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
+
+#ifdef DISCOVERY_DEBUG_LOGGING
+  fprintf(stderr, "******* Creating Service Details: ********\n");
+  fprintf(stderr, "Req DataReader Subscriber partition %s\n", subscriber_qos.partition.name[0]);
+  fprintf(stderr, "Subscriber topic %s\n", request_datareader->get_topicdescription()->get_name());
+  fprintf(stderr, "Subscriber address %p\n", (void *)dds_subscriber);
+  fprintf(stderr, "Resp DataWriter Publisher partition %s\n", publisher_qos.partition.name[0]);
+  fprintf(stderr, "Publisher topic %s\n", response_datawriter->get_topic()->get_name());
+  fprintf(stderr, "Publisher address %p\n", (void *)dds_publisher);
+  fprintf(stderr, "******\n");
+#endif
 
   return service;
 fail:
@@ -2105,27 +2115,6 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
 
-  DDSPublisher * request_publisher = request_datawriter->get_publisher();
-  DDS_PublisherQos pub_qos;
-  request_publisher->get_qos(pub_qos);
-  for (DDS_Long i = 0; i < pub_qos.partition.name.length(); ++i) {
-    fprintf(stderr, "request topic name: %s\n", request_topic_name);
-    fprintf(stderr, "request partition (should be rq) %s\n", pub_qos.partition.name[i]);
-  }
-
-  DDS::DataReader * response_datareader =
-    static_cast<DDS::DataReader *>(callbacks->get_reply_datareader(requester));
-  const char * response_topic_name = response_datareader->get_topicdescription()->get_name();
-  DDSSubscriber * response_sub = response_datareader->get_subscriber();
-  DDS_SubscriberQos sub_qos;
-  response_sub->get_qos(sub_qos);
-  for (DDS_Long i = 0; i < sub_qos.partition.name.length(); ++i) {
-    fprintf(stderr, "response topic name: %s\n", response_topic_name);
-    fprintf(stderr, "response partition (should be rr) %s\n", sub_qos.partition.name[i]);
-  }
-
-
-
   *is_available = false;
   // In the Connext RPC implementation, a server is ready when:
   //   - At least one subscriber is matched to the request publisher.
@@ -2138,13 +2127,34 @@ rmw_service_server_is_available(
     return ret;
   }
 #ifdef DISCOVERY_DEBUG_LOGGING
+  DDSPublisher * request_publisher = request_datawriter->get_publisher();
+  DDS_PublisherQos pub_qos;
+  request_publisher->get_qos(pub_qos);
+  fprintf(stderr, "******** rmw_server_is_available *****\n");
+  for (DDS_Long i = 0; i < pub_qos.partition.name.length(); ++i) {
+    fprintf(stderr, "publisher address %p\n", (void *)request_publisher);
+    fprintf(stderr, "request topic name: %s\n", request_topic_name);
+    fprintf(stderr, "request partition (should be rq) %s\n", pub_qos.partition.name[i]);
+  }
+
+  DDS::DataReader * response_datareader =
+    static_cast<DDS::DataReader *>(callbacks->get_reply_datareader(requester));
+  const char * response_topic_name = response_datareader->get_topicdescription()->get_name();
+  DDSSubscriber * response_sub = response_datareader->get_subscriber();
+  DDS_SubscriberQos sub_qos;
+  response_sub->get_qos(sub_qos);
+  for (DDS_Long i = 0; i < sub_qos.partition.name.length(); ++i) {
+    fprintf(stderr, "subscriber address %p\n", (void *)response_sub);
+    fprintf(stderr, "response topic name: %s\n", response_topic_name);
+    fprintf(stderr, "response partition (should be rr) %s\n", sub_qos.partition.name[i]);
+  }
+  fprintf(stderr, "********\n");
   printf("Checking for service server:\n");
   printf(" - %s: %zu\n",
     request_topic_name,
     number_of_request_subscribers);
 #endif
   if (number_of_request_subscribers == 0) {
-    fprintf(stderr, "Number of request subscribers is 0\n");
     // not ready
     return RMW_RET_OK;
   }
