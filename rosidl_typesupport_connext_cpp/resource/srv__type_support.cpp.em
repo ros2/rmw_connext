@@ -78,6 +78,26 @@ void * create_requester__@(spec.srv_name)(
   const DDS_DataReaderQos * datareader_qos = static_cast<const DDS_DataReaderQos *>(untyped_datareader_qos);
   const DDS_DataWriterQos * datawriter_qos = static_cast<const DDS_DataWriterQos *>(untyped_datawriter_qos);
   connext::RequesterParams requester_params(participant);
+
+  // we create separate publishers and subscribers
+  // because the default publisher is a singleton within
+  // the replier/requester context in connext.
+  // if we use the implicit one, every service/client will
+  // overwrite the QoS of all previous instances.
+  DDS::Publisher * publisher = participant->create_publisher(
+      DDS_PUBLISHER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
+  if (publisher == NULL) {
+    RMW_SET_ERROR_MSG("C++ exception during construction of publisher for requester");
+    return NULL;
+  }
+  DDS::Subscriber * subscriber = participant->create_subscriber(
+      DDS_SUBSCRIBER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
+  if (subscriber == NULL) {
+    RMW_SET_ERROR_MSG("C++ exception during construction of subscriber for requester");
+    return NULL;
+  }
+  requester_params.publisher(publisher);
+  requester_params.subscriber(subscriber);
   requester_params.service_name(service_name);
   requester_params.datareader_qos(*datareader_qos);
   requester_params.datawriter_qos(*datawriter_qos);
@@ -154,7 +174,29 @@ void * create_replier__@(spec.srv_name)(
   const DDS_DataReaderQos * datareader_qos = static_cast<const DDS_DataReaderQos *>(untyped_datareader_qos);
   const DDS_DataWriterQos * datawriter_qos = static_cast<const DDS_DataWriterQos *>(untyped_datawriter_qos);
   connext::ReplierParams<@(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_, @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_> replier_params(participant);
+
+  // we create separate publishers and subscribers
+  // because the default publisher is a singleton within
+  // the replier/requester context in connext.
+  // if we use the implicit one, every service/client will
+  // overwrite the QoS of all previous instances.
+  DDS::Publisher * publisher = participant->create_publisher(
+      DDS_PUBLISHER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
+  if (publisher == NULL) {
+    RMW_SET_ERROR_MSG("C++ exception during construction of publisher for replier");
+    return NULL;
+  }
+  DDS::Subscriber * subscriber = participant->create_subscriber(
+      DDS_SUBSCRIBER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
+  if (subscriber == NULL) {
+    RMW_SET_ERROR_MSG("C++ exception during construction of subscriber for replier");
+    return NULL;
+  }
+  replier_params.publisher(publisher);
+  replier_params.subscriber(subscriber);
   replier_params.service_name(service_name);
+  // replier_params.request_topic_name(std::string(service_name)+"Request");
+  // replier_params.reply_topic_name(std::string(service_name)+"Reply");
   replier_params.datareader_qos(*datareader_qos);
   replier_params.datawriter_qos(*datawriter_qos);
 
