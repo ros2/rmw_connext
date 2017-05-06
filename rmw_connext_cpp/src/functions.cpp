@@ -414,7 +414,7 @@ rmw_create_publisher(
   fprintf(stderr, "******* Creating Publisher Details: ********\n");
   fprintf(stderr, "Publisher partition %s\n", publisher_qos.partition.name[0]);
   fprintf(stderr, "Publisher topic %s\n", topic_writer->get_topic()->get_name());
-  fprintf(stderr, "Publisher address %p\n", (void *)dds_publisher);
+  fprintf(stderr, "Publisher address %p\n", static_cast<void *>(dds_publisher));
   fprintf(stderr, "******\n");
 #endif
 
@@ -764,7 +764,7 @@ rmw_create_subscription(const rmw_node_t * node,
   fprintf(stderr, "******* Creating Subscriber Details: ********\n");
   fprintf(stderr, "Subscriber partition %s\n", subscriber_qos.partition.name[0]);
   fprintf(stderr, "Subscriber topic %s\n", topic_reader->get_topicdescription()->get_name());
-  fprintf(stderr, "Subscriber address %p\n", (void *)dds_subscriber);
+  fprintf(stderr, "Subscriber address %p\n", static_cast<void *>(dds_subscriber));
   fprintf(stderr, "******\n");
 #endif
 
@@ -1235,12 +1235,13 @@ rmw_create_client(
 
 #ifdef DISCOVERY_DEBUG_LOGGING
   fprintf(stderr, "****** Creating Client Details: *********\n");
-  fprintf(stderr, "Response DataReader Subscriber partition %s\n", subscriber_qos.partition.name[0]);
+  fprintf(stderr, "Response DataReader Subscriber partition %s\n",
+    subscriber_qos.partition.name[0]);
   fprintf(stderr, "Subscriber topic %s\n", response_datareader->get_topicdescription()->get_name());
-  fprintf(stderr, "Subscriber address %p\n", (void *)dds_subscriber);
+  fprintf(stderr, "Subscriber address %p\n", static_cast<void *>(dds_subscriber));
   fprintf(stderr, "Request DataWriter Publisher partition %s\n", publisher_qos.partition.name[0]);
   fprintf(stderr, "Publisher topic %s\n", request_datawriter->get_topic()->get_name());
-  fprintf(stderr, "Publisher address %p\n", (void *)dds_publisher);
+  fprintf(stderr, "Publisher address %p\n", static_cast<void *>(dds_publisher));
   fprintf(stderr, "******\n");
 #endif
 
@@ -1596,10 +1597,10 @@ rmw_create_service(
   fprintf(stderr, "******* Creating Service Details: ********\n");
   fprintf(stderr, "Req DataReader Subscriber partition %s\n", subscriber_qos.partition.name[0]);
   fprintf(stderr, "Subscriber topic %s\n", request_datareader->get_topicdescription()->get_name());
-  fprintf(stderr, "Subscriber address %p\n", (void *)dds_subscriber);
+  fprintf(stderr, "Subscriber address %p\n", static_cast<void *>(dds_subscriber));
   fprintf(stderr, "Resp DataWriter Publisher partition %s\n", publisher_qos.partition.name[0]);
   fprintf(stderr, "Publisher topic %s\n", response_datawriter->get_topic()->get_name());
-  fprintf(stderr, "Publisher address %p\n", (void *)dds_publisher);
+  fprintf(stderr, "Publisher address %p\n", static_cast<void *>(dds_publisher));
   fprintf(stderr, "******\n");
 #endif
 
@@ -2132,7 +2133,7 @@ rmw_service_server_is_available(
   request_publisher->get_qos(pub_qos);
   fprintf(stderr, "******** rmw_server_is_available *****\n");
   for (DDS_Long i = 0; i < pub_qos.partition.name.length(); ++i) {
-    fprintf(stderr, "publisher address %p\n", (void *)request_publisher);
+    fprintf(stderr, "publisher address %p\n", static_cast<void *>(request_publisher));
     fprintf(stderr, "request topic name: %s\n", request_topic_name);
     fprintf(stderr, "request partition (should be rq) %s\n", pub_qos.partition.name[i]);
   }
@@ -2144,7 +2145,7 @@ rmw_service_server_is_available(
   DDS_SubscriberQos sub_qos;
   response_sub->get_qos(sub_qos);
   for (DDS_Long i = 0; i < sub_qos.partition.name.length(); ++i) {
-    fprintf(stderr, "subscriber address %p\n", (void *)response_sub);
+    fprintf(stderr, "subscriber address %p\n", static_cast<void *>(response_sub));
     fprintf(stderr, "response topic name: %s\n", response_topic_name);
     fprintf(stderr, "response partition (should be rr) %s\n", sub_qos.partition.name[i]);
   }

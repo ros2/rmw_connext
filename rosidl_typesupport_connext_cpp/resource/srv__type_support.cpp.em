@@ -85,13 +85,13 @@ void * create_requester__@(spec.srv_name)(
   // if we use the implicit one, every service/client will
   // overwrite the QoS of all previous instances.
   DDS::Publisher * publisher = participant->create_publisher(
-      DDS_PUBLISHER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
+    DDS_PUBLISHER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
   if (publisher == NULL) {
     RMW_SET_ERROR_MSG("C++ exception during construction of publisher for requester");
     return NULL;
   }
   DDS::Subscriber * subscriber = participant->create_subscriber(
-      DDS_SUBSCRIBER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
+    DDS_SUBSCRIBER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
   if (subscriber == NULL) {
     RMW_SET_ERROR_MSG("C++ exception during construction of subscriber for requester");
     return NULL;
@@ -181,13 +181,13 @@ void * create_replier__@(spec.srv_name)(
   // if we use the implicit one, every service/client will
   // overwrite the QoS of all previous instances.
   DDS::Publisher * publisher = participant->create_publisher(
-      DDS_PUBLISHER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
+    DDS_PUBLISHER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
   if (publisher == NULL) {
     RMW_SET_ERROR_MSG("C++ exception during construction of publisher for replier");
     return NULL;
   }
   DDS::Subscriber * subscriber = participant->create_subscriber(
-      DDS_SUBSCRIBER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
+    DDS_SUBSCRIBER_QOS_DEFAULT, NULL, DDS_STATUS_MASK_NONE);
   if (subscriber == NULL) {
     RMW_SET_ERROR_MSG("C++ exception during construction of subscriber for replier");
     return NULL;
