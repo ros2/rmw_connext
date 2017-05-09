@@ -153,7 +153,7 @@ extern "C"
 // static for internal linkage
 static const char * const rti_connext_identifier = "rmw_connext_cpp";
 static const char * const ros_topics_prefix = "rt";
-static const char * const ros_service_requester_prefix = "rqtacco";
+static const char * const ros_service_requester_prefix = "rq";
 static const char * const ros_service_response_prefix = "rr";
 
 struct ConnextStaticPublisherInfo
@@ -234,6 +234,7 @@ rmw_create_publisher(
 
   if (!topic_name || strlen(topic_name) == 0) {
     RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+    return NULL;
   }
 
   if (!qos_profile) {
@@ -410,6 +411,7 @@ rmw_create_publisher(
     dds_publisher->get_instance_handle(), topic_name, type_name, EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
+// TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   fprintf(stderr, "******* Creating Publisher Details: ********\n");
   fprintf(stderr, "Publisher partition %s\n", publisher_qos.partition.name[0]);
@@ -760,6 +762,7 @@ rmw_create_subscription(const rmw_node_t * node,
     dds_subscriber->get_instance_handle(), topic_name, type_name, EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
+// TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   fprintf(stderr, "******* Creating Subscriber Details: ********\n");
   fprintf(stderr, "Subscriber partition %s\n", subscriber_qos.partition.name[0]);
@@ -1233,6 +1236,7 @@ rmw_create_client(
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
+// TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   fprintf(stderr, "****** Creating Client Details: *********\n");
   fprintf(stderr, "Response DataReader Subscriber partition %s\n",
@@ -1593,6 +1597,7 @@ rmw_create_service(
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
+// TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   fprintf(stderr, "******* Creating Service Details: ********\n");
   fprintf(stderr, "Req DataReader Subscriber partition %s\n", subscriber_qos.partition.name[0]);
@@ -2010,6 +2015,7 @@ _publisher_count_matched_subscriptions(DDS::DataWriter * datawriter, size_t * co
     return RMW_RET_ERROR;
   }
 
+// TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   using std::to_string;
   using std::stringstream;
@@ -2127,6 +2133,7 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
+// TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   DDSPublisher * request_publisher = request_datawriter->get_publisher();
   DDS_PublisherQos pub_qos;

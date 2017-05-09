@@ -59,7 +59,6 @@ register_rmw_implementation(
 )
 
 add_library(rmw_connext_cpp SHARED src/functions.cpp)
-target_link_libraries(rmw_connext_cpp ${rcutils_LIBRARIES})
 ament_target_dependencies(rmw_connext_cpp
   "rcutils"
   "rmw"
@@ -86,25 +85,6 @@ endif()
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
-
-  #find_package(test_msgs)
-  #ament_add_gtest(test_namespace_publisher test/test_namespace_publisher.cpp
-  #  APPEND_LIBRARY_DIRS "${append_library_dirs}")
-  #if(TARGET test_namespace_publisher)
-  #  ament_target_dependencies(
-  #    test_namespace_publisher
-  #    ${PROJECT_NAME}
-  #    "test_msgs")
-  #  #foreach(typesupport_impl_cpp ${typesupport_impls_cpp})
-  #  #  rosidl_target_interfaces(test_externally_defined_services
-  #  #    mock_msgs ${typesupport_impl_cpp})
-  #  #endforeach()
-  #  #foreach(typesupport_impl_c ${typesupport_impls_c})
-  #  #  rosidl_target_interfaces(test_externally_defined_services
-  #  #    mock_msgs ${typesupport_impl_c})
-  #  #endforeach()
-  #endif()
-
 endif()
 
 ament_package()
