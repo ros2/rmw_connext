@@ -204,12 +204,10 @@ rmw_create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  bool enforce_security,
-  const char * security_root_path)
+  const rmw_node_security_options_t * options)
 {
   return create_node(
-    rti_connext_dynamic_identifier, name, namespace_, domain_id,
-    enforce_security, security_root_path);
+    rti_connext_dynamic_identifier, name, namespace_, domain_id, options);
 }
 
 rmw_ret_t
