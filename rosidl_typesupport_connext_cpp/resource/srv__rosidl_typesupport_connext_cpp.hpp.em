@@ -44,6 +44,7 @@ create_requester__@(spec.srv_name)(
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
+  void ** untyped_writer,
   void * (*allocator)(size_t));
 
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC_@(spec.pkg_name)
@@ -66,6 +67,7 @@ create_replier__@(spec.srv_name)(
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
+  void ** untyped_writer,
   void * (*allocator)(size_t));
 
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC_@(spec.pkg_name)

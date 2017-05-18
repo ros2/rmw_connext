@@ -307,10 +307,12 @@ wait(const char * implementation_identifier,
   for (size_t i = 0; i < services->service_count; ++i) {
     ServiceInfo * service_info =
       static_cast<ServiceInfo *>(services->services[i]);
+
     if (!service_info) {
       RMW_SET_ERROR_MSG("service info handle is null");
       return RMW_RET_ERROR;
     }
+
     DDSReadCondition * read_condition = service_info->read_condition_;
     if (!read_condition) {
       RMW_SET_ERROR_MSG("read condition handle is null");
@@ -331,12 +333,14 @@ wait(const char * implementation_identifier,
       RMW_SET_ERROR_MSG("client info handle is null");
       return RMW_RET_ERROR;
     }
+
     DDSDataReader * response_datareader = client_info->response_datareader_;
     if (!response_datareader) {
       RMW_SET_ERROR_MSG("response datareader handle is null");
       return RMW_RET_ERROR;
     }
 
+    // MIGHT BE IMPORTANT !!!
     DDSReadCondition * read_condition = client_info->read_condition_;
     if (!read_condition) {
       RMW_SET_ERROR_MSG("read condition handle is null");
@@ -357,6 +361,7 @@ wait(const char * implementation_identifier,
     timeout.sec = static_cast<DDS_Long>(wait_timeout->sec);
     timeout.nanosec = static_cast<DDS_Long>(wait_timeout->nsec);
   }
+
   DDS_ReturnCode_t status = dds_waitset->wait(*active_conditions, timeout);
 
   if (status != DDS_RETCODE_OK && status != DDS_RETCODE_TIMEOUT) {

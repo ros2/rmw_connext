@@ -23,6 +23,8 @@ if(NOT Connext_FOUND OR CONNEXT_DYNAMIC_DISABLE)
   return()
 endif()
 
+find_package(rcutils REQUIRED)
+
 find_package(rosidl_typesupport_introspection_c)
 find_package(rosidl_typesupport_introspection_cpp)
 if(NOT rosidl_typesupport_introspection_c_FOUND AND NOT rosidl_typesupport_introspection_cpp_FOUND)
@@ -37,6 +39,7 @@ find_package(rosidl_generator_c REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 
 ament_export_dependencies(
+  rcutils
   rmw rmw_connext_shared_cpp
   rosidl_generator_c
   rosidl_generator_cpp
@@ -51,6 +54,7 @@ register_rmw_implementation(
 
 add_library(rmw_connext_dynamic_cpp SHARED src/functions.cpp src/publish_take.cpp)
 ament_target_dependencies(rmw_connext_dynamic_cpp
+  "rcutils"
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
   "rmw"
