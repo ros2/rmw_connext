@@ -1878,7 +1878,10 @@ rmw_get_topic_names_and_types(
   rmw_topic_names_and_types_t * topic_names_and_types)
 {
   return get_topic_names_and_types(rti_connext_identifier, node,
-           topic_names_and_types);
+           topic_names_and_types,
+           ros_topics_prefix,
+           ros_service_requester_prefix,
+           ros_service_response_prefix);
 }
 
 rmw_ret_t
@@ -1908,7 +1911,12 @@ rmw_count_publishers(
   const char * topic_name,
   size_t * count)
 {
-  return count_publishers(rti_connext_identifier, node, topic_name, count);
+  return count_publishers(rti_connext_identifier, node,
+    topic_name,
+    ros_topics_prefix,
+    ros_service_requester_prefix,
+    ros_service_response_prefix,
+    count);
 }
 
 rmw_ret_t
@@ -1917,7 +1925,12 @@ rmw_count_subscribers(
   const char * topic_name,
   size_t * count)
 {
-  return count_subscribers(rti_connext_identifier, node, topic_name, count);
+  return count_subscribers(rti_connext_identifier, node,
+    topic_name,
+    ros_topics_prefix,
+    ros_service_requester_prefix,
+    ros_service_response_prefix,
+    count);
 }
 
 rmw_ret_t
