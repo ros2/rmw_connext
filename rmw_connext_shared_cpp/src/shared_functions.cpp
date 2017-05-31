@@ -853,7 +853,7 @@ get_topic_names_and_types(
     for (auto & jt : it.second) {
       // truncate ros specific prefix
       auto topic_fqdn = _filter_ros_prefix(
-          it.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
+        it.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
       topics_with_multiple_types[topic_fqdn].insert(jt);
     }
   }
@@ -861,7 +861,7 @@ get_topic_names_and_types(
     for (auto & jt : it.second) {
       // truncate ros specific prefix
       auto topic_fqdn = _filter_ros_prefix(
-          it.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
+        it.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
       topics_with_multiple_types[topic_fqdn].insert(jt);
     }
   }
@@ -1021,13 +1021,13 @@ count_publishers(const char * implementation_identifier,
   auto it = std::find_if(
     topic_names_and_types.begin(),
     topic_names_and_types.end(),
-    [&] (auto tnt) -> bool {
-      auto fqdn = _filter_ros_prefix(
-          tnt.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
-      if (fqdn == topic_name) {
-        return true;
-      }
-      return false;
+    [&](auto tnt) -> bool {
+    auto fqdn = _filter_ros_prefix(
+      tnt.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
+    if (fqdn == topic_name) {
+      return true;
+    }
+    return false;
   });
   if (it == topic_names_and_types.end()) {
     *count = 0;
@@ -1077,13 +1077,13 @@ count_subscribers(const char * implementation_identifier,
   auto it = std::find_if(
     topic_names_and_types.begin(),
     topic_names_and_types.end(),
-    [&] (auto tnt) -> bool {
-      auto fqdn = _filter_ros_prefix(
-          tnt.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
-      if (fqdn == topic_name) {
-        return true;
-      }
-      return false;
+    [&](auto tnt) -> bool {
+    auto fqdn = _filter_ros_prefix(
+      tnt.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
+    if (fqdn == topic_name) {
+      return true;
+    }
+    return false;
   });
   if (it == topic_names_and_types.end()) {
     *count = 0;

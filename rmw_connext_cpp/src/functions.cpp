@@ -1912,11 +1912,11 @@ rmw_count_publishers(
   size_t * count)
 {
   return count_publishers(rti_connext_identifier, node,
-    topic_name,
-    ros_topics_prefix,
-    ros_service_requester_prefix,
-    ros_service_response_prefix,
-    count);
+           topic_name,
+           ros_topics_prefix,
+           ros_service_requester_prefix,
+           ros_service_response_prefix,
+           count);
 }
 
 rmw_ret_t
@@ -1926,11 +1926,11 @@ rmw_count_subscribers(
   size_t * count)
 {
   return count_subscribers(rti_connext_identifier, node,
-    topic_name,
-    ros_topics_prefix,
-    ros_service_requester_prefix,
-    ros_service_response_prefix,
-    count);
+           topic_name,
+           ros_topics_prefix,
+           ros_service_requester_prefix,
+           ros_service_response_prefix,
+           count);
 }
 
 rmw_ret_t
