@@ -805,7 +805,7 @@ _filter_ros_prefix(
 {
   auto prefixes = {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
   for (auto prefix : prefixes) {
-    if (topic_name.rfind(std::string(prefix) + "/") == 0) {
+    if (topic_name.rfind(std::string(prefix) + "/", 0) == 0) {
       return topic_name.substr(strlen(ros_topic_prefix));
     }
   }
