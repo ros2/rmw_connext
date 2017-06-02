@@ -190,7 +190,8 @@ init()
   return RMW_RET_OK;
 }
 
-rmw_ret_t check_attach_condition_error(DDS::ReturnCode_t retcode)
+rmw_ret_t
+check_attach_condition_error(DDS::ReturnCode_t retcode)
 {
   if (retcode == DDS_RETCODE_OK) {
     return RMW_RET_OK;
@@ -794,11 +795,31 @@ trigger_guard_condition(const char * implementation_identifier,
   return RMW_RET_OK;
 }
 
+inline
+std::string
+_filter_ros_prefix(
+  const std::string & topic_name,
+  const char * const ros_topic_prefix,
+  const char * const ros_service_requester_prefix,
+  const char * const ros_service_response_prefix)
+{
+  auto prefixes = {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
+  for (auto prefix : prefixes) {
+    if (topic_name.rfind(std::string(prefix) + "/", 0) == 0) {
+      return topic_name.substr(strlen(ros_topic_prefix));
+    }
+  }
+  return topic_name;
+}
+
 rmw_ret_t
 get_topic_names_and_types(
   const char * implementation_identifier,
   const rmw_node_t * node,
-  rmw_topic_names_and_types_t * topic_names_and_types)
+  rmw_topic_names_and_types_t * topic_names_and_types,
+  const char * const ros_topic_prefix,
+  const char * const ros_service_requester_prefix,
+  const char * const ros_service_response_prefix)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -830,12 +851,18 @@ get_topic_names_and_types(
   std::map<std::string, std::set<std::string>> topics_with_multiple_types;
   for (auto it : node_info->publisher_listener->topic_names_and_types) {
     for (auto & jt : it.second) {
-      topics_with_multiple_types[it.first].insert(jt);
+      // truncate ros specific prefix
+      auto topic_fqdn = _filter_ros_prefix(
+        it.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
+      topics_with_multiple_types[topic_fqdn].insert(jt);
     }
   }
   for (auto it : node_info->subscriber_listener->topic_names_and_types) {
     for (auto & jt : it.second) {
-      topics_with_multiple_types[it.first].insert(jt);
+      // truncate ros specific prefix
+      auto topic_fqdn = _filter_ros_prefix(
+        it.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
+      topics_with_multiple_types[topic_fqdn].insert(jt);
     }
   }
 
@@ -958,6 +985,9 @@ rmw_ret_t
 count_publishers(const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
+  const char * const ros_topic_prefix,
+  const char * const ros_service_requester_prefix,
+  const char * const ros_service_response_prefix,
   size_t * count)
 {
   if (!node) {
@@ -988,7 +1018,17 @@ count_publishers(const char * implementation_identifier,
   }
 
   const auto & topic_names_and_types = node_info->publisher_listener->topic_names_and_types;
-  auto it = topic_names_and_types.find(topic_name);
+  auto it = std::find_if(
+    topic_names_and_types.begin(),
+    topic_names_and_types.end(),
+    [&](auto tnt) -> bool {
+    auto fqdn = _filter_ros_prefix(
+      tnt.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
+    if (fqdn == topic_name) {
+      return true;
+    }
+    return false;
+  });
   if (it == topic_names_and_types.end()) {
     *count = 0;
   } else {
@@ -1001,6 +1041,9 @@ rmw_ret_t
 count_subscribers(const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
+  const char * const ros_topic_prefix,
+  const char * const ros_service_requester_prefix,
+  const char * const ros_service_response_prefix,
   size_t * count)
 {
   if (!node) {
@@ -1031,7 +1074,17 @@ count_subscribers(const char * implementation_identifier,
   }
 
   const auto & topic_names_and_types = node_info->subscriber_listener->topic_names_and_types;
-  auto it = topic_names_and_types.find(topic_name);
+  auto it = std::find_if(
+    topic_names_and_types.begin(),
+    topic_names_and_types.end(),
+    [&](auto tnt) -> bool {
+    auto fqdn = _filter_ros_prefix(
+      tnt.first, ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix);
+    if (fqdn == topic_name) {
+      return true;
+    }
+    return false;
+  });
   if (it == topic_names_and_types.end()) {
     *count = 0;
   } else {

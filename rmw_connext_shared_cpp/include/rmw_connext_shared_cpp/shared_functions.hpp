@@ -506,12 +506,14 @@ wait(const char * implementation_identifier,
   return RMW_RET_OK;
 }
 
-
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
 get_topic_names_and_types(const char * implementation_identifier,
   const rmw_node_t * node,
-  rmw_topic_names_and_types_t * topic_names_and_types);
+  rmw_topic_names_and_types_t * topic_names_and_types,
+  const char * const ros_topic_prefix,
+  const char * const ros_service_requester_prefix,
+  const char * const ros_service_response_prefix);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -524,6 +526,9 @@ rmw_ret_t
 count_publishers(const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
+  const char * const ros_topics_prefix,
+  const char * const ros_service_requester_prefix,
+  const char * const ros_service_response_prefix,
   size_t * count);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
@@ -531,6 +536,9 @@ rmw_ret_t
 count_subscribers(const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
+  const char * const ros_topics_prefix,
+  const char * const ros_service_requester_prefix,
+  const char * const ros_service_response_prefix,
   size_t * count);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
