@@ -221,7 +221,7 @@ _process_topic_name(
   char ** partition_str)
 {
   bool success = true;
-  rcutils_string_array_t name_tokens;
+  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
@@ -251,7 +251,7 @@ _process_topic_name(
     // Connext will call deallocate on this, passing ownership to connext
     *topic_str = DDS_String_dup(name_tokens.data[1]);
   } else {
-    RMW_SET_ERROR_MSG("Illformated topic name")
+    RMW_SET_ERROR_MSG("incorrectly formatted topic name")
     success = false;
   }
 
