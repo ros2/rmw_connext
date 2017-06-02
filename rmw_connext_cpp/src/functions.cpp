@@ -214,7 +214,7 @@ rmw_destroy_node(rmw_node_t * node)
 }
 
 bool
-__process_topic_name(
+_process_topic_name(
   const char * topic_name,
   bool avoid_ros_namespace_conventions,
   char ** topic_str,
@@ -346,7 +346,7 @@ rmw_create_publisher(
     goto fail;
   }
 
-  if (!__process_topic_name(
+  if (!_process_topic_name(
     topic_name,
     qos_profile->avoid_ros_namespace_conventions,
     &topic_str,
@@ -678,7 +678,7 @@ rmw_create_subscription(const rmw_node_t * node,
     goto fail;
   }
 
-  if (!__process_topic_name(
+  if (!_process_topic_name(
     topic_name,
     qos_profile->avoid_ros_namespace_conventions,
     &topic_str,
@@ -1038,12 +1038,12 @@ rmw_wait(rmw_subscriptions_t * subscriptions,
 }
 
 bool
-__process_service_name(
+_process_service_name(
   const char * service_name,
   bool avoid_ros_namespace_conventions,
+  char ** service_str,
   char ** request_partition_str,
-  char ** response_partition_str,
-  char ** service_str)
+  char ** response_partition_str)
 {
   bool success = true;
   rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
@@ -1180,12 +1180,12 @@ rmw_create_client(
     goto fail;
   }
 
-  if (!__process_service_name(
+  if (!_process_service_name(
     service_name,
     qos_profile->avoid_ros_namespace_conventions,
+    &service_str,
     &request_partition_str,
-    &response_partition_str,
-    &service_str))
+    &response_partition_str))
   {
     goto fail;
   }
@@ -1514,12 +1514,12 @@ rmw_create_service(
     goto fail;
   }
 
-  if (!__process_service_name(
+  if (!_process_service_name(
     service_name,
     qos_profile->avoid_ros_namespace_conventions,
+    &service_str,
     &request_partition_str,
-    &response_partition_str,
-    &service_str))
+    &response_partition_str))
   {
     goto fail;
   }
