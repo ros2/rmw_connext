@@ -307,7 +307,7 @@ create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * options)
+  const rmw_node_security_options_t * security_options)
 {
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
@@ -347,7 +347,7 @@ create_node(
     return NULL;
   }
 
-  if (options->security_root_path) {
+  if (security_options->security_root_path) {
     // enable some security stuff
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
@@ -377,7 +377,7 @@ create_node(
       return NULL;
     }
 
-    const char * srp = options->security_root_path;  // save some typing
+    const char * srp = security_options->security_root_path;  // save some typing
     std::string ca_cert_fn = rcutils_join_path(srp, "ca.cert.pem");
     std::string cert_fn = rcutils_join_path(srp, "cert.pem");
     std::string key_fn = rcutils_join_path(srp, "key.pem");
