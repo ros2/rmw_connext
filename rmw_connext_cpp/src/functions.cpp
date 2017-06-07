@@ -222,10 +222,13 @@ _process_topic_name(
 {
   bool success = true;
   rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
-  // allocates memory, but doesn't have to be freed.
-  // partition operater takes ownership of it.
-  name_tokens = rcutils_split_last(topic_name, '/');
+  if (rcutils_split_last(topic_name, '/', allocator, &name_tokens) != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    success = false;
+    goto end;
+  }
   if (name_tokens.size == 1) {
     if (!avoid_ros_namespace_conventions) {
       *partition_str = DDS_String_dup(ros_topics_prefix);
@@ -1047,11 +1050,13 @@ _process_service_name(
 {
   bool success = true;
   rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
-  // get actual data subsription object
-  // allocates memory, but doesn't have to be freed.
-  // partition operater takes ownership of it
-  name_tokens = rcutils_split_last(service_name, '/');
+  if (rcutils_split_last(service_name, '/', allocator, &name_tokens) != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    success = false;
+    goto end;
+  }
   if (name_tokens.size == 1) {
     if (!avoid_ros_namespace_conventions) {
       *request_partition_str = DDS_String_dup(ros_service_requester_prefix);
