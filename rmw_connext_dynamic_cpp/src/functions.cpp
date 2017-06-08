@@ -267,6 +267,11 @@ rmw_create_publisher(
     return nullptr;
   }
 
+  if (qos_profile->avoid_ros_namespace_conventions) {
+    RMW_SET_ERROR_MSG("QoS 'avoid_ros_namespace_conventions' is not implemented");
+    return NULL;
+  }
+
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
@@ -756,6 +761,11 @@ rmw_create_subscription(
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
     return nullptr;
+  }
+
+  if (qos_profile->avoid_ros_namespace_conventions) {
+    RMW_SET_ERROR_MSG("QoS 'avoid_ros_namespace_conventions' is not implemented");
+    return NULL;
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
@@ -1340,6 +1350,11 @@ rmw_create_client(
     return nullptr;
   }
 
+  if (qos_profile->avoid_ros_namespace_conventions) {
+    RMW_SET_ERROR_MSG("QoS 'avoid_ros_namespace_conventions' is not implemented");
+    return NULL;
+  }
+
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
@@ -1747,6 +1762,11 @@ rmw_create_service(
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
     return nullptr;
+  }
+
+  if (qos_profile->avoid_ros_namespace_conventions) {
+    RMW_SET_ERROR_MSG("QoS 'avoid_ros_namespace_conventions' is not implemented");
+    return NULL;
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
