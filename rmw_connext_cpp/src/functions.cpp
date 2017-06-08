@@ -347,10 +347,10 @@ rmw_create_publisher(
   }
 
   if (!_process_topic_name(
-    topic_name,
-    qos_profile->avoid_ros_namespace_conventions,
-    &topic_str,
-    &partition_str))
+      topic_name,
+      qos_profile->avoid_ros_namespace_conventions,
+      &topic_str,
+      &partition_str))
   {
     goto fail;
   }
@@ -679,10 +679,10 @@ rmw_create_subscription(const rmw_node_t * node,
   }
 
   if (!_process_topic_name(
-    topic_name,
-    qos_profile->avoid_ros_namespace_conventions,
-    &topic_str,
-    &partition_str))
+      topic_name,
+      qos_profile->avoid_ros_namespace_conventions,
+      &topic_str,
+      &partition_str))
   {
     goto fail;
   }
@@ -1181,11 +1181,11 @@ rmw_create_client(
   }
 
   if (!_process_service_name(
-    service_name,
-    qos_profile->avoid_ros_namespace_conventions,
-    &service_str,
-    &request_partition_str,
-    &response_partition_str))
+      service_name,
+      qos_profile->avoid_ros_namespace_conventions,
+      &service_str,
+      &request_partition_str,
+      &response_partition_str))
   {
     goto fail;
   }
@@ -1515,11 +1515,11 @@ rmw_create_service(
   }
 
   if (!_process_service_name(
-    service_name,
-    qos_profile->avoid_ros_namespace_conventions,
-    &service_str,
-    &request_partition_str,
-    &response_partition_str))
+      service_name,
+      qos_profile->avoid_ros_namespace_conventions,
+      &service_str,
+      &request_partition_str,
+      &response_partition_str))
   {
     goto fail;
   }
