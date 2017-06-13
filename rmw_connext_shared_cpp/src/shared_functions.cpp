@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw_connext_shared_cpp/shared_functions.hpp"
+
 #include <map>
 #include <mutex>
 #include <set>
@@ -21,7 +23,6 @@
 #include "rcutils/types/string_array.h"
 #include "rmw/allocators.h"
 #include "rmw/sanity_checks.h"
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
 
 // Uncomment this to get extra console output about discovery.
 // #define DISCOVERY_DEBUG_LOGGING 1
@@ -309,6 +310,10 @@ create_node(
   size_t domain_id,
   const rmw_node_security_options_t * security_options)
 {
+  if (!security_options) {
+    RMW_SET_ERROR_MSG("security_options is null");
+    return nullptr;
+  }
   DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
   if (!dpf_) {
     RMW_SET_ERROR_MSG("failed to get participant factory");

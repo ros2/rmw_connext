@@ -207,11 +207,7 @@ rmw_create_node(
   const rmw_node_security_options_t * security_options)
 {
   return create_node(
-    rti_connext_identifier,
-    name,
-    namespace_,
-    domain_id,
-    security_options);
+    rti_connext_identifier, name, namespace_, domain_id, security_options);
 }
 
 rmw_ret_t
