@@ -240,7 +240,6 @@ _process_topic_name(
       *partition_str = DDS_String_dup(name_tokens.data[0]);
     } else {
       // concat the ros_topics_prefix with the user's namespace
-      rcutils_allocator_t allocator = rcutils_get_default_allocator();
       char * concat_str =
         rcutils_format_string(allocator, "%s/%s", ros_topics_prefix, name_tokens.data[0]);
       if (!concat_str) {
@@ -261,7 +260,7 @@ _process_topic_name(
 end:
   // all necessary strings are copied into connext
   // free that memory
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
   return success;
@@ -658,7 +657,6 @@ rmw_create_subscription(const rmw_node_t * node,
   rmw_subscription_t * subscription = nullptr;
 
   // memory allocations for namespacing
-  rcutils_string_array_t name_tokens;
   char * partition_str = nullptr;
   char * topic_str = nullptr;
 
@@ -825,11 +823,6 @@ fail:
   }
   if (buf) {
     rmw_free(buf);
-  }
-
-  // cleanup namespacing
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
   return NULL;
@@ -1070,7 +1063,6 @@ _process_service_name(
       *response_partition_str = DDS_String_dup(name_tokens.data[0]);
     } else {
       // concat the ros_service_*_prefix with the user's namespace
-      rcutils_allocator_t allocator = rcutils_get_default_allocator();
       char * request_concat_str = rcutils_format_string(
         allocator,
         "%s/%s", ros_service_requester_prefix, name_tokens.data[0]);
@@ -1100,7 +1092,7 @@ _process_service_name(
 
 end:
   // free that memory
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
