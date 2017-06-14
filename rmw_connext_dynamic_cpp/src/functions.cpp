@@ -130,6 +130,10 @@ extern "C"
 {
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
 const char * rti_connext_dynamic_identifier = "rmw_connext_dynamic_cpp";
+// static for internal linkage
+static const char * const ros_topics_prefix = "rt";
+static const char * const ros_service_requester_prefix = "rq";
+static const char * const ros_service_response_prefix = "rr";
 
 struct CustomPublisherInfo
 {
@@ -310,6 +314,7 @@ rmw_create_publisher(
   rcutils_string_array_t name_tokens;
   char * partition_str = nullptr;
   char * topic_str = nullptr;
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
   // Start initializing elements.
   publisher = rmw_publisher_allocate();
@@ -357,7 +362,10 @@ rmw_create_publisher(
   // allocates memory, but doesn't have to be freed.
   // partition operater takes ownership of it.
   printf("Original publisher topic name: %s\n", topic_name);
-  name_tokens = rcutils_split_last(topic_name, '/');
+  if (rcutils_split_last(topic_name, '/', allocator, &name_tokens) != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    goto fail;
+  }
   partition_str = NULL;
   topic_str = NULL;
   if (name_tokens.size == 2) {
@@ -566,7 +574,7 @@ fail:
   }
 
   // cleanup namespacing
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -2269,7 +2277,10 @@ rmw_get_topic_names_and_types(
   return get_topic_names_and_types(
     rti_connext_dynamic_identifier,
     node,
-    topic_names_and_types);
+    topic_names_and_types,
+    ros_topics_prefix,
+    ros_service_requester_prefix,
+    ros_service_response_prefix);
 }
 
 rmw_ret_t
@@ -2299,7 +2310,10 @@ rmw_count_publishers(
   const char * topic_name,
   size_t * count)
 {
-  return count_publishers(rti_connext_dynamic_identifier, node, topic_name, count);
+  return count_publishers(
+    rti_connext_dynamic_identifier, node, topic_name,
+    ros_topics_prefix, ros_service_requester_prefix, ros_service_response_prefix,
+    count);
 }
 
 rmw_ret_t
@@ -2308,7 +2322,10 @@ rmw_count_subscribers(
   const char * topic_name,
   size_t * count)
 {
-  return count_subscribers(rti_connext_dynamic_identifier, node, topic_name, count);
+  return count_subscribers(
+    rti_connext_dynamic_identifier, node, topic_name,
+    ros_topics_prefix, ros_service_requester_prefix, ros_service_response_prefix,
+    count);
 }
 
 rmw_ret_t
