@@ -184,8 +184,9 @@ configure_file(
 
 set(_target_suffix "__rosidl_typesupport_connext_cpp")
 
-if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
 endif()
 
 link_directories(${Connext_LIBRARY_DIRS})

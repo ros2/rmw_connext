@@ -5,8 +5,13 @@ project(rmw_connext_dynamic_cpp)
 set(CONNEXT_DYNAMIC_DISABLE $ENV{CONNEXT_DYNAMIC_DISABLE}
   CACHE BOOL "If Connext Dynamic should be disabled.")
 
-if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wpedantic")
+# Default to C++14
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
 find_package(ament_cmake REQUIRED)
