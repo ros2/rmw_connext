@@ -151,9 +151,6 @@ extern "C"
 {
 // static for internal linkage
 static const char * const rti_connext_identifier = "rmw_connext_cpp";
-static const char * const ros_topics_prefix = "rt";
-static const char * const ros_service_requester_prefix = "rq";
-static const char * const ros_service_response_prefix = "rr";
 
 struct ConnextStaticPublisherInfo
 {
@@ -234,17 +231,17 @@ _process_topic_name(
   }
   if (name_tokens.size == 1) {
     if (!avoid_ros_namespace_conventions) {
-      *partition_str = DDS_String_dup(ros_topics_prefix);
+      *partition_str = DDS_String_dup(ros_topic_prefix);
     }
     *topic_str = DDS_String_dup(name_tokens.data[0]);
   } else if (name_tokens.size == 2) {
     if (avoid_ros_namespace_conventions) {
-      // no ros_topics_prefix, so store the user's namespace directly
+      // no ros_topic_prefix, so store the user's namespace directly
       *partition_str = DDS_String_dup(name_tokens.data[0]);
     } else {
-      // concat the ros_topics_prefix with the user's namespace
+      // concat the ros_topic_prefix with the user's namespace
       char * concat_str =
-        rcutils_format_string(allocator, "%s/%s", ros_topics_prefix, name_tokens.data[0]);
+        rcutils_format_string(allocator, "%s/%s", ros_topic_prefix, name_tokens.data[0]);
       if (!concat_str) {
         RMW_SET_ERROR_MSG("could not allocate memory for partition string")
         success = false;
@@ -263,7 +260,7 @@ _process_topic_name(
 end:
   // all necessary strings are copied into connext
   // free that memory
-  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
   return success;
@@ -1095,7 +1092,7 @@ _process_service_name(
 
 end:
   // free that memory
-  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1888,25 +1885,16 @@ rmw_send_response(
 rmw_ret_t
 rmw_get_topic_names_and_types(
   const rmw_node_t * node,
-  rmw_topic_names_and_types_t * topic_names_and_types)
+  rcutils_allocator_t * allocator,
+  bool no_demangle,
+  rmw_names_and_types_t * topic_names_and_types)
 {
-  return get_topic_names_and_types(rti_connext_identifier, node,
-           topic_names_and_types,
-           ros_topics_prefix,
-           ros_service_requester_prefix,
-           ros_service_response_prefix);
-}
-
-rmw_ret_t
-rmw_destroy_topic_names_and_types(
-  rmw_topic_names_and_types_t * topic_names_and_types)
-{
-  if (!topic_names_and_types) {
-    RMW_SET_ERROR_MSG("topics handle is null");
-    return RMW_RET_ERROR;
-  }
-  destroy_topic_names_and_types(topic_names_and_types);
-  return RMW_RET_OK;
+  return get_topic_names_and_types(
+    rti_connext_identifier,
+    node,
+    allocator,
+    no_demangle,
+    topic_names_and_types);
 }
 
 rmw_ret_t
@@ -1914,8 +1902,7 @@ rmw_get_node_names(
   const rmw_node_t * node,
   rcutils_string_array_t * node_names)
 {
-  return get_node_names(rti_connext_identifier, node,
-           node_names);
+  return get_node_names(rti_connext_identifier, node, node_names);
 }
 
 rmw_ret_t
@@ -1924,12 +1911,7 @@ rmw_count_publishers(
   const char * topic_name,
   size_t * count)
 {
-  return count_publishers(rti_connext_identifier, node,
-           topic_name,
-           ros_topics_prefix,
-           ros_service_requester_prefix,
-           ros_service_response_prefix,
-           count);
+  return count_publishers(rti_connext_identifier, node, topic_name, count);
 }
 
 rmw_ret_t
@@ -1938,12 +1920,7 @@ rmw_count_subscribers(
   const char * topic_name,
   size_t * count)
 {
-  return count_subscribers(rti_connext_identifier, node,
-           topic_name,
-           ros_topics_prefix,
-           ros_service_requester_prefix,
-           ros_service_response_prefix,
-           count);
+  return count_subscribers(rti_connext_identifier, node, topic_name, count);
 }
 
 rmw_ret_t

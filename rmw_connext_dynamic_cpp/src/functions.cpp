@@ -130,10 +130,6 @@ extern "C"
 {
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
 const char * rti_connext_dynamic_identifier = "rmw_connext_dynamic_cpp";
-// static for internal linkage
-static const char * const ros_topics_prefix = "rt";
-static const char * const ros_service_requester_prefix = "rq";
-static const char * const ros_service_response_prefix = "rr";
 
 struct CustomPublisherInfo
 {
@@ -579,7 +575,7 @@ fail:
   }
 
   // cleanup namespacing
-  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -2277,27 +2273,16 @@ rmw_send_response(
 rmw_ret_t
 rmw_get_topic_names_and_types(
   const rmw_node_t * node,
-  rmw_topic_names_and_types_t * topic_names_and_types)
+  rcutils_allocator_t * allocator,
+  bool no_demangle,
+  rmw_names_and_types_t * topic_names_and_types)
 {
   return get_topic_names_and_types(
     rti_connext_dynamic_identifier,
     node,
-    topic_names_and_types,
-    ros_topics_prefix,
-    ros_service_requester_prefix,
-    ros_service_response_prefix);
-}
-
-rmw_ret_t
-rmw_destroy_topic_names_and_types(
-  rmw_topic_names_and_types_t * topic_names_and_types)
-{
-  if (!topic_names_and_types) {
-    RMW_SET_ERROR_MSG("topics handle is null");
-    return RMW_RET_ERROR;
-  }
-  destroy_topic_names_and_types(topic_names_and_types);
-  return RMW_RET_OK;
+    allocator,
+    no_demangle,
+    topic_names_and_types);
 }
 
 rmw_ret_t
@@ -2315,10 +2300,7 @@ rmw_count_publishers(
   const char * topic_name,
   size_t * count)
 {
-  return count_publishers(
-    rti_connext_dynamic_identifier, node, topic_name,
-    ros_topics_prefix, ros_service_requester_prefix, ros_service_response_prefix,
-    count);
+  return count_publishers(rti_connext_dynamic_identifier, node, topic_name, count);
 }
 
 rmw_ret_t
@@ -2327,10 +2309,7 @@ rmw_count_subscribers(
   const char * topic_name,
   size_t * count)
 {
-  return count_subscribers(
-    rti_connext_dynamic_identifier, node, topic_name,
-    ros_topics_prefix, ros_service_requester_prefix, ros_service_response_prefix,
-    count);
+  return count_subscribers(rti_connext_dynamic_identifier, node, topic_name, count);
 }
 
 rmw_ret_t
