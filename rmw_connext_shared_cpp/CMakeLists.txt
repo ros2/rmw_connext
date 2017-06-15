@@ -14,6 +14,7 @@ if(NOT Connext_FOUND)
   message(WARNING "Could not find RTI Connext - skipping '${PROJECT_NAME}'")
   return()
 endif()
+find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 
 include_directories(include)
@@ -26,6 +27,7 @@ ament_export_dependencies(rmw)
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(rmw_connext_shared_cpp SHARED src/shared_functions.cpp)
 ament_target_dependencies(rmw_connext_shared_cpp
+  "rcutils"
   "rmw"
   "Connext")
 ament_export_libraries(rmw_connext_shared_cpp ${Connext_LIBRARIES})

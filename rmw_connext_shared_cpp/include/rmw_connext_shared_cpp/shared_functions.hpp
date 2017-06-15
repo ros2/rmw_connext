@@ -143,7 +143,8 @@ create_node(
   const char * implementation_identifier,
   const char * name,
   const char * namespace_,
-  size_t domain_id);
+  size_t domain_id,
+  const rmw_node_security_options_t * options);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
