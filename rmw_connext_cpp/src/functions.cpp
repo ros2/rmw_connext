@@ -327,6 +327,7 @@ rmw_create_publisher(
   void * buf = nullptr;
   ConnextStaticPublisherInfo * publisher_info = nullptr;
   rmw_publisher_t * publisher = nullptr;
+  std::string mangled_name = "";
 
   // memory allocations for namespacing
   char * partition_str = nullptr;
@@ -446,8 +447,12 @@ rmw_create_publisher(
   }
   memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
+  mangled_name =
+    std::string(publisher_qos.partition.name[0]) +
+    "/" +
+    topic_writer->get_topic()->get_name();
   node_info->publisher_listener->add_information(
-    dds_publisher->get_instance_handle(), topic_name, type_name, EntityType::Publisher);
+    dds_publisher->get_instance_handle(), mangled_name.c_str(), type_name, EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
 // TODO(karsten1987): replace this block with logging macros
@@ -658,6 +663,7 @@ rmw_create_subscription(const rmw_node_t * node,
   void * buf = nullptr;
   ConnextStaticSubscriberInfo * subscriber_info = nullptr;
   rmw_subscription_t * subscription = nullptr;
+  std::string mangled_name;
 
   // memory allocations for namespacing
   char * partition_str = nullptr;
@@ -776,8 +782,15 @@ rmw_create_subscription(const rmw_node_t * node,
   }
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
 
+  mangled_name =
+    std::string(subscriber_qos.partition.name[0]) +
+    "/" +
+    topic_reader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
-    dds_subscriber->get_instance_handle(), topic_name, type_name, EntityType::Subscriber);
+    dds_subscriber->get_instance_handle(),
+    mangled_name.c_str(),
+    type_name,
+    EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
 // TODO(karsten1987): replace this block with logging macros
@@ -1157,6 +1170,7 @@ rmw_create_client(
   void * buf = nullptr;
   ConnextStaticClientInfo * client_info = nullptr;
   rmw_client_t * client = nullptr;
+  std::string mangled_name = "";
 
   // memory allocations for namespacing
   char * request_partition_str = nullptr;
@@ -1273,16 +1287,24 @@ rmw_create_client(
   }
   memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
 
+  mangled_name =
+    std::string(subscriber_qos.partition.name[0]) +
+    "/" +
+    response_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
     response_datareader->get_instance_handle(),
-    response_datareader->get_topicdescription()->get_name(),
+    mangled_name.c_str(),
     response_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
+  mangled_name =
+    std::string(publisher_qos.partition.name[0]) +
+    "/" +
+    request_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
     request_datawriter->get_instance_handle(),
-    request_datawriter->get_topic()->get_name(),
+    mangled_name.c_str(),
     request_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
@@ -1491,6 +1513,7 @@ rmw_create_service(
   void * buf = nullptr;
   ConnextStaticServiceInfo * service_info = nullptr;
   rmw_service_t * service = nullptr;
+  std::string mangled_name = "";
 
   // memory allocations for namespacing
   char * request_partition_str = nullptr;
@@ -1601,16 +1624,24 @@ rmw_create_service(
   }
   memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
 
+  mangled_name =
+    std::string(subscriber_qos.partition.name[0]) +
+    "/" +
+    request_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
     request_datareader->get_instance_handle(),
-    request_datareader->get_topicdescription()->get_name(),
+    mangled_name.c_str(),
     request_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
+  mangled_name =
+    std::string(publisher_qos.partition.name[0]) +
+    "/" +
+    response_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
     response_datawriter->get_instance_handle(),
-    response_datawriter->get_topic()->get_name(),
+    mangled_name.c_str(),
     response_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
