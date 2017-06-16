@@ -880,7 +880,7 @@ trigger_guard_condition(const char * implementation_identifier,
 }
 
 static std::vector<std::string> _ros_prefixes =
-  {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
+{ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
 
 /// Return the ROS specific prefix if it exists, otherwise "".
 static inline
@@ -988,7 +988,9 @@ get_topic_names_and_types(
   auto demangle_topic = _demangle_if_ros_topic;
   auto demangle_type = _demangle_if_ros_type;
   if (no_demangle) {
-    auto noop = [](const std::string & in) -> std::string {return in;};
+    auto noop = [](const std::string & in) -> std::string {
+        return in;
+      };
     demangle_topic = noop;
     demangle_type = noop;
   }
