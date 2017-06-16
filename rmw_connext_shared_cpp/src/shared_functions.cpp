@@ -984,17 +984,6 @@ get_topic_names_and_types(
     }
   }
 
-  // setup demangle functions based on no_demangle
-  auto demangle_topic = _demangle_if_ros_topic;
-  auto demangle_type = _demangle_if_ros_type;
-  if (no_demangle) {
-    auto noop = [](const std::string & in) -> std::string {
-        return in;
-      };
-    demangle_topic = noop;
-    demangle_type = noop;
-  }
-
   // Copy data to results handle
   if (topics.size() > 0) {
     // Setup string array to store names
