@@ -1089,7 +1089,7 @@ _demangle_service_from_topic(const std::string & topic_name)
     suffix_position = topic_name.rfind(suffix);
     if (suffix_position != std::string::npos) {
       if (topic_name.length() - suffix_position - suffix.length() != 0) {
-        RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_cpp",
+        RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
           "service topic has service prefix and a suffix, but not at the end"
           ", report this: '%s'", topic_name.c_str())
         continue;
@@ -1099,15 +1099,15 @@ _demangle_service_from_topic(const std::string & topic_name)
     }
   }
   if (suffix_position == std::string::npos) {
-    RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_cpp",
+    RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
       "service topic has prefix but no suffix"
       ", report this: '%s'", topic_name.c_str())
     return "";
   }
   // strip off the suffix first
-  std::string service_name = topic_name.substr(0, suffix_position);
+  std::string service_name = topic_name.substr(0, suffix_position + 1);
   // then the prefix
-  size_t start = prefix.length() + 1 /* for / */;
+  size_t start = prefix.length();  // explicitly leave / after prefix
   return service_name.substr(start, service_name.length() - 1 - start);
 }
 
@@ -1132,7 +1132,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
     suffix_position = dds_type_name.rfind(suffix);
     if (suffix_position != std::string::npos) {
       if (dds_type_name.length() - suffix_position - suffix.length() != 0) {
-        RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_cpp",
+        RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
           "service type contains '::srv::dds_::' and a suffix, but not at the end"
           ", report this: '%s'", dds_type_name.c_str())
         continue;
@@ -1142,7 +1142,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
     }
   }
   if (suffix_position == std::string::npos) {
-    RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_cpp",
+    RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
       "service type contains '::srv::dds_::' but does not have a suffix"
       ", report this: '%s'", dds_type_name.c_str())
     return "";
@@ -1305,8 +1305,12 @@ get_node_names(const char * implementation_identifier,
     return RMW_RET_ERROR;
   }
   auto length = handles.length() + 1;  // add yourself
-  node_names->size = length;
-  node_names->data = static_cast<char **>(rmw_allocate(length * sizeof(char *)));
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rcutils_ret_t rcutils_ret = rcutils_string_array_init(node_names, length, &allocator);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+  }
 
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -1314,23 +1318,25 @@ get_node_names(const char * implementation_identifier,
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return RMW_RET_ERROR;
   }
-  auto participant_name_length = strlen(participant_qos.participant_name.name) + 1;
-  node_names->data[0] =
-    static_cast<char *>(rmw_allocate(participant_name_length * sizeof(char)));
-  snprintf(node_names->data[0], participant_name_length, "%s",
-    participant_qos.participant_name.name);
+  node_names->data[0] = rcutils_strdup(participant_qos.participant_name.name, allocator);
+  if (!node_names->data[0]) {
+    RMW_SET_ERROR_MSG("could not allocate memory for node name")
+    return RMW_RET_BAD_ALLOC;
+  }
 
 
   for (auto i = 1; i < length; ++i) {
     ParticipantBuiltinTopicData pbtd;
     auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i - 1]);
-    char * name = pbtd.participant_name.name;
+    const char * name = pbtd.participant_name.name;
     if (!name || dds_ret != DDS_RETCODE_OK) {
-      name = const_cast<char *>("(no name)");
+      name = "(no name)";
     }
-    size_t name_length = strlen(name) + 1;
-    node_names->data[i] = static_cast<char *>(rmw_allocate(name_length * sizeof(char)));
-    snprintf(node_names->data[i], name_length, "%s", name);
+    node_names->data[i] = rcutils_strdup(name, allocator);
+    if (!node_names->data[i]) {
+      RMW_SET_ERROR_MSG("could not allocate memory for node name")
+      return RMW_RET_BAD_ALLOC;
+    }
   }
 
   return RMW_RET_OK;
