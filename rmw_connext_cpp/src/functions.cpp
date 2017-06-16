@@ -47,6 +47,9 @@
 #include "rmw/rmw.h"
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/names_and_types.h"
+#include "rmw/get_service_names_and_types.h"
+#include "rmw/get_topic_names_and_types.h"
 #include "rmw/types.h"
 
 #include "rmw/impl/cpp/macros.hpp"
@@ -1895,6 +1898,19 @@ rmw_get_topic_names_and_types(
     allocator,
     no_demangle,
     topic_names_and_types);
+}
+
+rmw_ret_t
+rmw_get_service_names_and_types(
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  rmw_names_and_types_t * service_names_and_types)
+{
+  return get_service_names_and_types(
+    rti_connext_identifier,
+    node,
+    allocator,
+    service_names_and_types);
 }
 
 rmw_ret_t
