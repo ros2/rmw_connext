@@ -879,7 +879,7 @@ trigger_guard_condition(const char * implementation_identifier,
   return RMW_RET_OK;
 }
 
-static std::vector<const char * const> _ros_prefixes =
+static std::vector<std::string> _ros_prefixes =
   {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
 
 /// Return the ROS specific prefix if it exists, otherwise "".
