@@ -447,10 +447,14 @@ rmw_create_publisher(
   }
   memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
-  mangled_name =
-    std::string(publisher_qos.partition.name[0]) +
-    "/" +
-    topic_writer->get_topic()->get_name();
+  if (!qos_profile->avoid_ros_namespace_conventions) {
+    mangled_name =
+      std::string(publisher_qos.partition.name[0]) +
+      "/" +
+      topic_writer->get_topic()->get_name();
+  } else {
+    mangled_name = topic_name;
+  }
   node_info->publisher_listener->add_information(
     dds_publisher->get_instance_handle(), mangled_name.c_str(), type_name, EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
@@ -782,10 +786,14 @@ rmw_create_subscription(const rmw_node_t * node,
   }
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
 
-  mangled_name =
-    std::string(subscriber_qos.partition.name[0]) +
-    "/" +
-    topic_reader->get_topicdescription()->get_name();
+  if (!qos_profile->avoid_ros_namespace_conventions) {
+    mangled_name =
+      std::string(subscriber_qos.partition.name[0]) +
+      "/" +
+      topic_reader->get_topicdescription()->get_name();
+  } else {
+    mangled_name = topic_name;
+  }
   node_info->subscriber_listener->add_information(
     dds_subscriber->get_instance_handle(),
     mangled_name.c_str(),
