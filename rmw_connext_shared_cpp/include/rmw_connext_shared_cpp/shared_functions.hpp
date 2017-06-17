@@ -40,6 +40,9 @@
 #endif
 
 #include "rmw/allocators.h"
+#include "rmw/get_service_names_and_types.h"
+#include "rmw/get_topic_names_and_types.h"
+#include "rmw/names_and_types.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
@@ -47,6 +50,10 @@
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 #include "rmw_connext_shared_cpp/types.hpp"
+
+#define ros_topic_prefix "rt"
+#define ros_service_requester_prefix "rq"
+#define ros_service_response_prefix "rr"
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t init();
@@ -131,11 +138,6 @@ bool set_entity_qos_from_profile(const rmw_qos_profile_t & qos_profile,
   }
   return true;
 }
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-void
-destroy_topic_names_and_types(
-  rmw_topic_names_and_types_t * topic_names_and_types);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_node_t *
@@ -511,10 +513,16 @@ RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
 get_topic_names_and_types(const char * implementation_identifier,
   const rmw_node_t * node,
-  rmw_topic_names_and_types_t * topic_names_and_types,
-  const char * const ros_topic_prefix,
-  const char * const ros_service_requester_prefix,
-  const char * const ros_service_response_prefix);
+  rcutils_allocator_t * allocator,
+  bool no_demangle,
+  rmw_names_and_types_t * topic_names_and_types);
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+rmw_ret_t
+get_service_names_and_types(const char * implementation_identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  rmw_names_and_types_t * service_names_and_types);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -527,9 +535,6 @@ rmw_ret_t
 count_publishers(const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
-  const char * const ros_topics_prefix,
-  const char * const ros_service_requester_prefix,
-  const char * const ros_service_response_prefix,
   size_t * count);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
@@ -537,9 +542,6 @@ rmw_ret_t
 count_subscribers(const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
-  const char * const ros_topics_prefix,
-  const char * const ros_service_requester_prefix,
-  const char * const ros_service_response_prefix,
   size_t * count);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC

@@ -47,6 +47,9 @@
 #include "rmw/rmw.h"
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/names_and_types.h"
+#include "rmw/get_service_names_and_types.h"
+#include "rmw/get_topic_names_and_types.h"
 #include "rmw/types.h"
 
 #include "rmw/impl/cpp/macros.hpp"
@@ -151,9 +154,6 @@ extern "C"
 {
 // static for internal linkage
 static const char * const rti_connext_identifier = "rmw_connext_cpp";
-static const char * const ros_topics_prefix = "rt";
-static const char * const ros_service_requester_prefix = "rq";
-static const char * const ros_service_response_prefix = "rr";
 
 struct ConnextStaticPublisherInfo
 {
@@ -234,17 +234,17 @@ _process_topic_name(
   }
   if (name_tokens.size == 1) {
     if (!avoid_ros_namespace_conventions) {
-      *partition_str = DDS_String_dup(ros_topics_prefix);
+      *partition_str = DDS_String_dup(ros_topic_prefix);
     }
     *topic_str = DDS_String_dup(name_tokens.data[0]);
   } else if (name_tokens.size == 2) {
     if (avoid_ros_namespace_conventions) {
-      // no ros_topics_prefix, so store the user's namespace directly
+      // no ros_topic_prefix, so store the user's namespace directly
       *partition_str = DDS_String_dup(name_tokens.data[0]);
     } else {
-      // concat the ros_topics_prefix with the user's namespace
+      // concat the ros_topic_prefix with the user's namespace
       char * concat_str =
-        rcutils_format_string(allocator, "%s/%s", ros_topics_prefix, name_tokens.data[0]);
+        rcutils_format_string(allocator, "%s/%s", ros_topic_prefix, name_tokens.data[0]);
       if (!concat_str) {
         RMW_SET_ERROR_MSG("could not allocate memory for partition string")
         success = false;
@@ -263,7 +263,7 @@ _process_topic_name(
 end:
   // all necessary strings are copied into connext
   // free that memory
-  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
   return success;
@@ -327,6 +327,7 @@ rmw_create_publisher(
   void * buf = nullptr;
   ConnextStaticPublisherInfo * publisher_info = nullptr;
   rmw_publisher_t * publisher = nullptr;
+  std::string mangled_name = "";
 
   // memory allocations for namespacing
   char * partition_str = nullptr;
@@ -446,8 +447,16 @@ rmw_create_publisher(
   }
   memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
+  if (!qos_profile->avoid_ros_namespace_conventions) {
+    mangled_name =
+      std::string(publisher_qos.partition.name[0]) +
+      "/" +
+      topic_writer->get_topic()->get_name();
+  } else {
+    mangled_name = topic_name;
+  }
   node_info->publisher_listener->add_information(
-    dds_publisher->get_instance_handle(), topic_name, type_name, EntityType::Publisher);
+    dds_publisher->get_instance_handle(), mangled_name.c_str(), type_name, EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
 // TODO(karsten1987): replace this block with logging macros
@@ -658,6 +667,7 @@ rmw_create_subscription(const rmw_node_t * node,
   void * buf = nullptr;
   ConnextStaticSubscriberInfo * subscriber_info = nullptr;
   rmw_subscription_t * subscription = nullptr;
+  std::string mangled_name;
 
   // memory allocations for namespacing
   char * partition_str = nullptr;
@@ -776,8 +786,19 @@ rmw_create_subscription(const rmw_node_t * node,
   }
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
 
+  if (!qos_profile->avoid_ros_namespace_conventions) {
+    mangled_name =
+      std::string(subscriber_qos.partition.name[0]) +
+      "/" +
+      topic_reader->get_topicdescription()->get_name();
+  } else {
+    mangled_name = topic_name;
+  }
   node_info->subscriber_listener->add_information(
-    dds_subscriber->get_instance_handle(), topic_name, type_name, EntityType::Subscriber);
+    dds_subscriber->get_instance_handle(),
+    mangled_name.c_str(),
+    type_name,
+    EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
 // TODO(karsten1987): replace this block with logging macros
@@ -1095,7 +1116,7 @@ _process_service_name(
 
 end:
   // free that memory
-  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1157,6 +1178,7 @@ rmw_create_client(
   void * buf = nullptr;
   ConnextStaticClientInfo * client_info = nullptr;
   rmw_client_t * client = nullptr;
+  std::string mangled_name = "";
 
   // memory allocations for namespacing
   char * request_partition_str = nullptr;
@@ -1273,16 +1295,24 @@ rmw_create_client(
   }
   memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
 
+  mangled_name =
+    std::string(subscriber_qos.partition.name[0]) +
+    "/" +
+    response_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
     response_datareader->get_instance_handle(),
-    response_datareader->get_topicdescription()->get_name(),
+    mangled_name.c_str(),
     response_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
+  mangled_name =
+    std::string(publisher_qos.partition.name[0]) +
+    "/" +
+    request_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
     request_datawriter->get_instance_handle(),
-    request_datawriter->get_topic()->get_name(),
+    mangled_name.c_str(),
     request_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
@@ -1491,6 +1521,7 @@ rmw_create_service(
   void * buf = nullptr;
   ConnextStaticServiceInfo * service_info = nullptr;
   rmw_service_t * service = nullptr;
+  std::string mangled_name = "";
 
   // memory allocations for namespacing
   char * request_partition_str = nullptr;
@@ -1601,16 +1632,24 @@ rmw_create_service(
   }
   memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
 
+  mangled_name =
+    std::string(subscriber_qos.partition.name[0]) +
+    "/" +
+    request_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
     request_datareader->get_instance_handle(),
-    request_datareader->get_topicdescription()->get_name(),
+    mangled_name.c_str(),
     request_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
+  mangled_name =
+    std::string(publisher_qos.partition.name[0]) +
+    "/" +
+    response_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
     response_datawriter->get_instance_handle(),
-    response_datawriter->get_topic()->get_name(),
+    mangled_name.c_str(),
     response_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
@@ -1888,25 +1927,29 @@ rmw_send_response(
 rmw_ret_t
 rmw_get_topic_names_and_types(
   const rmw_node_t * node,
-  rmw_topic_names_and_types_t * topic_names_and_types)
+  rcutils_allocator_t * allocator,
+  bool no_demangle,
+  rmw_names_and_types_t * topic_names_and_types)
 {
-  return get_topic_names_and_types(rti_connext_identifier, node,
-           topic_names_and_types,
-           ros_topics_prefix,
-           ros_service_requester_prefix,
-           ros_service_response_prefix);
+  return get_topic_names_and_types(
+    rti_connext_identifier,
+    node,
+    allocator,
+    no_demangle,
+    topic_names_and_types);
 }
 
 rmw_ret_t
-rmw_destroy_topic_names_and_types(
-  rmw_topic_names_and_types_t * topic_names_and_types)
+rmw_get_service_names_and_types(
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  rmw_names_and_types_t * service_names_and_types)
 {
-  if (!topic_names_and_types) {
-    RMW_SET_ERROR_MSG("topics handle is null");
-    return RMW_RET_ERROR;
-  }
-  destroy_topic_names_and_types(topic_names_and_types);
-  return RMW_RET_OK;
+  return get_service_names_and_types(
+    rti_connext_identifier,
+    node,
+    allocator,
+    service_names_and_types);
 }
 
 rmw_ret_t
@@ -1914,8 +1957,7 @@ rmw_get_node_names(
   const rmw_node_t * node,
   rcutils_string_array_t * node_names)
 {
-  return get_node_names(rti_connext_identifier, node,
-           node_names);
+  return get_node_names(rti_connext_identifier, node, node_names);
 }
 
 rmw_ret_t
@@ -1924,12 +1966,7 @@ rmw_count_publishers(
   const char * topic_name,
   size_t * count)
 {
-  return count_publishers(rti_connext_identifier, node,
-           topic_name,
-           ros_topics_prefix,
-           ros_service_requester_prefix,
-           ros_service_response_prefix,
-           count);
+  return count_publishers(rti_connext_identifier, node, topic_name, count);
 }
 
 rmw_ret_t
@@ -1938,12 +1975,7 @@ rmw_count_subscribers(
   const char * topic_name,
   size_t * count)
 {
-  return count_subscribers(rti_connext_identifier, node,
-           topic_name,
-           ros_topics_prefix,
-           ros_service_requester_prefix,
-           ros_service_response_prefix,
-           count);
+  return count_subscribers(rti_connext_identifier, node, topic_name, count);
 }
 
 rmw_ret_t
