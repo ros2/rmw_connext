@@ -1075,7 +1075,7 @@ _demangle_service_from_topic(const std::string & topic_name)
     "Request",
   };
   std::string found_suffix;
-  size_t suffix_position;
+  size_t suffix_position = std::string::npos;
   for (auto suffix : suffixes) {
     suffix_position = topic_name.rfind(suffix);
     if (suffix_position != std::string::npos) {
@@ -1118,7 +1118,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
     std::string("_Request_"),
   };
   std::string found_suffix = "";
-  size_t suffix_position = 0;
+  size_t suffix_position = std::string::npos;
   for (auto suffix : suffixes) {
     suffix_position = dds_type_name.rfind(suffix);
     if (suffix_position != std::string::npos) {
