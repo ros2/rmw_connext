@@ -17,6 +17,7 @@
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 
 #include "identifier.hpp"
+#include "ndds_include.hpp"
 
 extern "C"
 {

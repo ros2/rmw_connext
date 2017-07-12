@@ -18,6 +18,7 @@
 
 #include "rmw/impl/cpp/macros.hpp"
 
+#include "ndds_include.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
 #include "identifier.hpp"

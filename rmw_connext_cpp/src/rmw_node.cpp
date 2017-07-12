@@ -27,4 +27,25 @@ rmw_create_node(
   return create_node(
     rti_connext_identifier, name, namespace_, domain_id, security_options);
 }
+
+rmw_ret_t
+rmw_destroy_node(rmw_node_t * node)
+{
+  return destroy_node(rti_connext_identifier, node);
+}
+
+const rmw_guard_condition_t *
+rmw_node_get_graph_guard_condition(const rmw_node_t * node)
+{
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return nullptr;
+  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier, rti_connext_identifier,
+    return nullptr)
+
+  return node_get_graph_guard_condition(node);
+}
 }  // extern "C"

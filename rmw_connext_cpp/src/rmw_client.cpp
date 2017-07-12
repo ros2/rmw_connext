@@ -28,6 +28,11 @@
 #include "type_support_commons.hpp"
 #include "types/connext_static_client_info.hpp"
 
+// Uncomment this to get extra console output about discovery.
+// This affects code in this file, but there is a similar variable in:
+//   rmw_connext_shared_cpp/shared_functions.cpp
+// #define DISCOVERY_DEBUG_LOGGING 1
+
 extern "C"
 {
 rmw_client_t *
