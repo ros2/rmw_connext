@@ -63,7 +63,33 @@ register_rmw_implementation(
   "cpp:rosidl_typesupport_cpp:rosidl_typesupport_connext_cpp"
 )
 
-add_library(rmw_connext_cpp SHARED src/functions.cpp)
+add_library(
+  rmw_connext_cpp
+  SHARED
+  src/identifier.cpp
+  src/process_topic_and_service_names.cpp
+  src/rmw_client.cpp
+  src/rmw_compare_gid_equals.cpp
+  src/rmw_count.cpp
+  src/rmw_get_gid_for_publisher.cpp
+  src/rmw_get_implementation_identifier.cpp
+  src/rmw_guard_condition.cpp
+  src/rmw_init.cpp
+  src/rmw_node.cpp
+  src/rmw_node_names.cpp
+  src/rmw_publish.cpp
+  src/rmw_publisher.cpp
+  src/rmw_request.cpp
+  src/rmw_response.cpp
+  src/rmw_service.cpp
+  src/rmw_service_names_and_types.cpp
+  src/rmw_service_server_is_available.cpp
+  src/rmw_subscription.cpp
+  src/rmw_take.cpp
+  src/rmw_topic_names_and_types.cpp
+  src/rmw_trigger_guard_condition.cpp
+  src/rmw_wait.cpp
+  src/rmw_waitset.cpp)
 ament_target_dependencies(rmw_connext_cpp
   "rcutils"
   "rmw"
