@@ -184,11 +184,6 @@ configure_file(
 
 set(_target_suffix "__rosidl_typesupport_connext_cpp")
 
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(${rosidl_generate_interfaces_TARGET}${_target_suffix} SHARED
   ${_generated_msg_files} ${_generated_external_msg_files} ${_generated_srv_files} ${_generated_external_srv_files})
@@ -196,6 +191,8 @@ if(rosidl_generate_interfaces_LIBRARY_NAME)
   set_target_properties(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PROPERTIES OUTPUT_NAME "${rosidl_generate_interfaces_LIBRARY_NAME}${_target_suffix}")
 endif()
+set_target_properties(${rosidl_generate_interfaces_TARGET}${_target_suffix}
+  PROPERTIES CXX_STANDARD 14)
 if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
   target_compile_definitions(${rosidl_generate_interfaces_TARGET}${_target_suffix}
     PRIVATE Connext_GLIBCXX_USE_CXX11_ABI_ZERO)

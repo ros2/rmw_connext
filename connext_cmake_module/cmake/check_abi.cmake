@@ -14,11 +14,6 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 
-# Default to C++14
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14)
-endif()
-
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic -Wl,--no-as-needed)
 endif()
@@ -28,3 +23,5 @@ add_executable(exe
   "@connext_cmake_module_DIR@/check_abi.cpp")
 target_compile_definitions(exe PRIVATE @Connext_DEFINITIONS@)
 target_link_libraries(exe @Connext_LIBRARIES@)
+set_target_properties(exe
+  PROPERTIES CXX_STANDARD 14)
