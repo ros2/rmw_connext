@@ -276,6 +276,10 @@ publish(void * dds_data_writer, const void * untyped_ros_message)
   }
   @(pkg)::@(subfolder)::dds_::@(type)_DataWriter * data_writer =
     @(pkg)::@(subfolder)::dds_::@(type)_DataWriter::narrow(topic_writer);
+  if (!data_writer) {
+    fprintf(stderr, "failed to narrow data writer\n");
+    return false;
+  }
   DDS_ReturnCode_t status = data_writer->write(dds_message, DDS_HANDLE_NIL);
 
   switch (status) {
