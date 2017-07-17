@@ -30,7 +30,25 @@ ament_export_include_directories(include ${Connext_INCLUDE_DIRS})
 ament_export_dependencies(rmw)
 
 link_directories(${Connext_LIBRARY_DIRS})
-add_library(rmw_connext_shared_cpp SHARED src/shared_functions.cpp)
+add_library(
+  rmw_connext_shared_cpp
+  SHARED
+  src/condition_error.cpp
+  src/count.cpp
+  src/demangle.cpp
+  src/guard_condition.cpp
+  src/init.cpp
+  src/namespace_prefix.cpp
+  src/node.cpp
+  src/node_names.cpp
+  src/qos.cpp
+  src/service_names_and_types.cpp
+  src/topic_names_and_types.cpp
+  src/trigger_guard_condition.cpp
+  src/waitset.cpp
+  src/types/custom_data_reader_listener.cpp
+  src/types/custom_publisher_listener.cpp
+  src/types/custom_subscriber_listener.cpp)
 ament_target_dependencies(rmw_connext_shared_cpp
   "rcutils"
   "rmw"
