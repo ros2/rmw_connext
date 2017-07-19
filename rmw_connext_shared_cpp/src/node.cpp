@@ -14,9 +14,16 @@
 
 #include <string>
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
-
 #include "rcutils/filesystem.h"
+
+#include "rmw_connext_shared_cpp/guard_condition.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/node.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
+
+#include "rmw/allocators.h"
+#include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 
 rmw_node_t *
 create_node(

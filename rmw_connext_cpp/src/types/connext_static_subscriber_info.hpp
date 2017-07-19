@@ -15,7 +15,7 @@
 #ifndef TYPES__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
 #define TYPES__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 

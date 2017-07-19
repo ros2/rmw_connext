@@ -15,7 +15,10 @@
 #include <mutex>
 #include <string>
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw/error_handling.h"
+
+#include "rmw_connext_shared_cpp/trigger_guard_condition.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 // Uncomment this to get extra console output about discovery.
 // #define DISCOVERY_DEBUG_LOGGING 1

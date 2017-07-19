@@ -18,11 +18,13 @@
 #include <string>
 #include <vector>
 
-extern const char * const ros_topic_prefix;
-extern const char * const ros_service_requester_prefix;
-extern const char * const ros_service_response_prefix;
+#include "rmw_connext_shared_cpp/visibility_control.h"
 
-extern std::vector<std::string> _ros_prefixes;
+RMW_CONNEXT_SHARED_CPP_PUBLIC extern const char * const ros_topic_prefix;
+RMW_CONNEXT_SHARED_CPP_PUBLIC extern const char * const ros_service_requester_prefix;
+RMW_CONNEXT_SHARED_CPP_PUBLIC extern const char * const ros_service_response_prefix;
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC extern std::vector<std::string> _ros_prefixes;
 
 /// Return the ROS specific prefix if it exists, otherwise "".
 std::string

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
 #include "identifier.hpp"

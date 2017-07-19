@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/rmw.h"
-#include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
+#include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw/impl/cpp/macros.hpp"
-
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/count.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 
 #include "identifier.hpp"
 #include "types/connext_static_client_info.hpp"

@@ -27,22 +27,9 @@
 #include <stdexcept>
 #include <string>
 
-#ifndef _WIN32
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wunused-parameter"
-# ifdef __clang__
-#  pragma clang diagnostic ignored "-Wdeprecated-register"
-#  pragma clang diagnostic ignored "-Winfinite-recursion"
-#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-# endif
-#endif
-#include <ndds/ndds_cpp.h>
-#include <ndds/ndds_requestreply_cpp.h>
-#ifndef _WIN32
-# pragma GCC diagnostic pop
-#endif
-
 #include "rmw/rmw.h"
+
+#include "ndds_include.hpp"
 
 enum EntityType {Publisher, Subscriber};
 

@@ -17,14 +17,13 @@
 
 #include "ndds_include.hpp"
 
-#include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/types.h"
 
-#include "rmw/impl/cpp/macros.hpp"
-
-#include "rmw_connext_shared_cpp/visibility_control.h"
+#include "rmw_connext_shared_cpp/condition_error.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
+#include "rmw_connext_shared_cpp/visibility_control.h"
 
 template<typename SubscriberInfo, typename ServiceInfo, typename ClientInfo>
 rmw_ret_t

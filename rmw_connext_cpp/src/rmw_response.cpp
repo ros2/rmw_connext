@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/rmw.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
+#include "rmw/rmw.h"
 
 #include "identifier.hpp"
 #include "types/connext_static_client_info.hpp"

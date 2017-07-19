@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DEMANGLE_HPP_
-#define DEMANGLE_HPP_
+#ifndef RMW_CONNEXT_SHARED_CPP__DEMANGLE_HPP_
+#define RMW_CONNEXT_SHARED_CPP__DEMANGLE_HPP_
 
 #include <string>
-
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
 
 std::string
 _demangle_if_ros_topic(const std::string & topic_name);
@@ -31,4 +29,4 @@ _demangle_service_from_topic(const std::string & topic_name);
 std::string
 _demangle_service_type_only(const std::string & dds_type_name);
 
-#endif  // DEMANGLE_HPP_
+#endif  // RMW_CONNEXT_SHARED_CPP__DEMANGLE_HPP_

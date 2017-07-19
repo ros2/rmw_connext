@@ -12,7 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
+
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/trigger_guard_condition.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 rmw_ret_t
 trigger_guard_condition(const char * implementation_identifier,

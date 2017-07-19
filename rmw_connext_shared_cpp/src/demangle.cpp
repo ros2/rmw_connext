@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "demangle.hpp"
-
+#include <algorithm>
+#include <cstring>
 #include <map>
 #include <string>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
+
+#include "rmw_connext_shared_cpp/namespace_prefix.hpp"
+#include "rmw_connext_shared_cpp/demangle.hpp"
 
 std::string
 _demangle_if_ros_topic(const std::string & topic_name)

@@ -17,6 +17,7 @@
 
 #include "condition_error.hpp"
 #include "count.hpp"
+#include "demangle.hpp"
 #include "guard_condition.hpp"
 #include "init.hpp"
 #include "ndds_include.hpp"
@@ -27,6 +28,7 @@
 #include "service_names_and_types.hpp"
 #include "topic_names_and_types.hpp"
 #include "trigger_guard_condition.hpp"
+#include "types.hpp"
 #include "wait.hpp"
 #include "waitset.hpp"
 
