@@ -27,7 +27,8 @@
 
 template<typename SubscriberInfo, typename ServiceInfo, typename ClientInfo>
 rmw_ret_t
-wait(const char * implementation_identifier,
+wait(
+  const char * implementation_identifier,
   rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,

@@ -23,7 +23,8 @@
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
-get_topic_names_and_types(const char * implementation_identifier,
+get_topic_names_and_types(
+  const char * implementation_identifier,
   const rmw_node_t * node,
   rcutils_allocator_t * allocator,
   bool no_demangle,

@@ -25,7 +25,6 @@ create_waitset(const char * implementation_identifier, size_t max_conditions);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
-destroy_waitset(const char * implementation_identifier,
-  rmw_waitset_t * waitset);
+destroy_waitset(const char * implementation_identifier, rmw_waitset_t * waitset);
 
 #endif  // RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_

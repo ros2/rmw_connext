@@ -24,7 +24,8 @@
 extern "C"
 {
 rmw_ret_t
-rmw_wait(rmw_subscriptions_t * subscriptions,
+rmw_wait(
+  rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,

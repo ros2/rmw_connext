@@ -20,7 +20,8 @@
 #include "rmw_connext_shared_cpp/types.hpp"
 
 rmw_ret_t
-trigger_guard_condition(const char * implementation_identifier,
+trigger_guard_condition(
+  const char * implementation_identifier,
   const rmw_guard_condition_t * guard_condition_handle)
 {
   if (!guard_condition_handle) {
