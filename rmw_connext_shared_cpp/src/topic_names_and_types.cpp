@@ -24,7 +24,6 @@
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
 
 #include "demangle.hpp"
-#include "namespace_prefix.hpp"
 
 rmw_ret_t
 get_topic_names_and_types(

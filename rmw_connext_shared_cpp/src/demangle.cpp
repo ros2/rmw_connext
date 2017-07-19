@@ -20,8 +20,6 @@
 
 #include "rcutils/logging_macros.h"
 
-#include "namespace_prefix.hpp"
-
 std::string
 _demangle_if_ros_topic(const std::string & topic_name)
 {
