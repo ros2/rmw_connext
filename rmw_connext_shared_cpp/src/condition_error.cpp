@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/condition_error.hpp"
+
+#include "rmw/error_handling.h"
 
 rmw_ret_t
 check_attach_condition_error(DDS::ReturnCode_t retcode)

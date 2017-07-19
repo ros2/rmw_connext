@@ -16,15 +16,18 @@
 #include <set>
 #include <string>
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
-
+#include "rcutils/allocator.h"
 #include "rcutils/logging_macros.h"
 #include "rcutils/strdup.h"
 #include "rcutils/types/string_array.h"
 
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
+#include "rmw/error_handling.h"
 
-#include "demangle.hpp"
+#include "rmw_connext_shared_cpp/demangle.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/service_names_and_types.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 rmw_ret_t
 get_service_names_and_types(

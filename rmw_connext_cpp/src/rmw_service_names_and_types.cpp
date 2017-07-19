@@ -16,7 +16,7 @@
 
 #include "rmw/rmw.h"
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/service_names_and_types.hpp"
 
 #include "identifier.hpp"
 

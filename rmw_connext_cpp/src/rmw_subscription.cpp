@@ -14,13 +14,13 @@
 
 #include <string>
 
-#include "rmw/rmw.h"
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
-
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/rmw.h"
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/qos.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 #include "identifier.hpp"
 #include "process_topic_and_service_names.hpp"

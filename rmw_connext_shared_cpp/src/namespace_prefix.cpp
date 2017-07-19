@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/namespace_prefix.hpp"
 
 const char * const ros_topic_prefix = "rt";
 const char * const ros_service_requester_prefix = "rq";

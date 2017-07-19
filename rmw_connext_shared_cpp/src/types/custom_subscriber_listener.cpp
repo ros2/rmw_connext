@@ -14,7 +14,7 @@
 
 #include <string>
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
 {

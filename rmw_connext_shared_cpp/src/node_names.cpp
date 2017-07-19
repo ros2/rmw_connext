@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
-
 #include "rcutils/logging_macros.h"
 #include "rcutils/strdup.h"
 
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
+#include "rmw/error_handling.h"
 #include "rmw/sanity_checks.h"
+
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/node_names.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 rmw_ret_t
 get_node_names(const char * implementation_identifier,

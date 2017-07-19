@@ -15,7 +15,7 @@
 #include "rmw/rmw.h"
 #include "rmw/get_topic_names_and_types.h"
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/topic_names_and_types.hpp"
 
 #include "identifier.hpp"
 

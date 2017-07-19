@@ -20,7 +20,8 @@
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/namespace_prefix.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 
 bool
 _process_topic_name(

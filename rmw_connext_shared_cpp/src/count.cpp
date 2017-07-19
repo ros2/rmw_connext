@@ -14,9 +14,11 @@
 
 #include <map>
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/count.hpp"
+#include "rmw_connext_shared_cpp/demangle.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
-#include "demangle.hpp"
+#include "rmw/error_handling.h"
 
 rmw_ret_t
 count_publishers(const char * implementation_identifier,

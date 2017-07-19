@@ -15,6 +15,8 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__GUARD_CONDITION_HPP_
 #define RMW_CONNEXT_SHARED_CPP__GUARD_CONDITION_HPP_
 
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
+
 #include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"

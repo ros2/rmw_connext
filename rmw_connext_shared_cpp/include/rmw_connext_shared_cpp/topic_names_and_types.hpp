@@ -15,6 +15,10 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__TOPIC_NAMES_AND_TYPES_HPP_
 #define RMW_CONNEXT_SHARED_CPP__TOPIC_NAMES_AND_TYPES_HPP_
 
+#include "rcutils/allocator.h"
+
+#include "rmw_connext_shared_cpp/visibility_control.h"
+
 #include "rmw/get_topic_names_and_types.h"
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC

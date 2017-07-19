@@ -14,7 +14,7 @@
 
 #include "rmw/rmw.h"
 
-#include "rmw_connext_shared_cpp/shared_functions.hpp"
+#include "rmw_connext_shared_cpp/wait.hpp"
 
 #include "identifier.hpp"
 #include "types/connext_static_client_info.hpp"
