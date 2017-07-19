@@ -12,168 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
-#define RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+#ifndef RMW_CONNEXT_SHARED_CPP__WAIT_HPP_
+#define RMW_CONNEXT_SHARED_CPP__WAIT_HPP_
 
-#include <limits>
-#include <list>
-#include <map>
-#include <set>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-
-#ifndef _WIN32
-# pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-# pragma GCC diagnostic ignored "-Wunused-parameter"
-# ifdef __clang__
-#  pragma clang diagnostic ignored "-Wdeprecated-register"
-#  pragma clang diagnostic ignored "-Winfinite-recursion"
-#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-# endif
-#endif
-#include <ndds/ndds_cpp.h>
-#include <ndds/ndds_requestreply_cpp.h>
-#ifndef _WIN32
-# pragma GCC diagnostic pop
-#endif
+#include "ndds_include.hpp"
 
 #include "rmw/allocators.h"
-#include "rmw/get_service_names_and_types.h"
-#include "rmw/get_topic_names_and_types.h"
-#include "rmw/names_and_types.h"
-#include "rmw/rmw.h"
+#include "rmw/error_handling.h"
 #include "rmw/types.h"
 
 #include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 #include "rmw_connext_shared_cpp/types.hpp"
-
-#define ros_topic_prefix "rt"
-#define ros_service_requester_prefix "rq"
-#define ros_service_response_prefix "rr"
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t init();
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t check_attach_condition_error(DDS::ReturnCode_t retcode);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-bool
-get_datareader_qos(DDSDomainParticipant * participant, const rmw_qos_profile_t & qos_profile,
-  DDS_DataReaderQos & datareader_qos);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-bool
-get_datawriter_qos(DDSDomainParticipant * participant, const rmw_qos_profile_t & qos_profile,
-  DDS_DataWriterQos & datawriter_qos);
-
-template<typename DDSEntityQos>
-bool set_entity_qos_from_profile(const rmw_qos_profile_t & qos_profile,
-  DDSEntityQos & entity_qos)
-{
-  // Read properties from the rmw profile
-  switch (qos_profile.history) {
-    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      entity_qos.history.kind = DDS_KEEP_LAST_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      entity_qos.history.kind = DDS_KEEP_ALL_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS history policy");
-      return false;
-  }
-
-  switch (qos_profile.reliability) {
-    case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
-      entity_qos.reliability.kind = DDS_BEST_EFFORT_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
-      entity_qos.reliability.kind = DDS_RELIABLE_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
-      return false;
-  }
-
-  switch (qos_profile.durability) {
-    case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
-      entity_qos.durability.kind = DDS_TRANSIENT_LOCAL_DURABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_DURABILITY_VOLATILE:
-      entity_qos.durability.kind = DDS_VOLATILE_DURABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS durability policy");
-      return false;
-  }
-
-  if (qos_profile.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
-    entity_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
-  }
-
-  // ensure the history depth is at least the requested queue size
-  assert(entity_qos.history.depth >= 0);
-  if (
-    entity_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    static_cast<size_t>(entity_qos.history.depth) < qos_profile.depth
-  )
-  {
-    if (qos_profile.depth > (std::numeric_limits<DDS_Long>::max)()) {
-      RMW_SET_ERROR_MSG(
-        "failed to set history depth since the requested queue size exceeds the DDS type");
-      return false;
-    }
-    entity_qos.history.depth = static_cast<DDS_Long>(qos_profile.depth);
-  }
-  return true;
-}
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_node_t *
-create_node(
-  const char * implementation_identifier,
-  const char * name,
-  const char * namespace_,
-  size_t domain_id,
-  const rmw_node_security_options_t * options);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-destroy_node(const char * implementation_identifier, rmw_node_t * node);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_guard_condition_t *
-create_guard_condition(const char * implementation_identifier);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-destroy_guard_condition(const char * implementation_identifier,
-  rmw_guard_condition_t * guard_condition);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_waitset_t *
-create_waitset(const char * implementation_identifier, size_t max_conditions);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-destroy_waitset(const char * implementation_identifier,
-  rmw_waitset_t * waitset);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-trigger_guard_condition(const char * implementation_identifier,
-  const rmw_guard_condition_t * guard_condition_handle);
 
 template<typename SubscriberInfo, typename ServiceInfo, typename ClientInfo>
 rmw_ret_t
@@ -509,43 +360,4 @@ wait(const char * implementation_identifier,
   return RMW_RET_OK;
 }
 
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-get_topic_names_and_types(const char * implementation_identifier,
-  const rmw_node_t * node,
-  rcutils_allocator_t * allocator,
-  bool no_demangle,
-  rmw_names_and_types_t * topic_names_and_types);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-get_service_names_and_types(const char * implementation_identifier,
-  const rmw_node_t * node,
-  rcutils_allocator_t * allocator,
-  rmw_names_and_types_t * service_names_and_types);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-get_node_names(const char * implementation_identifier,
-  const rmw_node_t * node,
-  rcutils_string_array_t * node_names);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-count_publishers(const char * implementation_identifier,
-  const rmw_node_t * node,
-  const char * topic_name,
-  size_t * count);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-count_subscribers(const char * implementation_identifier,
-  const rmw_node_t * node,
-  const char * topic_name,
-  size_t * count);
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-const rmw_guard_condition_t *
-node_get_graph_guard_condition(const rmw_node_t * node);
-
-#endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+#endif  // RMW_CONNEXT_SHARED_CPP__WAIT_HPP_
