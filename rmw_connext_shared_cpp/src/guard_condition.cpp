@@ -51,7 +51,8 @@ fail:
 }
 
 rmw_ret_t
-destroy_guard_condition(const char * implementation_identifier,
+destroy_guard_condition(
+  const char * implementation_identifier,
   rmw_guard_condition_t * guard_condition)
 {
   if (!guard_condition) {

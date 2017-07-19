@@ -21,7 +21,8 @@
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
-trigger_guard_condition(const char * implementation_identifier,
+trigger_guard_condition(
+  const char * implementation_identifier,
   const rmw_guard_condition_t * guard_condition_handle);
 
 #endif  // RMW_CONNEXT_SHARED_CPP__TRIGGER_GUARD_CONDITION_HPP_

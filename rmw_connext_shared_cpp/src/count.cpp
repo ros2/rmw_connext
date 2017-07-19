@@ -21,7 +21,8 @@
 #include "rmw/error_handling.h"
 
 rmw_ret_t
-count_publishers(const char * implementation_identifier,
+count_publishers(
+  const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
   size_t * count)
@@ -73,7 +74,8 @@ count_publishers(const char * implementation_identifier,
 }
 
 rmw_ret_t
-count_subscribers(const char * implementation_identifier,
+count_subscribers(
+  const char * implementation_identifier,
   const rmw_node_t * node,
   const char * topic_name,
   size_t * count)

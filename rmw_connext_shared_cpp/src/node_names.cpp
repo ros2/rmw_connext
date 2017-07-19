@@ -24,7 +24,8 @@
 #include "rmw_connext_shared_cpp/types.hpp"
 
 rmw_ret_t
-get_node_names(const char * implementation_identifier,
+get_node_names(
+  const char * implementation_identifier,
   const rmw_node_t * node,
   rcutils_string_array_t * node_names)
 {

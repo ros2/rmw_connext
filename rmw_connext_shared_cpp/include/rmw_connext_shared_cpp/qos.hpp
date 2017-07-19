@@ -27,16 +27,22 @@
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 bool
-get_datareader_qos(DDSDomainParticipant * participant, const rmw_qos_profile_t & qos_profile,
+get_datareader_qos(
+  DDSDomainParticipant * participant,
+  const rmw_qos_profile_t & qos_profile,
   DDS_DataReaderQos & datareader_qos);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 bool
-get_datawriter_qos(DDSDomainParticipant * participant, const rmw_qos_profile_t & qos_profile,
+get_datawriter_qos(
+  DDSDomainParticipant * participant,
+  const rmw_qos_profile_t & qos_profile,
   DDS_DataWriterQos & datawriter_qos);
 
 template<typename DDSEntityQos>
-bool set_entity_qos_from_profile(const rmw_qos_profile_t & qos_profile,
+bool
+set_entity_qos_from_profile(
+  const rmw_qos_profile_t & qos_profile,
   DDSEntityQos & entity_qos)
 {
   // Read properties from the rmw profile

@@ -21,7 +21,8 @@
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
-get_service_names_and_types(const char * implementation_identifier,
+get_service_names_and_types(
+  const char * implementation_identifier,
   const rmw_node_t * node,
   rcutils_allocator_t * allocator,
   rmw_names_and_types_t * service_names_and_types);

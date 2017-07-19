@@ -24,7 +24,10 @@
 extern "C"
 {
 rmw_ret_t
-_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken,
+_take(
+  const rmw_subscription_t * subscription,
+  void * ros_message,
+  bool * taken,
   DDS_InstanceHandle_t * sending_publication_handle)
 {
   if (!subscription) {

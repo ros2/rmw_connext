@@ -112,8 +112,7 @@ fail:
 }
 
 rmw_ret_t
-destroy_waitset(const char * implementation_identifier,
-  rmw_waitset_t * waitset)
+destroy_waitset(const char * implementation_identifier, rmw_waitset_t * waitset)
 {
   if (!waitset) {
     RMW_SET_ERROR_MSG("waitset handle is null");
