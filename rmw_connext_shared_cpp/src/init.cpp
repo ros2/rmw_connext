@@ -12,24 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
-#define RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+#include "rmw_connext_shared_cpp/init.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 
-#include "condition_error.hpp"
-#include "count.hpp"
-#include "demangle.hpp"
-#include "guard_condition.hpp"
-#include "init.hpp"
-#include "ndds_include.hpp"
-#include "namespace_prefix.hpp"
-#include "node.hpp"
-#include "node_names.hpp"
-#include "qos.hpp"
-#include "service_names_and_types.hpp"
-#include "topic_names_and_types.hpp"
-#include "trigger_guard_condition.hpp"
-#include "types.hpp"
-#include "wait.hpp"
-#include "waitset.hpp"
+#include "rmw/error_handling.h"
 
-#endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+rmw_ret_t
+init()
+{
+  DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
+  if (!dpf_) {
+    RMW_SET_ERROR_MSG("failed to get participant factory");
+    return RMW_RET_ERROR;
+  }
+  return RMW_RET_OK;
+}

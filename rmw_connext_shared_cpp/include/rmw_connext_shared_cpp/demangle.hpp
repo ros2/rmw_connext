@@ -12,24 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
-#define RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+#ifndef RMW_CONNEXT_SHARED_CPP__DEMANGLE_HPP_
+#define RMW_CONNEXT_SHARED_CPP__DEMANGLE_HPP_
 
-#include "condition_error.hpp"
-#include "count.hpp"
-#include "demangle.hpp"
-#include "guard_condition.hpp"
-#include "init.hpp"
-#include "ndds_include.hpp"
-#include "namespace_prefix.hpp"
-#include "node.hpp"
-#include "node_names.hpp"
-#include "qos.hpp"
-#include "service_names_and_types.hpp"
-#include "topic_names_and_types.hpp"
-#include "trigger_guard_condition.hpp"
-#include "types.hpp"
-#include "wait.hpp"
-#include "waitset.hpp"
+#include <string>
 
-#endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+std::string
+_demangle_if_ros_topic(const std::string & topic_name);
+
+std::string
+_demangle_if_ros_type(const std::string & dds_type_string);
+
+std::string
+_demangle_service_from_topic(const std::string & topic_name);
+
+std::string
+_demangle_service_type_only(const std::string & dds_type_name);
+
+#endif  // RMW_CONNEXT_SHARED_CPP__DEMANGLE_HPP_

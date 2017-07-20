@@ -12,24 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
-#define RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+#ifndef RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
+#define RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
 
-#include "condition_error.hpp"
-#include "count.hpp"
-#include "demangle.hpp"
-#include "guard_condition.hpp"
-#include "init.hpp"
-#include "ndds_include.hpp"
-#include "namespace_prefix.hpp"
-#include "node.hpp"
-#include "node_names.hpp"
-#include "qos.hpp"
-#include "service_names_and_types.hpp"
-#include "topic_names_and_types.hpp"
-#include "trigger_guard_condition.hpp"
-#include "types.hpp"
-#include "wait.hpp"
-#include "waitset.hpp"
+#include "rmw/types.h"
 
-#endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
+#include "rmw_connext_shared_cpp/visibility_control.h"
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+rmw_waitset_t *
+create_waitset(const char * implementation_identifier, size_t max_conditions);
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+rmw_ret_t
+destroy_waitset(const char * implementation_identifier, rmw_waitset_t * waitset);
+
+#endif  // RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
