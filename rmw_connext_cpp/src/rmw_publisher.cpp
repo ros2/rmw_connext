@@ -25,7 +25,7 @@
 
 #include "identifier.hpp"
 #include "process_topic_and_service_names.hpp"
-#include "type_support_commons.hpp"
+#include "type_support_common.hpp"
 #include "types/connext_static_publisher_info.hpp"
 
 // Uncomment this to get extra console output about discovery.
