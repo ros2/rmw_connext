@@ -129,16 +129,16 @@ destroy_waitset(const char * implementation_identifier, rmw_waitset_t * waitset)
   // Explicitly call destructor since the "placement new" was used
   if (waitset_info->active_conditions) {
     RMW_TRY_DESTRUCTOR(
-      waitset_info->active_conditions->~ConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
+      waitset_info->active_conditions->~DDSConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
     rmw_free(waitset_info->active_conditions);
   }
   if (waitset_info->attached_conditions) {
     RMW_TRY_DESTRUCTOR(
-      waitset_info->attached_conditions->~ConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
+      waitset_info->attached_conditions->~DDSConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
     rmw_free(waitset_info->attached_conditions);
   }
   if (waitset_info->waitset) {
-    RMW_TRY_DESTRUCTOR(waitset_info->waitset->~WaitSet(), WaitSet, result = RMW_RET_ERROR)
+    RMW_TRY_DESTRUCTOR(waitset_info->waitset->~DDSWaitSet(), WaitSet, result = RMW_RET_ERROR)
     rmw_free(waitset_info->waitset);
   }
   waitset_info = nullptr;
