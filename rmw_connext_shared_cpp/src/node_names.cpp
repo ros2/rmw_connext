@@ -69,7 +69,7 @@ get_node_names(
 
 
   for (auto i = 1; i < length; ++i) {
-    ParticipantBuiltinTopicData pbtd;
+    DDS::ParticipantBuiltinTopicData pbtd;
     auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i - 1]);
     const char * name = pbtd.participant_name.name;
     if (!name || dds_ret != DDS_RETCODE_OK) {
