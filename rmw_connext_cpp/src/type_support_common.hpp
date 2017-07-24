@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPE_SUPPORT_COMMONS_HPP_
-#define TYPE_SUPPORT_COMMONS_HPP_
+#ifndef TYPE_SUPPORT_COMMON_HPP_
+#define TYPE_SUPPORT_COMMON_HPP_
 
 #include <string>
 
@@ -94,4 +94,4 @@ _create_type_name(
     "::" + sep + "::dds_::" + callbacks->message_name + "_";
 }
 
-#endif  // TYPE_SUPPORT_COMMONS_HPP_
+#endif  // TYPE_SUPPORT_COMMON_HPP_
