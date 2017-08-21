@@ -69,6 +69,7 @@ register_rmw_implementation(
 add_library(
   rmw_connext_cpp
   SHARED
+  src/get_participant.cpp
   src/identifier.cpp
   src/process_topic_and_service_names.cpp
   src/rmw_client.cpp
@@ -103,6 +104,11 @@ ament_target_dependencies(rmw_connext_cpp
   "rosidl_typesupport_connext_cpp"
   "Connext")
 ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
+
+# Causes the visibility macros to use dllexport rather than dllimport
+# which is appropriate when building the library but not consuming it.
+target_compile_definitions(rmw_connext_cpp
+  PRIVATE "RMW_CONNEXT_CPP_BUILDING_DLL")
 
 # On Windows this adds the RMW_BUILDING_DLL definition.
 # On Unix (GCC or Clang) it hides the symbols with -fvisibility=hidden.
