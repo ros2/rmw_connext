@@ -22,10 +22,10 @@
 #include "rmw_connext_shared_cpp/qos.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
-#include "identifier.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
 #include "process_topic_and_service_names.hpp"
 #include "type_support_common.hpp"
-#include "types/connext_static_subscriber_info.hpp"
+#include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 
 // Uncomment this to get extra console output about discovery.
 // This affects code in this file, but there is a similar variable in:

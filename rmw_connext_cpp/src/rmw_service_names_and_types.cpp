@@ -18,7 +18,7 @@
 
 #include "rmw_connext_shared_cpp/service_names_and_types.hpp"
 
-#include "identifier.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
 
 extern "C"
 {
