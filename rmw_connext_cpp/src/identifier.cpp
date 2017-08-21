@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "identifier.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
 
-extern "C"
-{
 const char * const rti_connext_identifier = "rmw_connext_cpp";
-}  // extern "C"

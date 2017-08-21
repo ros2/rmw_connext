@@ -49,6 +49,9 @@ find_package(rmw_connext_shared_cpp REQUIRED)
 find_package(rosidl_generator_c REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 
+include_directories(include)
+
+ament_export_include_directories(include)
 ament_export_dependencies(
   rcutils
   rmw
@@ -119,6 +122,11 @@ if(BUILD_TESTING)
 endif()
 
 ament_package()
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
 
 install(
   TARGETS rmw_connext_cpp

@@ -18,8 +18,8 @@
 
 #include "rmw_connext_shared_cpp/types.hpp"
 
-#include "identifier.hpp"
-#include "types/connext_static_subscriber_info.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
+#include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 
 extern "C"
 {

@@ -16,8 +16,8 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "identifier.hpp"
-#include "types/connext_static_publisher_info.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
+#include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 
 extern "C"
 {
