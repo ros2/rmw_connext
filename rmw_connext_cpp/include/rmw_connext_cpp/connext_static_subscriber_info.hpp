@@ -12,29 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/rmw.h"
+#ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
+#define RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
 
-#include "rmw_connext_shared_cpp/count.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 
-#include "rmw_connext_cpp/identifier.hpp"
+#include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
 extern "C"
 {
-rmw_ret_t
-rmw_count_publishers(
-  const rmw_node_t * node,
-  const char * topic_name,
-  size_t * count)
+struct ConnextStaticSubscriberInfo
 {
-  return count_publishers(rti_connext_identifier, node, topic_name, count);
-}
-
-rmw_ret_t
-rmw_count_subscribers(
-  const rmw_node_t * node,
-  const char * topic_name,
-  size_t * count)
-{
-  return count_subscribers(rti_connext_identifier, node, topic_name, count);
-}
+  DDSSubscriber * dds_subscriber_;
+  DDSDataReader * topic_reader_;
+  DDSReadCondition * read_condition_;
+  bool ignore_local_publications;
+  const message_type_support_callbacks_t * callbacks_;
+};
 }  // extern "C"
+
+#endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_

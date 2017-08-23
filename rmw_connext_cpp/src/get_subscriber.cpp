@@ -1,4 +1,4 @@
-// Copyright 2014-2017 Open Source Robotics Foundation, Inc.
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,29 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/rmw.h"
+#include "rmw_connext_cpp/get_subscriber.hpp"
 
-#include "rmw_connext_shared_cpp/count.hpp"
-
+#include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
-extern "C"
+namespace rmw_connext_cpp
 {
-rmw_ret_t
-rmw_count_publishers(
-  const rmw_node_t * node,
-  const char * topic_name,
-  size_t * count)
+
+DDSDataReader *
+get_data_reader(rmw_subscription_t * subscription)
 {
-  return count_publishers(rti_connext_identifier, node, topic_name, count);
+  if (!subscription) {
+    return NULL;
+  }
+  if (subscription->implementation_identifier != rti_connext_identifier) {
+    return NULL;
+  }
+  ConnextStaticSubscriberInfo * impl =
+    static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
+  return impl->topic_reader_;
 }
 
-rmw_ret_t
-rmw_count_subscribers(
-  const rmw_node_t * node,
-  const char * topic_name,
-  size_t * count)
-{
-  return count_subscribers(rti_connext_identifier, node, topic_name, count);
-}
-}  // extern "C"
+}  // namespace rmw_connext_cpp

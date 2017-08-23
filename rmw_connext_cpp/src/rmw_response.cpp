@@ -16,9 +16,9 @@
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
-#include "identifier.hpp"
-#include "types/connext_static_client_info.hpp"
-#include "types/connext_static_service_info.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
+#include "rmw_connext_cpp/connext_static_client_info.hpp"
+#include "rmw_connext_cpp/connext_static_service_info.hpp"
 
 extern "C"
 {

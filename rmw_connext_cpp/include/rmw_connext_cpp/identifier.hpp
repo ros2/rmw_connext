@@ -12,29 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/rmw.h"
+#ifndef RMW_CONNEXT_CPP__IDENTIFIER_HPP_
+#define RMW_CONNEXT_CPP__IDENTIFIER_HPP_
 
-#include "rmw_connext_shared_cpp/count.hpp"
+extern const char * const rti_connext_identifier;
 
-#include "rmw_connext_cpp/identifier.hpp"
-
-extern "C"
-{
-rmw_ret_t
-rmw_count_publishers(
-  const rmw_node_t * node,
-  const char * topic_name,
-  size_t * count)
-{
-  return count_publishers(rti_connext_identifier, node, topic_name, count);
-}
-
-rmw_ret_t
-rmw_count_subscribers(
-  const rmw_node_t * node,
-  const char * topic_name,
-  size_t * count)
-{
-  return count_subscribers(rti_connext_identifier, node, topic_name, count);
-}
-}  // extern "C"
+#endif  // RMW_CONNEXT_CPP__IDENTIFIER_HPP_

@@ -1,4 +1,4 @@
-// Copyright 2014-2017 Open Source Robotics Foundation, Inc.
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef IDENTIFIER_HPP_
-#define IDENTIFIER_HPP_
+#include "rmw_connext_cpp/get_service.hpp"
 
-extern "C"
+#include "rmw_connext_cpp/connext_static_service_info.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
+
+namespace rmw_connext_cpp
 {
-// static for internal linkage
-extern const char * const rti_connext_identifier;
-}  // extern "C"
 
-#endif  // IDENTIFIER_HPP_
+void *
+get_replier(rmw_service_t * service)
+{
+  if (!service) {
+    return NULL;
+  }
+  if (service->implementation_identifier != rti_connext_identifier) {
+    return NULL;
+  }
+  ConnextStaticServiceInfo * impl = static_cast<ConnextStaticServiceInfo *>(service->data);
+  return impl->replier_;
+}
+
+}  // namespace rmw_connext_cpp
