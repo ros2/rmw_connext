@@ -113,6 +113,7 @@ rmw_create_client(
     goto fail;
   }
 
+  // allocating memory for service_str and partition strings
   if (!_process_service_name(
       service_name,
       qos_profile->avoid_ros_namespace_conventions,
@@ -132,6 +133,8 @@ rmw_create_client(
     reinterpret_cast<void **>(&response_datareader),
     reinterpret_cast<void **>(&request_datawriter),
     &rmw_allocate);
+  DDS_String_free(service_str);
+  service_str = nullptr;
   if (!requester) {
     RMW_SET_ERROR_MSG("failed to create requester");
     goto fail;
@@ -161,18 +164,28 @@ rmw_create_client(
 
   // we have to set the partition array to length 1
   // and then set the partition_str in it
-  if (response_partition_str && strlen(response_partition_str) != 0) {
-    subscriber_qos.partition.name.ensure_length(1, 1);
-    subscriber_qos.partition.name[0] = response_partition_str;
+  if (response_partition_str) {
+    if (strlen(response_partition_str) != 0) {
+      subscriber_qos.partition.name.ensure_length(1, 1);
+      // passing ownership to Connext
+      subscriber_qos.partition.name[0] = response_partition_str;
+    } else {
+      DDS_String_free(response_partition_str);
+    }
   }
   // update attached subscriber
   dds_subscriber->set_qos(subscriber_qos);
 
   // we cannot assign the partition_ptr again,
   // as rti takes ownership over it.
-  if (request_partition_str && strlen(response_partition_str) != 0) {
-    publisher_qos.partition.name.ensure_length(1, 1);
-    publisher_qos.partition.name[0] = request_partition_str;
+  if (request_partition_str) {
+    if (strlen(request_partition_str) != 0) {
+      publisher_qos.partition.name.ensure_length(1, 1);
+      // passing ownership to Connext
+      publisher_qos.partition.name[0] = request_partition_str;
+    } else {
+      DDS_String_free(request_partition_str);
+    }
   }
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
@@ -243,6 +256,14 @@ rmw_create_client(
 
   return client;
 fail:
+  if (request_partition_str) {
+    DDS_String_free(request_partition_str);
+    request_partition_str = nullptr;
+  }
+  if (response_partition_str) {
+    DDS_String_free(response_partition_str);
+    response_partition_str = nullptr;
+  }
   if (client) {
     rmw_client_free(client);
   }
