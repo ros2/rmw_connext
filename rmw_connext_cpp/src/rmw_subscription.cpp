@@ -91,7 +91,6 @@ rmw_create_subscription(
   rmw_subscription_t * subscription = nullptr;
   std::string mangled_name;
 
-  // memory allocations for namespacing
   char * partition_str = nullptr;
   char * topic_str = nullptr;
 
@@ -114,6 +113,7 @@ rmw_create_subscription(
     goto fail;
   }
 
+  // allocating memory for topic_str and partition_str
   if (!_process_topic_name(
       topic_name,
       qos_profile->avoid_ros_namespace_conventions,
@@ -125,9 +125,15 @@ rmw_create_subscription(
 
   // we have to set the partition array to length 1
   // and then set the partition_str in it
-  if (partition_str && strlen(partition_str) != 0) {  // only set if not empty
-    subscriber_qos.partition.name.ensure_length(1, 1);
-    subscriber_qos.partition.name[0] = partition_str;
+  if (partition_str) {
+    if (strlen(partition_str) != 0) {  // only set if not empty
+      subscriber_qos.partition.name.ensure_length(1, 1);
+      // passing ownership to Connext
+      subscriber_qos.partition.name[0] = partition_str;
+    } else {
+      DDS_String_free(partition_str);
+    }
+    partition_str = nullptr;
   }
 
   dds_subscriber = participant->create_subscriber(
@@ -161,6 +167,8 @@ rmw_create_subscription(
       goto fail;
     }
   }
+  DDS_String_free(topic_str);
+  topic_str = nullptr;
 
   if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
     // error string was set within the function
@@ -234,6 +242,14 @@ rmw_create_subscription(
 
   return subscription;
 fail:
+  if (partition_str) {
+    DDS_String_free(partition_str);
+    partition_str = nullptr;
+  }
+  if (topic_str) {
+    DDS_String_free(topic_str);
+    topic_str = nullptr;
+  }
   if (subscription) {
     rmw_subscription_free(subscription);
   }

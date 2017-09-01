@@ -60,7 +60,6 @@ _process_topic_name(
       *partition_str = DDS_String_dup(concat_str);
       allocator.deallocate(concat_str, allocator.state);
     }
-    // Connext will call deallocate on this, passing ownership to connext
     *topic_str = DDS_String_dup(name_tokens.data[1]);
   } else {
     RMW_SET_ERROR_MSG("incorrectly formatted topic name")
