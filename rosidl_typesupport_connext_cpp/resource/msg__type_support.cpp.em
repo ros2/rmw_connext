@@ -165,12 +165,14 @@ publish__@(spec.base_type.type)(
   if (success) {
     @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer =
       @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
-    if (!data_writer) {
-      fprintf(stderr, "failed to narrow data writer\n");
-      return false;
+    if (data_writer != static_cast<@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter *>(NULL)) {
+      DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
+      success = (status == DDS_RETCODE_OK);
     }
-    DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
-    success = status == DDS_RETCODE_OK;
+    else {
+      fprintf(stderr, "failed to narrow data writer\n");
+      success = false;
+    }
   }
 
   DDS_ReturnCode_t status =
