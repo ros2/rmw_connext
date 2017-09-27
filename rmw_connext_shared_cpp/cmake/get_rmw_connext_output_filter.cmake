@@ -28,5 +28,5 @@ macro(get_rmw_connext_output_filter output_filter)
       "unused arguments: ${ARGN}")
   endif()
 
-  set(${output_filter} "RTI Data Distribution Service.*$\nExpires on.*$")
+  set(${output_filter} "RTI Data Distribution Service\nExpires on")
 endmacro()
