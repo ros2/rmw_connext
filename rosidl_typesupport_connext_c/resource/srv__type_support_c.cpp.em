@@ -92,7 +92,7 @@ void * create_requester__@(spec.srv_name)(
 }
 const char * destroy_requester__@(spec.srv_name)(
   void * untyped_requester,
-  void (* deallocator)(void *))
+  void (*deallocator)(void *))
 {
   return @(spec.pkg_name)::srv::typesupport_connext_cpp::destroy_requester__@(spec.srv_name)(
     untyped_requester, deallocator);
@@ -147,7 +147,7 @@ void * create_replier__@(spec.srv_name)(
 
 const char * destroy_replier__@(spec.srv_name)(
   void * untyped_replier,
-  void (* deallocator)(void *))
+  void (*deallocator)(void *))
 {
   return @(spec.pkg_name)::srv::typesupport_connext_cpp::destroy_replier__@(spec.srv_name)(
     untyped_replier, deallocator);

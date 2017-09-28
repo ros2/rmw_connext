@@ -96,8 +96,7 @@ set_entity_qos_from_profile(
   assert(entity_qos.history.depth >= 0);
   if (
     entity_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
-    static_cast<size_t>(entity_qos.history.depth) < qos_profile.depth
-  )
+    static_cast<size_t>(entity_qos.history.depth) < qos_profile.depth)
   {
     if (qos_profile.depth > (std::numeric_limits<DDS_Long>::max)()) {
       RMW_SET_ERROR_MSG(
