@@ -27,7 +27,8 @@ create_guard_condition(const char * implementation_identifier);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
-destroy_guard_condition(const char * implementation_identifier,
+destroy_guard_condition(
+  const char * implementation_identifier,
   rmw_guard_condition_t * guard_condition);
 
 #endif  // RMW_CONNEXT_SHARED_CPP__GUARD_CONDITION_HPP_

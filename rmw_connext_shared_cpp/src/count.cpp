@@ -59,12 +59,12 @@ count_publishers(
     topic_names_and_types.begin(),
     topic_names_and_types.end(),
     [&](auto tnt) -> bool {
-    auto fqdn = _demangle_if_ros_topic(tnt.first);
-    if (fqdn == topic_name) {
-      return true;
-    }
-    return false;
-  });
+      auto fqdn = _demangle_if_ros_topic(tnt.first);
+      if (fqdn == topic_name) {
+        return true;
+      }
+      return false;
+    });
   if (it == topic_names_and_types.end()) {
     *count = 0;
   } else {
@@ -112,12 +112,12 @@ count_subscribers(
     topic_names_and_types.begin(),
     topic_names_and_types.end(),
     [&](auto tnt) -> bool {
-    auto fqdn = _demangle_if_ros_topic(tnt.first);
-    if (fqdn == topic_name) {
-      return true;
-    }
-    return false;
-  });
+      auto fqdn = _demangle_if_ros_topic(tnt.first);
+      if (fqdn == topic_name) {
+        return true;
+      }
+      return false;
+    });
   if (it == topic_names_and_types.end()) {
     *count = 0;
   } else {
