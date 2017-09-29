@@ -44,16 +44,14 @@ _publisher_count_matched_subscriptions(DDS::DataWriter * datawriter, size_t * co
   using std::to_string;
   using std::stringstream;
   std::stringstream ss;
-  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-  ss << "DDS_PublicationMatchedStatus:\n"
-     << "  topic name:               " << datawriter->get_topic()->get_name() << "\n"
-     << "  current_count:            " << to_string(s.current_count) << "\n"
-     << "  current_count_change:     " << to_string(s.current_count_change) << "\n"
-     << "  current_count_peak:       " << to_string(s.current_count_peak) << "\n"
-     << "  total_count:              " << to_string(s.total_count) << "\n"
-     << "  total_count_change:       " << to_string(s.total_count_change) << "\n"
-     << "  last_subscription_handle: " << to_string(s.last_subscription_handle) << "\n";
-  // *INDENT-ON*
+  ss << "DDS_PublicationMatchedStatus:\n" <<
+    "  topic name:               " << datawriter->get_topic()->get_name() << "\n" <<
+    "  current_count:            " << to_string(s.current_count) << "\n" <<
+    "  current_count_change:     " << to_string(s.current_count_change) << "\n" <<
+    "  current_count_peak:       " << to_string(s.current_count_peak) << "\n" <<
+    "  total_count:              " << to_string(s.total_count) << "\n" <<
+    "  total_count_change:       " << to_string(s.total_count_change) << "\n" <<
+    "  last_subscription_handle: " << to_string(s.last_subscription_handle) << "\n";
   printf("%s", ss.str().c_str());
 #endif
 
@@ -76,16 +74,14 @@ _subscription_count_matched_publishers(DDS::DataReader * datareader, size_t * co
   using std::to_string;
   using std::stringstream;
   std::stringstream ss;
-  // *INDENT-OFF* (prevent uncrustify from making unnecessary indents here)
-  ss << "DDS_SubscriptionMatchedStatus:\n"
-     << "  topic name:               " << datareader->get_topicdescription()->get_name() << "\n"
-     << "  current_count:            " << to_string(s.current_count) << "\n"
-     << "  current_count_change:     " << to_string(s.current_count_change) << "\n"
-     << "  current_count_peak:       " << to_string(s.current_count_peak) << "\n"
-     << "  total_count:              " << to_string(s.total_count) << "\n"
-     << "  total_count_change:       " << to_string(s.total_count_change) << "\n"
-     << "  last_publication_handle:  " << to_string(s.last_publication_handle) << "\n";
-  // *INDENT-ON*
+  ss << "DDS_SubscriptionMatchedStatus:\n" <<
+    "  topic name:               " << datareader->get_topicdescription()->get_name() << "\n" <<
+    "  current_count:            " << to_string(s.current_count) << "\n" <<
+    "  current_count_change:     " << to_string(s.current_count_change) << "\n" <<
+    "  current_count_peak:       " << to_string(s.current_count_peak) << "\n" <<
+    "  total_count:              " << to_string(s.total_count) << "\n" <<
+    "  total_count_change:       " << to_string(s.total_count_change) << "\n" <<
+    "  last_publication_handle:  " << to_string(s.last_publication_handle) << "\n";
   printf("%s", ss.str().c_str());
 #endif
 
