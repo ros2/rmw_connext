@@ -327,7 +327,7 @@ endif()
 if(Connext_DDSGEN_SERVER)
   # check that the generator is invocable / finds a Java runtime environment
   execute_process(
-    COMMAND "${Connext_DDSGEN_SERVER}"
+    COMMAND "${Connext_DDSGEN_SERVER}" "-version"
     RESULT_VARIABLE _retcode
     OUTPUT_QUIET ERROR_QUIET)
   if(NOT _retcode EQUAL 0)
