@@ -327,6 +327,7 @@ endif()
 if(Connext_DDSGEN_SERVER)
   # the first invocation with a timeout is necessary since when the script
   # forks the daemon it fails to exit early (default daemon timeout is 20s)
+  # TODO(mikaelarguedas) remove this once rtiddsgen_server detaches the forked daemon and returns early
   execute_process(
     COMMAND "${Connext_DDSGEN_SERVER}" "-version"
     TIMEOUT 1
