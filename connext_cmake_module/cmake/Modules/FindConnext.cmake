@@ -325,6 +325,12 @@ if(Connext_FOUND)
 endif()
 
 if(Connext_DDSGEN_SERVER)
+  # the first invocation with a timeout is necessary since when the script
+  # forks the daemon it fails to exit early (default daemon timeout is 20s)
+  execute_process(
+    COMMAND "${Connext_DDSGEN_SERVER}" "-version"
+    TIMEOUT 1
+    OUTPUT_QUIET ERROR_QUIET)
   # check that the generator is invocable / finds a Java runtime environment
   execute_process(
     COMMAND "${Connext_DDSGEN_SERVER}" "-version"
