@@ -17,7 +17,6 @@
 
 #ifndef _WIN32
 # pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 # pragma GCC diagnostic ignored "-Wunused-parameter"
 # ifdef __clang__
 #  pragma clang diagnostic ignored "-Wdeprecated-register"
