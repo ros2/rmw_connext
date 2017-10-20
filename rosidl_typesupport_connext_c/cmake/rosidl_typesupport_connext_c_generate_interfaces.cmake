@@ -73,12 +73,8 @@ if(NOT WIN32)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(_connext_compile_flags
       "-Wno-deprecated-register"
-      "-Wno-mismatched-tags"
       "-Wno-return-type-c-linkage"
-      "-Wno-sometimes-uninitialized"
-      "-Wno-tautological-compare"
       "-Wno-unused-parameter"
-      "-Wno-unused-variable"
     )
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(_connext_compile_flags

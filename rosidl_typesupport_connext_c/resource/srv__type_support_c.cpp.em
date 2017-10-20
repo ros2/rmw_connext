@@ -21,7 +21,6 @@
 # pragma GCC diagnostic ignored "-Wunused-parameter"
 # ifdef __clang__
 #  pragma clang diagnostic ignored "-Wdeprecated-register"
-#  pragma clang diagnostic ignored "-Winfinite-recursion"
 #  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 # endif
 #endif
