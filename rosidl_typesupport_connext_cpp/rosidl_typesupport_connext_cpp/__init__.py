@@ -110,9 +110,70 @@ def generate_dds_connext_cpp(
             # modify generated code to avoid unsed global variable warning
             # which can't be suppressed non-globally with gcc
             msg_filename = os.path.join(output_path, msg_name + '.h')
+            # TODO(karsten1987): Modify should take array of callbacks
+            # to avoid multiple file readings
             _modify(msg_filename, pkg_name, msg_name, _inject_unused_attribute)
 
+            plugin_filename = os.path.join(output_path, msg_name + 'Plugin.cxx')
+            _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_serialize_function)
+
     return 0
+
+
+def _get_serialization_code(msg_name, indentation):
+    val = ("{{\n"
+           "{indentation}// MODIFIED FOR ROS2 PURPOSES\n"
+           "{indentation}const ConnextStaticMessageHandle * message_handle =\n"
+           "{indentation}  reinterpret_cast<const ConnextStaticMessageHandle *>(fake_sample);\n"
+           "{indentation}if (message_handle->raw_message) {{\n"
+           "{indentation}  memcpy(stream->_buffer, message_handle->raw_message, "
+           "*(message_handle->raw_message_length));\n"
+           "{indentation}  stream->_relativeBuffer = stream->_buffer;\n"
+           "{indentation}  stream->_tmpRelativeBuffer = stream->_buffer;\n"
+           "{indentation}  stream->_buffer = stream->_buffer;\n"
+           "{indentation}  //stream->_endian = \'\\x01\';\n"
+           "{indentation}  //stream->_nativeEndian = \'\\x01\';\n"
+           "{indentation}  //stream->_encapsulationKind = 1;\n"
+           "{indentation}  //stream->_zeroOnAlign = 0;\n"
+           "{indentation}  stream->_currentPosition = "
+           "stream->_buffer + *(message_handle->raw_message_length);\n"
+           "{indentation}  return RTI_TRUE;\n"
+           "{indentation}}}\n"
+           "{indentation}const {msg_name} * sample = reinterpret_cast<const {msg_name} *> "
+           "(message_handle->untyped_dds_message);\n"
+           .format(indentation=indentation, msg_name=msg_name))
+    return val
+
+
+def _modify_plugin_serialize_function(pkg_name, msg_name, lines):
+    # set include correctly - line 49 is the last generated include
+    if lines[49] == '':
+        lines[49] = ('\n// MODIFIED FOR ROS2 PURPOSES\n#include \"'
+                     'rosidl_typesupport_connext_cpp/connext_static_message_handle.hpp\"\n')
+
+    serialize_fcn_signature = msg_name + 'Plugin_serialize('
+    print("looking for '%s' serialize function" % serialize_fcn_signature)
+    signature_found = False
+    injection_start = None
+    for index, line in enumerate(lines):
+        if not signature_found:
+            if line.lstrip().startswith(serialize_fcn_signature):
+                signature_found = True
+        else:
+            if '{' in line.lstrip():
+                print("found %s serialize function in line: %d" % (msg_name, index))
+                injection_start = index
+                break
+    if not signature_found:
+        raise RuntimeError('failed to locate %sPlugin_serialize function' % msg_name)
+
+    # rename message argument from sample to fake_sample
+    # this eases the modification within the serialize function
+    print(lines[injection_start - 6])
+    lines[injection_start - 6] = lines[injection_start - 6].replace('sample', 'fake_sample')
+    indentation = ' ' * 16
+    lines[injection_start] = line.replace('{', _get_serialization_code(msg_name, indentation))
+    return True
 
 
 def _inject_unused_attribute(pkg_name, msg_name, lines):
