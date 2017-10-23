@@ -149,35 +149,52 @@ convert_ros_message_to_dds(
 bool
 publish__@(spec.base_type.type)(
   void * untyped_topic_writer,
-  const void * untyped_ros_message)
+  ConnextStaticMessageHandle * message_handle)
 {
   DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
+  bool success = false;
+  //@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * sample = nullptr;
 
-  const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
-    *(const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
-  if (!dds_message) {
-    return false;
-  }
-
-  bool success = convert_ros_message_to_dds(ros_message, *dds_message);
-  if (success) {
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer =
-      @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
-    if (!data_writer) {
-      fprintf(stderr, "failed to narrow data writer\n");
-      success = false;
-    } else {
-      DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
-      success = status == DDS_RETCODE_OK;
+  // in case we have an untyped ros message (classic publish)
+  if (message_handle->untyped_ros_message) {
+    const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
+      *(const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)message_handle->untyped_ros_message;
+       @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+    message_handle->untyped_dds_message = (void *)dds_message;
+    if (!dds_message) {
+      return false;
     }
+
+    success = convert_ros_message_to_dds(ros_message, *dds_message);
+  // in case we have a raw CDR message
+  // HACK only print data for now, this has no action to be done
+  } else if (message_handle->raw_message) {
+    fprintf(stderr, "connext publish callback\n");
+    for (size_t i = 0; i < *(message_handle->raw_message_length); ++i) {
+      fprintf(stderr, "%02x ", message_handle->raw_message[i]);
+    }
+    fprintf(stderr, "\n");
+    success = true;
   }
 
-  DDS_ReturnCode_t status =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
-  success &= status == DDS_RETCODE_OK;
+  if (success) {
+      @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer =
+        @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
+      if (!data_writer) {
+        fprintf(stderr, "failed to narrow data writer\n");
+        success = false;
+      } else {
+        @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * sample  = reinterpret_cast<@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ *>(message_handle);
+        DDS_ReturnCode_t status = data_writer->write(*sample, DDS_HANDLE_NIL);
+        success = status == DDS_RETCODE_OK;
+      }
+    }
 
+  if (message_handle->untyped_dds_message) {
+    DDS_ReturnCode_t status =
+      @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(reinterpret_cast<@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ *>(message_handle->untyped_dds_message));
+    success &= status == DDS_RETCODE_OK;
+  }
   return success;
 }
 

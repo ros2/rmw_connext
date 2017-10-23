@@ -28,6 +28,7 @@
 #include "rosidl_typesupport_connext_c/identifier.h"
 // Provides the definition of the message_type_support_callbacks_t struct.
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
+#include "rosidl_typesupport_connext_cpp/connext_static_message_handle.hpp"
 
 #include "@(pkg)/msg/rosidl_typesupport_connext_c__visibility_control.h"
 @{header_file_name = get_header_filename_from_msg_name(type)}@
@@ -255,8 +256,9 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
 }
 
 static bool
-publish(void * dds_data_writer, const void * untyped_ros_message)
+publish(void * dds_data_writer, ConnextStaticMessageHandle* untyped_ros_messageFIX)
 {
+  void *untyped_ros_message = (void *) untyped_ros_messageFIX;
   if (!dds_data_writer) {
     fprintf(stderr, "data writer handle is null\n");
     return false;

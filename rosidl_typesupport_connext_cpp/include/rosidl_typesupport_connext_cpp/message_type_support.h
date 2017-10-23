@@ -17,6 +17,8 @@
 
 #include "rosidl_generator_c/message_type_support_struct.h"
 
+#include "rosidl_typesupport_connext_cpp/connext_static_message_handle.hpp"
+
 typedef struct message_type_support_callbacks_t
 {
   const char * package_name;
@@ -24,7 +26,7 @@ typedef struct message_type_support_callbacks_t
   // Function to register type with given dds_participant
   bool (* register_type)(void * dds_participant, const char * type_name);
   // Function to publish a ROS message with a given DDS data_writer
-  bool (* publish)(void * dds_data_writer, const void * ros_message);
+  bool (* publish)(void * dds_data_writer, ConnextStaticMessageHandle * ros_message);
   // Function to take a ROS message from a dds data reader
   bool (* take)(
     void * dds_data_reader, bool ignore_local_publications, void * ros_message, bool * taken,
