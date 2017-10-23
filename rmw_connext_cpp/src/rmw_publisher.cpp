@@ -252,9 +252,7 @@ fail:
     DDS_String_free(topic_str);
     topic_str = nullptr;
   }
-  if (publisher) {
-    rmw_publisher_free(publisher);
-  }
+
   // Assumption: participant is valid.
   if (dds_publisher) {
     if (topic_writer) {

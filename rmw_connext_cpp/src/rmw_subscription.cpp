@@ -250,9 +250,7 @@ fail:
     DDS_String_free(topic_str);
     topic_str = nullptr;
   }
-  if (subscription) {
-    rmw_subscription_free(subscription);
-  }
+
   // Assumption: participant is valid.
   if (dds_subscriber) {
     if (topic_reader) {
