@@ -78,6 +78,7 @@ if(NOT WIN32)
     )
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     set(_connext_compile_flags
+      # no-strict-aliasing necessary only for Release builds
       "-Wno-strict-aliasing"
       "-Wno-unused-parameter"
     )
