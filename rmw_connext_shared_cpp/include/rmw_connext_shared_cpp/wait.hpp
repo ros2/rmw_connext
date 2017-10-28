@@ -259,6 +259,7 @@ wait(
       DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        return RMW_RET_ERROR;
       }
     }
   }
@@ -294,6 +295,7 @@ wait(
       DDS_ReturnCode_t retcode = dds_waitset->detach_condition(condition);
       if (retcode != DDS_RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        return RMW_RET_ERROR;
       }
     }
   }
@@ -328,6 +330,7 @@ wait(
       DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        return RMW_RET_ERROR;
       }
     }
   }
@@ -362,6 +365,7 @@ wait(
       DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        return RMW_RET_ERROR;
       }
     }
   }
