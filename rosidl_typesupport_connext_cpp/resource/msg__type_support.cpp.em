@@ -165,8 +165,13 @@ publish__@(spec.base_type.type)(
   if (success) {
     @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer =
       @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
-    DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
-    success = status == DDS_RETCODE_OK;
+    if (!data_writer) {
+      fprintf(stderr, "failed to narrow data writer\n");
+      success = false;
+    } else {
+      DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
+      success = status == DDS_RETCODE_OK;
+    }
   }
 
   DDS_ReturnCode_t status =
@@ -249,6 +254,10 @@ take__@(spec.base_type.type)(
 
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader * data_reader =
     @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
+  if (!data_reader) {
+    fprintf(stderr, "failed to narrow data reader\n");
+    return false;
+  }
 
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_Seq dds_messages;
   DDS_SampleInfoSeq sample_infos;

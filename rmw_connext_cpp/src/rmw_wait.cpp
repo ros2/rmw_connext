@@ -32,8 +32,8 @@ rmw_wait(
   rmw_waitset_t * waitset,
   const rmw_time_t * wait_timeout)
 {
-  return wait<ConnextStaticSubscriberInfo, ConnextStaticServiceInfo, ConnextStaticClientInfo>
-           (rti_connext_identifier, subscriptions, guard_conditions, services, clients, waitset,
-           wait_timeout);
+  return wait<ConnextStaticSubscriberInfo, ConnextStaticServiceInfo, ConnextStaticClientInfo>(
+    rti_connext_identifier, subscriptions, guard_conditions, services, clients, waitset,
+    wait_timeout);
 }
 }  // extern "C"

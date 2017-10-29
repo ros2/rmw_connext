@@ -114,13 +114,10 @@ target_compile_definitions(rmw_connext_cpp
 # On Windows this adds the RMW_BUILDING_DLL definition.
 # On Unix (GCC or Clang) it hides the symbols with -fvisibility=hidden.
 configure_rmw_library(rmw_connext_cpp)
-# Additionally, on Windows, add the ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL definition.
 
 if(WIN32)
   target_compile_definitions(rmw_connext_cpp
     PRIVATE "_CRT_NONSTDC_NO_DEPRECATE")
-  target_compile_definitions(rmw_connext_cpp
-    PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
 endif()
 
 if(BUILD_TESTING)
@@ -143,4 +140,4 @@ install(
 )
 
 get_rmw_connext_output_filter("rmw_connext_output_filter")
-ament_index_register_resource("rmw_output_filter" CONTENT "${rmw_connext_output_filter}")
+ament_index_register_resource("rmw_output_prefixes" CONTENT "${rmw_connext_output_filter}")

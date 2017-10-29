@@ -37,7 +37,6 @@
 #ifndef _WIN32
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wunused-parameter"
-# pragma GCC diagnostic ignored "-Wunused-variable"
 # ifdef __clang__
 #  pragma clang diagnostic ignored "-Wdeprecated-register"
 #  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
@@ -437,6 +436,10 @@ take(
 
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader * data_reader =
     @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
+  if (!data_reader) {
+    fprintf(stderr, "failed to narrow data reader\n");
+    return false;
+  }
 
   @(__dds_msg_type_prefix)Seq dds_messages;
   DDS_SampleInfoSeq sample_infos;

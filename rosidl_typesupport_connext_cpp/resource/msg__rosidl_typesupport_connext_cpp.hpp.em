@@ -33,7 +33,6 @@ header_guard_variable = '__'.join([x.upper() for x in header_guard_parts]) + '_'
 #ifndef _WIN32
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wunused-parameter"
-# pragma GCC diagnostic ignored "-Wunused-variable"
 # ifdef __clang__
 #  pragma clang diagnostic ignored "-Wdeprecated-register"
 #  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"

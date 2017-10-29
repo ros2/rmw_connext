@@ -18,11 +18,9 @@
 
 #ifndef _WIN32
 # pragma GCC diagnostic push
-# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 # pragma GCC diagnostic ignored "-Wunused-parameter"
 # ifdef __clang__
 #  pragma clang diagnostic ignored "-Wdeprecated-register"
-#  pragma clang diagnostic ignored "-Winfinite-recursion"
 #  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 # endif
 #endif
@@ -117,7 +115,7 @@ void * create_requester__@(spec.srv_name)(
 
 const char * destroy_requester__@(spec.srv_name)(
   void * untyped_requester,
-  void (* deallocator)(void *))
+  void (*deallocator)(void *))
 {
   using RequesterType = connext::Requester<
       @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
@@ -215,7 +213,7 @@ void * create_replier__@(spec.srv_name)(
 
 const char * destroy_replier__@(spec.srv_name)(
   void * untyped_replier,
-  void (* deallocator)(void *))
+  void (*deallocator)(void *))
 {
   using ReplierType = connext::Replier<
       @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,

@@ -108,11 +108,11 @@ function(_find_connext_libraries var library_names basepath)
     # If this is Darwin, only accept Darwin
     if(APPLE)
       set(match FALSE)
-      string(FIND "${library}" "x64Darwin15clang7.0" _found)
+      string(FIND "${library}" "x64Darwin16clang8.0" _found)
       if(NOT ${_found} EQUAL -1)
         set(match TRUE)
       else()
-        string(FIND "${library}" "x64Darwin14clang6.0" _found)
+        string(FIND "${library}" "x64Darwin15clang7.0" _found)
         if(NOT ${_found} EQUAL -1)
           set(match TRUE)
         endif()
@@ -326,8 +326,9 @@ endif()
 
 if(Connext_DDSGEN_SERVER)
   # check that the generator is invocable / finds a Java runtime environment
+  # the undocumented option ensures that the script doesn't spawn a server
   execute_process(
-    COMMAND "${Connext_DDSGEN_SERVER}"
+    COMMAND "${Connext_DDSGEN_SERVER}" "-n_version"
     RESULT_VARIABLE _retcode
     OUTPUT_QUIET ERROR_QUIET)
   if(NOT _retcode EQUAL 0)
