@@ -103,7 +103,7 @@ ament_target_dependencies(rmw_connext_cpp
   "rosidl_typesupport_connext_c"
   "rosidl_typesupport_connext_cpp"
   "Connext")
-ament_export_libraries(rmw_connext_cpp ${Connext_LIBRARIES})
+ament_export_libraries(rmw_connext_cpp)
 
 # Causes the visibility macros to use dllexport rather than dllimport
 # which is appropriate when building the library but not consuming it.
@@ -124,7 +124,7 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_package()
+ament_package(CONFIG_EXTRAS "${PROJECT_NAME}-extras.cmake")
 
 install(
   DIRECTORY include/
