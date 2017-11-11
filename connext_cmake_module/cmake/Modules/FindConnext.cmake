@@ -46,6 +46,10 @@
 
 # lint_cmake: -convention/filename, -package/stdargs
 
+if(DEFINED Connext_FOUND)
+  return()
+endif()
+
 set(Connext_FOUND FALSE)
 
 # get the platform specific library names
