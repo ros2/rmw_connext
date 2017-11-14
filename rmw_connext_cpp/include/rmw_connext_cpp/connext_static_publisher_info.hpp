@@ -27,6 +27,7 @@ struct ConnextStaticPublisherInfo
   DDSDataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
+  bool raw_stream_publisher = true;
 };
 }  // extern "C"
 

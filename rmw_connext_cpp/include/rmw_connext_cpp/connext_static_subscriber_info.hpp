@@ -28,6 +28,7 @@ struct ConnextStaticSubscriberInfo
   DDSReadCondition * read_condition_;
   bool ignore_local_publications;
   const message_type_support_callbacks_t * callbacks_;
+  bool raw_stream_subscriber = true;
 };
 }  // extern "C"
 

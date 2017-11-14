@@ -17,7 +17,7 @@
 
 #include "rosidl_generator_c/message_type_support_struct.h"
 
-#include "rosidl_typesupport_connext_cpp/connext_static_message_handle.hpp"
+#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 
 typedef struct message_type_support_callbacks_t
 {
@@ -26,16 +26,24 @@ typedef struct message_type_support_callbacks_t
   // Function to register type with given dds_participant
   bool (* register_type)(void * dds_participant, const char * type_name);
   // Function to publish a ROS message with a given DDS data_writer
-  bool (* publish)(void * dds_data_writer, ConnextStaticMessageHandle * ros_message);
+  bool (* publish)(void * dds_data_writer, ConnextStaticCDRStream * cdr_stream);
   // Function to take a ROS message from a dds data reader
   bool (* take)(
-    void * dds_data_reader, bool ignore_local_publications, void * ros_message, bool * taken,
+    void * dds_data_reader, bool ignore_local_publications, ConnextStaticCDRStream * cdr_stream, bool * taken,
     void * sending_publication_handle);
   bool (* convert_ros_to_dds)(
     const void * untyped_ros_message,
     void * untyped_data_message);
   bool (* convert_dds_to_ros)(
     const void * untyped_data_message,
+    void * untyped_ros_message);
+  // Function to serialize a ROS message to a CDR stream
+  bool (* to_cdr_stream)(
+    const void * untyped_ros_message,
+    ConnextStaticCDRStream * cdr_stream);
+  // Function to deserialize a CDR message to a ROS message
+  bool (* to_message)(
+    const ConnextStaticCDRStream * cdr_stream,
     void * untyped_ros_message);
 } message_type_support_callbacks_t;
 

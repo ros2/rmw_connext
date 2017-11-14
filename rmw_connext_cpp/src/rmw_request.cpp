@@ -111,7 +111,7 @@ rmw_take_request(
   }
 
   *taken = callbacks->take_request(replier, request_header, ros_request);
-
+  fprintf(stderr, "Correctly taken the request\n");
   return RMW_RET_OK;
 }
 }  // extern "C"

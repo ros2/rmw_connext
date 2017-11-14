@@ -39,9 +39,13 @@ header_guard_variable = '__'.join([x.upper() for x in header_guard_parts]) + '_'
 # endif
 #endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
+#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Plugin.h"
 #ifndef _WIN32
 # pragma GCC diagnostic pop
 #endif
+
+// forward declaration of internal CDR Stream
+struct ConnextStaticCDRStream;
 
 // forward declaration of DDS types
 class DDSDomainParticipant;
@@ -83,8 +87,18 @@ bool
 take__@(spec.base_type.type)(
   DDSDataReader * topic_reader,
   bool ignore_local_publications,
-  void * untyped_ros_message,
+  ConnextStaticCDRStream * untyped_ros_message,
   bool * taken);
+
+bool
+to_cdr_stream__@(spec.base_type.type)(
+  const void * untyped_ros_message,
+  ConnextStaticCDRStream * cdr_stream);
+
+bool
+to_message__@(spec.base_type.type)(
+  const ConnextStaticCDRStream * cdr_stream,
+  void * untyped_ros_message);
 
 }  // namespace typesupport_connext_cpp
 

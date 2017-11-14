@@ -28,7 +28,7 @@
 #include "rosidl_typesupport_connext_c/identifier.h"
 // Provides the definition of the message_type_support_callbacks_t struct.
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
-#include "rosidl_typesupport_connext_cpp/connext_static_message_handle.hpp"
+#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 
 #include "@(pkg)/msg/rosidl_typesupport_connext_c__visibility_control.h"
 @{header_file_name = get_header_filename_from_msg_name(type)}@
@@ -44,6 +44,7 @@
 # endif
 #endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
+#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Plugin.h"
 #ifndef _WIN32
 # pragma GCC diagnostic pop
 #endif
@@ -256,7 +257,7 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
 }
 
 static bool
-publish(void * dds_data_writer, ConnextStaticMessageHandle* untyped_ros_messageFIX)
+publish(void * dds_data_writer, ConnextStaticCDRStream * untyped_ros_messageFIX)
 {
   void *untyped_ros_message = (void *) untyped_ros_messageFIX;
   if (!dds_data_writer) {
@@ -425,10 +426,11 @@ static bool
 take(
   void * dds_data_reader,
   bool ignore_local_publications,
-  void * untyped_ros_message,
+  ConnextStaticCDRStream * cdr_streamFIX,
   bool * taken,
   void * sending_publication_handle)
 {
+  void * untyped_ros_message = reinterpret_cast<void *>(cdr_streamFIX);
   if (untyped_ros_message == 0) {
     fprintf(stderr, "invalid ros message pointer\n");
     return false;
@@ -562,6 +564,34 @@ finally:
 
   return false;
 }
+
+static bool
+to_cdr_stream(
+  const void * untyped_ros_message,
+  ConnextStaticCDRStream * cdr_stream)
+{
+  if (!untyped_ros_message) {
+    return false;
+  }
+  if (!cdr_stream) {
+    return false;
+  }
+  return true;
+}
+
+static bool
+to_message(
+  const ConnextStaticCDRStream * cdr_stream,
+  void * untyped_ros_message)
+{
+  if (!cdr_stream) {
+    return false;
+  }
+  if (!untyped_ros_message) {
+    return false;
+  }
+  return true;
+}
 @
 @# // Collect the callback functions and provide a function to get the type support struct.
 
@@ -573,6 +603,8 @@ static message_type_support_callbacks_t __callbacks = {
   take,  // take
   convert_ros_to_dds,  // convert_ros_to_dds
   convert_dds_to_ros,  // convert_dds_to_ros
+  to_cdr_stream,  // to_cdr_stream
+  to_message  // to_message
 };
 
 static rosidl_message_type_support_t __type_support = {

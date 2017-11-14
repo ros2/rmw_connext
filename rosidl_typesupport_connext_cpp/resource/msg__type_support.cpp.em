@@ -20,6 +20,7 @@
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
+#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/message_type_support_decl.hpp"
@@ -149,52 +150,21 @@ convert_ros_message_to_dds(
 bool
 publish__@(spec.base_type.type)(
   void * untyped_topic_writer,
-  ConnextStaticMessageHandle * message_handle)
+  ConnextStaticCDRStream * cdr_stream)
 {
+  bool success = true;
   DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
-  bool success = false;
-  //@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * sample = nullptr;
 
-  // in case we have an untyped ros message (classic publish)
-  if (message_handle->untyped_ros_message) {
-    const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
-      *(const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)message_handle->untyped_ros_message;
-       @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
-    message_handle->untyped_dds_message = (void *)dds_message;
-    if (!dds_message) {
-      return false;
-    }
-
-    success = convert_ros_message_to_dds(ros_message, *dds_message);
-  // in case we have a raw CDR message
-  // HACK only print data for now, this has no action to be done
-  } else if (message_handle->raw_message) {
-    fprintf(stderr, "connext publish callback\n");
-    for (size_t i = 0; i < *(message_handle->raw_message_length); ++i) {
-      fprintf(stderr, "%02x ", message_handle->raw_message[i]);
-    }
-    fprintf(stderr, "\n");
-    success = true;
+  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
+  if (!data_writer) {
+    fprintf(stderr, "failed to narrow data writer\n");
+    success = false;
+  } else {
+    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * sample  = reinterpret_cast<@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ *>(cdr_stream);
+    DDS_ReturnCode_t status = data_writer->write(*sample, DDS_HANDLE_NIL);
+    success = status == DDS_RETCODE_OK;
   }
 
-  if (success) {
-      @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer =
-        @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
-      if (!data_writer) {
-        fprintf(stderr, "failed to narrow data writer\n");
-        success = false;
-      } else {
-        @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * sample  = reinterpret_cast<@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ *>(message_handle);
-        DDS_ReturnCode_t status = data_writer->write(*sample, DDS_HANDLE_NIL);
-        success = status == DDS_RETCODE_OK;
-      }
-    }
-
-  if (message_handle->untyped_dds_message) {
-    DDS_ReturnCode_t status =
-      @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(reinterpret_cast<@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ *>(message_handle->untyped_dds_message));
-    success &= status == DDS_RETCODE_OK;
-  }
   return success;
 }
 
@@ -253,15 +223,15 @@ bool
 take__@(spec.base_type.type)(
   void * untyped_topic_reader,
   bool ignore_local_publications,
-  void * untyped_ros_message,
+  ConnextStaticCDRStream * cdr_stream,
   bool * taken,
   void * sending_publication_handle)
 {
   if (!untyped_topic_reader) {
     throw std::runtime_error("topic reader handle is null");
   }
-  if (!untyped_ros_message) {
-    throw std::runtime_error("ros message handle is null");
+  if (!cdr_stream) {
+    throw std::runtime_error("cdr stream handle is null");
   }
   if (!taken) {
     throw std::runtime_error("taken handle is null");
@@ -319,19 +289,89 @@ take__@(spec.base_type.type)(
       sample_info.publication_handle;
   }
 
-  bool success = true;
   if (!ignore_sample) {
-    @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
-      *(@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
-    success = convert_dds_message_to_ros(dds_messages[0], ros_message);
-    if (success) {
-      *taken = true;
-    }
+    ConnextStaticCDRStream * input_stream = reinterpret_cast<ConnextStaticCDRStream *>(&dds_messages[0]);
+    cdr_stream->raw_message = input_stream->raw_message;
+    cdr_stream->message_length = input_stream->message_length;
+    fprintf(stderr, "Received stream of length %u\n", cdr_stream->message_length);
+    *taken = true;
   } else {
     *taken = false;
   }
   data_reader->return_loan(dds_messages, sample_infos);
 
+  return true;
+}
+
+bool
+to_cdr_stream__@(spec.base_type.type)(
+  const void * untyped_ros_message,
+  ConnextStaticCDRStream * cdr_stream)
+{
+  if (!cdr_stream) {
+    return false;
+  }
+  if (!untyped_ros_message) {
+    return false;
+  }
+
+  // cast the untyped to the known ros message
+  const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
+    *(const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
+  // create a respective connext dds type
+  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+  if (!dds_message) {
+    return false;
+  }
+  // convert ros to dds
+  if (!convert_ros_message_to_dds(ros_message, *dds_message)) {
+    return false;
+  }
+
+  // call the serialize function for the first time to get the expected length of the message
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(NULL, &cdr_stream->message_length, dds_message) != RTI_TRUE) {
+    return false;
+  }
+  fprintf(stderr, "message length: %d\n", cdr_stream->message_length);
+  // allocate enough memory for the CDR stream
+  cdr_stream->raw_message = (char *)malloc(sizeof(char) * cdr_stream->message_length);
+  // call the function again and fill the buffer this time
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(cdr_stream->raw_message, &cdr_stream->message_length, dds_message) != RTI_TRUE) {
+    return false;
+  }
+  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK){
+    return false;
+  }
+  return true;
+}
+
+bool
+to_message__@(spec.base_type.type)(
+  const ConnextStaticCDRStream * cdr_stream,
+  void * untyped_ros_message)
+{
+  if (!cdr_stream) {
+    return false;
+  }
+  if (!cdr_stream->raw_message) {
+    fprintf(stderr, "cdr stream doesn't contain data\n");
+  }
+  if (!untyped_ros_message) {
+    return false;
+  }
+  
+  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+  if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(dds_message, cdr_stream->raw_message, cdr_stream->message_length) != RTI_TRUE) {
+    fprintf(stderr, "deserialize from cdr buffer failed\n");
+    return false;
+  }
+
+  @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
+    *(@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
+  bool success = convert_dds_message_to_ros(*dds_message, ros_message);
+  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK){
+    return false;
+  }
   return success;
 }
 
@@ -342,7 +382,9 @@ static message_type_support_callbacks_t callbacks = {
   &publish__@(spec.base_type.type),
   &take__@(spec.base_type.type),
   nullptr,
-  nullptr
+  nullptr,
+  &to_cdr_stream__@(spec.base_type.type),
+  &to_message__@(spec.base_type.type)
 };
 
 static rosidl_message_type_support_t handle = {

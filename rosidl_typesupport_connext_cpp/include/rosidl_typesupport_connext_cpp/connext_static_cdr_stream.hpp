@@ -1,4 +1,4 @@
-// Copyright 2014-2017 Open Source Robotics Foundation, Inc.
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_SERVICE_INFO_HPP_
-#define RMW_CONNEXT_CPP__CONNEXT_STATIC_SERVICE_INFO_HPP_
-
-#include "rmw_connext_shared_cpp/ndds_include.hpp"
-
-#include "rosidl_typesupport_connext_cpp/service_type_support.h"
+#ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP__CONNEXT_STATIC_CDR_STREAM_HPP_
+#define ROSIDL_TYPESUPPORT_CONNEXT_CPP__CONNEXT_STATIC_CDR_STREAM_HPP_
 
 extern "C"
 {
-struct ConnextStaticServiceInfo
+struct ConnextStaticCDRStream
 {
-  void * replier_;
-  DDSDataReader * request_datareader_;
-  DDSReadCondition * read_condition_;
-  const service_type_support_callbacks_t * callbacks_;
-  bool raw_stream_subscriber = true;
+  char * raw_message = nullptr;
+  unsigned int message_length = 0;
 };
 }  // extern "C"
 
-#endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_SERVICE_INFO_HPP_
+#endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__CONNEXT_STATIC_CDR_STREAM_HPP_

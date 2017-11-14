@@ -84,6 +84,7 @@ rmw_create_publisher(
   // Past this point, a failure results in unrolling code in the goto fail block.
   bool registered;
   DDS_DataWriterQos datawriter_qos;
+  DDS_TypeSupportQosPolicy ts;
   DDS_PublisherQos publisher_qos;
   DDS_ReturnCode_t status;
   DDSPublisher * dds_publisher = nullptr;
@@ -159,18 +160,6 @@ rmw_create_publisher(
   DDS_String_free(topic_str);
   topic_str = nullptr;
 
-  if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
-    // error string was set within the function
-    goto fail;
-  }
-
-  topic_writer = dds_publisher->create_datawriter(
-    topic, datawriter_qos, NULL, DDS_STATUS_MASK_NONE);
-  if (!topic_writer) {
-    RMW_SET_ERROR_MSG("failed to create datawriter");
-    goto fail;
-  }
-
   // Allocate memory for the ConnextStaticPublisherInfo object.
   buf = rmw_allocate(sizeof(ConnextStaticPublisherInfo));
   if (!buf) {
@@ -180,6 +169,25 @@ rmw_create_publisher(
   // Use a placement new to construct the ConnextStaticPublisherInfo in the preallocated buffer.
   RMW_TRY_PLACEMENT_NEW(publisher_info, buf, goto fail, ConnextStaticPublisherInfo, )
   buf = nullptr;  // Only free the publisher_info pointer; don't need the buf pointer anymore.
+
+  if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
+    // error string was set within the function
+    goto fail;
+  }
+
+  // Set the plugin typesupport to the connext info
+  // If this is true, a raw CDR Stream is enabled
+  ts.plugin_data = &publisher_info->raw_stream_publisher;
+  ts.cdr_padding_kind = DDS_AUTO_CDR_PADDING;
+  datawriter_qos.type_support = ts;
+  topic_writer = dds_publisher->create_datawriter(
+    topic, datawriter_qos, NULL, DDS_STATUS_MASK_NONE);
+  if (!topic_writer) {
+    RMW_SET_ERROR_MSG("failed to create datawriter");
+    goto fail;
+  }
+  fprintf(stderr, "created datawriter\n");
+
   publisher_info->dds_publisher_ = dds_publisher;
   publisher_info->topic_writer_ = topic_writer;
   publisher_info->callbacks_ = callbacks;

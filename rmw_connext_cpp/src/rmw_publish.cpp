@@ -56,13 +56,27 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     return RMW_RET_ERROR;
   }
 
-  ConnextStaticMessageHandle message_handle;
-  message_handle.untyped_ros_message = ros_message;
-  bool published = callbacks->publish(topic_writer, &message_handle);
-  if (!published) {
+
+  ConnextStaticCDRStream * my_cdr = new ConnextStaticCDRStream();
+  ConnextStaticCDRStream & cdr_stream = *my_cdr;
+  if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
+    RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
+    return RMW_RET_ERROR;
+  }
+  fprintf(stderr, "successfully converted to cdr stream\n");
+  if (cdr_stream.message_length == 0) {
+    RMW_SET_ERROR_MSG("no message length set");
+    return RMW_RET_ERROR;
+  }
+  if (!cdr_stream.raw_message) {
+    RMW_SET_ERROR_MSG("no raw message attached");
+    return RMW_RET_ERROR;
+  }
+  if (!callbacks->publish(topic_writer, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;
   }
+  free(cdr_stream.raw_message);
   return RMW_RET_OK;
 }
 
@@ -99,10 +113,13 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
     return RMW_RET_ERROR;
   }
 
-  ConnextStaticMessageHandle message_handle;
-  message_handle.raw_message = raw_message->buffer;
-  message_handle.raw_message_length = &raw_message->buffer_length;
-  bool published = callbacks->publish(topic_writer, &message_handle);
+  ConnextStaticCDRStream cdr_stream;
+  cdr_stream.raw_message = DDS_String_dup(raw_message->buffer);
+  cdr_stream.message_length = static_cast<unsigned int>(raw_message->buffer_length);
+  //ConnextStaticMessageHandle message_handle;
+  //message_handle.raw_message = raw_message->buffer;
+  //message_handle.raw_message_length = &raw_message->buffer_length;
+  bool published = callbacks->publish(topic_writer, &cdr_stream);
   if (!published) {
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;
