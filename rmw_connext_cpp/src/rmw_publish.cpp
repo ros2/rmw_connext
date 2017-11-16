@@ -57,8 +57,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   }
 
 
-  ConnextStaticCDRStream * my_cdr = new ConnextStaticCDRStream();
-  ConnextStaticCDRStream & cdr_stream = *my_cdr;
+  ConnextStaticCDRStream cdr_stream;
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
     return RMW_RET_ERROR;
