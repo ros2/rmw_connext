@@ -86,7 +86,7 @@ def generate_dds_connext_cpp(
         count = 1
         max_count = 5
         while True:
-#           subprocess.check_call(cmd)
+           subprocess.check_call(cmd)
 
            # fail safe if the generator does not work as expected
            any_missing = False
@@ -114,13 +114,13 @@ def generate_dds_connext_cpp(
             # to avoid multiple file readings
             _modify(msg_filename, pkg_name, msg_name, _inject_unused_attribute)
 
-#            plugin_filename = os.path.join(output_path, msg_name + 'Plugin.cxx')
-#            if not "Request" in msg_name and not "Response" in msg_name:
-#                _modify(plugin_filename, pkg_name, msg_name, _modify_include_headers)
-#                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_create_data_function)
-#                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_destroy_data_function)
-#                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_serialize_function)
-#                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_deserialize_function)
+            plugin_filename = os.path.join(output_path, msg_name + 'Plugin.cxx')
+            if not "Request" in msg_name and not "Response" in msg_name:
+                _modify(plugin_filename, pkg_name, msg_name, _modify_include_headers)
+                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_create_data_function)
+                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_destroy_data_function)
+                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_serialize_function)
+                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_deserialize_function)
 
     return 0
 
@@ -282,9 +282,15 @@ def _get_include_headers():
 
 
 def _modify_include_headers(pkg_name, msg_name, lines):
-    # set include correctly - line 49 is the last generated include
-    if lines[49] == '':
-        lines[49] = _get_include_headers()
+    last_include_found = False
+    include_line = '#include \"{msg_name}Plugin.h\"'.format(msg_name=msg_name)
+    for index, line in enumerate(lines):
+        if include_line in line:
+            lines[index] = lines[index] + _get_include_headers()
+            last_include_found = True
+            break
+    if not last_include_found:
+        raise RuntimeError('failed to find last include line', include_line)
     return True
 
 
