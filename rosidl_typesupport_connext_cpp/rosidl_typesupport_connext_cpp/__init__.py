@@ -142,10 +142,14 @@ def _modify_plugin_create_data_function(pkg_name, msg_name, lines):
     signature_found = False
     injection_start = None
     for index, line in enumerate(lines):
-        if line.lstrip().startswith(create_data_fcn_signature):
-            signature_found = True
-            injection_start = index
-            break
+        if not signature_found:
+            if line.lstrip().startswith(create_data_fcn_signature):
+                signature_found = True
+        else:
+            if '{' in line.lstrip():
+                print("fpund %s create ex function in line %d" % (msg_name, index))
+                injection_start = index
+                break
     if not signature_found:
         raise RuntimeError('failed to locate %sPlugin_create_data function' % msg_name)
 
