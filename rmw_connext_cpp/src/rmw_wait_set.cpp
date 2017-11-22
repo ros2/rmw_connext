@@ -14,21 +14,21 @@
 
 #include "rmw/rmw.h"
 
-#include "rmw_connext_shared_cpp/waitset.hpp"
+#include "rmw_connext_shared_cpp/wait_set.hpp"
 
 #include "rmw_connext_cpp/identifier.hpp"
 
 extern "C"
 {
-rmw_waitset_t *
-rmw_create_waitset(size_t max_conditions)
+rmw_wait_set_t *
+rmw_create_wait_set(size_t max_conditions)
 {
-  return create_waitset(rti_connext_identifier, max_conditions);
+  return create_wait_set(rti_connext_identifier, max_conditions);
 }
 
 rmw_ret_t
-rmw_destroy_waitset(rmw_waitset_t * waitset)
+rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
 {
-  return destroy_waitset(rti_connext_identifier, waitset);
+  return destroy_wait_set(rti_connext_identifier, wait_set);
 }
 }  // extern "C"

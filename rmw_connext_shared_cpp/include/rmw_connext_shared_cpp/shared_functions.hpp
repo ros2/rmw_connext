@@ -30,6 +30,6 @@
 #include "trigger_guard_condition.hpp"
 #include "types.hpp"
 #include "wait.hpp"
-#include "waitset.hpp"
+#include "wait_set.hpp"
 
 #endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
