@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <rmw/types.h>
-#include "rosidl_generator_c/service_type_support.h"
+#include "rosidl_generator_c/service_type_support_struct.h"
 
 typedef struct service_type_support_callbacks_t
 {
