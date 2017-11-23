@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
-#define RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
+#ifndef RMW_CONNEXT_SHARED_CPP__WAIT_SET_HPP_
+#define RMW_CONNEXT_SHARED_CPP__WAIT_SET_HPP_
 
 #include "rmw/types.h"
 
@@ -27,4 +27,4 @@ RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
 destroy_wait_set(const char * implementation_identifier, rmw_wait_set_t * wait_set);
 
-#endif  // RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
+#endif  // RMW_CONNEXT_SHARED_CPP__WAIT_SET_HPP_
