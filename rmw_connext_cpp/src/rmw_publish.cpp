@@ -19,7 +19,7 @@
 #include "rmw_connext_cpp/identifier.hpp"
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 
-#include "rosidl_typesupport_connext_cpp/connext_static_message_handle.hpp"
+#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 
 extern "C"
 {
@@ -55,7 +55,6 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     RMW_SET_ERROR_MSG("topic writer handle is null");
     return RMW_RET_ERROR;
   }
-
 
   ConnextStaticCDRStream cdr_stream;
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {

@@ -17,11 +17,13 @@
 
 extern "C"
 {
-struct ConnextStaticCDRStream
+
+typedef struct ConnextStaticCDRStream
 {
   char * raw_message = nullptr;
   unsigned int message_length = 0;
-};
+} ConnextStaticCDRStream;
+
 }  // extern "C"
 
 #endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__CONNEXT_STATIC_CDR_STREAM_HPP_
