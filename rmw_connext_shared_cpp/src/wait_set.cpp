@@ -23,7 +23,7 @@ create_wait_set(const char * implementation_identifier, size_t max_conditions)
 
   // From here onward, error results in unrolling in the goto fail block.
   if (!wait_set) {
-    RMW_SET_ERROR_MSG("failed to allocate wait_set");
+    RMW_SET_ERROR_MSG("failed to allocate wait set");
     goto fail;
   }
   wait_set->implementation_identifier = implementation_identifier;
@@ -31,13 +31,13 @@ create_wait_set(const char * implementation_identifier, size_t max_conditions)
   wait_set_info = static_cast<ConnextWaitSetInfo *>(wait_set->data);
 
   if (!wait_set_info) {
-    RMW_SET_ERROR_MSG("failed to allocate wait_set");
+    RMW_SET_ERROR_MSG("failed to allocate wait set");
     goto fail;
   }
 
   wait_set_info->wait_set = static_cast<DDSWaitSet *>(rmw_allocate(sizeof(DDSWaitSet)));
   if (!wait_set_info->wait_set) {
-    RMW_SET_ERROR_MSG("failed to allocate wait_set");
+    RMW_SET_ERROR_MSG("failed to allocate wait set");
     goto fail;
   }
 
@@ -115,7 +115,7 @@ rmw_ret_t
 destroy_wait_set(const char * implementation_identifier, rmw_wait_set_t * wait_set)
 {
   if (!wait_set) {
-    RMW_SET_ERROR_MSG("wait_set handle is null");
+    RMW_SET_ERROR_MSG("wait set handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(

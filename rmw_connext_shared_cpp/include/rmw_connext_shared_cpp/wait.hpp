@@ -45,7 +45,7 @@ wait(
     {
       // Manually detach conditions and clear sequences, to ensure a clean wait set for next time.
       if (!wait_set) {
-        RMW_SET_ERROR_MSG("wait_set handle is null");
+        RMW_SET_ERROR_MSG("wait set handle is null");
         return;
       }
       RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -60,7 +60,7 @@ wait(
 
       DDSWaitSet * dds_wait_set = static_cast<DDSWaitSet *>(wait_set_info->wait_set);
       if (!dds_wait_set) {
-        RMW_SET_ERROR_MSG("DDS wait_set handle is null");
+        RMW_SET_ERROR_MSG("DDS wait set handle is null");
         return;
       }
 
@@ -74,14 +74,14 @@ wait(
       DDS_ReturnCode_t retcode;
       retcode = dds_wait_set->get_conditions(*attached_conditions);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get attached conditions for wait_set");
+        RMW_SET_ERROR_MSG("Failed to get attached conditions for wait set");
         return;
       }
 
       for (DDS_Long i = 0; i < attached_conditions->length(); ++i) {
         retcode = dds_wait_set->detach_condition((*attached_conditions)[i]);
         if (retcode != DDS_RETCODE_OK) {
-          RMW_SET_ERROR_MSG("Failed to get detach condition from wait_set");
+          RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         }
       }
     }
@@ -93,7 +93,7 @@ wait(
   atexit.implementation_identifier = implementation_identifier;
 
   if (!wait_set) {
-    RMW_SET_ERROR_MSG("wait_set handle is null");
+    RMW_SET_ERROR_MSG("wait set handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -109,7 +109,7 @@ wait(
 
   DDSWaitSet * dds_wait_set = static_cast<DDSWaitSet *>(wait_set_info->wait_set);
   if (!dds_wait_set) {
-    RMW_SET_ERROR_MSG("DDS wait_set handle is null");
+    RMW_SET_ERROR_MSG("DDS wait set handle is null");
     return RMW_RET_ERROR;
   }
 
@@ -225,7 +225,7 @@ wait(
   DDS_ReturnCode_t status = dds_wait_set->wait(*active_conditions, timeout);
 
   if (status != DDS_RETCODE_OK && status != DDS_RETCODE_TIMEOUT) {
-    RMW_SET_ERROR_MSG("failed to wait on wait_set");
+    RMW_SET_ERROR_MSG("failed to wait on wait set");
     return RMW_RET_ERROR;
   }
 
@@ -258,7 +258,7 @@ wait(
       }
       DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from wait_set");
+        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }
@@ -294,7 +294,7 @@ wait(
       }
       DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from wait_set");
+        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }
@@ -329,7 +329,7 @@ wait(
       }
       DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from wait_set");
+        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }
@@ -364,7 +364,7 @@ wait(
       }
       DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from wait_set");
+        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }
