@@ -33,7 +33,7 @@ wait(
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
-  rmw_waitset_t * waitset,
+  rmw_wait_set_t * wait_set,
   const rmw_time_t * wait_timeout)
 {
   // To ensure that we properly clean up the wait set, we declare an
@@ -44,77 +44,77 @@ wait(
     ~atexit_t()
     {
       // Manually detach conditions and clear sequences, to ensure a clean wait set for next time.
-      if (!waitset) {
-        RMW_SET_ERROR_MSG("waitset handle is null");
+      if (!wait_set) {
+        RMW_SET_ERROR_MSG("wait set handle is null");
         return;
       }
       RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-        waitset handle,
-        waitset->implementation_identifier, implementation_identifier,
+        wait set handle,
+        wait_set->implementation_identifier, implementation_identifier,
         return )
-      ConnextWaitSetInfo * waitset_info = static_cast<ConnextWaitSetInfo *>(waitset->data);
-      if (!waitset_info) {
+      ConnextWaitSetInfo * wait_set_info = static_cast<ConnextWaitSetInfo *>(wait_set->data);
+      if (!wait_set_info) {
         RMW_SET_ERROR_MSG("WaitSet implementation struct is null");
         return;
       }
 
-      DDSWaitSet * dds_waitset = static_cast<DDSWaitSet *>(waitset_info->waitset);
-      if (!dds_waitset) {
-        RMW_SET_ERROR_MSG("DDS waitset handle is null");
+      DDSWaitSet * dds_wait_set = static_cast<DDSWaitSet *>(wait_set_info->wait_set);
+      if (!dds_wait_set) {
+        RMW_SET_ERROR_MSG("DDS wait set handle is null");
         return;
       }
 
       DDSConditionSeq * attached_conditions =
-        static_cast<DDSConditionSeq *>(waitset_info->attached_conditions);
+        static_cast<DDSConditionSeq *>(wait_set_info->attached_conditions);
       if (!attached_conditions) {
         RMW_SET_ERROR_MSG("DDS condition sequence handle is null");
         return;
       }
 
       DDS_ReturnCode_t retcode;
-      retcode = dds_waitset->get_conditions(*attached_conditions);
+      retcode = dds_wait_set->get_conditions(*attached_conditions);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get attached conditions for waitset");
+        RMW_SET_ERROR_MSG("Failed to get attached conditions for wait set");
         return;
       }
 
       for (DDS_Long i = 0; i < attached_conditions->length(); ++i) {
-        retcode = dds_waitset->detach_condition((*attached_conditions)[i]);
+        retcode = dds_wait_set->detach_condition((*attached_conditions)[i]);
         if (retcode != DDS_RETCODE_OK) {
-          RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+          RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         }
       }
     }
-    rmw_waitset_t * waitset = NULL;
+    rmw_wait_set_t * wait_set = NULL;
     const char * implementation_identifier = NULL;
   } atexit;
 
-  atexit.waitset = waitset;
+  atexit.wait_set = wait_set;
   atexit.implementation_identifier = implementation_identifier;
 
-  if (!waitset) {
-    RMW_SET_ERROR_MSG("waitset handle is null");
+  if (!wait_set) {
+    RMW_SET_ERROR_MSG("wait set handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    waitset,
-    waitset->implementation_identifier, implementation_identifier,
+    wait set handle,
+    wait_set->implementation_identifier, implementation_identifier,
     return RMW_RET_ERROR);
 
-  ConnextWaitSetInfo * waitset_info = static_cast<ConnextWaitSetInfo *>(waitset->data);
-  if (!waitset_info) {
+  ConnextWaitSetInfo * wait_set_info = static_cast<ConnextWaitSetInfo *>(wait_set->data);
+  if (!wait_set_info) {
     RMW_SET_ERROR_MSG("WaitSet implementation struct is null");
     return RMW_RET_ERROR;
   }
 
-  DDSWaitSet * dds_waitset = static_cast<DDSWaitSet *>(waitset_info->waitset);
-  if (!dds_waitset) {
-    RMW_SET_ERROR_MSG("DDS waitset handle is null");
+  DDSWaitSet * dds_wait_set = static_cast<DDSWaitSet *>(wait_set_info->wait_set);
+  if (!dds_wait_set) {
+    RMW_SET_ERROR_MSG("DDS wait set handle is null");
     return RMW_RET_ERROR;
   }
 
   DDSConditionSeq * active_conditions =
-    static_cast<DDSConditionSeq *>(waitset_info->active_conditions);
+    static_cast<DDSConditionSeq *>(wait_set_info->active_conditions);
   if (!active_conditions) {
     RMW_SET_ERROR_MSG("DDS condition sequence handle is null");
     return RMW_RET_ERROR;
@@ -135,7 +135,7 @@ wait(
         return RMW_RET_ERROR;
       }
       rmw_ret_t rmw_status = check_attach_condition_error(
-        dds_waitset->attach_condition(read_condition));
+        dds_wait_set->attach_condition(read_condition));
       if (rmw_status != RMW_RET_OK) {
         return rmw_status;
       }
@@ -152,7 +152,7 @@ wait(
         return RMW_RET_ERROR;
       }
       rmw_ret_t rmw_status = check_attach_condition_error(
-        dds_waitset->attach_condition(guard_condition));
+        dds_wait_set->attach_condition(guard_condition));
       if (rmw_status != RMW_RET_OK) {
         return rmw_status;
       }
@@ -176,7 +176,7 @@ wait(
         return RMW_RET_ERROR;
       }
       rmw_ret_t rmw_status = check_attach_condition_error(
-        dds_waitset->attach_condition(read_condition));
+        dds_wait_set->attach_condition(read_condition));
       if (rmw_status != RMW_RET_OK) {
         return rmw_status;
       }
@@ -206,7 +206,7 @@ wait(
         return RMW_RET_ERROR;
       }
       rmw_ret_t rmw_status = check_attach_condition_error(
-        dds_waitset->attach_condition(read_condition));
+        dds_wait_set->attach_condition(read_condition));
       if (rmw_status != RMW_RET_OK) {
         return rmw_status;
       }
@@ -222,10 +222,10 @@ wait(
     timeout.nanosec = static_cast<DDS_Long>(wait_timeout->nsec);
   }
 
-  DDS_ReturnCode_t status = dds_waitset->wait(*active_conditions, timeout);
+  DDS_ReturnCode_t status = dds_wait_set->wait(*active_conditions, timeout);
 
   if (status != DDS_RETCODE_OK && status != DDS_RETCODE_TIMEOUT) {
-    RMW_SET_ERROR_MSG("failed to wait on waitset");
+    RMW_SET_ERROR_MSG("failed to wait on wait set");
     return RMW_RET_ERROR;
   }
 
@@ -256,9 +256,9 @@ wait(
       if (!(j < active_conditions->length())) {
         subscriptions->subscribers[i] = 0;
       }
-      DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
+      DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }
@@ -292,9 +292,9 @@ wait(
       if (!(j < active_conditions->length())) {
         guard_conditions->guard_conditions[i] = 0;
       }
-      DDS_ReturnCode_t retcode = dds_waitset->detach_condition(condition);
+      DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }
@@ -327,9 +327,9 @@ wait(
       if (!(j < active_conditions->length())) {
         services->services[i] = 0;
       }
-      DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
+      DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }
@@ -362,9 +362,9 @@ wait(
       if (!(j < active_conditions->length())) {
         clients->clients[i] = 0;
       }
-      DDS_ReturnCode_t retcode = dds_waitset->detach_condition(read_condition);
+      DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
       if (retcode != DDS_RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from waitset");
+        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }

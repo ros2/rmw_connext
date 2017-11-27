@@ -110,7 +110,7 @@ struct ConnextPublisherGID
 
 struct ConnextWaitSetInfo
 {
-  DDSWaitSet * waitset;
+  DDSWaitSet * wait_set;
   DDSConditionSeq * active_conditions;
   DDSConditionSeq * attached_conditions;
 };
