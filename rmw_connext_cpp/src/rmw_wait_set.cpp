@@ -1,4 +1,4 @@
-// Copyright 2015-2017 Open Source Robotics Foundation, Inc.
+// Copyright 2014-2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,19 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
-#define RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
+#include "rmw/rmw.h"
 
-#include "rmw/types.h"
+#include "rmw_connext_shared_cpp/wait_set.hpp"
 
-#include "rmw_connext_shared_cpp/visibility_control.h"
+#include "rmw_connext_cpp/identifier.hpp"
 
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_waitset_t *
-create_waitset(const char * implementation_identifier, size_t max_conditions);
+extern "C"
+{
+rmw_wait_set_t *
+rmw_create_wait_set(size_t max_conditions)
+{
+  return create_wait_set(rti_connext_identifier, max_conditions);
+}
 
-RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
-destroy_waitset(const char * implementation_identifier, rmw_waitset_t * waitset);
-
-#endif  // RMW_CONNEXT_SHARED_CPP__WAITSET_HPP_
+rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
+{
+  return destroy_wait_set(rti_connext_identifier, wait_set);
+}
+}  // extern "C"

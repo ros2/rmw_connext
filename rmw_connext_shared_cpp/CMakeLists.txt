@@ -45,7 +45,7 @@ add_library(
   src/service_names_and_types.cpp
   src/topic_names_and_types.cpp
   src/trigger_guard_condition.cpp
-  src/waitset.cpp
+  src/wait_set.cpp
   src/types/custom_data_reader_listener.cpp
   src/types/custom_publisher_listener.cpp
   src/types/custom_subscriber_listener.cpp)

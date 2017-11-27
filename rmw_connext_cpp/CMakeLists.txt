@@ -93,7 +93,7 @@ add_library(
   src/rmw_topic_names_and_types.cpp
   src/rmw_trigger_guard_condition.cpp
   src/rmw_wait.cpp
-  src/rmw_waitset.cpp)
+  src/rmw_wait_set.cpp)
 ament_target_dependencies(rmw_connext_cpp
   "rcutils"
   "rmw"
