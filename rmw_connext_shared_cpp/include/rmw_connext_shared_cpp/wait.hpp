@@ -49,7 +49,7 @@ wait(
         return;
       }
       RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-        wait_set handle,
+        wait set handle,
         wait_set->implementation_identifier, implementation_identifier,
         return )
       ConnextWaitSetInfo * wait_set_info = static_cast<ConnextWaitSetInfo *>(wait_set->data);
@@ -97,7 +97,7 @@ wait(
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    wait_set,
+    wait set handle,
     wait_set->implementation_identifier, implementation_identifier,
     return RMW_RET_ERROR);
 
