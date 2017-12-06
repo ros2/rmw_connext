@@ -73,25 +73,12 @@ _demangle_service_from_topic(const std::string & topic_name)
     // not a ROS service topic
     return "";
   }
-  std::vector<std::string> suffixes = {
-    "Reply",
-    "Request",
+  std::map<std::string, std::string> suffixes = {
+    {ros_service_response_prefix, "Reply"},
+    {ros_service_requester_prefix, "Request"},
   };
-  std::string found_suffix;
-  size_t suffix_position = std::string::npos;
-  for (auto suffix : suffixes) {
-    suffix_position = topic_name.rfind(suffix);
-    if (suffix_position != std::string::npos) {
-      if (topic_name.length() - suffix_position - suffix.length() != 0) {
-        RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
-          "service topic has service prefix and a suffix, but not at the end"
-          ", report this: '%s'", topic_name.c_str())
-        continue;
-      }
-      found_suffix = suffix;
-      break;
-    }
-  }
+  auto suffix = suffixes[prefix];
+  size_t suffix_position = topic_name.rfind(suffix);
   if (suffix_position == std::string::npos) {
     RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
       "service topic has prefix but no suffix"
