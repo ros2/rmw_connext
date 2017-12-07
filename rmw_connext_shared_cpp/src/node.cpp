@@ -53,6 +53,23 @@ create_node(
   // This String_dup is not matched with a String_free because DDS appears to
   // free this automatically.
   participant_qos.participant_name.name = DDS::String_dup(name);
+  // since the participant name is not part of the DDS spec
+  // the node name is also set in the user_data
+  DDS_Long name_length = static_cast<DDS_Long>(strlen(name));
+  const char prefix[6] = "name=";
+  bool success = participant_qos.user_data.value.length(name_length + sizeof(prefix));
+  if (!success) {
+    RMW_SET_ERROR_MSG("failed to resize participant user_data");
+    return NULL;
+  }
+  memcpy(participant_qos.user_data.value.get_contiguous_buffer(), prefix, sizeof(prefix) - 1);
+  {
+    for (DDS_Long i = 0; i < name_length; ++i) {
+      participant_qos.user_data.value[sizeof(prefix) - 1 + i] = name[i];
+    }
+    participant_qos.user_data.value[sizeof(prefix) - 1 + name_length] = ';';
+  }
+
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
   // (in which case traffic will be sent over both transports)
