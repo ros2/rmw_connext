@@ -5,13 +5,14 @@ _Connext_LIBRARY_DIR="@Connext_LIBRARY_DIR@"
 # refer to an invalid path, e.g. for users using binaries.
 
 # Warn about changing the Connext location
-if [ -n "$NDDSHOME" ] && ["$NDDSHOME" != "$_DEFAULT_NDDSHOME"]; then
-  echo "Setting OSPL_HOME to \"$NDDSHOME\" but the one used at build time was \"$_DEFAULT_NDDSHOME\"" 1>&2
+if [ ! -z "$NDDSHOME" -a "$NDDSHOME" != "$_DEFAULT_NDDSHOME" ]; then
+  echo "NDDSHOME environment variable is set to \"$NDDSHOME\" but the one used at build time was" \
+    "\"$_DEFAULT_NDDSHOME\"" 1>&2
 fi
 
 if [ -z "$NDDSHOME" ]; then
-  echo NDDSHOME environment variable not set.
-  echo Using $NDDSHOME that was detected when the workspace was built.
+  echo "NDDSHOME environment variable not set."
+  echo "Using NDDSHOME that was detected when the workspace was built: \"$_DEFAULT_NDDSHOME\"" 1>&2
   export NDDSHOME=$_DEFAULT_NDDSHOME
 fi
 
@@ -23,7 +24,7 @@ if [ "$_UNAME" = "Darwin" ]; then
 fi
 unset _UNAME
 
-ament_prepend_unique_value PATH "$_Connext_HOME/bin"
+ament_prepend_unique_value PATH "$NDDSHOME/bin"
 
 # add the libary dir on the (DY)LD_LIBRARY_PATH for the rtiddsgen tool
 ament_prepend_unique_value PATH "$_Connext_LIBRARY_DIR"

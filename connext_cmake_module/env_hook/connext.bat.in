@@ -16,3 +16,4 @@ if "%NDDSHOME%" == "" (
 
 :: Call RTI's env setup script, piping stdout to nul, since they have echo on.
 call "%NDDSHOME:/=\%\resource\scripts\rtisetenv_@Connext_ARCHITECTURE_NAME@.bat" 1> nul
+set "_DEFAULT_NDDSHOME="
