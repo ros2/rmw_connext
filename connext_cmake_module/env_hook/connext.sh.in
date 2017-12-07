@@ -1,11 +1,19 @@
-_Connext_HOME="@Connext_HOME@"
+_DEFAULT_NDDSHOME="@Connext_HOME@"
 _Connext_LIBRARY_DIR="@Connext_LIBRARY_DIR@"
 
-# warn about changing the Connext location
-if [ ! -z "$NDDSHOME" -a "$NDDSHOME" != "$_Connext_HOME" ]; then
->&2 echo "NDDSHOME changed from \"$NDDSHOME\" to \"$_Connext_HOME\""
+# Give priority to the NDDSHOME environment variable because the one detected at build time may
+# refer to an invalid path, e.g. for users using binaries.
+
+# Warn about changing the Connext location
+if [ -n "$NDDSHOME" ] && ["$NDDSHOME" != "$_DEFAULT_NDDSHOME"]; then
+  echo "Setting OSPL_HOME to \"$NDDSHOME\" but the one used at build time was \"$_DEFAULT_NDDSHOME\"" 1>&2
 fi
-export NDDSHOME="$_Connext_HOME"
+
+if [ -z "$NDDSHOME" ]; then
+  echo NDDSHOME environment variable not set.
+  echo Using $NDDSHOME that was detected when the workspace was built.
+  export NDDSHOME=$_DEFAULT_NDDSHOME
+fi
 
 # detect if running on Darwin platform
 _UNAME=`uname -s`
@@ -27,4 +35,4 @@ fi
 unset _IS_DARWIN
 
 unset _Connext_LIBRARY_DIR
-unset _Connext_HOME
+unset _DEFAULT_NDDSHOME

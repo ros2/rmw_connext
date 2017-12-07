@@ -1,10 +1,18 @@
-set "_Connext_HOME=@Connext_HOME@"
+set "_DEFAULT_NDDSHOME=@Connext_HOME@"
 
-:: warn about changing the Connext location
+:: Give priority to the NDDSHOME environment variable because the one detected at build time may
+:: refer to an invalid path, e.g. for users using binaries.
+
+:: Warn about changing the Connext location
 if "%NDDSHOME%" NEQ "" if "%NDDSHOME%" NEQ "%_Connext_HOME%" (
-  echo "NDDSHOME changed from \"%NDDSHOME%\" to \"%_Connext_HOME%\"" 1>&2
+  echo "Using NDDSHOME of \"%NDDSHOME%\" but the one used at build time was \"%_DEFAULT_NDDSHOME%\"" 1>&2
+)
+
+if "%NDDSHOME%" == "" (
+  echo "NDDSHOME environment variable not set."
+  echo "Using \"%_DEFAULT_NDDSHOME%\" that was detected when the workspace was built."
+  set "NDDSHOME=%_DEFAULT_NDDSHOME%"
 )
 
 :: Call RTI's env setup script, piping stdout to nul, since they have echo on.
-call "%_Connext_HOME:/=\%\resource\scripts\rtisetenv_@Connext_ARCHITECTURE_NAME@.bat" 1> nul
-set "_Connext_HOME="
+call "%NDDSHOME:/=\%\resource\scripts\rtisetenv_@Connext_ARCHITECTURE_NAME@.bat" 1> nul
