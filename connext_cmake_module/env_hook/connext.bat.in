@@ -9,8 +9,7 @@ if "%NDDSHOME%" NEQ "" if "%NDDSHOME%" NEQ "%_Connext_HOME%" (
 )
 
 if "%NDDSHOME%" == "" (
-  echo "NDDSHOME environment variable not set."
-  echo "Using \"%_DEFAULT_NDDSHOME%\" that was detected when the workspace was built."
+  echo "NDDSHOME environment variable not set. Using NDDSHOME that was detected when the workspace was built: \"%NDDSHOME%\"" 1>&2
   set "NDDSHOME=%_DEFAULT_NDDSHOME%"
 )
 

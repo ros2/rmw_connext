@@ -11,8 +11,8 @@ if [ ! -z "$NDDSHOME" -a "$NDDSHOME" != "$_DEFAULT_NDDSHOME" ]; then
 fi
 
 if [ -z "$NDDSHOME" ]; then
-  echo "NDDSHOME environment variable not set."
-  echo "Using NDDSHOME that was detected when the workspace was built: \"$_DEFAULT_NDDSHOME\"" 1>&2
+  echo "NDDSHOME environment variable not set. Using NDDSHOME that was detected when the" \
+    "workspace was built: \"$_DEFAULT_NDDSHOME\"" 1>&2
   export NDDSHOME=$_DEFAULT_NDDSHOME
 fi
 
