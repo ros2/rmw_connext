@@ -5,7 +5,7 @@ set "_DEFAULT_NDDSHOME=%_DEFAULT_NDDSHOME:/=\%"  :: Replace forward slashes with
 :: refer to an invalid path, e.g. for users using binaries.
 
 :: Warn about changing the Connext location
-if "%NDDSHOME%" NEQ "" )
+if "%NDDSHOME%" NEQ "" (
   set "NDDSHOME=%NDDSHOME:/=\%"  :: Replace forward slashes with backslashes
   if "%NDDSHOME%" NEQ "%_Connext_HOME%" (
     echo [connext_cmake_module] NDDSHOME environment variable is set to "%NDDSHOME%" which is different to the one used when the workspace was built: "%_DEFAULT_NDDSHOME%" 1>&2
