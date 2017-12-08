@@ -8,17 +8,17 @@ set "_DEFAULT_NDDSHOME=%_DEFAULT_NDDSHOME:/=\%"  :: Replace forward slashes with
 if "%NDDSHOME%" NEQ "" )
   set "NDDSHOME=%NDDSHOME:/=\%"  :: Replace forward slashes with backslashes
   if "%NDDSHOME%" NEQ "%_Connext_HOME%" (
-    echo "[connext_cmake_module] Using NDDSHOME of %NDDSHOME% but the one used at build time was %_DEFAULT_NDDSHOME%" 1>&2
+    echo [connext_cmake_module] Using NDDSHOME of "%NDDSHOME%" but the one used at build time was "%_DEFAULT_NDDSHOME%" 1>&2
   )
 )
 
 if "%NDDSHOME%" == "" (
-  echo "[connext_cmake_module] NDDSHOME environment variable not set. Using NDDSHOME that was detected when the workspace was built: \"%NDDSHOME%\"" 1>&2
+  echo [connext_cmake_module] NDDSHOME environment variable not set. Using NDDSHOME that was detected when the workspace was built: "%NDDSHOME%" 1>&2
   set "NDDSHOME=%_DEFAULT_NDDSHOME%"
 )
 
 if not exist %OSPL_HOME% (
-  echo "[connext_cmake_module] Error: NDDSHOME environment variable does not point to a valid directory: " %NDDSHOME% 1>&2
+  echo [connext_cmake_module] Error: NDDSHOME environment variable does not point to a valid directory: " %NDDSHOME%" 1>&2
   set "_DEFAULT_OSPL_HOME="
   goto :eof
 )
