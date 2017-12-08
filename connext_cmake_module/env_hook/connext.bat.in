@@ -1,11 +1,15 @@
 set "_DEFAULT_NDDSHOME=@Connext_HOME@"
+set "_DEFAULT_NDDSHOME=%_DEFAULT_NDDSHOME:/=\%"  :: Replace forward slashes with backslashes
 
 :: Give priority to the NDDSHOME environment variable because the one detected at build time may
 :: refer to an invalid path, e.g. for users using binaries.
 
 :: Warn about changing the Connext location
-if "%NDDSHOME%" NEQ "" if "%NDDSHOME%" NEQ "%_Connext_HOME%" (
-  echo "[connext_cmake_module] Using NDDSHOME of \"%NDDSHOME%\" but the one used at build time was \"%_DEFAULT_NDDSHOME%\"" 1>&2
+if "%NDDSHOME%" NEQ "" )
+  set "NDDSHOME=%NDDSHOME:/=\%"  :: Replace forward slashes with backslashes
+  if "%NDDSHOME%" NEQ "%_Connext_HOME%" (
+    echo "[connext_cmake_module] Using NDDSHOME of %NDDSHOME% but the one used at build time was %_DEFAULT_NDDSHOME%" 1>&2
+  )
 )
 
 if "%NDDSHOME%" == "" (
