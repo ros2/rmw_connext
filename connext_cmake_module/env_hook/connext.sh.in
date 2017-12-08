@@ -6,8 +6,8 @@ _Connext_LIBRARY_DIR="@Connext_LIBRARY_DIR@"
 
 # Warn about changing the Connext location
 if [ ! -z "$NDDSHOME" -a "$NDDSHOME" != "$_DEFAULT_NDDSHOME" ]; then
-  echo "[connext_cmake_module] NDDSHOME environment variable is set to \"$NDDSHOME\" but the one used at build time was" \
-    "\"$_DEFAULT_NDDSHOME\"" 1>&2
+  echo "[connext_cmake_module] NDDSHOME environment variable is set to \"$NDDSHOME\" which" \
+    "is different to what it was when the workspace was built: \"$_DEFAULT_NDDSHOME\"" 1>&2
 fi
 
 if [ -z "$NDDSHOME" ]; then
