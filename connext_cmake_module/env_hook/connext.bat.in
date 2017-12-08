@@ -13,6 +13,12 @@ if "%NDDSHOME%" == "" (
   set "NDDSHOME=%_DEFAULT_NDDSHOME%"
 )
 
+if not exist %OSPL_HOME% (
+  echo "[connext_cmake_module] Error: NDDSHOME environment variable does not point to a valid directory: " %NDDSHOME% 1>&2
+  set "_DEFAULT_OSPL_HOME="
+  goto :eof
+)
+
 :: Call RTI's env setup script, piping stdout to nul, since they have echo on.
 call "%NDDSHOME:/=\%\resource\scripts\rtisetenv_@Connext_ARCHITECTURE_NAME@.bat" 1> nul
 set "_DEFAULT_NDDSHOME="

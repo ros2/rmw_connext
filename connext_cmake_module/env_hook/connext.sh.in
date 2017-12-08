@@ -16,6 +16,12 @@ if [ -z "$NDDSHOME" ]; then
   export NDDSHOME=$_DEFAULT_NDDSHOME
 fi
 
+if [ ! -d "$NDDSHOME" ]; then
+  echo "[connext_cmake_module] Error: NDDSHOME environment variable does not point to a valid directory: \"$NDDSHOME\"" 1>&2
+  unset _DEFAULT_NDDSHOME
+  return
+fi
+
 # detect if running on Darwin platform
 _UNAME=`uname -s`
 _IS_DARWIN=0
