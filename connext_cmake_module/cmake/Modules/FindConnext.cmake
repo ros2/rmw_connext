@@ -313,8 +313,6 @@ if(Connext_FOUND)
   endif()
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(Connext_LIBRARIES "-Wl,--no-as-needed" ${Connext_LIBRARIES} "-Wl,--as-needed")
-
     # check with which ABI the Connext libraries are built
     configure_file(
       "${connext_cmake_module_DIR}/check_abi.cmake"
