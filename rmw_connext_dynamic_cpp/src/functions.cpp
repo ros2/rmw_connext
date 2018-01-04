@@ -1309,16 +1309,16 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
   return trigger_guard_condition(rti_connext_dynamic_identifier, guard_condition_handle);
 }
 
-rmw_waitset_t *
-rmw_create_waitset(size_t max_conditions)
+rmw_wait_set_t *
+rmw_create_wait_set(size_t max_conditions)
 {
-  return create_waitset(rti_connext_dynamic_identifier, max_conditions);
+  return create_wait_set(rti_connext_dynamic_identifier, max_conditions);
 }
 
 rmw_ret_t
-rmw_destroy_waitset(rmw_waitset_t * waitset)
+rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
 {
-  return destroy_waitset(rti_connext_dynamic_identifier, waitset);
+  return destroy_wait_set(rti_connext_dynamic_identifier, wait_set);
 }
 
 rmw_ret_t
@@ -1327,12 +1327,12 @@ rmw_wait(
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
-  rmw_waitset_t * waitset,
+  rmw_wait_set_t * wait_set,
   const rmw_time_t * wait_timeout)
 {
   return wait<CustomSubscriberInfo, ConnextDynamicServiceInfo, ConnextDynamicClientInfo>
            (rti_connext_dynamic_identifier, subscriptions, guard_conditions, services, clients,
-           waitset,
+           wait_set,
            wait_timeout);
 }
 

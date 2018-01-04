@@ -46,6 +46,10 @@
 
 # lint_cmake: -convention/filename, -package/stdargs
 
+if(DEFINED Connext_FOUND)
+  return()
+endif()
+
 set(Connext_FOUND FALSE)
 
 # get the platform specific library names
@@ -256,8 +260,12 @@ if(NOT _NDDSHOME STREQUAL "")
   set(Connext_FOUND TRUE)
 else()
   # try to find_package() it
-  find_package(nddscpp)
-  find_package(rticonnextmsgcpp)
+  set(quiet "")
+  if(Connext_FIND_QUIETLY)
+    set(quiet "QUIET")
+  endif()
+  find_package(nddscpp ${quiet})
+  find_package(rticonnextmsgcpp ${quiet})
   if(nddscpp_FOUND AND rticonnextmsgcpp_FOUND)
     message(STATUS "Found RTI Connext: ${nddscpp_DIR} ${rticonnextmsgcpp_DIR}")
     set(Connext_INCLUDE_DIRS ${nddscpp_INCLUDE_DIRS})
@@ -305,8 +313,6 @@ if(Connext_FOUND)
   endif()
 
   if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    set(Connext_LIBRARIES "-Wl,--no-as-needed" ${Connext_LIBRARIES} "-Wl,--as-needed")
-
     # check with which ABI the Connext libraries are built
     configure_file(
       "${connext_cmake_module_DIR}/check_abi.cmake"

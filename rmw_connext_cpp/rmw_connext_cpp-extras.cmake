@@ -1,4 +1,4 @@
-# Copyright 2016 Open Source Robotics Foundation, Inc.
+# Copyright 2017 Open Source Robotics Foundation, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cmake_minimum_required(VERSION 2.8.3)
+# copied from rmw_opensplice_cpp/rmw_opensplice_cpp-extras.cmake
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+find_package(connext_cmake_module QUIET)
+find_package(Connext MODULE QUIET)
+
+if(NOT Connext_FOUND)
+  message(STATUS
+    "Could not find RTI Connext - skipping rmw_connext_cpp")
+  set(rmw_connext_cpp_FOUND FALSE)
+else()
+  list(APPEND rmw_connext_cpp_LIBRARIES ${Connext_LIBRARIES})
 endif()
-
-include_directories(@Connext_INCLUDE_DIRS@)
-add_executable(exe
-  "@connext_cmake_module_DIR@/check_abi.cpp")
-target_compile_definitions(exe PRIVATE @Connext_DEFINITIONS@)
-target_link_libraries(exe @Connext_LIBRARIES@)
-set_target_properties(exe
-  PROPERTIES CXX_STANDARD 14)
