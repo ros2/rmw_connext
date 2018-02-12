@@ -15,7 +15,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wl,--no-as-needed)
 endif()
 
 include_directories(@Connext_INCLUDE_DIRS@)
