@@ -65,15 +65,15 @@ get_datawriter_qos(
     return false;
   }
 
-//  status = DDSPropertyQosPolicyHelper::add_property(
-//    datawriter_qos.property,
-//    "dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size",
-//    "4096",
-//    DDS_BOOLEAN_FALSE);
-//  if (status != DDS_RETCODE_OK) {
-//    RMW_SET_ERROR_MSG("failed to add qos property");
-//    return false;
-//  }
+  status = DDSPropertyQosPolicyHelper::add_property(
+    datawriter_qos.property,
+    "dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size",
+    "4096",
+    DDS_BOOLEAN_FALSE);
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to add qos property");
+    return false;
+  }
 
   if (!set_entity_qos_from_profile(qos_profile, datawriter_qos)) {
     return false;

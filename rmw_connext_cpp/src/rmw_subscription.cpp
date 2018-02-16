@@ -79,7 +79,6 @@ rmw_create_subscription(
   // Past this point, a failure results in unrolling code in the goto fail block.
   bool registered;
   DDS_DataReaderQos datareader_qos;
-  DDS_TypeSupportQosPolicy ts;
   DDS_SubscriberQos subscriber_qos;
   DDS_ReturnCode_t status;
   DDSSubscriber * dds_subscriber = nullptr;
@@ -156,6 +155,26 @@ rmw_create_subscription(
   DDS_String_free(topic_str);
   topic_str = nullptr;
 
+  if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
+    // error string was set within the function
+    goto fail;
+  }
+
+  topic_reader = dds_subscriber->create_datareader(
+    topic, datareader_qos,
+    NULL, DDS_STATUS_MASK_NONE);
+  if (!topic_reader) {
+    RMW_SET_ERROR_MSG("failed to create datareader");
+    goto fail;
+  }
+
+  read_condition = topic_reader->create_readcondition(
+    DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
+  if (!read_condition) {
+    RMW_SET_ERROR_MSG("failed to create read condition");
+    goto fail;
+  }
+
   // Allocate memory for the ConnextStaticSubscriberInfo object.
   buf = rmw_allocate(sizeof(ConnextStaticSubscriberInfo));
   if (!buf) {
@@ -165,34 +184,6 @@ rmw_create_subscription(
   // Use a placement new to construct the ConnextStaticSubscriberInfo in the preallocated buffer.
   RMW_TRY_PLACEMENT_NEW(subscriber_info, buf, goto fail, ConnextStaticSubscriberInfo, )
   buf = nullptr;  // Only free the subscriber_info pointer; don't need the buf pointer anymore.
-
-  if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
-    // error string was set within the function
-    goto fail;
-  }
-
-  // Set the plugin typesupport to the connext info
-  // If this is true, a raw CDR Stream is enabled
-  ts.plugin_data = &subscriber_info->raw_stream_subscriber;
-  ts.cdr_padding_kind = DDS_AUTO_CDR_PADDING;
-  datareader_qos.type_support = ts;
-
-  topic_reader = dds_subscriber->create_datareader(
-    topic, datareader_qos,
-    NULL, DDS_STATUS_MASK_NONE);
-  if (!topic_reader) {
-    RMW_SET_ERROR_MSG("failed to create datareader");
-    goto fail;
-  }
-  fprintf(stderr, "data reader created\n");
-
-  read_condition = topic_reader->create_readcondition(
-    DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
-  if (!read_condition) {
-    RMW_SET_ERROR_MSG("failed to create read condition");
-    goto fail;
-  }
-
   subscriber_info->dds_subscriber_ = dds_subscriber;
   subscriber_info->topic_reader_ = topic_reader;
   subscriber_info->read_condition_ = read_condition;

@@ -27,7 +27,6 @@ struct ConnextStaticServiceInfo
   DDSDataReader * request_datareader_;
   DDSReadCondition * read_condition_;
   const service_type_support_callbacks_t * callbacks_;
-  bool raw_stream_subscriber = true;
 };
 }  // extern "C"
 

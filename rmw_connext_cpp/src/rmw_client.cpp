@@ -78,7 +78,6 @@ rmw_create_client(
   DDS_SubscriberQos subscriber_qos;
   DDS_ReturnCode_t status;
   DDS_PublisherQos publisher_qos;
-  DDS_TypeSupportQosPolicy ts;
   DDS_DataReaderQos datareader_qos;
   DDS_DataWriterQos datawriter_qos;
   DDS::Publisher * dds_publisher = nullptr;
@@ -122,13 +121,6 @@ rmw_create_client(
   {
     goto fail;
   }
-  // Set the plugin typesupport to the connext info
-  // If this is true, a raw CDR Stream is enabled
-  //ts.plugin_data = &client_info->raw_stream_subscriber;
-  //ts.cdr_padding_kind = DDS_AUTO_CDR_PADDING;
-  //datareader_qos.type_support = ts;
-  //datawriter_qos.type_support = ts;
-  (void) ts;
 
   requester = callbacks->create_requester(
     participant, request_topic_str, response_topic_str,

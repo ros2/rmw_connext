@@ -21,6 +21,7 @@
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
+#include "rosidl_typesupport_connext_cpp/connext_static_raw_data_support.h"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/message_type_support_decl.hpp"
@@ -66,9 +67,21 @@ register_type__@(spec.base_type.type)(
   const char * type_name)
 {
   DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
-  DDS_ReturnCode_t status =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
-
+  DDS_TypeCode * type_code =
+    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::get_typecode();
+  // This is a non-standard RTI Connext function
+  // It allows to register an external type to a static data writer
+  // In this case, we register the custom message type to a data writer,
+  // which only publishes DDS_Octets
+  // The purpose of this is to send only raw data DDS_Octets over the wire,
+  // advertise the topic however with a type of the message, e.g. std_msgs::msg::dds_::String
+  DDS_ReturnCode_t status = ConnextStaticRawDataSupport_register_external_type(
+    participant,
+    type_name,
+    type_code);
+  if (status != DDS_RETCODE_OK) {
+    fprintf(stderr, "Failed to register external type\n");
+  }
   return status == DDS_RETCODE_OK;
 }
 
@@ -152,20 +165,46 @@ publish__@(spec.base_type.type)(
   void * untyped_topic_writer,
   ConnextStaticCDRStream * cdr_stream)
 {
-  bool success = true;
   DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
 
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
+  ConnextStaticRawDataDataWriter * data_writer =
+    ConnextStaticRawDataDataWriter::narrow(topic_writer);
   if (!data_writer) {
     fprintf(stderr, "failed to narrow data writer\n");
-    success = false;
-  } else {
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * sample  = reinterpret_cast<@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ *>(cdr_stream);
-    DDS_ReturnCode_t status = data_writer->write(*sample, DDS_HANDLE_NIL);
-    success = status == DDS_RETCODE_OK;
+    return false;
   }
 
-  return success;
+  ConnextStaticRawData * instance = ConnextStaticRawDataTypeSupport::create_data();
+  if (!instance) {
+    fprintf(stderr, "failed to create dds message instance\n");
+    return false;
+  }
+
+  DDS_ReturnCode_t status = DDS_RETCODE_ERROR;
+
+  instance->serialized_data.maximum(0);
+  if (!instance->serialized_data.loan_contiguous(
+      reinterpret_cast<DDS_Octet *>(cdr_stream->raw_message),
+      cdr_stream->message_length, cdr_stream->message_length)) {
+    fprintf(stderr, "failed to loan memory for message\n");
+    return false;
+  }
+
+  fprintf(stderr, "raw data size: %d\n", instance->serialized_data.length());
+  for (DDS_Long i = 0; i < instance->serialized_data.length(); ++i) {
+    fprintf(stderr, "%02x ", instance->serialized_data[i]);
+  }
+  fprintf(stderr, "\n");
+
+  status = data_writer->write(*instance, DDS_HANDLE_NIL);
+
+  if (!instance->serialized_data.unloan()) {
+    fprintf(stderr, "failed to return loaned memory\n");
+    return false;
+  }
+  status = ConnextStaticRawDataTypeSupport::delete_data(instance);
+
+  return status == DDS_RETCODE_OK;
 }
 
 bool
@@ -239,14 +278,14 @@ take__@(spec.base_type.type)(
 
   DDSDataReader * topic_reader = static_cast<DDSDataReader *>(untyped_topic_reader);
 
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader * data_reader =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
+  ConnextStaticRawDataDataReader * data_reader =
+    ConnextStaticRawDataDataReader::narrow(topic_reader);
   if (!data_reader) {
     fprintf(stderr, "failed to narrow data reader\n");
     return false;
   }
 
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_Seq dds_messages;
+  ConnextStaticRawDataSeq dds_messages;
   DDS_SampleInfoSeq sample_infos;
   DDS_ReturnCode_t status = data_reader->take(
     dds_messages,
@@ -290,10 +329,11 @@ take__@(spec.base_type.type)(
   }
 
   if (!ignore_sample) {
-    ConnextStaticCDRStream * input_stream = reinterpret_cast<ConnextStaticCDRStream *>(&dds_messages[0]);
-    cdr_stream->raw_message = input_stream->raw_message;
-    cdr_stream->message_length = input_stream->message_length;
-    fprintf(stderr, "Received stream of length %u\n", cdr_stream->message_length);
+    cdr_stream->message_length = dds_messages[0].serialized_data.length();
+    cdr_stream->raw_message = (char *) malloc(cdr_stream->message_length * sizeof(char));
+    for (unsigned int i = 0; i < cdr_stream->message_length; ++i) {
+      cdr_stream->raw_message[i] = dds_messages[0].serialized_data[i];
+    }
     *taken = true;
   } else {
     *taken = false;
@@ -318,11 +358,13 @@ to_cdr_stream__@(spec.base_type.type)(
   // cast the untyped to the known ros message
   const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
     *(const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
+
   // create a respective connext dds type
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
   if (!dds_message) {
     return false;
   }
+
   // convert ros to dds
   if (!convert_ros_message_to_dds(ros_message, *dds_message)) {
     return false;
@@ -332,9 +374,9 @@ to_cdr_stream__@(spec.base_type.type)(
   if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(NULL, &cdr_stream->message_length, dds_message) != RTI_TRUE) {
     return false;
   }
-  fprintf(stderr, "message length: %d\n", cdr_stream->message_length);
   // allocate enough memory for the CDR stream
   // TODO(karsten1987): This allocation has to be preallocated
+  // or at least bring in a custom allocator
   cdr_stream->raw_message = (char *)malloc(sizeof(char) * cdr_stream->message_length);
   // call the function again and fill the buffer this time
   if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(cdr_stream->raw_message, &cdr_stream->message_length, dds_message) != RTI_TRUE) {
@@ -360,7 +402,7 @@ to_message__@(spec.base_type.type)(
   if (!untyped_ros_message) {
     return false;
   }
-  
+
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
   if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(dds_message, cdr_stream->raw_message, cdr_stream->message_length) != RTI_TRUE) {
     fprintf(stderr, "deserialize from cdr buffer failed\n");

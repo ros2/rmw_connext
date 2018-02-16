@@ -86,216 +86,33 @@ def generate_dds_connext_cpp(
         count = 1
         max_count = 5
         while True:
-           subprocess.check_call(cmd)
+            subprocess.check_call(cmd)
 
-           # fail safe if the generator does not work as expected
-           any_missing = False
-           for suffix in ['.h', '.cxx', 'Plugin.h', 'Plugin.cxx', 'Support.h', 'Support.cxx']:
-               filename = os.path.join(output_path, msg_name + suffix)
-               if not os.path.exists(filename):
-                   any_missing = True
-                   break
-           if not any_missing:
-               break
-           print("'%s' failed to generate the expected files for '%s/%s'" %
-                 (idl_pp, pkg_name, msg_name), file=sys.stderr)
-           if count < max_count:
-               count += 1
-               print('Running code generator again (retry %d of %d)...' %
-                     (count, max_count), file=sys.stderr)
-               continue
-           raise RuntimeError('failed to generate the expected files')
+            # fail safe if the generator does not work as expected
+            any_missing = False
+            for suffix in ['.h', '.cxx', 'Plugin.h', 'Plugin.cxx', 'Support.h', 'Support.cxx']:
+                filename = os.path.join(output_path, msg_name + suffix)
+                if not os.path.exists(filename):
+                    any_missing = True
+                    break
+            if not any_missing:
+                break
+            print("'%s' failed to generate the expected files for '%s/%s'" %
+                  (idl_pp, pkg_name, msg_name), file=sys.stderr)
+            if count < max_count:
+                count += 1
+                print('Running code generator again (retry %d of %d)...' %
+                      (count, max_count), file=sys.stderr)
+                continue
+            raise RuntimeError('failed to generate the expected files')
 
         if os.name != 'nt':
             # modify generated code to avoid unsed global variable warning
             # which can't be suppressed non-globally with gcc
             msg_filename = os.path.join(output_path, msg_name + '.h')
-            # TODO(karsten1987): Modify should take array of callbacks
-            # to avoid multiple file readings
             _modify(msg_filename, pkg_name, msg_name, _inject_unused_attribute)
 
-            plugin_filename = os.path.join(output_path, msg_name + 'Plugin.cxx')
-            if not "Request" in msg_name and not "Response" in msg_name:
-                _modify(plugin_filename, pkg_name, msg_name, _modify_include_headers)
-                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_create_data_function)
-                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_destroy_data_function)
-                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_serialize_function)
-                _modify(plugin_filename, pkg_name, msg_name, _modify_plugin_deserialize_function)
-
     return 0
-
-
-def _get_create_data_code(msg_name, indentation):
-    val = (\
-        "{{\n"
-        "{indentation}// MODIFIED FOR ROS2 PURPOSES\n"
-        "{indentation}ConnextStaticCDRStream * cdr_stream = NULL;\n"
-        "{indentation}RTIOsapiHeap_allocateStructure(&cdr_stream, ConnextStaticCDRStream);\n"
-        "{indentation}return reinterpret_cast<{msg_name} *>(cdr_stream);\n"
-        "\n".format(msg_name=msg_name, indentation=indentation))
-    return val
-
-
-def _modify_plugin_create_data_function(pkg_name, msg_name, lines):
-    create_data_fcn_signature = msg_name + 'PluginSupport_create_data_ex('
-    print("looking for '%s' create_data function" % create_data_fcn_signature)
-    signature_found = False
-    injection_start = None
-    for index, line in enumerate(lines):
-        if not signature_found:
-            if line.lstrip().startswith(create_data_fcn_signature):
-                signature_found = True
-        else:
-            if '{' in line.lstrip():
-                print("fpund %s create ex function in line %d" % (msg_name, index))
-                injection_start = index
-                break
-    if not signature_found:
-        raise RuntimeError('failed to locate %sPlugin_create_data function' % msg_name)
-
-    indentation = ' ' * 16
-    lines[injection_start] = line.replace('{', _get_create_data_code(msg_name, indentation))
-    return True
-
-
-def _get_destroy_data_code(msg_name, indentation):
-    val = (\
-        "{{\n"
-        "{indentation}// MODIFIED FOR ROS2 PURPOSES\n"
-        "{indentation}RTIOsapiHeap_freeStructure(sample);\n"
-        "{indentation}return;\n".format(indentation=indentation))
-    return val
-
-
-def _modify_plugin_destroy_data_function(pkg_name, msg_name, lines):
-    destroy_fcn_signature = msg_name + 'PluginSupport_destroy_data_ex('
-    print("looking for '%s' destroy function" % destroy_fcn_signature)
-    signature_found = False
-    injection_start = None
-    for index, line in enumerate(lines):
-        if not signature_found:
-            if line.lstrip().startswith(destroy_fcn_signature):
-                signature_found = True
-        else:
-            if '{' in line.lstrip():
-                print("found %s destroy function in line: %d" % (msg_name, index))
-                injection_start = index
-                break
-    if not signature_found:
-        raise RuntimeError('failed to locate %sPlugin_destroy function' % msg_name)
-
-    indentation = ' ' * 16
-    lines[injection_start] = line.replace('{', _get_destroy_data_code(msg_name, indentation))
-    return True
-
-
-def _get_deserialization_code(msg_name, indentation):
-    val = (\
-        "{{\n"
-        "{indentation}// MODIFIED FOR ROS2 PURPOSES\n"
-        "{indentation}if (endpoint_plugin_qos) {{\n"
-        "{indentation}  if (!reinterpret_cast<bool *>(endpoint_plugin_qos)) {{\n"
-        "{indentation}     return RTI_FALSE;\n"
-        "{indentation}  }}\n"
-        "{indentation}  ConnextStaticCDRStream * cdr_stream =\n"
-        "{indentation}    reinterpret_cast<ConnextStaticCDRStream *>(sample);\n"
-        "{indentation}  cdr_stream->raw_message = stream->_buffer;\n"
-        "{indentation}  cdr_stream->message_length = stream->_bufferLength;\n"
-        "{indentation}  return RTI_TRUE;\n"
-        "{indentation}}}\n"
-        .format(indentation=indentation))
-    return val
-
-
-def _modify_plugin_deserialize_function(pkg_name, msg_name, lines):
-    deserialize_fcn_signature = msg_name + 'Plugin_deserialize_sample('
-    print("looking for '%s' deserialize function" % deserialize_fcn_signature)
-    signature_found = False
-    injection_start = None
-    for index, line in enumerate(lines):
-        if not signature_found:
-            if line.lstrip().startswith(deserialize_fcn_signature):
-                signature_found = True
-        else:
-            if '{' in line.lstrip():
-                print("found %s deserialize function in line: %d" % (msg_name, index))
-                injection_start = index
-                break
-    if not signature_found:
-        raise RuntimeError('failed to locate %sPlugin_deserialize function' % msg_name)
-
-    indentation = ' ' * 16
-    lines[injection_start] = line.replace('{', _get_deserialization_code(msg_name, indentation))
-    return True
-
-
-def _get_serialization_code(msg_name, indentation):
-    val = (\
-        "{{\n"
-        "{indentation}// MODIFIED FOR ROS2 PURPOSES\n"
-        "{indentation}if (endpoint_plugin_qos) {{\n"
-        "{indentation}  if (!reinterpret_cast<bool *>(endpoint_plugin_qos)) {{\n"
-        "{indentation}     return RTI_FALSE;\n"
-        "{indentation}  }}\n"
-        "{indentation}  const ConnextStaticCDRStream * cdr_stream =\n"
-        "{indentation}    reinterpret_cast<const ConnextStaticCDRStream *>(sample);\n"
-        "{indentation}  memcpy(stream->_buffer, cdr_stream->raw_message, "
-        "cdr_stream->message_length);\n"
-        "{indentation}  stream->_relativeBuffer = stream->_buffer;\n"
-        "{indentation}  stream->_tmpRelativeBuffer = stream->_buffer;\n"
-        "{indentation}  stream->_buffer = stream->_buffer;\n"
-        "{indentation}  //stream->_endian = \'\\x01\';\n"
-        "{indentation}  //stream->_nativeEndian = \'\\x01\';\n"
-        "{indentation}  //stream->_encapsulationKind = 1;\n"
-        "{indentation}  //stream->_zeroOnAlign = 0;\n"
-        "{indentation}  stream->_currentPosition = "
-        "stream->_buffer + cdr_stream->message_length;\n"
-        "{indentation}  return RTI_TRUE;\n"
-        "{indentation}}}\n"
-        .format(indentation=indentation, msg_name=msg_name))
-    return val
-
-
-def _modify_plugin_serialize_function(pkg_name, msg_name, lines):
-    serialize_fcn_signature = msg_name + 'Plugin_serialize('
-    print("looking for '%s' serialize function" % serialize_fcn_signature)
-    signature_found = False
-    injection_start = None
-    for index, line in enumerate(lines):
-        if not signature_found:
-            if line.lstrip().startswith(serialize_fcn_signature):
-                signature_found = True
-        else:
-            if '{' in line.lstrip():
-                print("found %s serialize function in line: %d" % (msg_name, index))
-                injection_start = index
-                break
-    if not signature_found:
-        raise RuntimeError('failed to locate %sPlugin_serialize function' % msg_name)
-
-    indentation = ' ' * 16
-    lines[injection_start] = line.replace('{', _get_serialization_code(msg_name, indentation))
-    return True
-
-
-def _get_include_headers():
-    val = (\
-        "\n// MODIFIED FOR ROS2 PURPOSES\n#include \""
-        "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp\"\n")
-    return val
-
-
-def _modify_include_headers(pkg_name, msg_name, lines):
-    last_include_found = False
-    include_line = '#include \"{msg_name}Plugin.h\"'.format(msg_name=msg_name)
-    for index, line in enumerate(lines):
-        if include_line in line:
-            lines[index] = lines[index] + _get_include_headers()
-            last_include_found = True
-            break
-    if not last_include_found:
-        raise RuntimeError('failed to find last include line', include_line)
-    return True
 
 
 def _inject_unused_attribute(pkg_name, msg_name, lines):

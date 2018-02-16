@@ -40,6 +40,8 @@ header_guard_variable = '__'.join([x.upper() for x in header_guard_parts]) + '_'
 #endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Plugin.h"
+
+#include "ndds/ndds_cpp.h"
 #ifndef _WIN32
 # pragma GCC diagnostic pop
 #endif
