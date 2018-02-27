@@ -21,7 +21,6 @@
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
-#include "rosidl_typesupport_connext_cpp/connext_static_raw_data_support.h"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/message_type_support_decl.hpp"
@@ -61,28 +60,10 @@ namespace @(subfolder)
 namespace typesupport_connext_cpp
 {
 
-bool
-register_type__@(spec.base_type.type)(
-  void * untyped_participant,
-  const char * type_name)
+DDS_TypeCode *
+get_type_code__@(spec.base_type.type)()
 {
-  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
-  DDS_TypeCode * type_code =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::get_typecode();
-  // This is a non-standard RTI Connext function
-  // It allows to register an external type to a static data writer
-  // In this case, we register the custom message type to a data writer,
-  // which only publishes DDS_Octets
-  // The purpose of this is to send only raw data DDS_Octets over the wire,
-  // advertise the topic however with a type of the message, e.g. std_msgs::msg::dds_::String
-  DDS_ReturnCode_t status = ConnextStaticRawDataSupport_register_external_type(
-    participant,
-    type_name,
-    type_code);
-  if (status != DDS_RETCODE_OK) {
-    fprintf(stderr, "Failed to register external type\n");
-  }
-  return status == DDS_RETCODE_OK;
+  return @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::get_typecode();
 }
 
 bool
@@ -161,53 +142,6 @@ convert_ros_message_to_dds(
 }
 
 bool
-publish__@(spec.base_type.type)(
-  void * untyped_topic_writer,
-  ConnextStaticCDRStream * cdr_stream)
-{
-  DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
-
-  ConnextStaticRawDataDataWriter * data_writer =
-    ConnextStaticRawDataDataWriter::narrow(topic_writer);
-  if (!data_writer) {
-    fprintf(stderr, "failed to narrow data writer\n");
-    return false;
-  }
-
-  ConnextStaticRawData * instance = ConnextStaticRawDataTypeSupport::create_data();
-  if (!instance) {
-    fprintf(stderr, "failed to create dds message instance\n");
-    return false;
-  }
-
-  DDS_ReturnCode_t status = DDS_RETCODE_ERROR;
-
-  instance->serialized_data.maximum(0);
-  if (!instance->serialized_data.loan_contiguous(
-      reinterpret_cast<DDS_Octet *>(cdr_stream->raw_message),
-      cdr_stream->message_length, cdr_stream->message_length)) {
-    fprintf(stderr, "failed to loan memory for message\n");
-    return false;
-  }
-
-  fprintf(stderr, "raw data size: %d\n", instance->serialized_data.length());
-  for (DDS_Long i = 0; i < instance->serialized_data.length(); ++i) {
-    fprintf(stderr, "%02x ", instance->serialized_data[i]);
-  }
-  fprintf(stderr, "\n");
-
-  status = data_writer->write(*instance, DDS_HANDLE_NIL);
-
-  if (!instance->serialized_data.unloan()) {
-    fprintf(stderr, "failed to return loaned memory\n");
-    return false;
-  }
-  status = ConnextStaticRawDataTypeSupport::delete_data(instance);
-
-  return status == DDS_RETCODE_OK;
-}
-
-bool
 convert_dds_message_to_ros(
   const @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message,
   @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message)
@@ -255,91 +189,6 @@ convert_dds_message_to_ros(
 @[  end if]@
 
 @[end for]@
-  return true;
-}
-
-bool
-take__@(spec.base_type.type)(
-  void * untyped_topic_reader,
-  bool ignore_local_publications,
-  ConnextStaticCDRStream * cdr_stream,
-  bool * taken,
-  void * sending_publication_handle)
-{
-  if (!untyped_topic_reader) {
-    throw std::runtime_error("topic reader handle is null");
-  }
-  if (!cdr_stream) {
-    throw std::runtime_error("cdr stream handle is null");
-  }
-  if (!taken) {
-    throw std::runtime_error("taken handle is null");
-  }
-
-  DDSDataReader * topic_reader = static_cast<DDSDataReader *>(untyped_topic_reader);
-
-  ConnextStaticRawDataDataReader * data_reader =
-    ConnextStaticRawDataDataReader::narrow(topic_reader);
-  if (!data_reader) {
-    fprintf(stderr, "failed to narrow data reader\n");
-    return false;
-  }
-
-  ConnextStaticRawDataSeq dds_messages;
-  DDS_SampleInfoSeq sample_infos;
-  DDS_ReturnCode_t status = data_reader->take(
-    dds_messages,
-    sample_infos,
-    1,
-    DDS_ANY_SAMPLE_STATE,
-    DDS_ANY_VIEW_STATE,
-    DDS_ANY_INSTANCE_STATE);
-  if (status == DDS_RETCODE_NO_DATA) {
-    *taken = false;
-    return true;
-  }
-  if (status != DDS_RETCODE_OK) {
-    fprintf(stderr, "take failed with status = %d\n", status);
-    return false;
-  }
-
-  bool ignore_sample = false;
-  DDS_SampleInfo & sample_info = sample_infos[0];
-  if (!sample_info.valid_data) {
-    // skip sample without data
-    ignore_sample = true;
-  } else if (ignore_local_publications) {
-    // compare the lower 12 octets of the guids from the sender and this receiver
-    // if they are equal the sample has been sent from this process and should be ignored
-    DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
-    DDS_InstanceHandle_t receiver_instance_handle = topic_reader->get_instance_handle();
-    ignore_sample = true;
-    for (size_t i = 0; i < 12; ++i) {
-      DDS_Octet * sender_element = &(sender_guid.value[i]);
-      DDS_Octet * receiver_element = &(reinterpret_cast<DDS_Octet *>(&receiver_instance_handle)[i]);
-      if (*sender_element != *receiver_element) {
-        ignore_sample = false;
-        break;
-      }
-    }
-  }
-  if (sample_info.valid_data && sending_publication_handle) {
-    *static_cast<DDS_InstanceHandle_t *>(sending_publication_handle) =
-      sample_info.publication_handle;
-  }
-
-  if (!ignore_sample) {
-    cdr_stream->message_length = dds_messages[0].serialized_data.length();
-    cdr_stream->raw_message = (char *) malloc(cdr_stream->message_length * sizeof(char));
-    for (unsigned int i = 0; i < cdr_stream->message_length; ++i) {
-      cdr_stream->raw_message[i] = dds_messages[0].serialized_data[i];
-    }
-    *taken = true;
-  } else {
-    *taken = false;
-  }
-  data_reader->return_loan(dds_messages, sample_infos);
-
   return true;
 }
 
@@ -421,9 +270,7 @@ to_message__@(spec.base_type.type)(
 static message_type_support_callbacks_t callbacks = {
   "@(spec.base_type.pkg_name)",
   "@(spec.base_type.type)",
-  &register_type__@(spec.base_type.type),
-  &publish__@(spec.base_type.type),
-  &take__@(spec.base_type.type),
+  &get_type_code__@(spec.base_type.type),
   nullptr,
   nullptr,
   &to_cdr_stream__@(spec.base_type.type),

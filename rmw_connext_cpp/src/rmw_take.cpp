@@ -18,10 +18,102 @@
 
 #include "rmw_connext_shared_cpp/types.hpp"
 
-#include "rmw_connext_cpp/identifier.hpp"
 #include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
+#include "rmw_connext_cpp/connext_static_raw_data.hpp"
+#include "rmw_connext_cpp/connext_static_raw_data_support.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
 
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
+
+static bool
+take(
+  DDSDataReader * dds_data_reader,
+  bool ignore_local_publications,
+  ConnextStaticCDRStream * cdr_stream,
+  bool * taken,
+  void * sending_publication_handle)
+{
+  if (!dds_data_reader) {
+    RMW_SET_ERROR_MSG("dds_data_reader is null");
+    return false;
+  }
+  if (!cdr_stream) {
+    RMW_SET_ERROR_MSG("cdr stream handle is null");
+    return false;
+  }
+  if (!taken) {
+    RMW_SET_ERROR_MSG("taken handle is null");
+    return false;
+  }
+
+  ConnextStaticRawDataDataReader * data_reader =
+    ConnextStaticRawDataDataReader::narrow(dds_data_reader);
+  if (!data_reader) {
+    RMW_SET_ERROR_MSG("failed to narrow data reader");
+    return false;
+  }
+
+  ConnextStaticRawDataSeq dds_messages;
+  DDS_SampleInfoSeq sample_infos;
+  bool ignore_sample = false;
+
+  DDS_ReturnCode_t status = data_reader->take(
+    dds_messages,
+    sample_infos,
+    1,
+    DDS_ANY_SAMPLE_STATE,
+    DDS_ANY_VIEW_STATE,
+    DDS_ANY_INSTANCE_STATE);
+  if (status == DDS_RETCODE_NO_DATA) {
+    data_reader->return_loan(dds_messages, sample_infos);
+    *taken = false;
+    return true;
+  }
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("take failed");
+    data_reader->return_loan(dds_messages, sample_infos);
+  }
+
+  DDS_SampleInfo & sample_info = sample_infos[0];
+  if (!sample_info.valid_data) {
+    // skip sample without data
+    ignore_sample = true;
+  } else if (ignore_local_publications) {
+    // compare the lower 12 octets of the guids from the sender and this receiver
+    // if they are equal the sample has been sent from this process and should be ignored
+    DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
+    DDS_InstanceHandle_t receiver_instance_handle = dds_data_reader->get_instance_handle();
+    ignore_sample = true;
+    for (size_t i = 0; i < 12; ++i) {
+      DDS_Octet * sender_element = &(sender_guid.value[i]);
+      DDS_Octet * receiver_element = &(reinterpret_cast<DDS_Octet *>(&receiver_instance_handle)[i]);
+      if (*sender_element != *receiver_element) {
+        ignore_sample = false;
+        break;
+      }
+    }
+  }
+  if (sample_info.valid_data && sending_publication_handle) {
+    *static_cast<DDS_InstanceHandle_t *>(sending_publication_handle) =
+      sample_info.publication_handle;
+  }
+
+  if (!ignore_sample) {
+    cdr_stream->message_length = dds_messages[0].serialized_data.length();
+    // TODO(karsten1987): This malloc has to go!
+    cdr_stream->raw_message = (char *) malloc(cdr_stream->message_length * sizeof(char));
+    for (unsigned int i = 0; i < cdr_stream->message_length; ++i) {
+      cdr_stream->raw_message[i] = dds_messages[0].serialized_data[i];
+    }
+    *taken = true;
+  } else {
+    *taken = false;
+  }
+
+  data_reader->return_loan(dds_messages, sample_infos);
+
+  return status == DDS_RETCODE_OK;
+}
 
 extern "C"
 {
@@ -70,7 +162,7 @@ _take(
 
   // fetch the incoming message as cdr stream
   ConnextStaticCDRStream cdr_stream;
-  if (!callbacks->take(
+  if (!take(
       topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
       sending_publication_handle))
   {
@@ -163,7 +255,7 @@ _take_raw(
 
   // fetch the incoming message as cdr stream
   ConnextStaticCDRStream cdr_stream;
-  if (!callbacks->take(
+  if (!take(
       topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
       sending_publication_handle))
   {

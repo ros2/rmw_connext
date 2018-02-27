@@ -12,7 +12,7 @@ or consult the RTI Connext manual.
 #ifndef ConnextStaticRawDataPlugin_1689213465_h
 #define ConnextStaticRawDataPlugin_1689213465_h
 
-#include "connext_static_raw_data.h"
+#include "rmw_connext_cpp/connext_static_raw_data.hpp"
 
 struct RTICdrStream;
 

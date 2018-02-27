@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP__NDDS_INCLUDE_HPP_
-#define ROSIDL_TYPESUPPORT_CONNEXT_CPP__NDDS_INCLUDE_HPP_
+#ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP__NDDS_INCLUDE_H_
+#define ROSIDL_TYPESUPPORT_CONNEXT_CPP__NDDS_INCLUDE_H_
 
 #ifndef _WIN32
 # pragma GCC diagnostic push
 # pragma GCC diagnostic ignored "-Wunused-parameter"
 # ifdef __clang__
-#  pragma clang diagnostic ignored "-Wdeprecated-register"
-#  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+#  pragma clang diagnostic ignored "-Wpedantic"
 # endif
 #endif
-#include "ndds/ndds_cpp.h"
-#include "ndds/ndds_requestreply_cpp.h"
+#include "ndds/ndds_c.h"
+//#include "ndds/ndds_requestreply_cpp.h"
 #ifndef _WIN32
 # pragma GCC diagnostic pop
 #endif
 
-#endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__NDDS_INCLUDE_HPP_
+#endif  // ROSIDL_TYPESUPPORT_CONNEXT_CPP__NDDS_INCLUDE_H_

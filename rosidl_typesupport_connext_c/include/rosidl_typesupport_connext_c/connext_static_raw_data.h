@@ -9,46 +9,28 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the RTI Connext manual.
 */
 
-#ifndef ConnextStaticRawData_1689213465_h
-#define ConnextStaticRawData_1689213465_h
+#ifndef ConnextStaticRawData_1419555957_h
+#define ConnextStaticRawData_1419555957_h
 
 #ifndef NDDS_STANDALONE_TYPE
-#ifndef ndds_cpp_h
-#include "ndds_include.hpp"
+#ifndef ndds_c_h
+#include "rosidl_typesupport_connext_c/ndds_include.h"
 #endif
 #else
 #include "ndds_standalone_type.h"
 #endif
 
-static const DDS_Long KEY_HASH_LENGTH_16= 16;
-extern "C" {
+#define KEY_HASH_LENGTH_16 (16)
 
-    extern const char *ConnextStaticRawDataTYPENAME;
+extern const char *ConnextStaticRawDataTYPENAME;
 
-}
-
-struct ConnextStaticRawDataSeq;
-#ifndef NDDS_STANDALONE_TYPE
-class ConnextStaticRawDataTypeSupport;
-class ConnextStaticRawDataDataWriter;
-class ConnextStaticRawDataDataReader;
-#endif
-
-class ConnextStaticRawData 
-{
-  public:
-    typedef struct ConnextStaticRawDataSeq Seq;
-    #ifndef NDDS_STANDALONE_TYPE
-    typedef ConnextStaticRawDataTypeSupport TypeSupport;
-    typedef ConnextStaticRawDataDataWriter DataWriter;
-    typedef ConnextStaticRawDataDataReader DataReader;
-    #endif
+typedef struct ConnextStaticRawData {
 
     DDS_Octet   key_hash [(KEY_HASH_LENGTH_16)];
-    DDS_OctetSeq  serialized_key ;
-    DDS_OctetSeq  serialized_data ;
+    struct    DDS_OctetSeq  serialized_key ;
+    struct    DDS_OctetSeq  serialized_data ;
 
-};
+} ConnextStaticRawData ;
 #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 /* If the code is building on Windows, start exporting symbols.
 */

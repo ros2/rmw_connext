@@ -19,18 +19,21 @@
 
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 
+// forward declare DDS_TypeCode
+struct DDS_TypeCode;
+
 typedef struct message_type_support_callbacks_t
 {
   const char * package_name;
   const char * message_name;
   // Function to register type with given dds_participant
-  bool (* register_type)(void * dds_participant, const char * type_name);
+  DDS_TypeCode * (* get_type_code)(void);
   // Function to publish a ROS message with a given DDS data_writer
-  bool (* publish)(void * dds_data_writer, ConnextStaticCDRStream * cdr_stream);
+  //bool (* publish)(void * dds_data_writer, ConnextStaticCDRStream * cdr_stream);
   // Function to take a ROS message from a dds data reader
-  bool (* take)(
-    void * dds_data_reader, bool ignore_local_publications, ConnextStaticCDRStream * cdr_stream, bool * taken,
-    void * sending_publication_handle);
+  //bool (* take)(
+  //  void * dds_data_reader, bool ignore_local_publications, ConnextStaticCDRStream * cdr_stream, bool * taken,
+  //  void * sending_publication_handle);
   bool (* convert_ros_to_dds)(
     const void * untyped_ros_message,
     void * untyped_data_message);

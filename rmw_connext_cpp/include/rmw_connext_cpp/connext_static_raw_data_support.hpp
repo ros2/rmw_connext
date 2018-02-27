@@ -12,10 +12,10 @@ or consult the RTI Connext manual.
 #define ConnextStaticRawDataSupport_1689213465_h
 
 /* Uses */
-#include "connext_static_raw_data.h"
+#include "rmw_connext_cpp/connext_static_raw_data.hpp"
 
 #ifndef ndds_cpp_h
-#include "ndds_include.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 #endif
 
 #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)

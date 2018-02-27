@@ -10,12 +10,9 @@ or consult the RTI Connext manual.
 */
 
 #ifndef NDDS_STANDALONE_TYPE
-#ifndef ndds_cpp_h
-#include "rosidl_typesupport_connext_cpp/ndds_include.hpp"
+#ifndef ndds_c_h
+#include "rosidl_typesupport_connext_c/ndds_include.h"
 #endif
-#ifndef dds_c_log_impl_h              
-#include "dds_c/dds_c_log_impl.h"                                
-#endif        
 
 #ifndef cdr_type_h
 #include "cdr/cdr_type.h"
@@ -28,9 +25,7 @@ or consult the RTI Connext manual.
 #include "ndds_standalone_type.h"
 #endif
 
-#include "rosidl_typesupport_connext_cpp/connext_static_raw_data.h"
-
-#include <new>
+#include "rosidl_typesupport_connext_c/connext_static_raw_data.h"
 
 /* ========================================================================= */
 const char *ConnextStaticRawDataTYPENAME = "ConnextStaticRawData";
@@ -254,30 +249,26 @@ RTIBool ConnextStaticRawData_copy(
     ConnextStaticRawData* dst,
     const ConnextStaticRawData* src)
 {
-    try {
 
-        if (dst == NULL || src == NULL) {
-            return RTI_FALSE;
-        }
-
-        if (!RTICdrType_copyArray(
-            dst->key_hash ,src->key_hash,((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_SIZE)) {
-            return RTI_FALSE;
-        }
-        if (!DDS_OctetSeq_copy(&dst->serialized_key ,
-        &src->serialized_key )) {
-            return RTI_FALSE;
-        }
-        if (!DDS_OctetSeq_copy(&dst->serialized_data ,
-        &src->serialized_data )) {
-            return RTI_FALSE;
-        }
-
-        return RTI_TRUE;
-
-    } catch (std::bad_alloc&) {
+    if (dst == NULL || src == NULL) {
         return RTI_FALSE;
     }
+
+    if (!RTICdrType_copyArray(
+        dst->key_hash ,src->key_hash,((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_SIZE)) {
+        return RTI_FALSE;
+    }
+    if (!DDS_OctetSeq_copy(&dst->serialized_key ,
+    &src->serialized_key )) {
+        return RTI_FALSE;
+    }
+    if (!DDS_OctetSeq_copy(&dst->serialized_data ,
+    &src->serialized_data )) {
+        return RTI_FALSE;
+    }
+
+    return RTI_TRUE;
+
 }
 
 /**
@@ -297,10 +288,8 @@ RTIBool ConnextStaticRawData_copy(
 
 #ifndef NDDS_STANDALONE_TYPE
 #include "dds_c/generic/dds_c_sequence_TSeq.gen"
-#include "dds_cpp/generic/dds_cpp_sequence_TSeq.gen"
 #else
 #include "dds_c_sequence_TSeq.gen"
-#include "dds_cpp_sequence_TSeq.gen"
 #endif
 
 #undef T_copy

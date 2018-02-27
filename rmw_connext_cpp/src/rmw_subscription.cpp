@@ -22,7 +22,9 @@
 #include "rmw_connext_shared_cpp/qos.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
+#include "rmw_connext_cpp/connext_static_raw_data_support.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
+
 #include "process_topic_and_service_names.hpp"
 #include "type_support_common.hpp"
 #include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
@@ -77,7 +79,7 @@ rmw_create_subscription(
   }
   std::string type_name = _create_type_name(callbacks, "msg");
   // Past this point, a failure results in unrolling code in the goto fail block.
-  bool registered;
+  DDS_TypeCode * type_code = nullptr;
   DDS_DataReaderQos datareader_qos;
   DDS_SubscriberQos subscriber_qos;
   DDS_ReturnCode_t status;
@@ -100,9 +102,21 @@ rmw_create_subscription(
     goto fail;
   }
 
-  registered = callbacks->register_type(participant, type_name.c_str());
-  if (!registered) {
-    RMW_SET_ERROR_MSG("failed to register type");
+  type_code = callbacks->get_type_code();
+  if (!type_code) {
+    RMW_SET_ERROR_MSG("failed to fetch type code\n");
+    goto fail;
+  }
+  // This is a non-standard RTI Connext function
+  // It allows to register an external type to a static data writer
+  // In this case, we register the custom message type to a data writer,
+  // which only publishes DDS_Octets
+  // The purpose of this is to send only raw data DDS_Octets over the wire,
+  // advertise the topic however with a type of the message, e.g. std_msgs::msg::dds_::String
+  status = ConnextStaticRawDataSupport_register_external_type(
+    participant, type_name.c_str(), type_code);
+  if (status != DDS_RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to register external type");
     goto fail;
   }
 

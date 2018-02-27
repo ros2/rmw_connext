@@ -11,7 +11,7 @@ or consult the RTI Connext manual.
 #include <string.h>
 
 #ifndef ndds_cpp_h
-#include "rosidl_typesupport_connext_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 #endif
 
 #ifndef osapi_type_h
@@ -53,7 +53,7 @@ or consult the RTI Connext manual.
 
 #include <new>
 
-#include "rosidl_typesupport_connext_cpp/connext_static_raw_data_plugin.h"
+#include "rmw_connext_cpp/connext_static_raw_data_plugin.hpp"
 
 /* ----------------------------------------------------------------------------
 *  Type ConnextStaticRawData

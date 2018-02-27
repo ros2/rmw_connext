@@ -41,13 +41,7 @@ ament_export_include_directories(include)
 
 ament_python_install_package(${PROJECT_NAME})
 
-add_library(
-  ${PROJECT_NAME}
-  SHARED
-  src/connext_static_raw_data.cxx
-  src/connext_static_raw_data_plugin.cxx
-  src/connext_static_raw_data_support.cxx
-  src/identifier.cpp)
+add_library(${PROJECT_NAME} SHARED src/identifier.cpp)
 if(WIN32)
   target_compile_definitions(${PROJECT_NAME}
     PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_CPP_BUILDING_DLL")
@@ -55,10 +49,6 @@ endif()
 target_include_directories(${PROJECT_NAME}
   PUBLIC
   include
-)
-ament_target_dependencies(
-  ${PROJECT_NAME}
-  "Connext"
 )
 ament_export_libraries(${PROJECT_NAME})
 

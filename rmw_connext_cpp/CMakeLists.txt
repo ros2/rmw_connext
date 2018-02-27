@@ -69,6 +69,9 @@ register_rmw_implementation(
 add_library(
   rmw_connext_cpp
   SHARED
+  src/connext_static_raw_data.cpp
+  src/connext_static_raw_data_plugin.cpp
+  src/connext_static_raw_data_support.cpp
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp

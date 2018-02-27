@@ -16,10 +16,56 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw_connext_cpp/identifier.hpp"
+#include "rmw_connext_cpp/connext_static_raw_data_support.hpp"
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
+#include "rmw_connext_cpp/identifier.hpp"
 
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
+
+bool
+publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
+{
+  // for (unsigned int i = 0; i < cdr_stream->message_length; ++i) {
+  //   fprintf(stderr, "%x02 ", cdr_stream->raw_message[i]);
+  // }
+  // fprintf(stderr, "\n");
+
+  ConnextStaticRawDataDataWriter * data_writer =
+    ConnextStaticRawDataDataWriter::narrow(dds_data_writer);
+  if (!data_writer) {
+    RMW_SET_ERROR_MSG("failed to narrow data writer");
+    return false;
+  }
+
+  ConnextStaticRawData * instance = ConnextStaticRawDataTypeSupport::create_data();
+  if (!instance) {
+    RMW_SET_ERROR_MSG("failed to create dds message instance");
+    return false;
+  }
+
+  DDS_ReturnCode_t status = DDS_RETCODE_ERROR;
+
+  instance->serialized_data.maximum(0);
+  if (!instance->serialized_data.loan_contiguous(
+      reinterpret_cast<DDS_Octet *>(cdr_stream->raw_message),
+      cdr_stream->message_length, cdr_stream->message_length)) {
+    RMW_SET_ERROR_MSG("failed to loan memory for message");
+    goto cleanup;
+  }
+
+  status = data_writer->write(*instance, DDS_HANDLE_NIL);
+
+cleanup:
+  if (instance) {
+    if (!instance->serialized_data.unloan()) {
+      fprintf(stderr, "failed to return loaned memory\n");
+      status = DDS_RETCODE_ERROR;
+    }
+    ConnextStaticRawDataTypeSupport::delete_data(instance);
+  }
+
+  return status == DDS_RETCODE_OK;
+}
 
 extern "C"
 {
@@ -69,7 +115,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     RMW_SET_ERROR_MSG("no raw message attached");
     return RMW_RET_ERROR;
   }
-  if (!callbacks->publish(topic_writer, &cdr_stream)) {
+  if (!publish(topic_writer, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;
   }
@@ -113,7 +159,7 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
   ConnextStaticCDRStream cdr_stream;
   cdr_stream.raw_message = raw_message->buffer;
   cdr_stream.message_length = raw_message->buffer_length;
-  bool published = callbacks->publish(topic_writer, &cdr_stream);
+  bool published = publish(topic_writer, &cdr_stream);
   if (!published) {
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;

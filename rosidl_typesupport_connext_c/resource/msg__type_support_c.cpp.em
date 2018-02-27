@@ -107,44 +107,10 @@ __dds_msg_type_prefix = "{0}::{1}::dds_::{2}_".format(
 using __dds_msg_type = @(__dds_msg_type_prefix);
 using __ros_msg_type = @(pkg)__@(subfolder)__@(type);
 
-static bool
-register_type(void * untyped_participant, const char * type_name)
+static DDS_TypeCode *
+get_type_code()
 {
-  if (!untyped_participant) {
-    fprintf(stderr, "untyped participant handle is null\n");
-    return false;
-  }
-  if (!type_name) {
-    fprintf(stderr, "type name handle is null\n");
-    return false;
-  }
-  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
-
-  DDS_ReturnCode_t status =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
-  switch (status) {
-    case DDS_RETCODE_ERROR:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: "
-        "an internal error has occurred\n");
-      return false;
-    case DDS_RETCODE_BAD_PARAMETER:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: "
-        "bad domain participant or type name parameter\n");
-      return false;
-    case DDS_RETCODE_OUT_OF_RESOURCES:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: "
-        "out of resources\n");
-      return false;
-    case DDS_RETCODE_PRECONDITION_NOT_MET:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: "
-        "already registered with a different TypeSupport class\n");
-      return false;
-    case DDS_RETCODE_OK:
-      return true;
-    default:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type: unknown return code\n");
-  }
-  return false;
+  return @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::get_typecode();
 }
 
 static bool
@@ -257,73 +223,6 @@ convert_ros_to_dds(const void * untyped_ros_message, void * untyped_dds_message)
 }
 
 static bool
-publish(void * dds_data_writer, ConnextStaticCDRStream * untyped_ros_messageFIX)
-{
-  void *untyped_ros_message = (void *) untyped_ros_messageFIX;
-  if (!dds_data_writer) {
-    fprintf(stderr, "data writer handle is null\n");
-    return false;
-  }
-  const __ros_msg_type * ros_message = static_cast<const __ros_msg_type *>(untyped_ros_message);
-  if (!ros_message) {
-    fprintf(stderr, "ros message handle is null\n");
-    return false;
-  }
-
-  DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(dds_data_writer);
-
-  __dds_msg_type dds_message;
-  if (!convert_ros_to_dds(ros_message, &dds_message)) {
-    return false;
-  }
-  @(pkg)::@(subfolder)::dds_::@(type)_DataWriter * data_writer =
-    @(pkg)::@(subfolder)::dds_::@(type)_DataWriter::narrow(topic_writer);
-  if (!data_writer) {
-    fprintf(stderr, "failed to narrow data writer\n");
-    return false;
-  }
-  DDS_ReturnCode_t status = data_writer->write(dds_message, DDS_HANDLE_NIL);
-
-  switch (status) {
-    case DDS_RETCODE_ERROR:
-      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
-        "an internal error has occurred\n");
-      return false;
-    case DDS_RETCODE_BAD_PARAMETER:
-      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
-        "bad handle or instance_data parameter\n");
-      return false;
-    case DDS_RETCODE_ALREADY_DELETED:
-      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
-        "this @(__dds_msg_type_prefix)DataWriter has already been deleted\n");
-      return false;
-    case DDS_RETCODE_OUT_OF_RESOURCES:
-      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
-        "out of resources\n");
-      return false;
-    case DDS_RETCODE_NOT_ENABLED:
-      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
-        "this @(__dds_msg_type_prefix)DataWriter is not enabled\n");
-      return false;
-    case DDS_RETCODE_PRECONDITION_NOT_MET:
-      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
-        "the handle has not been registered with this @(__dds_msg_type_prefix)DataWriter\n");
-      return false;
-    case DDS_RETCODE_TIMEOUT:
-      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
-        "writing resulted in blocking and then exceeded the timeout set by the "
-        "max_blocking_time of the ReliabilityQosPolicy\n");
-      return false;
-    case DDS_RETCODE_OK:
-      return true;
-    default:
-      fprintf(stderr, "@(pkg)::@(subfolder)::dds_::@(type)_DataWriter.write: "
-        "unknown return code\n");
-  }
-  return false;
-}
-
-static bool
 convert_dds_to_ros(const void * untyped_dds_message, void * untyped_ros_message)
 {
   if (!untyped_ros_message) {
@@ -422,148 +321,6 @@ else:
   return true;
 }
 
-static bool
-take(
-  void * dds_data_reader,
-  bool ignore_local_publications,
-  ConnextStaticCDRStream * cdr_streamFIX,
-  bool * taken,
-  void * sending_publication_handle)
-{
-  void * untyped_ros_message = reinterpret_cast<void *>(cdr_streamFIX);
-  if (untyped_ros_message == 0) {
-    fprintf(stderr, "invalid ros message pointer\n");
-    return false;
-  }
-
-  DDSDataReader * topic_reader = static_cast<DDSDataReader *>(dds_data_reader);
-
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader * data_reader =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
-  if (!data_reader) {
-    fprintf(stderr, "failed to narrow data reader\n");
-    return false;
-  }
-
-  @(__dds_msg_type_prefix)Seq dds_messages;
-  DDS_SampleInfoSeq sample_infos;
-  DDS_ReturnCode_t status = data_reader->take(
-    dds_messages,
-    sample_infos,
-    1,
-    DDS_ANY_SAMPLE_STATE,
-    DDS_ANY_VIEW_STATE,
-    DDS_ANY_INSTANCE_STATE);
-
-  bool ignore_sample = false;
-
-  switch (status) {
-    case DDS_RETCODE_ERROR:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-        "an internal error has occurred\n");
-      goto finally;
-    case DDS_RETCODE_ALREADY_DELETED:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-        "this @(__dds_msg_type_prefix)DataReader has already been deleted\n");
-      goto finally;
-    case DDS_RETCODE_OUT_OF_RESOURCES:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-        "out of resources\n");
-      goto finally;
-    case DDS_RETCODE_NOT_ENABLED:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-        "this @(__dds_msg_type_prefix)DataReader is not enabled\n");
-      goto finally;
-    case DDS_RETCODE_PRECONDITION_NOT_MET:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-        "a precondition is not met, one of: "
-        "max_samples > maximum and max_samples != LENGTH_UNLIMITED, or "
-        "the two sequences do not have matching parameters (length, maximum, release), or "
-        "maximum > 0 and release is false.\n");
-      goto finally;
-    case DDS_RETCODE_NO_DATA:
-      *taken = false;
-      goto finally;
-    case DDS_RETCODE_OK:
-      break;
-    default:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.take: "
-        "unknown return code\n");
-      goto finally;
-  }
-
-  {
-    DDS_SampleInfo & sample_info = sample_infos[0];
-    if (!sample_info.valid_data) {
-      // skip sample without data
-      ignore_sample = true;
-    } else if (ignore_local_publications) {
-      // compare the lower 12 octets of the guids from the sender and this receiver
-      // if they are equal the sample has been sent from this process and should be ignored
-      DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
-      DDS_InstanceHandle_t receiver_instance_handle = topic_reader->get_instance_handle();
-      ignore_sample = true;
-      for (size_t i = 0; i < 12; ++i) {
-        DDS_Octet * sender_element = &(sender_guid.value[i]);
-        DDS_Octet * receiver_element = &(reinterpret_cast<DDS_Octet *>(&receiver_instance_handle)[i]);
-        if (*sender_element != *receiver_element) {
-          ignore_sample = false;
-          break;
-        }
-      }
-      // This is nullptr when being used with plain rmw_take, so check first.
-      if (sending_publication_handle) {
-        *static_cast<DDS_InstanceHandle_t *>(sending_publication_handle) =
-          sample_info.publication_handle;
-      }
-    }
-  }
-
-  if (!ignore_sample) {
-    if (!convert_dds_to_ros(&dds_messages[0], untyped_ros_message)) {
-      goto finally;
-    }
-    *taken = true;
-  } else {
-    *taken = false;
-  }
-
-finally:
-  // Ensure the loan is returned.
-  status = data_reader->return_loan(dds_messages, sample_infos);
-  switch (status) {
-    case DDS_RETCODE_ERROR:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-        "an internal error has occurred\n");
-      return false;
-    case DDS_RETCODE_ALREADY_DELETED:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-        "this @(__dds_msg_type_prefix)DataReader has already been deleted\n");
-      return false;
-    case DDS_RETCODE_OUT_OF_RESOURCES:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-        "out of resources\n");
-      return false;
-    case DDS_RETCODE_NOT_ENABLED:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-        "this @(__dds_msg_type_prefix)DataReader is not enabled\n");
-      return false;
-    case DDS_RETCODE_PRECONDITION_NOT_MET:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-        "a precondition is not met, one of: "
-        "the data_values and info_seq do not belong to a single related pair, or "
-        "the data_values and info_seq were not obtained from this "
-        "@(__dds_msg_type_prefix)DataReader\n");
-      return false;
-    case DDS_RETCODE_OK:
-      return true;
-    default:
-      fprintf(stderr, "@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader.return_loan: "
-        "unknown return code\n");
-  }
-
-  return false;
-}
 
 static bool
 to_cdr_stream(
@@ -576,6 +333,25 @@ to_cdr_stream(
   if (!cdr_stream) {
     return false;
   }
+  const __ros_msg_type * ros_message = static_cast<const __ros_msg_type *>(untyped_ros_message);
+  __dds_msg_type dds_message;
+  if (!convert_ros_to_dds(ros_message, &dds_message)) {
+    return false;
+  }
+
+  // call the serialize function for the first time to get the expected length of the message
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(NULL, &cdr_stream->message_length, &dds_message) != RTI_TRUE) {
+    return false;
+  }
+  // allocate enough memory for the CDR stream
+  // TODO(karsten1987): This allocation has to be preallocated
+  // or at least bring in a custom allocator
+  cdr_stream->raw_message = (char *)malloc(sizeof(char) * cdr_stream->message_length);
+  // call the function again and fill the buffer this time
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(cdr_stream->raw_message, &cdr_stream->message_length, &dds_message) != RTI_TRUE) {
+    return false;
+  }
+
   return true;
 }
 
@@ -590,17 +366,26 @@ to_message(
   if (!untyped_ros_message) {
     return false;
   }
-  return true;
+
+  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+  if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(dds_message, cdr_stream->raw_message, cdr_stream->message_length) != RTI_TRUE) {
+    fprintf(stderr, "deserialize from cdr buffer failed\n");
+    return false;
+  }
+  bool success = convert_dds_to_ros(dds_message, untyped_ros_message);
+  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK){
+    return false;
+  }
+  return success;
 }
+
 @
 @# // Collect the callback functions and provide a function to get the type support struct.
 
 static message_type_support_callbacks_t __callbacks = {
   "@(pkg)",  // package_name
   "@(msg)",  // message_name
-  register_type,  // register_type
-  publish,  // publish
-  take,  // take
+  get_type_code,  // get_type_code
   convert_ros_to_dds,  // convert_ros_to_dds
   convert_dds_to_ros,  // convert_dds_to_ros
   to_cdr_stream,  // to_cdr_stream

@@ -8,8 +8,8 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the RTI Connext manual.
 */
 
-#include "rosidl_typesupport_connext_cpp/connext_static_raw_data_support.h"
-#include "rosidl_typesupport_connext_cpp/connext_static_raw_data_plugin.h"
+#include "rmw_connext_cpp/connext_static_raw_data_support.hpp"
+#include "rmw_connext_cpp/connext_static_raw_data_plugin.hpp"
 
 #ifndef dds_c_log_impl_h              
 #include "dds_c/dds_c_log_impl.h"                                
