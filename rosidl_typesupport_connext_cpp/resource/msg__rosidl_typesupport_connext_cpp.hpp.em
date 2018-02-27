@@ -72,23 +72,11 @@ convert_ros_message_to_dds(
   const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message,
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message);
 
-//bool
-//publish__@(spec.base_type.type)(
-//  DDSDataWriter * topic_writer,
-//  const void * untyped_ros_message);
-
 bool
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC_@(spec.base_type.pkg_name)
 convert_dds_message_to_ros(
   const @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message,
   @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message);
-
-//bool
-//take__@(spec.base_type.type)(
-//  DDSDataReader * topic_reader,
-//  bool ignore_local_publications,
-//  ConnextStaticCDRStream * untyped_ros_message,
-//  bool * taken);
 
 bool
 to_cdr_stream__@(spec.base_type.type)(

@@ -231,7 +231,7 @@ to_cdr_stream__@(spec.base_type.type)(
   if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(cdr_stream->raw_message, &cdr_stream->message_length, dds_message) != RTI_TRUE) {
     return false;
   }
-  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK){
+  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK) {
     return false;
   }
   return true;
@@ -261,7 +261,7 @@ to_message__@(spec.base_type.type)(
   @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
     *(@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
   bool success = convert_dds_message_to_ros(*dds_message, ros_message);
-  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK){
+  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK) {
     return false;
   }
   return success;

@@ -340,15 +340,20 @@ to_cdr_stream(
   }
 
   // call the serialize function for the first time to get the expected length of the message
-  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(NULL, &cdr_stream->message_length, &dds_message) != RTI_TRUE) {
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(
+      NULL, &cdr_stream->message_length, &dds_message) != RTI_TRUE)
+  {
     return false;
   }
   // allocate enough memory for the CDR stream
   // TODO(karsten1987): This allocation has to be preallocated
   // or at least bring in a custom allocator
-  cdr_stream->raw_message = (char *)malloc(sizeof(char) * cdr_stream->message_length);
+  cdr_stream->raw_message =
+    reinterpret_cast<char *>(malloc(sizeof(char) * cdr_stream->message_length));
   // call the function again and fill the buffer this time
-  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(cdr_stream->raw_message, &cdr_stream->message_length, &dds_message) != RTI_TRUE) {
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(
+      cdr_stream->raw_message, &cdr_stream->message_length, &dds_message) != RTI_TRUE)
+  {
     return false;
   }
 
@@ -367,13 +372,16 @@ to_message(
     return false;
   }
 
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
-  if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(dds_message, cdr_stream->raw_message, cdr_stream->message_length) != RTI_TRUE) {
+  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message =
+    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+  if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(
+      dds_message, cdr_stream->raw_message, cdr_stream->message_length) != RTI_TRUE)
+  {
     fprintf(stderr, "deserialize from cdr buffer failed\n");
     return false;
   }
   bool success = convert_dds_to_ros(dds_message, untyped_ros_message);
-  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK){
+  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK) {
     return false;
   }
   return success;
