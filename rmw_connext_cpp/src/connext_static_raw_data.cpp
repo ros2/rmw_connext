@@ -1,5 +1,3 @@
-
-
 /*
 WARNING: THIS FILE IS AUTO-GENERATED. DO NOT MODIFY.
 
@@ -13,16 +11,16 @@ or consult the RTI Connext manual.
 #ifndef ndds_cpp_h
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #endif
-#ifndef dds_c_log_impl_h              
-#include "dds_c/dds_c_log_impl.h"                                
-#endif        
+#ifndef dds_c_log_impl_h
+#include "dds_c/dds_c_log_impl.h"
+#endif
 
 #ifndef cdr_type_h
 #include "cdr/cdr_type.h"
-#endif    
+#endif
 
 #ifndef osapi_heap_h
-#include "osapi/osapi_heap.h" 
+#include "osapi/osapi_heap.h"
 #endif
 #else
 #include "ndds_standalone_type.h"
@@ -48,7 +46,7 @@ DDS_TypeCode* ConnextStaticRawData_get_typecode()
         {
             (char *)"key_hash",/* Member name */
             {
-                0,/* Representation ID */          
+                0,/* Representation ID */
                 DDS_BOOLEAN_FALSE,/* Is a pointer? */
                 -1, /* Bitfield bits */
                 NULL/* Member type code is assigned later */
@@ -61,11 +59,11 @@ DDS_TypeCode* ConnextStaticRawData_get_typecode()
             DDS_PUBLIC_MEMBER,/* Member visibility */
             1,
             NULL/* Ignored */
-        }, 
+        },
         {
             (char *)"serialized_key",/* Member name */
             {
-                1,/* Representation ID */          
+                1,/* Representation ID */
                 DDS_BOOLEAN_FALSE,/* Is a pointer? */
                 -1, /* Bitfield bits */
                 NULL/* Member type code is assigned later */
@@ -78,11 +76,11 @@ DDS_TypeCode* ConnextStaticRawData_get_typecode()
             DDS_PUBLIC_MEMBER,/* Member visibility */
             1,
             NULL/* Ignored */
-        }, 
+        },
         {
             (char *)"serialized_data",/* Member name */
             {
-                2,/* Representation ID */          
+                2,/* Representation ID */
                 DDS_BOOLEAN_FALSE,/* Is a pointer? */
                 -1, /* Bitfield bits */
                 NULL/* Member type code is assigned later */
@@ -104,13 +102,13 @@ DDS_TypeCode* ConnextStaticRawData_get_typecode()
             DDS_BOOLEAN_FALSE, /* Ignored */
             -1, /*Ignored*/
             (char *)"ConnextStaticRawData", /* Name */
-            NULL, /* Ignored */      
+            NULL, /* Ignored */
             0, /* Ignored */
             0, /* Ignored */
             NULL, /* Ignored */
             3, /* Number of members */
             ConnextStaticRawData_g_tc_members, /* Members */
-            DDS_VM_NONE  /* Ignored */         
+            DDS_VM_NONE  /* Ignored */
         }}; /* Type code for ConnextStaticRawData*/
 
     if (is_initialized) {
@@ -176,7 +174,7 @@ RTIBool ConnextStaticRawData_initialize_w_params(
         if (!DDS_OctetSeq_set_maximum(&sample->serialized_key , (0))) {
             return RTI_FALSE;
         }
-    } else { 
+    } else {
         DDS_OctetSeq_set_length(&sample->serialized_key, 0);
     }
     if (allocParams->allocate_memory) {
@@ -185,7 +183,7 @@ RTIBool ConnextStaticRawData_initialize_w_params(
         if (!DDS_OctetSeq_set_maximum(&sample->serialized_data , (0))) {
             return RTI_FALSE;
         }
-    } else { 
+    } else {
         DDS_OctetSeq_set_length(&sample->serialized_data, 0);
     }
     return RTI_TRUE;
@@ -206,7 +204,7 @@ void ConnextStaticRawData_finalize_ex(
 
     if (sample==NULL) {
         return;
-    } 
+    }
 
     deallocParams.delete_pointers = (DDS_Boolean)deletePointers;
 
@@ -242,7 +240,7 @@ void ConnextStaticRawData_finalize_optional_members(
 
     if (sample==NULL) {
         return;
-    } 
+    }
     if (deallocParams) {} /* To avoid warnings */
 
     deallocParamsTmp.delete_pointers = (DDS_Boolean)deletePointers;
@@ -310,4 +308,3 @@ RTIBool ConnextStaticRawData_copy(
 
 #undef TSeq
 #undef T
-

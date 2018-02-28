@@ -1,4 +1,3 @@
-
 /*
 WARNING: THIS FILE IS AUTO-GENERATED. DO NOT MODIFY.
 
@@ -43,10 +42,6 @@ implementing generics in C and C++.
 #define NDDSUSERDllExport __declspec(dllexport)
 
 #endif
-
-// DDS_TYPESUPPORT_CPP(
-//     ConnextStaticRawDataTypeSupport, 
-//     ConnextStaticRawData);
 
 class NDDSUSERDllExport DDSCPPDllExport ConnextStaticRawDataTypeSupport : public ::DDSTypeSupport
 {
@@ -130,7 +125,6 @@ private:
   ConnextStaticRawDataTypeSupport();
 };
 
-
 DDS_DATAWRITER_CPP(ConnextStaticRawDataDataWriter, ConnextStaticRawData);
 DDS_DATAREADER_CPP(ConnextStaticRawDataDataReader, ConnextStaticRawDataSeq, ConnextStaticRawData);
 
@@ -149,4 +143,3 @@ ConnextStaticRawDataSupport_register_external_type(
 #endif
 
 #endif  /* ConnextStaticRawDataSupport_1689213465_h */
-

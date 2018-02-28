@@ -25,11 +25,6 @@
 bool
 publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
 {
-  // for (unsigned int i = 0; i < cdr_stream->message_length; ++i) {
-  //   fprintf(stderr, "%x02 ", cdr_stream->raw_message[i]);
-  // }
-  // fprintf(stderr, "\n");
-
   ConnextStaticRawDataDataWriter * data_writer =
     ConnextStaticRawDataDataWriter::narrow(dds_data_writer);
   if (!data_writer) {
@@ -48,7 +43,8 @@ publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
   instance->serialized_data.maximum(0);
   if (!instance->serialized_data.loan_contiguous(
       reinterpret_cast<DDS_Octet *>(cdr_stream->raw_message),
-      cdr_stream->message_length, cdr_stream->message_length)) {
+      cdr_stream->message_length, cdr_stream->message_length))
+  {
     RMW_SET_ERROR_MSG("failed to loan memory for message");
     goto cleanup;
   }

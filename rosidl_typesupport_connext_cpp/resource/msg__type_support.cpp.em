@@ -226,7 +226,8 @@ to_cdr_stream__@(spec.base_type.type)(
   // allocate enough memory for the CDR stream
   // TODO(karsten1987): This allocation has to be preallocated
   // or at least bring in a custom allocator
-  cdr_stream->raw_message = (char *)malloc(sizeof(char) * cdr_stream->message_length);
+  cdr_stream->raw_message =
+    reinterpret_cast<char *>(malloc(sizeof(char) * cdr_stream->message_length));
   // call the function again and fill the buffer this time
   if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(cdr_stream->raw_message, &cdr_stream->message_length, dds_message) != RTI_TRUE) {
     return false;

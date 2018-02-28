@@ -1,4 +1,3 @@
-
 /*
 WARNING: THIS FILE IS AUTO-GENERATED. DO NOT MODIFY.
 
@@ -11,9 +10,9 @@ or consult the RTI Connext manual.
 #include "rmw_connext_cpp/connext_static_raw_data_support.hpp"
 #include "rmw_connext_cpp/connext_static_raw_data_plugin.hpp"
 
-#ifndef dds_c_log_impl_h              
-#include "dds_c/dds_c_log_impl.h"                                
-#endif        
+#ifndef dds_c_log_impl_h
+#include "dds_c/dds_c_log_impl.h"
+#endif
 
 /* ========================================================================= */
 /**
@@ -152,11 +151,6 @@ ConnextStaticRawDataSupport_register_external_type(
   already_registered = participant->is_type_registered(type_name);
 
   retcode = participant->register_type(type_name, presTypePlugin, NULL, !already_registered);
-  //retcode = DDS_DomainParticipant_register_type(
-  //    participant,
-  //    type_name,
-  //    presTypePlugin,
-  //    NULL /* registration_data */);
   if (retcode != DDS_RETCODE_OK) {
     fprintf(stderr, "error while registering external type\n");
     goto finError;

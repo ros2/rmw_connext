@@ -1,5 +1,3 @@
-
-
 /*
 WARNING: THIS FILE IS AUTO-GENERATED. DO NOT MODIFY.
 
@@ -34,7 +32,7 @@ class ConnextStaticRawDataDataWriter;
 class ConnextStaticRawDataDataReader;
 #endif
 
-class ConnextStaticRawData 
+class ConnextStaticRawData
 {
   public:
     typedef struct ConnextStaticRawDataSeq Seq;
@@ -71,7 +69,7 @@ RTIBool ConnextStaticRawData_initialize_ex(
 NDDSUSERDllExport
 RTIBool ConnextStaticRawData_initialize_w_params(
     ConnextStaticRawData* self,
-    const struct DDS_TypeAllocationParams_t * allocParams);  
+    const struct DDS_TypeAllocationParams_t * allocParams);
 
 NDDSUSERDllExport
 void ConnextStaticRawData_finalize(
@@ -88,7 +86,7 @@ void ConnextStaticRawData_finalize_w_params(
 
 NDDSUSERDllExport
 void ConnextStaticRawData_finalize_optional_members(
-    ConnextStaticRawData* self, RTIBool deletePointers);  
+    ConnextStaticRawData* self, RTIBool deletePointers);
 
 NDDSUSERDllExport
 RTIBool ConnextStaticRawData_copy(
@@ -103,4 +101,3 @@ RTIBool ConnextStaticRawData_copy(
 #endif
 
 #endif /* ConnextStaticRawData */
-

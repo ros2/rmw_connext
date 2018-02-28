@@ -1,4 +1,3 @@
-
 /*
 WARNING: THIS FILE IS AUTO-GENERATED. DO NOT MODIFY.
 
@@ -65,7 +64,7 @@ Support functions:
 
 ConnextStaticRawData*
 ConnextStaticRawDataPluginSupport_create_data_w_params(
-    const struct DDS_TypeAllocationParams_t * alloc_params) 
+    const struct DDS_TypeAllocationParams_t * alloc_params)
 {
     ConnextStaticRawData *sample = NULL;
 
@@ -78,11 +77,11 @@ ConnextStaticRawDataPluginSupport_create_data_w_params(
         delete  sample;
         sample=NULL;
     }
-    return sample; 
-} 
+    return sample;
+}
 
 ConnextStaticRawData *
-ConnextStaticRawDataPluginSupport_create_data_ex(RTIBool allocate_pointers) 
+ConnextStaticRawDataPluginSupport_create_data_ex(RTIBool allocate_pointers)
 {
     ConnextStaticRawData *sample = NULL;
 
@@ -97,7 +96,7 @@ ConnextStaticRawDataPluginSupport_create_data_ex(RTIBool allocate_pointers)
         sample=NULL;
     }
 
-    return sample; 
+    return sample;
 }
 
 ConnextStaticRawData *
@@ -106,7 +105,7 @@ ConnextStaticRawDataPluginSupport_create_data(void)
     return ConnextStaticRawDataPluginSupport_create_data_ex(RTI_TRUE);
 }
 
-void 
+void
 ConnextStaticRawDataPluginSupport_destroy_data_w_params(
     ConnextStaticRawData *sample,
     const struct DDS_TypeDeallocationParams_t * dealloc_params) {
@@ -117,7 +116,7 @@ ConnextStaticRawDataPluginSupport_destroy_data_w_params(
     sample=NULL;
 }
 
-void 
+void
 ConnextStaticRawDataPluginSupport_destroy_data_ex(
     ConnextStaticRawData *sample,RTIBool deallocate_pointers) {
 
@@ -127,7 +126,7 @@ ConnextStaticRawDataPluginSupport_destroy_data_ex(
     sample=NULL;
 }
 
-void 
+void
 ConnextStaticRawDataPluginSupport_destroy_data(
     ConnextStaticRawData *sample) {
 
@@ -135,7 +134,7 @@ ConnextStaticRawDataPluginSupport_destroy_data(
 
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPluginSupport_copy_data(
     ConnextStaticRawData *dst,
     const ConnextStaticRawData *src)
@@ -143,7 +142,7 @@ ConnextStaticRawDataPluginSupport_copy_data(
     return ConnextStaticRawData_copy(dst,(const ConnextStaticRawData*) src);
 }
 
-void 
+void
 ConnextStaticRawDataPluginSupport_print_data(
     const ConnextStaticRawData *sample,
     const char *desc,
@@ -165,8 +164,8 @@ ConnextStaticRawDataPluginSupport_print_data(
 
     RTICdrType_printArray(
         sample->key_hash, ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_SIZE,
-        (RTICdrTypePrintFunction)RTICdrType_printOctet, 
-        "key_hash", indent_level + 1);        
+        (RTICdrTypePrintFunction)RTICdrType_printOctet,
+        "key_hash", indent_level + 1);
 
     if (DDS_OctetSeq_get_contiguous_bufferI(&sample->serialized_key) != NULL) {
         RTICdrType_printArray(
@@ -216,7 +215,7 @@ ConnextStaticRawDataPluginSupport_create_key(void)
     return  ConnextStaticRawDataPluginSupport_create_key_ex(RTI_TRUE);
 }
 
-void 
+void
 ConnextStaticRawDataPluginSupport_destroy_key_ex(
     ConnextStaticRawDataKeyHolder *key,RTIBool deallocate_pointers)
 {
@@ -227,7 +226,7 @@ ConnextStaticRawDataPluginSupport_destroy_key_ex(
 
 }
 
-void 
+void
 ConnextStaticRawDataPluginSupport_destroy_key(
     ConnextStaticRawDataKeyHolder *key) {
 
@@ -239,7 +238,7 @@ ConnextStaticRawDataPluginSupport_destroy_key(
 Callback functions:
 * ---------------------------------------------------------------------------- */
 
-PRESTypePluginParticipantData 
+PRESTypePluginParticipantData
 ConnextStaticRawDataPlugin_on_participant_attached(
     void *registration_data,
     const struct PRESTypePluginParticipantInfo *participant_info,
@@ -257,7 +256,7 @@ ConnextStaticRawDataPlugin_on_participant_attached(
 
 }
 
-void 
+void
 ConnextStaticRawDataPlugin_on_participant_detached(
     PRESTypePluginParticipantData participant_data)
 {
@@ -269,7 +268,7 @@ PRESTypePluginEndpointData
 ConnextStaticRawDataPlugin_on_endpoint_attached(
     PRESTypePluginParticipantData participant_data,
     const struct PRESTypePluginEndpointInfo *endpoint_info,
-    RTIBool top_level_registration, 
+    RTIBool top_level_registration,
     void *containerPluginContext)
 {
     PRESTypePluginEndpointData epd = NULL;
@@ -289,18 +288,18 @@ ConnextStaticRawDataPlugin_on_endpoint_attached(
         (PRESTypePluginDefaultEndpointDataDestroySampleFunction)
         ConnextStaticRawDataPluginSupport_destroy_data,
         (PRESTypePluginDefaultEndpointDataCreateKeyFunction)
-        ConnextStaticRawDataPluginSupport_create_key ,            
+        ConnextStaticRawDataPluginSupport_create_key ,
         (PRESTypePluginDefaultEndpointDataDestroyKeyFunction)
         ConnextStaticRawDataPluginSupport_destroy_key);
 
     if (epd == NULL) {
         return NULL;
-    } 
+    }
     serializedKeyMaxSize =  ConnextStaticRawDataPlugin_get_serialized_key_max_size(
         epd,RTI_FALSE,RTI_CDR_ENCAPSULATION_ID_CDR_BE,0);
 
     if(!PRESTypePluginDefaultEndpointData_createMD5StreamWithInfo(
-        epd,endpoint_info,serializedKeyMaxSize))  
+        epd,endpoint_info,serializedKeyMaxSize))
     {
         PRESTypePluginDefaultEndpointData_delete(epd);
         return NULL;
@@ -325,18 +324,18 @@ ConnextStaticRawDataPlugin_on_endpoint_attached(
         }
     }
 
-    return epd;    
+    return epd;
 }
 
-void 
+void
 ConnextStaticRawDataPlugin_on_endpoint_detached(
     PRESTypePluginEndpointData endpoint_data)
-{  
+{
 
     PRESTypePluginDefaultEndpointData_delete(endpoint_data);
 }
 
-void    
+void
 ConnextStaticRawDataPlugin_return_sample(
     PRESTypePluginEndpointData endpoint_data,
     ConnextStaticRawData *sample,
@@ -349,7 +348,7 @@ ConnextStaticRawDataPlugin_return_sample(
         endpoint_data, sample, handle);
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_copy_sample(
     PRESTypePluginEndpointData endpoint_data,
     ConnextStaticRawData *dst,
@@ -362,21 +361,21 @@ ConnextStaticRawDataPlugin_copy_sample(
 /* ----------------------------------------------------------------------------
 (De)Serialize functions:
 * ------------------------------------------------------------------------- */
-unsigned int 
+unsigned int
 ConnextStaticRawDataPlugin_get_serialized_sample_max_size(
     PRESTypePluginEndpointData endpoint_data,
     RTIBool include_encapsulation,
     RTIEncapsulationId encapsulation_id,
     unsigned int current_alignment);
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_serialize(
     PRESTypePluginEndpointData endpoint_data,
-    const ConnextStaticRawData *sample, 
-    struct RTICdrStream *stream,    
+    const ConnextStaticRawData *sample,
+    struct RTICdrStream *stream,
     RTIBool serialize_encapsulation,
     RTIEncapsulationId encapsulation_id,
-    RTIBool serialize_sample, 
+    RTIBool serialize_sample,
     void *endpoint_plugin_qos)
 {
     char * position = NULL;
@@ -455,13 +454,13 @@ ConnextStaticRawDataPlugin_remove_padding_from_stream(struct RTICdrStream *strea
     RTICdrStream_setBufferLength(stream, adjustedBufferLength);
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_deserialize_sample(
     PRESTypePluginEndpointData endpoint_data,
     ConnextStaticRawData *sample,
-    struct RTICdrStream *stream,   
+    struct RTICdrStream *stream,
     RTIBool deserialize_encapsulation,
-    RTIBool deserialize_sample, 
+    RTIBool deserialize_sample,
     void *endpoint_plugin_qos)
 {
     char * position = NULL;
@@ -543,7 +542,7 @@ ConnextStaticRawDataPlugin_serialize_to_cdr_buffer(
         NULL, RTI_TRUE, RTICdrEncapsulation_getNativeCdrEncapsulationId(), 0);
 
     if (buffer == NULL) {
-        *length = 
+        *length =
         ConnextStaticRawDataPlugin_get_serialized_sample_size(
             (PRESTypePluginEndpointData)&epd,
             RTI_TRUE,
@@ -556,18 +555,18 @@ ConnextStaticRawDataPlugin_serialize_to_cdr_buffer(
         }
 
         return RTI_TRUE;
-    }    
+    }
 
     RTICdrStream_init(&stream);
     RTICdrStream_set(&stream, (char *)buffer, *length);
 
     result = ConnextStaticRawDataPlugin_serialize(
-        (PRESTypePluginEndpointData)&epd, sample, &stream, 
-        RTI_TRUE, RTICdrEncapsulation_getNativeCdrEncapsulationId(), 
-        RTI_TRUE, NULL);  
+        (PRESTypePluginEndpointData)&epd, sample, &stream,
+        RTI_TRUE, RTICdrEncapsulation_getNativeCdrEncapsulationId(),
+        RTI_TRUE, NULL);
 
     *length = RTICdrStream_getCurrentPositionOffset(&stream);
-    return result;     
+    return result;
 }
 
 RTIBool
@@ -582,9 +581,9 @@ ConnextStaticRawDataPlugin_deserialize_from_cdr_buffer(
     RTICdrStream_set(&stream, (char *)buffer, length);
 
     ConnextStaticRawData_finalize_optional_members(sample, RTI_TRUE);
-    return ConnextStaticRawDataPlugin_deserialize_sample( 
+    return ConnextStaticRawDataPlugin_deserialize_sample(
         NULL, sample,
-        &stream, RTI_TRUE, RTI_TRUE, 
+        &stream, RTI_TRUE, RTI_TRUE,
         NULL);
 }
 
@@ -592,7 +591,7 @@ DDS_ReturnCode_t
 ConnextStaticRawDataPlugin_data_to_string(
     const ConnextStaticRawData *sample,
     char *str,
-    DDS_UnsignedLong *str_size, 
+    DDS_UnsignedLong *str_size,
     const struct DDS_PrintFormatProperty *property)
 {
     DDS_DynamicData *data = NULL;
@@ -614,8 +613,8 @@ ConnextStaticRawDataPlugin_data_to_string(
     }
 
     if (!ConnextStaticRawDataPlugin_serialize_to_cdr_buffer(
-        NULL, 
-        &length, 
+        NULL,
+        &length,
         sample)) {
         return DDS_RETCODE_ERROR;
     }
@@ -626,15 +625,15 @@ ConnextStaticRawDataPlugin_data_to_string(
     }
 
     if (!ConnextStaticRawDataPlugin_serialize_to_cdr_buffer(
-        buffer, 
-        &length, 
+        buffer,
+        &length,
         sample)) {
         RTIOsapiHeap_freeBuffer(buffer);
         return DDS_RETCODE_ERROR;
     }
 
     data = DDS_DynamicData_new(
-        ConnextStaticRawData_get_typecode(), 
+        ConnextStaticRawData_get_typecode(),
         &DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
     if (data == NULL) {
         RTIOsapiHeap_freeBuffer(buffer);
@@ -649,7 +648,7 @@ ConnextStaticRawDataPlugin_data_to_string(
     }
 
     retCode = DDS_PrintFormatProperty_to_print_format(
-        property, 
+        property,
         &printFormat);
     if (retCode != DDS_RETCODE_OK) {
         RTIOsapiHeap_freeBuffer(buffer);
@@ -658,9 +657,9 @@ ConnextStaticRawDataPlugin_data_to_string(
     }
 
     retCode = DDS_DynamicDataFormatter_to_string_w_format(
-        data, 
+        data,
         str,
-        str_size, 
+        str_size,
         &printFormat);
     if (retCode != DDS_RETCODE_OK) {
         RTIOsapiHeap_freeBuffer(buffer);
@@ -673,14 +672,14 @@ ConnextStaticRawDataPlugin_data_to_string(
     return DDS_RETCODE_OK;
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_deserialize(
     PRESTypePluginEndpointData endpoint_data,
     ConnextStaticRawData **sample,
     RTIBool * drop_sample,
-    struct RTICdrStream *stream,   
+    struct RTICdrStream *stream,
     RTIBool deserialize_encapsulation,
-    RTIBool deserialize_sample, 
+    RTIBool deserialize_sample,
     void *endpoint_plugin_qos)
 {
 
@@ -689,9 +688,9 @@ ConnextStaticRawDataPlugin_deserialize(
     if (drop_sample) {} /* To avoid warnings */
 
     stream->_xTypesState.unassignable = RTI_FALSE;
-    result= ConnextStaticRawDataPlugin_deserialize_sample( 
+    result= ConnextStaticRawDataPlugin_deserialize_sample(
         endpoint_data, (sample != NULL)?*sample:NULL,
-        stream, deserialize_encapsulation, deserialize_sample, 
+        stream, deserialize_encapsulation, deserialize_sample,
         endpoint_plugin_qos);
     if (result) {
         if (stream->_xTypesState.unassignable) {
@@ -701,8 +700,8 @@ ConnextStaticRawDataPlugin_deserialize(
     if (!result && stream->_xTypesState.unassignable ) {
 
         RTICdrLog_exception(
-            METHOD_NAME, 
-            &RTI_CDR_LOG_UNASSIGNABLE_SAMPLE_OF_TYPE_s, 
+            METHOD_NAME,
+            &RTI_CDR_LOG_UNASSIGNABLE_SAMPLE_OF_TYPE_s,
             "ConnextStaticRawData");
 
     }
@@ -712,9 +711,9 @@ ConnextStaticRawDataPlugin_deserialize(
 
 RTIBool ConnextStaticRawDataPlugin_skip(
     PRESTypePluginEndpointData endpoint_data,
-    struct RTICdrStream *stream,   
+    struct RTICdrStream *stream,
     RTIBool skip_encapsulation,
-    RTIBool skip_sample, 
+    RTIBool skip_sample,
     void *endpoint_plugin_qos)
 {
     char * position = NULL;
@@ -736,15 +735,15 @@ RTIBool ConnextStaticRawDataPlugin_skip(
 
         if (!RTICdrStream_skipPrimitiveArray(
             stream, ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_TYPE)) {
-            goto fin; 
-        }      
+            goto fin;
+        }
         {
             RTICdrUnsignedLong sequence_length;
             if (!RTICdrStream_skipPrimitiveSequence(
                 stream,
                 &sequence_length,
                 RTI_CDR_OCTET_TYPE)){
-                goto fin; 
+                goto fin;
             }
         }
         {
@@ -753,17 +752,17 @@ RTIBool ConnextStaticRawDataPlugin_skip(
                 stream,
                 &sequence_length,
                 RTI_CDR_OCTET_TYPE)){
-                goto fin; 
+                goto fin;
             }
         }
     }
 
     done = RTI_TRUE;
   fin:
-    if (done != RTI_TRUE && 
+    if (done != RTI_TRUE &&
     RTICdrStream_getRemainder(stream) >=
     RTI_CDR_PARAMETER_HEADER_ALIGNMENT) {
-        return RTI_FALSE;   
+        return RTI_FALSE;
     }
     if(skip_encapsulation) {
         RTICdrStream_restoreAlignment(stream,position);
@@ -772,7 +771,7 @@ RTIBool ConnextStaticRawDataPlugin_skip(
     return RTI_TRUE;
 }
 
-unsigned int 
+unsigned int
 ConnextStaticRawDataPlugin_get_serialized_sample_max_size_ex(
     PRESTypePluginEndpointData endpoint_data,
     RTIBool * overflow,
@@ -794,7 +793,7 @@ ConnextStaticRawDataPlugin_get_serialized_sample_max_size_ex(
 
 }
 
-unsigned int 
+unsigned int
 ConnextStaticRawDataPlugin_get_serialized_sample_max_size(
     PRESTypePluginEndpointData endpoint_data,
     RTIBool include_encapsulation,
@@ -814,7 +813,7 @@ ConnextStaticRawDataPlugin_get_serialized_sample_max_size(
     return size;
 }
 
-unsigned int 
+unsigned int
 ConnextStaticRawDataPlugin_get_serialized_sample_min_size(
     PRESTypePluginEndpointData endpoint_data,
     RTIBool include_encapsulation,
@@ -826,7 +825,7 @@ ConnextStaticRawDataPlugin_get_serialized_sample_min_size(
 
     unsigned int encapsulation_size = current_alignment;
 
-    if (endpoint_data) {} /* To avoid warnings */ 
+    if (endpoint_data) {} /* To avoid warnings */
 
     if (include_encapsulation) {
 
@@ -853,7 +852,7 @@ ConnextStaticRawDataPlugin_get_serialized_sample_min_size(
 }
 
 /* Returns the size of the sample in its serialized form (in bytes).
-* It can also be an estimation in excess of the real buffer needed 
+* It can also be an estimation in excess of the real buffer needed
 * during a call to the serialize() function.
 * The value reported does not have to include the space for the
 * encapsulation flags.
@@ -864,13 +863,13 @@ ConnextStaticRawDataPlugin_get_serialized_sample_size(
     RTIBool include_encapsulation,
     RTIEncapsulationId encapsulation_id,
     unsigned int current_alignment,
-    const ConnextStaticRawData * sample) 
+    const ConnextStaticRawData * sample)
 {
 
     unsigned int initial_alignment = current_alignment;
 
     unsigned int encapsulation_size = current_alignment;
-    struct PRESTypePluginDefaultEndpointData epd;   
+    struct PRESTypePluginDefaultEndpointData epd;
 
     if (sample==NULL) {
         return 0;
@@ -879,7 +878,7 @@ ConnextStaticRawDataPlugin_get_serialized_sample_size(
         endpoint_data = (PRESTypePluginEndpointData) &epd;
         PRESTypePluginDefaultEndpointData_setBaseAlignment(
             endpoint_data,
-            current_alignment);        
+            current_alignment);
     }
 
     if (include_encapsulation) {
@@ -898,18 +897,18 @@ ConnextStaticRawDataPlugin_get_serialized_sample_size(
 
     current_alignment += RTICdrType_getPrimitiveArrayMaxSizeSerialized(
         PRESTypePluginDefaultEndpointData_getAlignment(
-            endpoint_data, current_alignment), 
-            ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_TYPE);  
+            endpoint_data, current_alignment),
+            ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_TYPE);
 
     current_alignment += RTICdrType_getPrimitiveSequenceSerializedSize(
         PRESTypePluginDefaultEndpointData_getAlignment(
-            endpoint_data, current_alignment), 
+            endpoint_data, current_alignment),
             DDS_OctetSeq_get_length(&sample->serialized_key),
             RTI_CDR_OCTET_TYPE);
 
     current_alignment += RTICdrType_getPrimitiveSequenceSerializedSize(
         PRESTypePluginDefaultEndpointData_getAlignment(
-            endpoint_data, current_alignment), 
+            endpoint_data, current_alignment),
             DDS_OctetSeq_get_length(&sample->serialized_data),
             RTI_CDR_OCTET_TYPE);
 
@@ -923,17 +922,17 @@ ConnextStaticRawDataPlugin_get_serialized_sample_size(
 Key Management functions:
 * -------------------------------------------------------------------------------------- */
 
-PRESTypePluginKeyKind 
+PRESTypePluginKeyKind
 ConnextStaticRawDataPlugin_get_key_kind(void)
 {
     return PRES_TYPEPLUGIN_NO_KEY;
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_serialize_key(
     PRESTypePluginEndpointData endpoint_data,
-    const ConnextStaticRawData *sample, 
-    struct RTICdrStream *stream,    
+    const ConnextStaticRawData *sample,
+    struct RTICdrStream *stream,
     RTIBool serialize_encapsulation,
     RTIEncapsulationId encapsulation_id,
     RTIBool serialize_key,
@@ -970,7 +969,7 @@ ConnextStaticRawDataPlugin_serialize_key(
 
 RTIBool ConnextStaticRawDataPlugin_deserialize_key_sample(
     PRESTypePluginEndpointData endpoint_data,
-    ConnextStaticRawData *sample, 
+    ConnextStaticRawData *sample,
     struct RTICdrStream *stream,
     RTIBool deserialize_encapsulation,
     RTIBool deserialize_key,
@@ -1013,7 +1012,7 @@ RTIBool ConnextStaticRawDataPlugin_deserialize_key_sample(
 
 RTIBool ConnextStaticRawDataPlugin_deserialize_key(
     PRESTypePluginEndpointData endpoint_data,
-    ConnextStaticRawData **sample, 
+    ConnextStaticRawData **sample,
     RTIBool * drop_sample,
     struct RTICdrStream *stream,
     RTIBool deserialize_encapsulation,
@@ -1032,7 +1031,7 @@ RTIBool ConnextStaticRawDataPlugin_deserialize_key(
         }
     }
 
-    return result;    
+    return result;
 
 }
 
@@ -1092,13 +1091,13 @@ ConnextStaticRawDataPlugin_get_serialized_key_max_size(
     return size;
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_serialized_sample_to_key(
     PRESTypePluginEndpointData endpoint_data,
     ConnextStaticRawData *sample,
-    struct RTICdrStream *stream, 
-    RTIBool deserialize_encapsulation,  
-    RTIBool deserialize_key, 
+    struct RTICdrStream *stream,
+    RTIBool deserialize_encapsulation,
+    RTIBool deserialize_key,
     void *endpoint_plugin_qos)
 {
     char * position = NULL;
@@ -1133,7 +1132,7 @@ ConnextStaticRawDataPlugin_serialized_sample_to_key(
                 stream,
                 &sequence_length,
                 RTI_CDR_OCTET_TYPE)){
-                goto fin; 
+                goto fin;
             }
         }
 
@@ -1143,7 +1142,7 @@ ConnextStaticRawDataPlugin_serialized_sample_to_key(
                 stream,
                 &sequence_length,
                 RTI_CDR_OCTET_TYPE)){
-                goto fin; 
+                goto fin;
             }
         }
 
@@ -1152,14 +1151,14 @@ ConnextStaticRawDataPlugin_serialized_sample_to_key(
     done = RTI_TRUE;
   fin:
     if(!error) {
-        if (done != RTI_TRUE && 
+        if (done != RTI_TRUE &&
         RTICdrStream_getRemainder(stream) >=
         RTI_CDR_PARAMETER_HEADER_ALIGNMENT) {
-            return RTI_FALSE;   
+            return RTI_FALSE;
         }
     } else {
         return RTI_FALSE;
-    }       
+    }
 
     if(deserialize_encapsulation) {
         RTICdrStream_restoreAlignment(stream,position);
@@ -1168,14 +1167,14 @@ ConnextStaticRawDataPlugin_serialized_sample_to_key(
     return RTI_TRUE;
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_instance_to_key(
     PRESTypePluginEndpointData endpoint_data,
-    ConnextStaticRawDataKeyHolder *dst, 
+    ConnextStaticRawDataKeyHolder *dst,
     const ConnextStaticRawData *src)
 {
 
-    if (endpoint_data) {} /* To avoid warnings */   
+    if (endpoint_data) {} /* To avoid warnings */
 
     if (!RTICdrType_copyArray(
         dst->key_hash ,src->key_hash,((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_SIZE)) {
@@ -1184,14 +1183,14 @@ ConnextStaticRawDataPlugin_instance_to_key(
     return RTI_TRUE;
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_key_to_instance(
     PRESTypePluginEndpointData endpoint_data,
     ConnextStaticRawData *dst, const
     ConnextStaticRawDataKeyHolder *src)
 {
 
-    if (endpoint_data) {} /* To avoid warnings */   
+    if (endpoint_data) {} /* To avoid warnings */
     if (!RTICdrType_copyArray(
         dst->key_hash ,src->key_hash,((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_SIZE)) {
         return RTI_FALSE;
@@ -1199,7 +1198,7 @@ ConnextStaticRawDataPlugin_key_to_instance(
     return RTI_TRUE;
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_instance_to_keyhash(
     PRESTypePluginEndpointData endpoint_data,
     DDS_KeyHash_t *keyhash,
@@ -1222,11 +1221,11 @@ ConnextStaticRawDataPlugin_instance_to_keyhash(
     if (!ConnextStaticRawDataPlugin_serialize_key(
         endpoint_data,
         instance,
-        md5Stream, 
-        RTI_FALSE, 
-        RTI_CDR_ENCAPSULATION_ID_CDR_BE, 
+        md5Stream,
+        RTI_FALSE,
+        RTI_CDR_ENCAPSULATION_ID_CDR_BE,
         RTI_TRUE,
-        NULL)) 
+        NULL))
     {
         int size;
 
@@ -1240,9 +1239,9 @@ ConnextStaticRawDataPlugin_instance_to_keyhash(
             instance);
 
         if (size <= RTICdrStream_getBufferLength(md5Stream)) {
-            RTICdrStream_popState(md5Stream, &cdrState);        
+            RTICdrStream_popState(md5Stream, &cdrState);
             return RTI_FALSE;
-        }   
+        }
 
         RTIOsapiHeap_allocateBuffer(&buffer,size,0);
 
@@ -1260,27 +1259,27 @@ ConnextStaticRawDataPlugin_instance_to_keyhash(
         if (!ConnextStaticRawDataPlugin_serialize_key(
             endpoint_data,
             instance,
-            md5Stream, 
-            RTI_FALSE, 
-            RTI_CDR_ENCAPSULATION_ID_CDR_BE, 
+            md5Stream,
+            RTI_FALSE,
+            RTI_CDR_ENCAPSULATION_ID_CDR_BE,
             RTI_TRUE,
-            NULL)) 
+            NULL))
         {
             RTICdrStream_popState(md5Stream, &cdrState);
             RTIOsapiHeap_freeBuffer(buffer);
             return RTI_FALSE;
-        }        
-    }   
+        }
+    }
 
-    if (PRESTypePluginDefaultEndpointData_getMaxSizeSerializedKey(endpoint_data) > 
+    if (PRESTypePluginDefaultEndpointData_getMaxSizeSerializedKey(endpoint_data) >
     (unsigned int)(MIG_RTPS_KEY_HASH_MAX_LENGTH) ||
     PRESTypePluginDefaultEndpointData_forceMD5KeyHash(endpoint_data)) {
         RTICdrStream_computeMD5(md5Stream, keyhash->value);
     } else {
         RTIOsapiMemory_zero(keyhash->value,MIG_RTPS_KEY_HASH_MAX_LENGTH);
         RTIOsapiMemory_copy(
-            keyhash->value, 
-            RTICdrStream_getBuffer(md5Stream), 
+            keyhash->value,
+            RTICdrStream_getBuffer(md5Stream),
             RTICdrStream_getCurrentPositionOffset(md5Stream));
     }
 
@@ -1294,14 +1293,14 @@ ConnextStaticRawDataPlugin_instance_to_keyhash(
     return RTI_TRUE;
 }
 
-RTIBool 
+RTIBool
 ConnextStaticRawDataPlugin_serialized_sample_to_keyhash(
     PRESTypePluginEndpointData endpoint_data,
-    struct RTICdrStream *stream, 
+    struct RTICdrStream *stream,
     DDS_KeyHash_t *keyhash,
     RTIBool deserialize_encapsulation,
-    void *endpoint_plugin_qos) 
-{   
+    void *endpoint_plugin_qos)
+{
     char * position = NULL;
 
     RTIBool done = RTI_FALSE;
@@ -1337,14 +1336,14 @@ ConnextStaticRawDataPlugin_serialized_sample_to_keyhash(
     done = RTI_TRUE;
   fin:
     if(!error) {
-        if (done != RTI_TRUE && 
+        if (done != RTI_TRUE &&
         RTICdrStream_getRemainder(stream) >=
         RTI_CDR_PARAMETER_HEADER_ALIGNMENT) {
-            return RTI_FALSE;   
+            return RTI_FALSE;
         }
     } else {
         return RTI_FALSE;
-    } 
+    }
 
     if(deserialize_encapsulation) {
         RTICdrStream_restoreAlignment(stream,position);
@@ -1361,8 +1360,8 @@ ConnextStaticRawDataPlugin_serialized_sample_to_keyhash(
 /* ------------------------------------------------------------------------
 * Plug-in Installation Methods
 * ------------------------------------------------------------------------ */
-struct PRESTypePlugin *ConnextStaticRawDataPlugin_new(void) 
-{ 
+struct PRESTypePlugin *ConnextStaticRawDataPlugin_new(void)
+{
   return NULL;
 }
 
@@ -1493,5 +1492,5 @@ void
 ConnextStaticRawDataPlugin_delete(struct PRESTypePlugin *plugin)
 {
     RTIOsapiHeap_freeStructure(plugin);
-} 
-#undef RTI_CDR_CURRENT_SUBMODULE 
+}
+#undef RTI_CDR_CURRENT_SUBMODULE
