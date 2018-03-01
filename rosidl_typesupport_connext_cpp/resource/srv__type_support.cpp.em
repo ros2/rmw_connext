@@ -65,8 +65,8 @@ void * create_requester__@(spec.srv_name)(
   void * (*allocator)(size_t))
 {
   using RequesterType = connext::Requester<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   if (!untyped_participant || !service_name || !untyped_reader) {
     return NULL;
   }
@@ -118,8 +118,8 @@ const char * destroy_requester__@(spec.srv_name)(
   void (*deallocator)(void *))
 {
   using RequesterType = connext::Requester<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   auto requester = static_cast<RequesterType *>(untyped_requester);
 
   requester->~RequesterType();
@@ -134,8 +134,8 @@ int64_t send_request__@(spec.srv_name)(
 {
   using ROSRequestType = @(spec.pkg_name)::srv::@(spec.srv_name)_Request;
   using RequesterType = connext::Requester<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   connext::WriteSample<
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   const ROSRequestType & ros_request = *(
@@ -161,8 +161,8 @@ void * create_replier__@(spec.srv_name)(
   void * (*allocator)(size_t))
 {
   using ReplierType = connext::Replier<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   if (!untyped_participant || !service_name || !untyped_reader) {
     return NULL;
   }
@@ -216,8 +216,8 @@ const char * destroy_replier__@(spec.srv_name)(
   void (*deallocator)(void *))
 {
   using ReplierType = connext::Replier<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   auto replier = static_cast<ReplierType *>(untyped_replier);
 
   replier->~ReplierType();
@@ -232,8 +232,8 @@ bool take_request__@(spec.srv_name)(
   void * untyped_ros_request)
 {
   using ReplierType = connext::Replier<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   using ROSRequestType = @(spec.pkg_name)::srv::@(spec.srv_name)_Request;
   if (!untyped_replier || !request_header || !untyped_ros_request) {
     return false;
@@ -339,8 +339,8 @@ get_request_datawriter__@(spec.srv_name)(void * untyped_requester)
     return NULL;
   }
   using RequesterType = connext::Requester<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
   return requester->get_request_datawriter();
 }
@@ -352,8 +352,8 @@ get_reply_datareader__@(spec.srv_name)(void * untyped_requester)
     return NULL;
   }
   using RequesterType = connext::Requester<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   RequesterType * requester = reinterpret_cast<RequesterType *>(untyped_requester);
   return requester->get_reply_datareader();
 }
@@ -365,8 +365,8 @@ get_request_datareader__@(spec.srv_name)(void * untyped_replier)
     return NULL;
   }
   using ReplierType = connext::Replier<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
   return replier->get_request_datareader();
 }
@@ -378,8 +378,8 @@ get_reply_datawriter__@(spec.srv_name)(void * untyped_replier)
     return NULL;
   }
   using ReplierType = connext::Replier<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   ReplierType * replier = reinterpret_cast<ReplierType *>(untyped_replier);
   return replier->get_reply_datawriter();
 }

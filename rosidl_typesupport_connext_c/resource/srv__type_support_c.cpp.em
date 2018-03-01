@@ -101,8 +101,8 @@ int64_t send_request__@(spec.srv_name)(
   const void * untyped_ros_request)
 {
   using RequesterType = connext::Requester<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   connext::WriteSample<
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_> request;
   const rosidl_message_type_support_t * ts =
@@ -157,8 +157,8 @@ bool take_request__@(spec.srv_name)(
   void * untyped_ros_request)
 {
   using ReplierType = connext::Replier<
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
-      @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
+    @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
   if (!untyped_replier || !request_header || !untyped_ros_request) {
     return false;
   }
