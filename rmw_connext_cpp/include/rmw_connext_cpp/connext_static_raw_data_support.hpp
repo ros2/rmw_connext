@@ -7,8 +7,8 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the RTI Connext manual.
 */
 
-#ifndef ConnextStaticRawDataSupport_1689213465_h
-#define ConnextStaticRawDataSupport_1689213465_h
+#ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_RAW_DATA_SUPPORT_HPP_
+#define RMW_CONNEXT_CPP__CONNEXT_STATIC_RAW_DATA_SUPPORT_HPP_
 
 /* Uses */
 #include "rmw_connext_cpp/connext_static_raw_data.hpp"
@@ -19,9 +19,9 @@ or consult the RTI Connext manual.
 
 #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 
-class __declspec(dllimport) DDSTypeSupport;
-class __declspec(dllimport) DDSDataWriter;
-class __declspec(dllimport) DDSDataReader;
+class __declspec (dllimport) DDSTypeSupport;
+class __declspec (dllimport) DDSDataWriter;
+class __declspec (dllimport) DDSDataReader;
 
 #endif
 
@@ -49,75 +49,83 @@ public:
   ConnextStaticRawDataTypeSupport(bool osrf)
   {
     (void) osrf;
-  };
+  }
 
   ~ConnextStaticRawDataTypeSupport();
 
   static DDS_ReturnCode_t register_type(
-      DDSDomainParticipant* participant,
-      const char* type_name = "ConnextStaticRawData");
+    DDSDomainParticipant * participant,
+    const char * type_name = "ConnextStaticRawData");
 
   static DDS_ReturnCode_t unregister_type(
-      DDSDomainParticipant* participant,
-      const char* type_name = "ConnextStaticRawData");
+    DDSDomainParticipant * participant,
+    const char * type_name = "ConnextStaticRawData");
 
-  static const char* get_type_name();
+  static const char * get_type_name();
 
-  static ConnextStaticRawData* create_data_ex(DDS_Boolean allocatePointers);
+  static ConnextStaticRawData * create_data_ex(DDS_Boolean allocatePointers);
 
-  static ConnextStaticRawData* create_data(
-      const DDS_TypeAllocationParams_t & alloc_params =
-      DDS_TYPE_ALLOCATION_PARAMS_DEFAULT);
+  static ConnextStaticRawData * create_data(
+    const DDS_TypeAllocationParams_t & alloc_params =
+    DDS_TYPE_ALLOCATION_PARAMS_DEFAULT);
 
-  static DDS_ReturnCode_t delete_data_ex(ConnextStaticRawData* a_data,
-      DDS_Boolean deletePointers);
+  static DDS_ReturnCode_t delete_data_ex(
+    ConnextStaticRawData * a_data,
+    DDS_Boolean deletePointers);
 
   static DDS_ReturnCode_t delete_data(
-      ConnextStaticRawData* a_data,
-      const DDS_TypeDeallocationParams_t & dealloc_params =
-      DDS_TYPE_DEALLOCATION_PARAMS_DEFAULT);
+    ConnextStaticRawData * a_data,
+    const DDS_TypeDeallocationParams_t & dealloc_params =
+    DDS_TYPE_DEALLOCATION_PARAMS_DEFAULT);
 
-  static void print_data(const ConnextStaticRawData* a_data);
+  static void print_data(const ConnextStaticRawData * a_data);
 
-  static DDS_ReturnCode_t copy_data(ConnextStaticRawData* dst_data, const ConnextStaticRawData* src_data);
+  static DDS_ReturnCode_t copy_data(
+    ConnextStaticRawData * dst_data, const ConnextStaticRawData * src_data);
 
-  static DDS_ReturnCode_t initialize_data_ex(ConnextStaticRawData* a_data,
-      DDS_Boolean allocatePointers);
+  static DDS_ReturnCode_t initialize_data_ex(
+    ConnextStaticRawData * a_data,
+    DDS_Boolean allocatePointers);
 
   static DDS_ReturnCode_t initialize_data(
-      ConnextStaticRawData* a_data,
-      const DDS_TypeAllocationParams_t & alloc_params =
-      DDS_TYPE_ALLOCATION_PARAMS_DEFAULT);
+    ConnextStaticRawData * a_data,
+    const DDS_TypeAllocationParams_t & alloc_params =
+    DDS_TYPE_ALLOCATION_PARAMS_DEFAULT);
 
-  static DDS_ReturnCode_t finalize_data_ex(ConnextStaticRawData* a_data,
-      DDS_Boolean deletePointers);
+  static DDS_ReturnCode_t finalize_data_ex(
+    ConnextStaticRawData * a_data,
+    DDS_Boolean deletePointers);
+
   static DDS_ReturnCode_t finalize_data(
-      ConnextStaticRawData* a_data,
-      const DDS_TypeDeallocationParams_t & dealloc_params =
-      DDS_TYPE_DEALLOCATION_PARAMS_DEFAULT);
+    ConnextStaticRawData * a_data,
+    const DDS_TypeDeallocationParams_t & dealloc_params =
+    DDS_TYPE_DEALLOCATION_PARAMS_DEFAULT);
 
-  DDSDataReader* create_datareaderI(DDSDataReader* dataReader);
-  DDS_ReturnCode_t destroy_datareaderI(DDSDataReader* dataReader);
-  DDSDataWriter* create_datawriterI(DDSDataWriter* dataWriter);
-  DDS_ReturnCode_t destroy_datawriterI(DDSDataWriter* dataWriter);
+  DDSDataReader * create_datareaderI(DDSDataReader * dataReader);
 
-  static DDS_TypeCode* get_typecode();
+  DDS_ReturnCode_t destroy_datareaderI(DDSDataReader * dataReader);
+
+  DDSDataWriter * create_datawriterI(DDSDataWriter * dataWriter);
+
+  DDS_ReturnCode_t destroy_datawriterI(DDSDataWriter * dataWriter);
+
+  static DDS_TypeCode * get_typecode();
 
   static DDS_ReturnCode_t serialize_data_to_cdr_buffer(
-      char * buffer,
-      unsigned int & length,
-      const ConnextStaticRawData *a_data);
+    char * buffer,
+    unsigned int & length,
+    const ConnextStaticRawData * a_data);
 
   static DDS_ReturnCode_t deserialize_data_from_cdr_buffer(
-      ConnextStaticRawData *a_data,
-      const char * buffer,
-      unsigned int length);
+    ConnextStaticRawData * a_data,
+    const char * buffer,
+    unsigned int length);
 
   static DDS_ReturnCode_t data_to_string(
-      ConnextStaticRawData *sample,
-      char *str,
-      DDS_UnsignedLong& str_size,
-      const DDS_PrintFormatProperty& property);
+    ConnextStaticRawData * sample,
+    char * str,
+    DDS_UnsignedLong & str_size,
+    const DDS_PrintFormatProperty & property);
 
   static void finalize();
 
@@ -142,4 +150,4 @@ ConnextStaticRawDataSupport_register_external_type(
 #define NDDSUSERDllExport
 #endif
 
-#endif  /* ConnextStaticRawDataSupport_1689213465_h */
+#endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_RAW_DATA_SUPPORT_HPP_

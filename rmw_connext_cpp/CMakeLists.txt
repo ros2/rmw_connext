@@ -128,8 +128,26 @@ if(WIN32)
 endif()
 
 if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
+  find_package(ament_cmake_cppcheck REQUIRED)
+  find_package(ament_cmake_cpplint REQUIRED)
+  find_package(ament_cmake_lint_cmake REQUIRED)
+  find_package(ament_cmake_uncrustify REQUIRED)
+  find_package(ament_cmake_copyright REQUIRED)
+  ament_cppcheck()
+  ament_cpplint("FILTERS" "-legal/copyright")
+  ament_lint_cmake()
+  ament_uncrustify()
+  ament_copyright(
+    "--exclude"
+    "connext_static_raw_data.hpp"
+    "connext_static_raw_data_plugin.hpp"
+    "connext_static_raw_data_support.hpp"
+    "connext_static_raw_data.cpp"
+    "connext_static_raw_data_plugin.cpp"
+    "connext_static_raw_data_support.cpp"
+  )
+
+  # ament_lint_auto_find_test_dependencies()
 endif()
 
 ament_package(CONFIG_EXTRAS "${PROJECT_NAME}-extras.cmake")

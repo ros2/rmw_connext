@@ -7,22 +7,15 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the RTI Connext manual.
 */
 
-#ifndef ConnextStaticRawData_1689213465_h
-#define ConnextStaticRawData_1689213465_h
+#ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_RAW_DATA_HPP_
+#define RMW_CONNEXT_CPP__CONNEXT_STATIC_RAW_DATA_HPP_
 
-#ifndef NDDS_STANDALONE_TYPE
-#ifndef ndds_cpp_h
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
-#endif
-#else
-#include "ndds_standalone_type.h"
-#endif
 
-static const DDS_Long KEY_HASH_LENGTH_16= 16;
+static const DDS_Long KEY_HASH_LENGTH_16 = 16;
+
 extern "C" {
-
-    extern const char *ConnextStaticRawDataTYPENAME;
-
+extern const char * ConnextStaticRawDataTYPENAME;
 }
 
 struct ConnextStaticRawDataSeq;
@@ -34,18 +27,17 @@ class ConnextStaticRawDataDataReader;
 
 class ConnextStaticRawData
 {
-  public:
-    typedef struct ConnextStaticRawDataSeq Seq;
-    #ifndef NDDS_STANDALONE_TYPE
-    typedef ConnextStaticRawDataTypeSupport TypeSupport;
-    typedef ConnextStaticRawDataDataWriter DataWriter;
-    typedef ConnextStaticRawDataDataReader DataReader;
-    #endif
+public:
+  typedef struct ConnextStaticRawDataSeq Seq;
+  #ifndef NDDS_STANDALONE_TYPE
+  typedef ConnextStaticRawDataTypeSupport TypeSupport;
+  typedef ConnextStaticRawDataDataWriter DataWriter;
+  typedef ConnextStaticRawDataDataReader DataReader;
+  #endif
 
-    DDS_Octet   key_hash [(KEY_HASH_LENGTH_16)];
-    DDS_OctetSeq  serialized_key ;
-    DDS_OctetSeq  serialized_data ;
-
+  DDS_Octet key_hash[(KEY_HASH_LENGTH_16)];
+  DDS_OctetSeq serialized_key;
+  DDS_OctetSeq serialized_data;
 };
 #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 /* If the code is building on Windows, start exporting symbols.
@@ -54,44 +46,44 @@ class ConnextStaticRawData
 #define NDDSUSERDllExport __declspec(dllexport)
 #endif
 
-NDDSUSERDllExport DDS_TypeCode* ConnextStaticRawData_get_typecode(void); /* Type code */
+NDDSUSERDllExport DDS_TypeCode * ConnextStaticRawData_get_typecode(void);
 
 DDS_SEQUENCE(ConnextStaticRawDataSeq, ConnextStaticRawData);
 
 NDDSUSERDllExport
 RTIBool ConnextStaticRawData_initialize(
-    ConnextStaticRawData* self);
+  ConnextStaticRawData * self);
 
 NDDSUSERDllExport
 RTIBool ConnextStaticRawData_initialize_ex(
-    ConnextStaticRawData* self,RTIBool allocatePointers,RTIBool allocateMemory);
+  ConnextStaticRawData * self, RTIBool allocatePointers, RTIBool allocateMemory);
 
 NDDSUSERDllExport
 RTIBool ConnextStaticRawData_initialize_w_params(
-    ConnextStaticRawData* self,
-    const struct DDS_TypeAllocationParams_t * allocParams);
+  ConnextStaticRawData * self,
+  const struct DDS_TypeAllocationParams_t * allocParams);
 
 NDDSUSERDllExport
 void ConnextStaticRawData_finalize(
-    ConnextStaticRawData* self);
+  ConnextStaticRawData * self);
 
 NDDSUSERDllExport
 void ConnextStaticRawData_finalize_ex(
-    ConnextStaticRawData* self,RTIBool deletePointers);
+  ConnextStaticRawData * self, RTIBool deletePointers);
 
 NDDSUSERDllExport
 void ConnextStaticRawData_finalize_w_params(
-    ConnextStaticRawData* self,
-    const struct DDS_TypeDeallocationParams_t * deallocParams);
+  ConnextStaticRawData * self,
+  const struct DDS_TypeDeallocationParams_t * deallocParams);
 
 NDDSUSERDllExport
 void ConnextStaticRawData_finalize_optional_members(
-    ConnextStaticRawData* self, RTIBool deletePointers);
+  ConnextStaticRawData * self, RTIBool deletePointers);
 
 NDDSUSERDllExport
 RTIBool ConnextStaticRawData_copy(
-    ConnextStaticRawData* dst,
-    const ConnextStaticRawData* src);
+  ConnextStaticRawData * dst,
+  const ConnextStaticRawData * src);
 
 #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 /* If the code is building on Windows, stop exporting symbols.
@@ -100,4 +92,4 @@ RTIBool ConnextStaticRawData_copy(
 #define NDDSUSERDllExport
 #endif
 
-#endif /* ConnextStaticRawData */
+#endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_RAW_DATA_HPP_
