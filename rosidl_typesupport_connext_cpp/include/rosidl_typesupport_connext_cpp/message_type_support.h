@@ -27,7 +27,7 @@ typedef struct message_type_support_callbacks_t
   const char * package_name;
   const char * message_name;
   // Function to register type with given dds_participant
-  DDS_TypeCode * (* get_type_code)(void);
+  DDS_TypeCode * (*get_type_code)(void);
   // Function to publish a ROS message with a given DDS data_writer
   //bool (* publish)(void * dds_data_writer, ConnextStaticCDRStream * cdr_stream);
   // Function to take a ROS message from a dds data reader
