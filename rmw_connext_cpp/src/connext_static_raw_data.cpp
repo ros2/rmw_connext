@@ -42,7 +42,7 @@ DDS_TypeCode * ConnextStaticRawData_get_typecode()
   static DDS_TypeCode_Member ConnextStaticRawData_g_tc_members[3] =
   {
     {
-      (char *)"key_hash",    /* Member name */  // NOLINT
+      (char *)"key_hash", /* Member name */     // NOLINT
       {
         0,      /* Representation ID */
         DDS_BOOLEAN_FALSE,      /* Is a pointer? */
@@ -59,7 +59,7 @@ DDS_TypeCode * ConnextStaticRawData_get_typecode()
       NULL    /* Ignored */
     },
     {
-      (char *)"serialized_key",    /* Member name */  // NOLINT
+      (char *)"serialized_key", /* Member name */     // NOLINT
       {
         1,      /* Representation ID */
         DDS_BOOLEAN_FALSE,      /* Is a pointer? */
@@ -76,7 +76,7 @@ DDS_TypeCode * ConnextStaticRawData_get_typecode()
       NULL    /* Ignored */
     },
     {
-      (char *)"serialized_data",    /* Member name */  // NOLINT
+      (char *)"serialized_data", /* Member name */     // NOLINT
       {
         2,      /* Representation ID */
         DDS_BOOLEAN_FALSE,      /* Is a pointer? */
@@ -99,7 +99,7 @@ DDS_TypeCode * ConnextStaticRawData_get_typecode()
       DDS_TK_STRUCT,    /* Kind */
       DDS_BOOLEAN_FALSE,     /* Ignored */
       -1,     /*Ignored*/
-      (char *)"ConnextStaticRawData",     /* Name */  // NOLINT
+      (char *)"ConnextStaticRawData", /* Name */      // NOLINT
       NULL,     /* Ignored */
       0,     /* Ignored */
       0,     /* Ignored */
@@ -113,20 +113,21 @@ DDS_TypeCode * ConnextStaticRawData_get_typecode()
     return &ConnextStaticRawData_g_tc;
   }
 
-  ConnextStaticRawData_g_tc_key_hash_array._data._typeCode = (RTICdrTypeCode *)&DDS_g_tc_octet;
+  ConnextStaticRawData_g_tc_key_hash_array._data._typeCode =
+    (RTICdrTypeCode *)&DDS_g_tc_octet;  // NOLINT
 
   ConnextStaticRawData_g_tc_serialized_key_sequence._data._typeCode =
-    (RTICdrTypeCode *)&DDS_g_tc_octet;
+    (RTICdrTypeCode *)&DDS_g_tc_octet;  // NOLINT
 
   ConnextStaticRawData_g_tc_serialized_data_sequence._data._typeCode =
-    (RTICdrTypeCode *)&DDS_g_tc_octet;
+    (RTICdrTypeCode *)&DDS_g_tc_octet;  // NOLINT
 
   ConnextStaticRawData_g_tc_members[0]._representation._typeCode =
-    (RTICdrTypeCode *)&ConnextStaticRawData_g_tc_key_hash_array;
+    (RTICdrTypeCode *)&ConnextStaticRawData_g_tc_key_hash_array;  // NOLINT
   ConnextStaticRawData_g_tc_members[1]._representation._typeCode =
-    (RTICdrTypeCode *)&ConnextStaticRawData_g_tc_serialized_key_sequence;
+    (RTICdrTypeCode *)&ConnextStaticRawData_g_tc_serialized_key_sequence;  // NOLINT
   ConnextStaticRawData_g_tc_members[2]._representation._typeCode =
-    (RTICdrTypeCode *)&ConnextStaticRawData_g_tc_serialized_data_sequence;
+    (RTICdrTypeCode *)&ConnextStaticRawData_g_tc_serialized_data_sequence;  // NOLINT
 
   is_initialized = RTI_TRUE;
 
@@ -142,7 +143,6 @@ RTIBool ConnextStaticRawData_initialize(
 RTIBool ConnextStaticRawData_initialize_ex(
   ConnextStaticRawData * sample, RTIBool allocatePointers, RTIBool allocateMemory)
 {
-
   struct DDS_TypeAllocationParams_t allocParams =
     DDS_TYPE_ALLOCATION_PARAMS_DEFAULT;
 
@@ -151,13 +151,11 @@ RTIBool ConnextStaticRawData_initialize_ex(
 
   return ConnextStaticRawData_initialize_w_params(
     sample, &allocParams);
-
 }
 
 RTIBool ConnextStaticRawData_initialize_w_params(
   ConnextStaticRawData * sample, const struct DDS_TypeAllocationParams_t * allocParams)
 {
-
   void * buffer = NULL;
   if (buffer) {}   /* To avoid warnings */
 
@@ -197,7 +195,6 @@ RTIBool ConnextStaticRawData_initialize_w_params(
 void ConnextStaticRawData_finalize(
   ConnextStaticRawData * sample)
 {
-
   ConnextStaticRawData_finalize_ex(sample, RTI_TRUE);
 }
 
@@ -220,7 +217,6 @@ void ConnextStaticRawData_finalize_ex(
 void ConnextStaticRawData_finalize_w_params(
   ConnextStaticRawData * sample, const struct DDS_TypeDeallocationParams_t * deallocParams)
 {
-
   if (sample == NULL) {
     return;
   }
@@ -232,7 +228,6 @@ void ConnextStaticRawData_finalize_w_params(
   DDS_OctetSeq_finalize(&sample->serialized_key);
 
   DDS_OctetSeq_finalize(&sample->serialized_data);
-
 }
 
 void ConnextStaticRawData_finalize_optional_members(
@@ -250,7 +245,6 @@ void ConnextStaticRawData_finalize_optional_members(
 
   deallocParamsTmp.delete_pointers = (DDS_Boolean)deletePointers;
   deallocParamsTmp.delete_optional_members = DDS_BOOLEAN_TRUE;
-
 }
 
 RTIBool ConnextStaticRawData_copy(
@@ -258,7 +252,6 @@ RTIBool ConnextStaticRawData_copy(
   const ConnextStaticRawData * src)
 {
   try {
-
     if (dst == NULL || src == NULL) {
       return RTI_FALSE;
     }

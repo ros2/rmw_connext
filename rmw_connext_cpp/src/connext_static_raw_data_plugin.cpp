@@ -110,7 +110,6 @@ ConnextStaticRawDataPluginSupport_destroy_data_w_params(
   ConnextStaticRawData * sample,
   const struct DDS_TypeDeallocationParams_t * dealloc_params)
 {
-
   ConnextStaticRawData_finalize_w_params(sample, dealloc_params);
 
   delete sample;
@@ -121,7 +120,6 @@ void
 ConnextStaticRawDataPluginSupport_destroy_data_ex(
   ConnextStaticRawData * sample, RTIBool deallocate_pointers)
 {
-
   ConnextStaticRawData_finalize_ex(sample, deallocate_pointers);
 
   delete sample;
@@ -132,9 +130,7 @@ void
 ConnextStaticRawDataPluginSupport_destroy_data(
   ConnextStaticRawData * sample)
 {
-
   ConnextStaticRawDataPluginSupport_destroy_data_ex(sample, RTI_TRUE);
-
 }
 
 RTIBool
@@ -151,7 +147,6 @@ ConnextStaticRawDataPluginSupport_print_data(
   const char * desc,
   unsigned int indent_level)
 {
-
   RTICdrType_printIndent(indent_level);
 
   if (desc != NULL) {
@@ -199,8 +194,8 @@ ConnextStaticRawDataPluginSupport_print_data(
       (RTICdrTypePrintFunction)RTICdrType_printOctet,
       "serialized_data", indent_level + 1);
   }
-
 }
+
 ConnextStaticRawData *
 ConnextStaticRawDataPluginSupport_create_key_ex(RTIBool allocate_pointers)
 {
@@ -227,16 +222,13 @@ ConnextStaticRawDataPluginSupport_destroy_key_ex(
 
   delete key;
   key = NULL;
-
 }
 
 void
 ConnextStaticRawDataPluginSupport_destroy_key(
   ConnextStaticRawDataKeyHolder * key)
 {
-
   ConnextStaticRawDataPluginSupport_destroy_key_ex(key, RTI_TRUE);
-
 }
 
 /* ----------------------------------------------------------------------------
@@ -258,14 +250,12 @@ ConnextStaticRawDataPlugin_on_participant_attached(
   if (type_code) {}   /* To avoid warnings */
 
   return PRESTypePluginDefaultParticipantData_new(participant_info);
-
 }
 
 void
 ConnextStaticRawDataPlugin_on_participant_detached(
   PRESTypePluginParticipantData participant_data)
 {
-
   PRESTypePluginDefaultParticipantData_delete(participant_data);
 }
 
@@ -337,7 +327,6 @@ void
 ConnextStaticRawDataPlugin_on_endpoint_detached(
   PRESTypePluginEndpointData endpoint_data)
 {
-
   PRESTypePluginDefaultEndpointData_delete(endpoint_data);
 }
 
@@ -347,7 +336,6 @@ ConnextStaticRawDataPlugin_return_sample(
   ConnextStaticRawData * sample,
   void * handle)
 {
-
   ConnextStaticRawData_finalize_optional_members(sample, RTI_TRUE);
 
   PRESTypePluginDefaultEndpointData_returnSample(
@@ -692,7 +680,6 @@ ConnextStaticRawDataPlugin_deserialize(
   RTIBool deserialize_sample,
   void * endpoint_plugin_qos)
 {
-
   RTIBool result;
   const char * METHOD_NAME = "ConnextStaticRawDataPlugin_deserialize";
   if (drop_sample) {}   /* To avoid warnings */
@@ -708,12 +695,10 @@ ConnextStaticRawDataPlugin_deserialize(
     }
   }
   if (!result && stream->_xTypesState.unassignable) {
-
     RTICdrLog_exception(
       METHOD_NAME,
       &RTI_CDR_LOG_UNASSIGNABLE_SAMPLE_OF_TYPE_s,
       "ConnextStaticRawData");
-
   }
 
   return result;
@@ -742,7 +727,6 @@ RTIBool ConnextStaticRawDataPlugin_skip(
   }
 
   if (skip_sample) {
-
     if (!RTICdrStream_skipPrimitiveArray(
         stream, ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_TYPE))
     {
@@ -793,7 +777,6 @@ ConnextStaticRawDataPlugin_get_serialized_sample_max_size_ex(
   RTIEncapsulationId encapsulation_id,
   unsigned int current_alignment)
 {
-
   if (endpoint_data) {}   /* To avoid warnings */
   if (include_encapsulation) {}
   if (encapsulation_id) {}
@@ -804,7 +787,6 @@ ConnextStaticRawDataPlugin_get_serialized_sample_max_size_ex(
   }
 
   return RTI_CDR_MAX_SERIALIZED_SIZE;
-
 }
 
 unsigned int
@@ -834,7 +816,6 @@ ConnextStaticRawDataPlugin_get_serialized_sample_min_size(
   RTIEncapsulationId encapsulation_id,
   unsigned int current_alignment)
 {
-
   unsigned int initial_alignment = current_alignment;
 
   unsigned int encapsulation_size = current_alignment;
@@ -842,7 +823,6 @@ ConnextStaticRawDataPlugin_get_serialized_sample_min_size(
   if (endpoint_data) {}   /* To avoid warnings */
 
   if (include_encapsulation) {
-
     if (!RTICdrEncapsulation_validEncapsulationId(encapsulation_id)) {
       return 1;
     }
@@ -879,7 +859,6 @@ ConnextStaticRawDataPlugin_get_serialized_sample_size(
   unsigned int current_alignment,
   const ConnextStaticRawData * sample)
 {
-
   unsigned int initial_alignment = current_alignment;
 
   unsigned int encapsulation_size = current_alignment;
@@ -896,7 +875,6 @@ ConnextStaticRawDataPlugin_get_serialized_sample_size(
   }
 
   if (include_encapsulation) {
-
     if (!RTICdrEncapsulation_validEncapsulationId(encapsulation_id)) {
       return 1;
     }
@@ -966,13 +944,11 @@ ConnextStaticRawDataPlugin_serialize_key(
   }
 
   if (serialize_key) {
-
     if (!RTICdrStream_serializePrimitiveArray(
         stream, (void *) sample->key_hash, ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_TYPE))
     {
       return RTI_FALSE;
     }
-
   }
 
   if (serialize_encapsulation) {
@@ -991,7 +967,6 @@ RTIBool ConnextStaticRawDataPlugin_deserialize_key_sample(
   void * endpoint_plugin_qos)
 {
   try {
-
     char * position = NULL;
 
     if (endpoint_data) {}     /* To avoid warnings */
@@ -1006,13 +981,11 @@ RTIBool ConnextStaticRawDataPlugin_deserialize_key_sample(
       position = RTICdrStream_resetAlignment(stream);
     }
     if (deserialize_key) {
-
       if (!RTICdrStream_deserializePrimitiveArray(
           stream, (void *) sample->key_hash, ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_TYPE))
       {
         return RTI_FALSE;
       }
-
     }
 
     if (deserialize_encapsulation) {
@@ -1048,7 +1021,6 @@ RTIBool ConnextStaticRawDataPlugin_deserialize_key(
   }
 
   return result;
-
 }
 
 unsigned int
@@ -1059,7 +1031,6 @@ ConnextStaticRawDataPlugin_get_serialized_key_max_size_ex(
   RTIEncapsulationId encapsulation_id,
   unsigned int current_alignment)
 {
-
   unsigned int initial_alignment = current_alignment;
 
   unsigned int encapsulation_size = current_alignment;
@@ -1136,7 +1107,6 @@ ConnextStaticRawDataPlugin_serialized_sample_to_key(
   }
 
   if (deserialize_key) {
-
     if (!RTICdrStream_deserializePrimitiveArray(
         stream, (void *) sample->key_hash, ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_TYPE))
     {
@@ -1193,7 +1163,6 @@ ConnextStaticRawDataPlugin_instance_to_key(
   ConnextStaticRawDataKeyHolder * dst,
   const ConnextStaticRawData * src)
 {
-
   if (endpoint_data) {}   /* To avoid warnings */
 
   if (!RTICdrType_copyArray(
@@ -1210,7 +1179,6 @@ ConnextStaticRawDataPlugin_key_to_instance(
   ConnextStaticRawData * dst, const
   ConnextStaticRawDataKeyHolder * src)
 {
-
   if (endpoint_data) {}   /* To avoid warnings */
   if (!RTICdrType_copyArray(
       dst->key_hash, src->key_hash, ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_SIZE))
