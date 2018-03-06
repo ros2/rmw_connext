@@ -101,7 +101,8 @@ take(
   if (!ignore_sample) {
     cdr_stream->message_length = dds_messages[0].serialized_data.length();
     // TODO(karsten1987): This malloc has to go!
-    cdr_stream->raw_message = (char *) malloc(cdr_stream->message_length * sizeof(char));
+    cdr_stream->raw_message =
+      reinterpret_cast<char *>(malloc(cdr_stream->message_length * sizeof(char)));
     for (unsigned int i = 0; i < cdr_stream->message_length; ++i) {
       cdr_stream->raw_message[i] = dds_messages[0].serialized_data[i];
     }
@@ -117,7 +118,6 @@ take(
 
 extern "C"
 {
-
 rmw_ret_t
 _take(
   const rmw_subscription_t * subscription,
