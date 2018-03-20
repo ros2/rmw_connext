@@ -16,11 +16,13 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw_connext_cpp/connext_static_raw_data_support.hpp"
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
+
+// include patched generated code from the build folder
+#include "connext_static_raw_dataSupport.h"
 
 bool
 publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)

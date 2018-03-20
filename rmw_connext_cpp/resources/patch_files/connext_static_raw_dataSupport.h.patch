@@ -1,5 +1,14 @@
 --- a/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataSupport.h
 +++ b/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataSupport.h
+@@ -15,7 +15,7 @@ or consult the RTI Connext manual.
+ #include "connext_static_raw_data.h"
+ 
+ #ifndef ndds_cpp_h
+-#include "ndds/ndds_cpp.h"
++#include "rmw_connext_shared_cpp/ndds_include.hpp"
+ #endif
+ 
+ #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 @@ -44,13 +44,106 @@ implementing generics in C and C++.
  
  #endif
@@ -110,4 +119,3 @@
  #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
  /* If the code is building on Windows, stop exporting symbols.
  */
-

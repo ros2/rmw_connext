@@ -1,5 +1,14 @@
 --- a/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataPlugin.cxx
 +++ b/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataPlugin.cxx
+@@ -11,7 +11,7 @@ or consult the RTI Connext manual.
+ #include <string.h>
+ 
+ #ifndef ndds_cpp_h
+-#include "ndds/ndds_cpp.h"
++#include "rmw_connext_shared_cpp/ndds_include.hpp"
+ #endif
+ 
+ #ifndef osapi_type_h
 @@ -379,74 +379,81 @@ ConnextStaticRawDataPlugin_serialize(
      RTIBool serialize_sample, 
      void *endpoint_plugin_qos)

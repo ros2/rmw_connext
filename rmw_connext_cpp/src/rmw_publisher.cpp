@@ -23,12 +23,14 @@
 #include "rmw_connext_shared_cpp/qos.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
-#include "rmw_connext_cpp/connext_static_raw_data_support.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
 #include "process_topic_and_service_names.hpp"
 #include "type_support_common.hpp"
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
+
+// include patched generated code from the build folder
+#include "connext_static_raw_dataSupport.h"
 
 // Uncomment this to get extra console output about discovery.
 // This affects code in this file, but there is a similar variable in:

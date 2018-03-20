@@ -73,18 +73,19 @@ if(NOT "${Connext_DDSGEN_SERVER}" STREQUAL "")
   # because it speeds up the code generation step significantly
   set(_idl_pp "${Connext_DDSGEN_SERVER}")
 endif()
+set(generated_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/generated")
+file(MAKE_DIRECTORY ${generated_directory})
 set(generated_files
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_data.cxx
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_data.h
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_dataPlugin.cxx
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_dataPlugin.h
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_dataSupport.cxx
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_dataSupport.h
+  ${generated_directory}/connext_static_raw_data.cxx
+  ${generated_directory}/connext_static_raw_data.h
+  ${generated_directory}/connext_static_raw_dataPlugin.cxx
+  ${generated_directory}/connext_static_raw_dataPlugin.h
+  ${generated_directory}/connext_static_raw_dataSupport.cxx
+  ${generated_directory}/connext_static_raw_dataSupport.h
 )
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/resources/generated")
 add_custom_command(
   OUTPUT ${generated_files}
-  COMMAND "${_idl_pp}" -language C++ -unboundedSupport "connext_static_raw_data.idl" -d ${CMAKE_CURRENT_BINARY_DIR}/resources/generated
+  COMMAND "${_idl_pp}" -language C++ -unboundedSupport "connext_static_raw_data.idl" -d ${generated_directory}
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
   COMMENT "Generating raw type support for RTI Connext (using '${_idl_pp}')"
   VERBATIM
@@ -99,15 +100,16 @@ set(patch_files
   ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataSupport.cxx.patch
   ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataSupport.h.patch
 )
+set(patched_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/patched")
+file(MAKE_DIRECTORY ${patched_directory})
 set(patched_files
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_data.cxx
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_data.h
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_dataPlugin.cxx
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_dataPlugin.h
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_dataSupport.cxx
-  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_dataSupport.h
+  ${patched_directory}/connext_static_raw_data.cxx
+  ${patched_directory}/connext_static_raw_data.h
+  ${patched_directory}/connext_static_raw_dataPlugin.cxx
+  ${patched_directory}/connext_static_raw_dataPlugin.h
+  ${patched_directory}/connext_static_raw_dataSupport.cxx
+  ${patched_directory}/connext_static_raw_dataSupport.h
 )
-file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/resources/patched")
 add_custom_command(
   OUTPUT ${patched_files}
   COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_SOURCE_DIR}/bin/apply-patch.py" --input ${generated_files} --patch ${patch_files} --out ${patched_files}
@@ -159,6 +161,7 @@ ament_target_dependencies(rmw_connext_cpp
   "rosidl_typesupport_connext_c"
   "rosidl_typesupport_connext_cpp"
   "Connext")
+target_include_directories(rmw_connext_cpp PUBLIC ${patched_directory})
 ament_export_libraries(rmw_connext_cpp)
 
 # Causes the visibility macros to use dllexport rather than dllimport
@@ -176,26 +179,8 @@ if(WIN32)
 endif()
 
 if(BUILD_TESTING)
-  find_package(ament_cmake_cppcheck REQUIRED)
-  find_package(ament_cmake_cpplint REQUIRED)
-  find_package(ament_cmake_lint_cmake REQUIRED)
-  find_package(ament_cmake_uncrustify REQUIRED)
-  find_package(ament_cmake_copyright REQUIRED)
-  ament_cppcheck()
-  ament_cpplint("FILTERS" "-legal/copyright")
-  ament_lint_cmake()
-  ament_uncrustify()
-  ament_copyright(
-    "--exclude"
-    "connext_static_raw_data.hpp"
-    "connext_static_raw_data_plugin.hpp"
-    "connext_static_raw_data_support.hpp"
-    "connext_static_raw_data.cpp"
-    "connext_static_raw_data_plugin.cpp"
-    "connext_static_raw_data_support.cpp"
-  )
-
-  # ament_lint_auto_find_test_dependencies()
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
 endif()
 
 ament_package(CONFIG_EXTRAS "${PROJECT_NAME}-extras.cmake")
