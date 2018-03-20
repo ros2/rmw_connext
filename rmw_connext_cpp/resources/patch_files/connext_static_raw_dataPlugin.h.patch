@@ -1,0 +1,11 @@
+--- a/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataPlugin.h
++++ b/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataPlugin.h
+@@ -324,6 +324,9 @@ extern "C" {
+     NDDSUSERDllExport extern struct PRESTypePlugin*
+     ConnextStaticRawDataPlugin_new(void);
+ 
++    NDDS_USER_DLL_EXPORT extern struct PRESTypePlugin*
++    ConnextStaticRawDataPlugin_new_external(struct DDS_TypeCode * external_type_code);
++
+     NDDSUSERDllExport extern void
+     ConnextStaticRawDataPlugin_delete(struct PRESTypePlugin *);
