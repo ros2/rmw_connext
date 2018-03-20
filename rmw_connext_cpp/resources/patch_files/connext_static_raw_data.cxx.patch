@@ -1,0 +1,2 @@
+--- a/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataPlugin.cxx
++++ b/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataPlugin.cxx

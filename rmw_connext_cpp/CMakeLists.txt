@@ -66,12 +66,60 @@ register_rmw_implementation(
   "cpp:rosidl_typesupport_cpp:rosidl_typesupport_connext_cpp"
 )
 
+# generate code for raw data
+set(_idl_pp "${Connext_DDSGEN}")
+if(NOT "${Connext_DDSGEN_SERVER}" STREQUAL "")
+  # use the code generator in server mode when available
+  # because it speeds up the code generation step significantly
+  set(_idl_pp "${Connext_DDSGEN_SERVER}")
+endif()
+set(generated_files
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_data.cxx
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_data.h
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_dataPlugin.cxx
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_dataPlugin.h
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_dataSupport.cxx
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/generated/connext_static_raw_dataSupport.h
+)
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/resources/generated")
+add_custom_command(
+  OUTPUT ${generated_files}
+  COMMAND "${_idl_pp}" -language C++ -unboundedSupport "connext_static_raw_data.idl" -d ${CMAKE_CURRENT_BINARY_DIR}/resources/generated
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+  COMMENT "Generating raw type support for RTI Connext (using '${_idl_pp}')"
+  VERBATIM
+)
+
+# patch the generate code for raw data
+set(patch_files
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_data.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_data.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataPlugin.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataPlugin.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataSupport.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataSupport.h.patch
+)
+set(patched_files
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_data.cxx
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_data.h
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_dataPlugin.cxx
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_dataPlugin.h
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_dataSupport.cxx
+  ${CMAKE_CURRENT_BINARY_DIR}/resources/patched/connext_static_raw_dataSupport.h
+)
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/resources/patched")
+add_custom_command(
+  OUTPUT ${patched_files}
+  COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_SOURCE_DIR}/bin/apply-patch.py" --input ${generated_files} --patch ${patch_files} --out ${patched_files}
+  DEPENDS ${generated_files}
+  COMMENT "Patching raw type support for RTI Connext"
+  VERBATIM
+)
+
 add_library(
   rmw_connext_cpp
   SHARED
-  src/connext_static_raw_data.cpp
-  src/connext_static_raw_data_plugin.cpp
-  src/connext_static_raw_data_support.cpp
+  ${patched_files}
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp
