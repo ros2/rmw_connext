@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+#include <vector>
+
 #include "rcutils/logging_macros.h"
 #include "rcutils/strdup.h"
 
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/key_value.hpp"
 #include "rmw/sanity_checks.h"
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
@@ -67,15 +71,31 @@ get_node_names(
     return RMW_RET_BAD_ALLOC;
   }
 
-
   for (auto i = 1; i < length; ++i) {
     DDS::ParticipantBuiltinTopicData pbtd;
     auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i - 1]);
-    const char * name = pbtd.participant_name.name;
-    if (!name || dds_ret != DDS_RETCODE_OK) {
-      name = "(no name)";
+    std::string name;
+    if (DDS_RETCODE_OK == dds_ret) {
+      auto data = static_cast<unsigned char *>(pbtd.user_data.value.get_contiguous_buffer());
+      std::vector<uint8_t> kv(data, data + pbtd.user_data.value.length());
+      auto map = rmw::impl::cpp::parse_key_value(kv);
+      auto found = map.find("name");
+      if (found != map.end()) {
+        name = std::string(found->second.begin(), found->second.end());
+      }
+      if (name.empty()) {
+        // use participant name if no name was found in the user data
+        if (pbtd.participant_name.name) {
+          name = pbtd.participant_name.name;
+        }
+      }
     }
-    node_names->data[i] = rcutils_strdup(name, allocator);
+    if (name.empty()) {
+      // ignore discovered participants without a name
+      node_names->data[i] = nullptr;
+      continue;
+    }
+    node_names->data[i] = rcutils_strdup(name.c_str(), allocator);
     if (!node_names->data[i]) {
       RMW_SET_ERROR_MSG("could not allocate memory for node name")
       rcutils_ret = rcutils_string_array_fini(node_names);
