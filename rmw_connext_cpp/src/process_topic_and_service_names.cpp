@@ -27,51 +27,26 @@ bool
 _process_topic_name(
   const char * topic_name,
   bool avoid_ros_namespace_conventions,
-  char ** topic_str,
-  char ** partition_str)
+  char ** topic_str)
 {
   bool success = true;
-  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
-  if (rcutils_split_last(topic_name, '/', allocator, &name_tokens) != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
-    success = false;
-    goto end;
-  }
-  if (name_tokens.size == 1) {
-    if (!avoid_ros_namespace_conventions) {
-      *partition_str = DDS_String_dup(ros_topic_prefix);
+  if (!avoid_ros_namespace_conventions) {
+    char * concat_str =
+      rcutils_format_string(allocator, "%s%s", ros_topic_prefix, topic_name);
+    if (!concat_str) {
+      RMW_SET_ERROR_MSG("could not allocate memory for topic string")
+      success = false;
+      goto end;
     }
-    *topic_str = DDS_String_dup(name_tokens.data[0]);
-  } else if (name_tokens.size == 2) {
-    if (avoid_ros_namespace_conventions) {
-      // no ros_topic_prefix, so store the user's namespace directly
-      *partition_str = DDS_String_dup(name_tokens.data[0]);
-    } else {
-      // concat the ros_topic_prefix with the user's namespace
-      char * concat_str =
-        rcutils_format_string(allocator, "%s/%s", ros_topic_prefix, name_tokens.data[0]);
-      if (!concat_str) {
-        RMW_SET_ERROR_MSG("could not allocate memory for partition string")
-        success = false;
-        goto end;
-      }
-      *partition_str = DDS_String_dup(concat_str);
-      allocator.deallocate(concat_str, allocator.state);
-    }
-    *topic_str = DDS_String_dup(name_tokens.data[1]);
+    *topic_str = DDS_String_dup(concat_str);
+    allocator.deallocate(concat_str, allocator.state);
   } else {
-    RMW_SET_ERROR_MSG("incorrectly formatted topic name")
-    success = false;
+    *topic_str = DDS_String_dup(topic_name);
   }
 
 end:
-  // all necessary strings are copied into connext
-  // free that memory
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
-  }
   return success;
 }
 
