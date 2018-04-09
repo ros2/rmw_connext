@@ -92,9 +92,8 @@ rmw_create_client(
   std::string mangled_name = "";
 
   // memory allocations for namespacing
-  char * request_partition_str = nullptr;
-  char * response_partition_str = nullptr;
-  char * service_str = nullptr;
+  char * request_topic_str = nullptr;
+  char * response_topic_str = nullptr;
 
   // Begin inializing elements.
   client = rmw_client_allocate();
@@ -113,13 +112,12 @@ rmw_create_client(
     goto fail;
   }
 
-  // allocating memory for service_str and partition strings
+  // allocating memory for request topic and response topic strings
   if (!_process_service_name(
       service_name,
       qos_profile->avoid_ros_namespace_conventions,
-      &service_str,
-      &request_partition_str,
-      &response_partition_str))
+      &request_topic_str,
+      &response_topic_str))
   {
     goto fail;
   }
@@ -129,12 +127,16 @@ rmw_create_client(
   // This has to be evaluated whether or not to provide a
   // Subscriber/Publisher object directly with preset partitions.
   requester = callbacks->create_requester(
-    participant, service_str, &datareader_qos, &datawriter_qos,
+    participant, request_topic_str, response_topic_str,
+    &datareader_qos, &datawriter_qos,
     reinterpret_cast<void **>(&response_datareader),
     reinterpret_cast<void **>(&request_datawriter),
     &rmw_allocate);
-  DDS_String_free(service_str);
-  service_str = nullptr;
+  DDS_String_free(request_topic_str);
+  request_topic_str = nullptr;
+  DDS_String_free(response_topic_str);
+  response_topic_str = nullptr;
+
   if (!requester) {
     RMW_SET_ERROR_MSG("failed to create requester");
     goto fail;
@@ -162,31 +164,9 @@ rmw_create_client(
     goto fail;
   }
 
-  // we have to set the partition array to length 1
-  // and then set the partition_str in it
-  if (response_partition_str) {
-    if (strlen(response_partition_str) != 0) {
-      subscriber_qos.partition.name.ensure_length(1, 1);
-      // passing ownership to Connext
-      subscriber_qos.partition.name[0] = response_partition_str;
-    } else {
-      DDS_String_free(response_partition_str);
-    }
-  }
   // update attached subscriber
   dds_subscriber->set_qos(subscriber_qos);
 
-  // we cannot assign the partition_ptr again,
-  // as rti takes ownership over it.
-  if (request_partition_str) {
-    if (strlen(request_partition_str) != 0) {
-      publisher_qos.partition.name.ensure_length(1, 1);
-      // passing ownership to Connext
-      publisher_qos.partition.name[0] = request_partition_str;
-    } else {
-      DDS_String_free(request_partition_str);
-    }
-  }
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
 
@@ -220,8 +200,6 @@ rmw_create_client(
   memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
 
   mangled_name =
-    std::string(subscriber_qos.partition.name[0]) +
-    "/" +
     response_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
     response_datareader->get_instance_handle(),
@@ -231,8 +209,6 @@ rmw_create_client(
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
   mangled_name =
-    std::string(publisher_qos.partition.name[0]) +
-    "/" +
     request_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
     request_datawriter->get_instance_handle(),
@@ -244,11 +220,8 @@ rmw_create_client(
 // TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   fprintf(stderr, "****** Creating Client Details: *********\n");
-  fprintf(stderr, "Response DataReader Subscriber partition %s\n",
-    subscriber_qos.partition.name[0]);
   fprintf(stderr, "Subscriber topic %s\n", response_datareader->get_topicdescription()->get_name());
   fprintf(stderr, "Subscriber address %p\n", static_cast<void *>(dds_subscriber));
-  fprintf(stderr, "Request DataWriter Publisher partition %s\n", publisher_qos.partition.name[0]);
   fprintf(stderr, "Publisher topic %s\n", request_datawriter->get_topic()->get_name());
   fprintf(stderr, "Publisher address %p\n", static_cast<void *>(dds_publisher));
   fprintf(stderr, "******\n");
@@ -256,13 +229,13 @@ rmw_create_client(
 
   return client;
 fail:
-  if (request_partition_str) {
-    DDS_String_free(request_partition_str);
-    request_partition_str = nullptr;
+  if (request_topic_str) {
+    DDS_String_free(request_topic_str);
+    request_topic_str = nullptr;
   }
-  if (response_partition_str) {
-    DDS_String_free(response_partition_str);
-    response_partition_str = nullptr;
+  if (response_topic_str) {
+    DDS_String_free(response_topic_str);
+    response_topic_str = nullptr;
   }
   if (client) {
     rmw_client_free(client);

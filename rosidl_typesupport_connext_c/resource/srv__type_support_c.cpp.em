@@ -72,7 +72,8 @@ const rosidl_message_type_support_t *
 
 void * create_requester__@(spec.srv_name)(
   void * untyped_participant,
-  const char * service_name,
+  const char * request_topic_str,
+  const char * response_topic_str,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
@@ -81,7 +82,8 @@ void * create_requester__@(spec.srv_name)(
 {
   return @(spec.pkg_name)::srv::typesupport_connext_cpp::create_requester__@(spec.srv_name)(
     untyped_participant,
-    service_name,
+    request_topic_str,
+    response_topic_str,
     untyped_datareader_qos,
     untyped_datawriter_qos,
     untyped_reader,
@@ -126,7 +128,8 @@ int64_t send_request__@(spec.srv_name)(
 
 void * create_replier__@(spec.srv_name)(
   void * untyped_participant,
-  const char * service_name,
+  const char * request_topic_str,
+  const char * response_topic_str,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
@@ -135,7 +138,8 @@ void * create_replier__@(spec.srv_name)(
 {
   return @(spec.pkg_name)::srv::typesupport_connext_cpp::create_replier__@(spec.srv_name)(
     untyped_participant,
-    service_name,
+    request_topic_str,
+    response_topic_str,
     untyped_datareader_qos,
     untyped_datawriter_qos,
     untyped_reader,

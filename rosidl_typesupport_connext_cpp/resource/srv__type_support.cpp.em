@@ -57,7 +57,8 @@ namespace typesupport_connext_cpp
 
 void * create_requester__@(spec.srv_name)(
   void * untyped_participant,
-  const char * service_name,
+  const char * request_topic_str,
+  const char * response_topic_str,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
@@ -67,7 +68,7 @@ void * create_requester__@(spec.srv_name)(
   using RequesterType = connext::Requester<
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
-  if (!untyped_participant || !service_name || !untyped_reader) {
+  if (!untyped_participant || !request_topic_str || !response_topic_str || !untyped_reader) {
     return NULL;
   }
   auto _allocator = allocator ? allocator : &malloc;
@@ -96,7 +97,8 @@ void * create_requester__@(spec.srv_name)(
   }
   requester_params.publisher(publisher);
   requester_params.subscriber(subscriber);
-  requester_params.service_name(service_name);
+  requester_params.request_topic_name(request_topic_str);
+  requester_params.reply_topic_name(response_topic_str);
   requester_params.datareader_qos(*datareader_qos);
   requester_params.datawriter_qos(*datawriter_qos);
 
@@ -153,7 +155,8 @@ int64_t send_request__@(spec.srv_name)(
 
 void * create_replier__@(spec.srv_name)(
   void * untyped_participant,
-  const char * service_name,
+  const char * request_topic_str,
+  const char * response_topic_str,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
@@ -163,7 +166,7 @@ void * create_replier__@(spec.srv_name)(
   using ReplierType = connext::Replier<
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Request_,
     @(spec.pkg_name)::srv::dds_::@(spec.srv_name)_Response_>;
-  if (!untyped_participant || !service_name || !untyped_reader) {
+  if (!untyped_participant || !request_topic_str || !response_topic_str || !untyped_reader) {
     return NULL;
   }
   auto _allocator = allocator ? allocator : &malloc;
@@ -192,9 +195,8 @@ void * create_replier__@(spec.srv_name)(
   }
   replier_params.publisher(publisher);
   replier_params.subscriber(subscriber);
-  replier_params.service_name(service_name);
-  // replier_params.request_topic_name(std::string(service_name)+"Request");
-  // replier_params.reply_topic_name(std::string(service_name)+"Reply");
+  replier_params.request_topic_name(request_topic_str);
+  replier_params.reply_topic_name(response_topic_str);
   replier_params.datareader_qos(*datareader_qos);
   replier_params.datawriter_qos(*datawriter_qos);
 

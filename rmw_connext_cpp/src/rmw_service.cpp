@@ -92,9 +92,8 @@ rmw_create_service(
   std::string mangled_name = "";
 
   // memory allocations for namespacing
-  char * request_partition_str = nullptr;
-  char * response_partition_str = nullptr;
-  char * service_str = nullptr;
+  char * request_topic_str = nullptr;
+  char * response_topic_str = nullptr;
 
   // Begin initializing elements.
   service = rmw_service_allocate();
@@ -113,24 +112,28 @@ rmw_create_service(
     goto fail;
   }
 
-  // allocating memory for service_str and partition strings
+  // allocating memory for request topic and response topic strings
   if (!_process_service_name(
       service_name,
       qos_profile->avoid_ros_namespace_conventions,
-      &service_str,
-      &request_partition_str,
-      &response_partition_str))
+      &request_topic_str,
+      &response_topic_str))
   {
     goto fail;
   }
 
   replier = callbacks->create_replier(
-    participant, service_str, &datareader_qos, &datawriter_qos,
+    participant, request_topic_str, response_topic_str,
+    &datareader_qos, &datawriter_qos,
     reinterpret_cast<void **>(&request_datareader),
     reinterpret_cast<void **>(&response_datawriter),
     &rmw_allocate);
-  DDS_String_free(service_str);
-  service_str = nullptr;
+
+  DDS_String_free(request_topic_str);
+  request_topic_str = nullptr;
+  DDS_String_free(response_topic_str);
+  response_topic_str = nullptr;
+
   if (!replier) {
     RMW_SET_ERROR_MSG("failed to create replier");
     goto fail;
@@ -165,29 +168,9 @@ rmw_create_service(
     goto fail;
   }
 
-  // we have to set the partition array to length 1
-  // and then set the partition_str in it
-  if (request_partition_str) {
-    if (strlen(request_partition_str) != 0) {
-      subscriber_qos.partition.name.ensure_length(1, 1);
-      // passing ownership to Connext
-      subscriber_qos.partition.name[0] = request_partition_str;
-    } else {
-      DDS_String_free(request_partition_str);
-    }
-  }
   // update attached subscriber
   dds_subscriber->set_qos(subscriber_qos);
 
-  if (response_partition_str) {
-    if (strlen(response_partition_str) != 0) {
-      publisher_qos.partition.name.ensure_length(1, 1);
-      // passing ownership to Connext
-      publisher_qos.partition.name[0] = response_partition_str;
-    } else {
-      DDS_String_free(response_partition_str);
-    }
-  }
   // update attached publisher
   dds_publisher->set_qos(publisher_qos);
 
@@ -214,8 +197,6 @@ rmw_create_service(
   memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
 
   mangled_name =
-    std::string(subscriber_qos.partition.name[0]) +
-    "/" +
     request_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
     request_datareader->get_instance_handle(),
@@ -225,8 +206,6 @@ rmw_create_service(
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
   mangled_name =
-    std::string(publisher_qos.partition.name[0]) +
-    "/" +
     response_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
     response_datawriter->get_instance_handle(),
@@ -238,10 +217,8 @@ rmw_create_service(
 // TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   fprintf(stderr, "******* Creating Service Details: ********\n");
-  fprintf(stderr, "Req DataReader Subscriber partition %s\n", subscriber_qos.partition.name[0]);
   fprintf(stderr, "Subscriber topic %s\n", request_datareader->get_topicdescription()->get_name());
   fprintf(stderr, "Subscriber address %p\n", static_cast<void *>(dds_subscriber));
-  fprintf(stderr, "Resp DataWriter Publisher partition %s\n", publisher_qos.partition.name[0]);
   fprintf(stderr, "Publisher topic %s\n", response_datawriter->get_topic()->get_name());
   fprintf(stderr, "Publisher address %p\n", static_cast<void *>(dds_publisher));
   fprintf(stderr, "******\n");
@@ -249,13 +226,13 @@ rmw_create_service(
 
   return service;
 fail:
-  if (request_partition_str) {
-    DDS_String_free(request_partition_str);
-    request_partition_str = nullptr;
+  if (request_topic_str) {
+    DDS_String_free(request_topic_str);
+    request_topic_str = nullptr;
   }
-  if (response_partition_str) {
-    DDS_String_free(response_partition_str);
-    response_partition_str = nullptr;
+  if (response_topic_str) {
+    DDS_String_free(response_topic_str);
+    response_topic_str = nullptr;
   }
   if (service) {
     rmw_service_free(service);
