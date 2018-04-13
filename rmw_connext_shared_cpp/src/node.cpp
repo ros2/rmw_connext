@@ -70,6 +70,9 @@ create_node(
     participant_qos.user_data.value[sizeof(prefix) - 1 + name_length] = ';';
   }
 
+  // Setting the contentfilter_property_max_length to 1024
+  participant_qos.resource_limits.contentfilter_property_max_length = 1024;
+
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
   // (in which case traffic will be sent over both transports)
