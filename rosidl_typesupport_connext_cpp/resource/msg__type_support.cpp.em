@@ -220,16 +220,15 @@ to_cdr_stream__@(spec.base_type.type)(
   }
 
   // call the serialize function for the first time to get the expected length of the message
-  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(NULL, &cdr_stream->message_length, dds_message) != RTI_TRUE) {
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(NULL, &cdr_stream->buffer_length, dds_message) != RTI_TRUE) {
     return false;
   }
-  // allocate enough memory for the CDR stream
-  // TODO(karsten1987): This allocation has to be preallocated
-  // or at least bring in a custom allocator
-  cdr_stream->raw_message =
-    reinterpret_cast<char *>(malloc(sizeof(char) * cdr_stream->message_length));
+  if (cdr_stream->buffer_capacity < cdr_stream->buffer_length) {
+    cdr_stream->allocator.deallocate(cdr_stream->buffer, cdr_stream->allocator.state);
+    cdr_stream->buffer = static_cast<char *>(cdr_stream->allocator.allocate(cdr_stream->buffer_length, cdr_stream->allocator.state));
+  }
   // call the function again and fill the buffer this time
-  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(cdr_stream->raw_message, &cdr_stream->message_length, dds_message) != RTI_TRUE) {
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(cdr_stream->buffer, &cdr_stream->buffer_length, dds_message) != RTI_TRUE) {
     return false;
   }
   if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK) {
@@ -246,7 +245,7 @@ to_message__@(spec.base_type.type)(
   if (!cdr_stream) {
     return false;
   }
-  if (!cdr_stream->raw_message) {
+  if (!cdr_stream->buffer) {
     fprintf(stderr, "cdr stream doesn't contain data\n");
   }
   if (!untyped_ros_message) {
@@ -254,7 +253,7 @@ to_message__@(spec.base_type.type)(
   }
 
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
-  if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(dds_message, cdr_stream->raw_message, cdr_stream->message_length) != RTI_TRUE) {
+  if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(dds_message, cdr_stream->buffer, cdr_stream->buffer_length) != RTI_TRUE) {
     fprintf(stderr, "deserialize from cdr buffer failed\n");
     return false;
   }

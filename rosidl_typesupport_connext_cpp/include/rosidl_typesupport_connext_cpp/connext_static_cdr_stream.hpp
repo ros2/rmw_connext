@@ -15,12 +15,18 @@
 #ifndef ROSIDL_TYPESUPPORT_CONNEXT_CPP__CONNEXT_STATIC_CDR_STREAM_HPP_
 #define ROSIDL_TYPESUPPORT_CONNEXT_CPP__CONNEXT_STATIC_CDR_STREAM_HPP_
 
+#include "rcutils/allocator.h"
+
 extern "C"
 {
+// TODO(karsten1987): Join rmw_raw_message_t and this ConnextStaticCDRStream struct
+// inside rcutils to have only one implementation of it.
 typedef struct ConnextStaticCDRStream
 {
-  char * raw_message = nullptr;
-  unsigned int message_length = 0;
+  char * buffer = NULL;
+  unsigned int buffer_length = 0;
+  unsigned int buffer_capacity = 0;
+  rcutils_allocator_t allocator;
 } ConnextStaticCDRStream;
 }  // extern "C"
 

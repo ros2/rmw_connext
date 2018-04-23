@@ -55,7 +55,7 @@ rmw_create_publisher(
     node->implementation_identifier, rti_connext_identifier,
     return NULL)
 
-  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support)
+  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, NULL)
 
   if (!topic_name || strlen(topic_name) == 0) {
     RMW_SET_ERROR_MSG("publisher topic is null or empty string");

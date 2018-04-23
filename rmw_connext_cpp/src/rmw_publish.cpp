@@ -44,8 +44,8 @@ publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
 
   instance->serialized_data.maximum(0);
   if (!instance->serialized_data.loan_contiguous(
-      reinterpret_cast<DDS_Octet *>(cdr_stream->raw_message),
-      cdr_stream->message_length, cdr_stream->message_length))
+      reinterpret_cast<DDS_Octet *>(cdr_stream->buffer),
+      cdr_stream->buffer_length, cdr_stream->buffer_length))
   {
     RMW_SET_ERROR_MSG("failed to loan memory for message");
     goto cleanup;
@@ -100,16 +100,18 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     return RMW_RET_ERROR;
   }
 
+  // if calling rmw_publish as is, this will always dynamically allocate memory
   ConnextStaticCDRStream cdr_stream;
+  cdr_stream.allocator = rcutils_get_default_allocator();
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
     return RMW_RET_ERROR;
   }
-  if (cdr_stream.message_length == 0) {
+  if (cdr_stream.buffer_length == 0) {
     RMW_SET_ERROR_MSG("no message length set");
     return RMW_RET_ERROR;
   }
-  if (!cdr_stream.raw_message) {
+  if (!cdr_stream.buffer) {
     RMW_SET_ERROR_MSG("no raw message attached");
     return RMW_RET_ERROR;
   }
@@ -117,7 +119,6 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;
   }
-  free(cdr_stream.raw_message);
   return RMW_RET_OK;
 }
 
@@ -155,8 +156,9 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
   }
 
   ConnextStaticCDRStream cdr_stream;
-  cdr_stream.raw_message = raw_message->buffer;
-  cdr_stream.message_length = raw_message->buffer_length;
+  cdr_stream.buffer = raw_message->buffer;
+  cdr_stream.buffer_length = raw_message->buffer_length;
+  cdr_stream.buffer_capacity = raw_message->buffer_capacity;
   bool published = publish(topic_writer, &cdr_stream);
   if (!published) {
     RMW_SET_ERROR_MSG("failed to publish message");

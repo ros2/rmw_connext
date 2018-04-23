@@ -101,12 +101,12 @@ take(
   }
 
   if (!ignore_sample) {
-    cdr_stream->message_length = dds_messages[0].serialized_data.length();
+    cdr_stream->buffer_length = dds_messages[0].serialized_data.length();
     // TODO(karsten1987): This malloc has to go!
-    cdr_stream->raw_message =
-      reinterpret_cast<char *>(malloc(cdr_stream->message_length * sizeof(char)));
-    for (unsigned int i = 0; i < cdr_stream->message_length; ++i) {
-      cdr_stream->raw_message[i] = dds_messages[0].serialized_data[i];
+    cdr_stream->buffer =
+      reinterpret_cast<char *>(malloc(cdr_stream->buffer_length * sizeof(char)));
+    for (unsigned int i = 0; i < cdr_stream->buffer_length; ++i) {
+      cdr_stream->buffer[i] = dds_messages[0].serialized_data[i];
     }
     *taken = true;
   } else {
@@ -265,8 +265,8 @@ _take_raw(
     return RMW_RET_ERROR;
   }
 
-  raw_message->buffer_length = cdr_stream.message_length;
-  raw_message->buffer = cdr_stream.raw_message;
+  raw_message->buffer_length = cdr_stream.buffer_length;
+  raw_message->buffer = cdr_stream.buffer;
 
   return RMW_RET_OK;
 }
