@@ -71,6 +71,12 @@ create_node(
   }
 
   // Setting the contentfilter_property_max_length to 1024
+  // The limit 1024 is accomodate sum of the lengths of
+  // contentFilteredTopicName (max length 256)
+  // relatedTopicName (max length 256)
+  // filterClassName (max length 256)
+  // filterName (DDSSQL)
+  // filterExpression
   participant_qos.resource_limits.contentfilter_property_max_length = 1024;
 
   // forces local traffic to be sent over loopback,
