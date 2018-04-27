@@ -1,10 +1,29 @@
+# Copyright 2016 Open Source Robotics Foundation, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# originated from the stackoverflow post:
+# https://stackoverflow.com/a/40967337
+# TODO(Karsten1987): Rewrite this function for clarity and tests
+
 import argparse
 import re
 
-_hdr_pat = re.compile("^@@ -(\d+),?(\d+)? \+(\d+),?(\d+)? @@.*$")
+# regular expression / pattern for patch header
+_hdr_pat = re.compile('^@@ -(\d+),?(\d+)? \+(\d+),?(\d+)? @@.*$')
 
 
-def apply_patch(s, patch, revert=False):
+def apply_patch(s, patch):
     """
     Apply unified diff patch to string s to recover newer string.
 
@@ -14,17 +33,19 @@ def apply_patch(s, patch, revert=False):
     p = patch.splitlines(True)
     t = ''
     i = sl = 0
-    (midx, sign) = (1, '+') if not revert else (3, '-')
+    (midx, sign) = (1, '+')
     while i < len(p) and p[i].startswith(('---', '+++')):
         i += 1  # skip header lines
     while i < len(p):
+        # find patch header
         m = _hdr_pat.match(p[i])
         if not m:
             raise Exception('Cannot process diff in line ' + str(i))
+
         i += 1
-        l = int(m.group(midx)) - 1 + (m.group(midx + 1) == '0')
-        t += ''.join(s[sl:l])
-        sl = l
+        ll = int(m.group(midx)) - 1 + (m.group(midx + 1) == '0')
+        t += ''.join(s[sl:ll])
+        sl = ll
         while i < len(p) and p[i][0] != '@':
             if i + 1 < len(p) and p[i + 1][0] == '\\':
                 line = p[i][:-1]

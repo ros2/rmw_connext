@@ -24,8 +24,8 @@
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 
 // include patched generated code from the build folder
-#include "connext_static_raw_dataSupport.h"
-#include "connext_static_raw_data.h"
+#include "./connext_static_raw_dataSupport.h"
+#include "./connext_static_raw_data.h"
 
 static bool
 take(
