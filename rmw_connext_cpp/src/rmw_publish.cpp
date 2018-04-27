@@ -119,6 +119,8 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;
   }
+
+  cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
   return RMW_RET_OK;
 }
 
