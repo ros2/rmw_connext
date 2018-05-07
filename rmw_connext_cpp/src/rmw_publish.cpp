@@ -100,28 +100,33 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     return RMW_RET_ERROR;
   }
 
-  // if calling rmw_publish as is, this will always dynamically allocate memory
+  auto ret = RMW_RET_OK;
   ConnextStaticCDRStream cdr_stream;
   cdr_stream.allocator = rcutils_get_default_allocator();
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
-    return RMW_RET_ERROR;
+    ret = RMW_RET_ERROR;
+    goto fail;
   }
   if (cdr_stream.buffer_length == 0) {
     RMW_SET_ERROR_MSG("no message length set");
-    return RMW_RET_ERROR;
+    ret = RMW_RET_ERROR;
+    goto fail;
   }
   if (!cdr_stream.buffer) {
     RMW_SET_ERROR_MSG("no raw message attached");
-    return RMW_RET_ERROR;
+    ret = RMW_RET_ERROR;
+    goto fail;
   }
   if (!publish(topic_writer, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to publish message");
-    return RMW_RET_ERROR;
+    ret = RMW_RET_ERROR;
+    goto fail;
   }
 
+fail:
   cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
-  return RMW_RET_OK;
+  return ret;
 }
 
 rmw_ret_t
