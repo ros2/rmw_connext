@@ -92,6 +92,10 @@ create_node(
     return NULL;
   }
 
+  // Disable TypeCode since it increases discovery message size and is replaced by TypeObject
+  // https://community.rti.com/kb/types-matching
+  participant_qos.resource_limits.type_code_max_serialized_length = 0;
+
   if (security_options->security_root_path) {
     // enable some security stuff
     status = DDSPropertyQosPolicyHelper::add_property(
