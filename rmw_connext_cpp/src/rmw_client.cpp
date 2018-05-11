@@ -122,10 +122,6 @@ rmw_create_client(
     goto fail;
   }
 
-  // TODO(karsten1987): For now, I'll expose the datawriter
-  // to access the respective DDSPublisher object.
-  // This has to be evaluated whether or not to provide a
-  // Subscriber/Publisher object directly with preset partitions.
   requester = callbacks->create_requester(
     participant, request_topic_str, response_topic_str,
     &datareader_qos, &datawriter_qos,
