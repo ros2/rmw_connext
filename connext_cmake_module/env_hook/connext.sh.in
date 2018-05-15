@@ -1,26 +1,11 @@
-_DEFAULT_NDDSHOME="@Connext_HOME@"
+_BUILDTIME_NDDSHOME="@Connext_HOME@"
 _Connext_LIBRARY_DIR="@Connext_LIBRARY_DIR@"
 
-# Give priority to the NDDSHOME environment variable because the one detected at build time may
-# refer to an invalid path, e.g. for users using binaries.
-
-# Warn about changing the Connext location
-if [ ! -z "$NDDSHOME" -a "$NDDSHOME" != "$_DEFAULT_NDDSHOME" ]; then
-  echo "[connext_cmake_module] NDDSHOME environment variable is set to \"$NDDSHOME\" which" \
-    "is different to what it was when the workspace was built: \"$_DEFAULT_NDDSHOME\"" 1>&2
+# warn about changing the Connext location
+if [ ! -z "$NDDSHOME" -a "$NDDSHOME" != "$_BUILDTIME_NDDS_HOME" ]; then
+>&2 echo "NDDSHOME changed from \"$NDDSHOME\" to \"$_BUILDTIME_NDDS_HOME\""
 fi
-
-if [ -z "$NDDSHOME" ]; then
-  echo "[connext_cmake_module] NDDSHOME environment variable not set. Using NDDSHOME that was detected when the" \
-    "workspace was built: \"$_DEFAULT_NDDSHOME\"" 1>&2
-  export NDDSHOME=$_DEFAULT_NDDSHOME
-fi
-
-if [ ! -d "$NDDSHOME" ]; then
-  echo "[connext_cmake_module] Error: NDDSHOME environment variable does not point to a valid directory: \"$NDDSHOME\"" 1>&2
-  unset _DEFAULT_NDDSHOME
-  return
-fi
+export NDDSHOME="$_BUILDTIME_NDDS_HOME"
 
 # detect if running on Darwin platform
 _UNAME=`uname -s`
@@ -30,7 +15,7 @@ if [ "$_UNAME" = "Darwin" ]; then
 fi
 unset _UNAME
 
-ament_prepend_unique_value PATH "$NDDSHOME/bin"
+ament_prepend_unique_value PATH "$_BUILDTIME_NDDS_HOME/bin"
 
 # add the libary dir on the (DY)LD_LIBRARY_PATH for the rtiddsgen tool
 ament_prepend_unique_value PATH "$_Connext_LIBRARY_DIR"
@@ -42,4 +27,4 @@ fi
 unset _IS_DARWIN
 
 unset _Connext_LIBRARY_DIR
-unset _DEFAULT_NDDSHOME
+unset _BUILDTIME_NDDS_HOME
