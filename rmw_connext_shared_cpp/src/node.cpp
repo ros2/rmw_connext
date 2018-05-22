@@ -139,11 +139,12 @@ create_node(
     }
 
     const char * srp = security_options->security_root_path;  // save some typing
-    std::string ca_cert_fn = rcutils_join_path(srp, "ca.cert.pem");
-    std::string cert_fn = rcutils_join_path(srp, "cert.pem");
-    std::string key_fn = rcutils_join_path(srp, "key.pem");
-    std::string gov_fn = rcutils_join_path(srp, "governance.p7s");
-    std::string perm_fn = rcutils_join_path(srp, "permissions.p7s");
+    rcutils_allocator_t allocator = rcutils_get_default_allocator();
+    std::string ca_cert_fn = rcutils_join_path(srp, "ca.cert.pem", allocator);
+    std::string cert_fn = rcutils_join_path(srp, "cert.pem", allocator);
+    std::string key_fn = rcutils_join_path(srp, "key.pem", allocator);
+    std::string gov_fn = rcutils_join_path(srp, "governance.p7s", allocator);
+    std::string perm_fn = rcutils_join_path(srp, "permissions.p7s", allocator);
 
     // now try to pass these filenames to the Authentication plugin
     status = DDSPropertyQosPolicyHelper::add_property(
