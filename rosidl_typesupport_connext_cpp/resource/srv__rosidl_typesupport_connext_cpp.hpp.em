@@ -40,7 +40,8 @@ ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC_@(spec.pkg_name)
 void *
 create_requester__@(spec.srv_name)(
   void * untyped_participant,
-  const char * service_name,
+  const char * request_topic_str,
+  const char * response_topic_str,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,
@@ -63,7 +64,8 @@ ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC_@(spec.pkg_name)
 void *
 create_replier__@(spec.srv_name)(
   void * untyped_participant,
-  const char * service_name,
+  const char * request_topic_str,
+  const char * response_topic_str,
   const void * untyped_datareader_qos,
   const void * untyped_datawriter_qos,
   void ** untyped_reader,

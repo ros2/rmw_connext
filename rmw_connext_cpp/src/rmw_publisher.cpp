@@ -95,7 +95,6 @@ rmw_create_publisher(
   rmw_publisher_t * publisher = nullptr;
   std::string mangled_name = "";
 
-  char * partition_str = nullptr;
   char * topic_str = nullptr;
 
   // Begin initializing elements
@@ -117,27 +116,13 @@ rmw_create_publisher(
     goto fail;
   }
 
-  // allocating memory for topic_str and partition_str
+  // allocating memory for topic_str
   if (!_process_topic_name(
       topic_name,
       qos_profile->avoid_ros_namespace_conventions,
-      &topic_str,
-      &partition_str))
+      &topic_str))
   {
     goto fail;
-  }
-
-  // we have to set the partition array to length 1
-  // and then set the partition_str in it
-  if (partition_str) {
-    if (strlen(partition_str) != 0) {  // only set if not empty
-      publisher_qos.partition.name.ensure_length(1, 1);
-      // passing ownership to Connext
-      publisher_qos.partition.name[0] = partition_str;
-    } else {
-      DDS_String_free(partition_str);
-    }
-    partition_str = nullptr;
   }
 
   dds_publisher = participant->create_publisher(
@@ -223,8 +208,6 @@ rmw_create_publisher(
 
   if (!qos_profile->avoid_ros_namespace_conventions) {
     mangled_name =
-      std::string(publisher_qos.partition.name[0]) +
-      "/" +
       topic_writer->get_topic()->get_name();
   } else {
     mangled_name = topic_name;
@@ -236,7 +219,6 @@ rmw_create_publisher(
 // TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
   fprintf(stderr, "******* Creating Publisher Details: ********\n");
-  fprintf(stderr, "Publisher partition %s\n", publisher_qos.partition.name[0]);
   fprintf(stderr, "Publisher topic %s\n", topic_writer->get_topic()->get_name());
   fprintf(stderr, "Publisher address %p\n", static_cast<void *>(dds_publisher));
   fprintf(stderr, "******\n");
@@ -244,10 +226,6 @@ rmw_create_publisher(
 
   return publisher;
 fail:
-  if (partition_str) {
-    DDS_String_free(partition_str);
-    partition_str = nullptr;
-  }
   if (topic_str) {
     DDS_String_free(topic_str);
     topic_str = nullptr;

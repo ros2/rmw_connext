@@ -19,15 +19,13 @@ bool
 _process_topic_name(
   const char * topic_name,
   bool avoid_ros_namespace_conventions,
-  char ** topic_str,
-  char ** partition_str);
+  char ** topic_str);
 
 bool
 _process_service_name(
   const char * service_name,
   bool avoid_ros_namespace_conventions,
-  char ** service_str,
-  char ** request_partition_str,
-  char ** response_partition_str);
+  char ** request_topic_str,
+  char ** response_topic_str);
 
 #endif  // PROCESS_TOPIC_AND_SERVICE_NAMES_HPP_

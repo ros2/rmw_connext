@@ -161,23 +161,16 @@ rmw_service_server_is_available(
   DDS_PublisherQos pub_qos;
   request_publisher->get_qos(pub_qos);
   fprintf(stderr, "******** rmw_server_is_available *****\n");
-  for (DDS_Long i = 0; i < pub_qos.partition.name.length(); ++i) {
-    fprintf(stderr, "publisher address %p\n", static_cast<void *>(request_publisher));
-    fprintf(stderr, "request topic name: %s\n", request_topic_name);
-    fprintf(stderr, "request partition (should be rq) %s\n", pub_qos.partition.name[i]);
-  }
-
+  fprintf(stderr, "publisher address %p\n", static_cast<void *>(request_publisher));
+  fprintf(stderr, "request topic name: %s\n", request_topic_name);
   DDS::DataReader * response_datareader =
     static_cast<DDS::DataReader *>(callbacks->get_reply_datareader(requester));
   const char * response_topic_name = response_datareader->get_topicdescription()->get_name();
   DDSSubscriber * response_sub = response_datareader->get_subscriber();
   DDS_SubscriberQos sub_qos;
   response_sub->get_qos(sub_qos);
-  for (DDS_Long i = 0; i < sub_qos.partition.name.length(); ++i) {
-    fprintf(stderr, "subscriber address %p\n", static_cast<void *>(response_sub));
-    fprintf(stderr, "response topic name: %s\n", response_topic_name);
-    fprintf(stderr, "response partition (should be rr) %s\n", sub_qos.partition.name[i]);
-  }
+  fprintf(stderr, "subscriber address %p\n", static_cast<void *>(response_sub));
+  fprintf(stderr, "response topic name: %s\n", response_topic_name);
   fprintf(stderr, "********\n");
   printf("Checking for service server:\n");
   printf(" - %s: %zu\n",
