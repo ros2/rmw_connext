@@ -38,11 +38,7 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
   for (auto i = 0; i < data_seq.length(); ++i) {
     if (info_seq[i].valid_data) {
       auto sub_fqdn = std::string("");
-      for (int j = 0; j < data_seq[i].partition.name.length(); ++j) {
-        sub_fqdn += data_seq[i].partition.name[j];
-        sub_fqdn += "/";
-      }
-      sub_fqdn += data_seq[i].topic_name;
+      sub_fqdn = data_seq[i].topic_name;
       add_information(
         info_seq[i].instance_handle,
         sub_fqdn,

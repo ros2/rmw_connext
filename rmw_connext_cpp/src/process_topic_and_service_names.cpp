@@ -27,50 +27,29 @@ bool
 _process_topic_name(
   const char * topic_name,
   bool avoid_ros_namespace_conventions,
-  char ** topic_str,
-  char ** partition_str)
+  char ** topic_str)
 {
   bool success = true;
-  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
-  if (rcutils_split_last(topic_name, '/', allocator, &name_tokens) != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+  const char * topic_prefix = "";
+  char * concat_str = nullptr;
+
+  if (!avoid_ros_namespace_conventions) {
+    topic_prefix = ros_topic_prefix;
+  }
+
+  concat_str = rcutils_format_string(allocator, "%s%s", topic_prefix, topic_name);
+  if (!concat_str) {
+    RMW_SET_ERROR_MSG("could not allocate memory for topic string")
     success = false;
     goto end;
   }
-  if (name_tokens.size == 1) {
-    if (!avoid_ros_namespace_conventions) {
-      *partition_str = DDS_String_dup(ros_topic_prefix);
-    }
-    *topic_str = DDS_String_dup(name_tokens.data[0]);
-  } else if (name_tokens.size == 2) {
-    if (avoid_ros_namespace_conventions) {
-      // no ros_topic_prefix, so store the user's namespace directly
-      *partition_str = DDS_String_dup(name_tokens.data[0]);
-    } else {
-      // concat the ros_topic_prefix with the user's namespace
-      char * concat_str =
-        rcutils_format_string(allocator, "%s/%s", ros_topic_prefix, name_tokens.data[0]);
-      if (!concat_str) {
-        RMW_SET_ERROR_MSG("could not allocate memory for partition string")
-        success = false;
-        goto end;
-      }
-      *partition_str = DDS_String_dup(concat_str);
-      allocator.deallocate(concat_str, allocator.state);
-    }
-    *topic_str = DDS_String_dup(name_tokens.data[1]);
-  } else {
-    RMW_SET_ERROR_MSG("incorrectly formatted topic name")
-    success = false;
-  }
+  *topic_str = DDS_String_dup(concat_str);
 
 end:
-  // all necessary strings are copied into connext
-  // free that memory
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
+  if (concat_str) {
+    allocator.deallocate(concat_str, allocator.state);
   }
   return success;
 }
@@ -79,64 +58,48 @@ bool
 _process_service_name(
   const char * service_name,
   bool avoid_ros_namespace_conventions,
-  char ** service_str,
-  char ** request_partition_str,
-  char ** response_partition_str)
+  char ** request_topic_str,
+  char ** response_topic_str)
 {
   bool success = true;
-  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
-  if (rcutils_split_last(service_name, '/', allocator, &name_tokens) != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+  const char * requester_prefix = "";
+  const char * response_prefix = "";
+  char * request_concat_str = nullptr;
+  char * response_concat_str = nullptr;
+
+  if (!avoid_ros_namespace_conventions) {
+    requester_prefix = ros_service_requester_prefix;
+    response_prefix = ros_service_response_prefix;
+  }
+
+  // concat the ros_service_*_prefix and Request/Reply suffixes with the service_name
+  request_concat_str = rcutils_format_string(
+    allocator,
+    "%s%s%s", requester_prefix, service_name, "Request");
+  if (!request_concat_str) {
+    RMW_SET_ERROR_MSG("could not allocate memory for request topic string")
     success = false;
     goto end;
   }
-  if (name_tokens.size == 1) {
-    if (!avoid_ros_namespace_conventions) {
-      *request_partition_str = DDS_String_dup(ros_service_requester_prefix);
-      *response_partition_str = DDS_String_dup(ros_service_response_prefix);
-    }
-    *service_str = DDS_String_dup(name_tokens.data[0]);
-  } else if (name_tokens.size == 2) {
-    if (avoid_ros_namespace_conventions) {
-      // no ros_service_*_prefix, so store the user's namespace directly
-      *request_partition_str = DDS_String_dup(name_tokens.data[0]);
-      *response_partition_str = DDS_String_dup(name_tokens.data[0]);
-    } else {
-      // concat the ros_service_*_prefix with the user's namespace
-      char * request_concat_str = rcutils_format_string(
-        allocator,
-        "%s/%s", ros_service_requester_prefix, name_tokens.data[0]);
-      if (!request_concat_str) {
-        RMW_SET_ERROR_MSG("could not allocate memory for partition string")
-        success = false;
-        goto end;
-      }
-      char * response_concat_str = rcutils_format_string(
-        allocator,
-        "%s/%s", ros_service_response_prefix, name_tokens.data[0]);
-      if (!response_concat_str) {
-        allocator.deallocate(request_concat_str, allocator.state);
-        RMW_SET_ERROR_MSG("could not allocate memory for partition string")
-        success = false;
-        goto end;
-      }
-      *request_partition_str = DDS_String_dup(request_concat_str);
-      *response_partition_str = DDS_String_dup(response_concat_str);
-      allocator.deallocate(request_concat_str, allocator.state);
-      allocator.deallocate(response_concat_str, allocator.state);
-    }
-    *service_str = DDS_String_dup(name_tokens.data[1]);
-  } else {
-    RMW_SET_ERROR_MSG("Illformated service name")
+  response_concat_str = rcutils_format_string(
+    allocator,
+    "%s%s%s", response_prefix, service_name, "Reply");
+  if (!response_concat_str) {
+    RMW_SET_ERROR_MSG("could not allocate memory for response topic string")
+    success = false;
+    goto end;
   }
+  *request_topic_str = DDS_String_dup(request_concat_str);
+  *response_topic_str = DDS_String_dup(response_concat_str);
 
 end:
-  // free that memory
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
+  if (request_concat_str) {
+    allocator.deallocate(request_concat_str, allocator.state);
   }
-
+  if (response_concat_str) {
+    allocator.deallocate(response_concat_str, allocator.state);
+  }
   return success;
 }

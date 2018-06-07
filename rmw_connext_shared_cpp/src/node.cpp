@@ -70,6 +70,18 @@ create_node(
     participant_qos.user_data.value[sizeof(prefix) - 1 + name_length] = ';';
   }
 
+
+  // Accorinrding to the RTPS spec, ContentFilterProperty_t has the following fields:
+  // -contentFilteredTopicName (max length 256)
+  // -relatedTopicName (max length 256)
+  // -filterClassName (max length 256)
+  // -filterName (DDSSQL)
+  // -filterExpression
+  // In Connext, contentfilter_property_max_length is sum of lengths of all these fields,
+  // which by default is 256.
+  // So we set the limit to 1024, to accomodate the complete topic name with namespaces.
+  participant_qos.resource_limits.contentfilter_property_max_length = 1024;
+
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
   // (in which case traffic will be sent over both transports)
