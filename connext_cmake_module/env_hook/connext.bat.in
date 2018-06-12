@@ -1,5 +1,4 @@
 set "_DEFAULT_NDDSHOME=@Connext_HOME@"
-set "_DEFAULT_NDDSHOME=%_DEFAULT_NDDSHOME:/=\%"  :: Replace forward slashes with backslashes
 
 :: Give priority to the NDDSHOME environment variable because the one detected at build time may
 :: refer to an invalid path, e.g. for users using binaries.
@@ -24,5 +23,5 @@ if not exist %OSPL_HOME% (
 )
 
 :: Call RTI's env setup script, piping stdout to nul, since they have echo on.
-call "%NDDSHOME:/=\%\resource\scripts\rtisetenv_@Connext_ARCHITECTURE_NAME@.bat" 1> nul
+call "%NDDSHOME\resource\scripts\rtisetenv_@Connext_ARCHITECTURE_NAME@.bat" 1> nul
 set "_DEFAULT_NDDSHOME="
