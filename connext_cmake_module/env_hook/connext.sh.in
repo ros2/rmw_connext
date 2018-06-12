@@ -1,5 +1,4 @@
 _BUILDTIME_NDDSHOME="@Connext_HOME@"
-_Connext_LIBRARY_DIR="@Connext_LIBRARY_DIR@"
 
 # Give priority to the Connext installation found when the workspace was built, if it's valid.
 # If it's not valid, the current value of the NDDSHOME environment variable will be used.
@@ -44,14 +43,17 @@ unset _UNAME
 
 ament_prepend_unique_value PATH "$_NDDSHOME_TO_USE/bin"
 
+_Connext_LIBRARY_DIR_TO_USE=$_NDDSHOME_TO_USE/lib/@Connext_ARCHITECTURE_NAME@
+
 # add the libary dir on the (DY)LD_LIBRARY_PATH for the rtiddsgen tool
-ament_prepend_unique_value PATH "$_Connext_LIBRARY_DIR"
+ament_prepend_unique_value PATH "$_Connext_LIBRARY_DIR_TO_USE"
 if [ $_IS_DARWIN -eq 0 ]; then
-  ament_prepend_unique_value LD_LIBRARY_PATH "$_Connext_LIBRARY_DIR"
+  ament_prepend_unique_value LD_LIBRARY_PATH "$_Connext_LIBRARY_DIR_TO_USE"
 else
-  ament_prepend_unique_value DYLD_LIBRARY_PATH "$_Connext_LIBRARY_DIR"
+  ament_prepend_unique_value DYLD_LIBRARY_PATH "$_Connext_LIBRARY_DIR_TO_USE"
 fi
 unset _IS_DARWIN
 
-unset _Connext_LIBRARY_DIR
-unset _BUILDTIME_NDDS_HOME
+unset _Connext_LIBRARY_DIR_TO_USE
+unset _NDDSHOME_TO_USE
+unset _BUILDTIME_NDDSHOME
