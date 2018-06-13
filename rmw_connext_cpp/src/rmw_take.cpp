@@ -177,6 +177,10 @@ _take(
     return RMW_RET_ERROR;
   }
 
+  // the call to take allocates memory for the raw message
+  // we have to free this here again
+  free(cdr_stream.buffer);
+
   return RMW_RET_OK;
 }
 
@@ -266,6 +270,8 @@ _take_raw(
   }
 
   raw_message->buffer_length = cdr_stream.buffer_length;
+  // we don't free the allocated memory
+  // and thus can directly set the pointer
   raw_message->buffer = cdr_stream.buffer;
 
   return RMW_RET_OK;

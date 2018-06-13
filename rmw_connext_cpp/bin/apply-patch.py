@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# originated from the stackoverflow post:
-# https://stackoverflow.com/a/40967337
+# Based on `unifieddiff.py` by @noporpoise which is licensed as `Public domain (CC0)`
+# see: https://gist.github.com/noporpoise/16e731849eb1231e86d78f9dfeca3abc
 # TODO(Karsten1987): Rewrite this function for clarity and tests
 
 import argparse
