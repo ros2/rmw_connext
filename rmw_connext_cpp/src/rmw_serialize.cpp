@@ -47,7 +47,8 @@ rmw_serialize(
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
     return RMW_RET_ERROR;
   }
-  serialized_message->buffer = cdr_stream.buffer;  // reassgin buffer because it might have been resized
+  // reassgin buffer because it might have been resized
+  serialized_message->buffer = cdr_stream.buffer;
   serialized_message->buffer_length = cdr_stream.buffer_length;
   serialized_message->buffer_capacity = cdr_stream.buffer_capacity;
   return RMW_RET_OK;

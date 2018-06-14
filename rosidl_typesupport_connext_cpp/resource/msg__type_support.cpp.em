@@ -222,9 +222,9 @@ to_cdr_stream__@(spec.base_type.type)(
   // call the serialize function for the first time to get the expected length of the message
   unsigned int expected_length;
   if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(
-    NULL,
-    &expected_length,
-    dds_message) != RTI_TRUE)
+      NULL,
+      &expected_length,
+      dds_message) != RTI_TRUE)
   {
     fprintf(stderr, "failed to call @(spec.base_type.type)_Plugin_serialize_to_cdr_buffer()\n");
     return false;
@@ -241,9 +241,9 @@ to_cdr_stream__@(spec.base_type.type)(
   // call the function again and fill the buffer this time
   unsigned int buffer_length_uint = static_cast<unsigned int>(cdr_stream->buffer_length);
   if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(
-    cdr_stream->buffer,
-    &buffer_length_uint,
-    dds_message) != RTI_TRUE)
+      cdr_stream->buffer,
+      &buffer_length_uint,
+      dds_message) != RTI_TRUE)
   {
     return false;
   }
@@ -275,9 +275,9 @@ to_message__@(spec.base_type.type)(
     return false;
   }
   if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(
-    dds_message,
-    cdr_stream->buffer,
-    static_cast<unsigned int>(cdr_stream->buffer_length)) != RTI_TRUE)
+      dds_message,
+      cdr_stream->buffer,
+      static_cast<unsigned int>(cdr_stream->buffer_length)) != RTI_TRUE)
   {
     fprintf(stderr, "deserialize from cdr buffer failed\n");
     return false;
