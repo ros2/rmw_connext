@@ -105,7 +105,7 @@ take(
     // TODO(karsten1987): This malloc has to go!
     cdr_stream->buffer =
       reinterpret_cast<char *>(malloc(cdr_stream->buffer_length * sizeof(char)));
-    for (unsigned int i = 0; i < cdr_stream->buffer_length; ++i) {
+    for (size_t i = 0; i < cdr_stream->buffer_length; ++i) {
       cdr_stream->buffer[i] = dds_messages[0].serialized_data[i];
     }
     *taken = true;

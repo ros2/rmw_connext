@@ -340,9 +340,16 @@ to_cdr_stream(
   }
 
   // call the serialize function for the first time to get the expected length of the message
+  unsigned int expected_length;
   if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(
-      NULL, &cdr_stream->buffer_length, &dds_message) != RTI_TRUE)
+      NULL, &expected_length, &dds_message) != RTI_TRUE)
   {
+    fprintf(stderr, "failed to call @(spec.base_type.type)_Plugin_serialize_to_cdr_buffer()\n");
+    return false;
+  }
+  cdr_stream->buffer_length = expected_length;
+  if (cdr_stream->buffer_length > std::numeric_limits<unsigned int>::max()) {
+    fprintf(stderr, "cdr_stream->buffer_length, unexpectedly larger than max unsigned int\n");
     return false;
   }
   if (cdr_stream->buffer_capacity < cdr_stream->buffer_length) {
@@ -350,8 +357,11 @@ to_cdr_stream(
     cdr_stream->buffer = static_cast<char *>(cdr_stream->allocator.allocate(cdr_stream->buffer_length, cdr_stream->allocator.state));
   }
   // call the function again and fill the buffer this time
+  unsigned int buffer_length_uint = static_cast<unsigned int>(cdr_stream->buffer_length);
   if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(
-      cdr_stream->buffer, &cdr_stream->buffer_length, &dds_message) != RTI_TRUE)
+      cdr_stream->buffer,
+      &buffer_length_uint,
+      &dds_message) != RTI_TRUE)
   {
     return false;
   }
@@ -373,8 +383,14 @@ to_message(
 
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message =
     @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+  if (cdr_stream->buffer_length > std::numeric_limits<unsigned int>::max()) {
+    fprintf(stderr, "cdr_stream->buffer_length, unexpectedly larger than max unsigned int\n");
+    return false;
+  }
   if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(
-      dds_message, cdr_stream->buffer, cdr_stream->buffer_length) != RTI_TRUE)
+      dds_message,
+      cdr_stream->buffer,
+      static_cast<unsigned int>(cdr_stream->buffer_length)) != RTI_TRUE)
   {
     fprintf(stderr, "deserialize from cdr buffer failed\n");
     return false;
