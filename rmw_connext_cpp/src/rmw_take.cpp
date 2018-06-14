@@ -24,8 +24,8 @@
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 
 // include patched generated code from the build folder
-#include "./connext_static_raw_dataSupport.h"
-#include "./connext_static_raw_data.h"
+#include "./connext_static_serialized_dataSupport.h"
+#include "./connext_static_serialized_data.h"
 
 static bool
 take(
@@ -48,14 +48,14 @@ take(
     return false;
   }
 
-  ConnextStaticRawDataDataReader * data_reader =
-    ConnextStaticRawDataDataReader::narrow(dds_data_reader);
+  ConnextStaticSerializedDataDataReader * data_reader =
+    ConnextStaticSerializedDataDataReader::narrow(dds_data_reader);
   if (!data_reader) {
     RMW_SET_ERROR_MSG("failed to narrow data reader");
     return false;
   }
 
-  ConnextStaticRawDataSeq dds_messages;
+  ConnextStaticSerializedDataSeq dds_messages;
   DDS_SampleInfoSeq sample_infos;
   bool ignore_sample = false;
 
@@ -177,7 +177,7 @@ _take(
     return RMW_RET_ERROR;
   }
 
-  // the call to take allocates memory for the raw message
+  // the call to take allocates memory for the serialized message
   // we have to free this here again
   free(cdr_stream.buffer);
 
@@ -218,9 +218,9 @@ rmw_take_with_info(
 }
 
 rmw_ret_t
-_take_raw(
+_take_serialized_message(
   const rmw_subscription_t * subscription,
-  rmw_message_raw_t * raw_message,
+  rmw_serialized_message_t * serialized_message,
   bool * taken,
   DDS_InstanceHandle_t * sending_publication_handle)
 {
@@ -233,7 +233,7 @@ _take_raw(
     subscription->implementation_identifier, rti_connext_identifier,
     return RMW_RET_ERROR)
 
-  if (!raw_message) {
+  if (!serialized_message) {
     RMW_SET_ERROR_MSG("ros message handle is null");
     return RMW_RET_ERROR;
   }
@@ -269,27 +269,27 @@ _take_raw(
     return RMW_RET_ERROR;
   }
 
-  raw_message->buffer_length = cdr_stream.buffer_length;
+  serialized_message->buffer_length = cdr_stream.buffer_length;
   // we don't free the allocated memory
   // and thus can directly set the pointer
-  raw_message->buffer = cdr_stream.buffer;
+  serialized_message->buffer = cdr_stream.buffer;
 
   return RMW_RET_OK;
 }
 
 rmw_ret_t
-rmw_take_raw(
+rmw_take_serialized_message(
   const rmw_subscription_t * subscription,
-  rmw_message_raw_t * raw_message,
+  rmw_serialized_message_t * serialized_message,
   bool * taken)
 {
-  return _take_raw(subscription, raw_message, taken, nullptr);
+  return _take_serialized_message(subscription, serialized_message, taken, nullptr);
 }
 
 rmw_ret_t
-rmw_take_raw_with_info(
+rmw_take_serialized_message_with_info(
   const rmw_subscription_t * subscription,
-  rmw_message_raw_t * raw_message,
+  rmw_serialized_message_t * serialized_message,
   bool * taken,
   rmw_message_info_t * message_info)
 {
@@ -298,7 +298,8 @@ rmw_take_raw_with_info(
     return RMW_RET_ERROR;
   }
   DDS_InstanceHandle_t sending_publication_handle;
-  auto ret = _take_raw(subscription, raw_message, taken, &sending_publication_handle);
+  auto ret =
+    _take_serialized_message(subscription, serialized_message, taken, &sending_publication_handle);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
     return RMW_RET_ERROR;

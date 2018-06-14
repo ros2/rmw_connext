@@ -1,11 +1,11 @@
---- a/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataSupport.cxx
-+++ b/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataSupport.cxx
+--- a/rmw_connext_cpp/resources/patch_generated/connext_static_serialized_dataSupport.cxx
++++ b/rmw_connext_cpp/resources/patch_generated/connext_static_serialized_dataSupport.cxx
 @@ -115,3 +115,62 @@ Defines:   TTypeSupport, TData, TDataReader, TDataWriter
  #undef TPlugin_new
  #undef TPlugin_delete
  
 +DDS_ReturnCode_t
-+ConnextStaticRawDataSupport_register_external_type(
++ConnextStaticSerializedDataSupport_register_external_type(
 +  DDSDomainParticipant * participant,
 +  const char * type_name,
 +  struct DDS_TypeCode * type_code)
@@ -25,12 +25,12 @@
 +  }
 +
 +  /* TODO pass the type_code */
-+  presTypePlugin = ConnextStaticRawDataPlugin_new_external(type_code);
++  presTypePlugin = ConnextStaticSerializedDataPlugin_new_external(type_code);
 +  if (presTypePlugin == NULL) {
 +    goto finError;
 +  }
 +
-+  dds_data_type = new ConnextStaticRawDataTypeSupport(true);
++  dds_data_type = new ConnextStaticSerializedDataTypeSupport(true);
 +  if (dds_data_type == NULL) {
 +    fprintf(stderr, "Error while registering external type\n");
 +    goto finError;
@@ -54,10 +54,10 @@
 +
 +finError:
 +  if (presTypePlugin != NULL) {
-+    ConnextStaticRawDataPlugin_delete(presTypePlugin);
++    ConnextStaticSerializedDataPlugin_delete(presTypePlugin);
 +  }
 +  if (delete_data_type) {
-+    delete (ConnextStaticRawDataTypeSupport *)dds_data_type;
++    delete (ConnextStaticSerializedDataTypeSupport *)dds_data_type;
 +    dds_data_type = NULL;
 +  }
 +

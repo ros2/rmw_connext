@@ -1,5 +1,5 @@
---- a/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataPlugin.cxx
-+++ b/rmw_connext_cpp/resources/patch_generated/connext_static_raw_dataPlugin.cxx
+--- a/rmw_connext_cpp/resources/patch_generated/connext_static_serialized_dataPlugin.cxx
++++ b/rmw_connext_cpp/resources/patch_generated/connext_static_serialized_dataPlugin.cxx
 @@ -11,7 +11,7 @@ or consult the RTI Connext manual.
  #include <string.h>
  
@@ -9,7 +9,7 @@
  #endif
  
  #ifndef osapi_type_h
-@@ -379,74 +379,81 @@ ConnextStaticRawDataPlugin_serialize(
+@@ -379,74 +379,81 @@ ConnextStaticSerializedDataPlugin_serialize(
      RTIBool serialize_sample, 
      void *endpoint_plugin_qos)
  {
@@ -138,7 +138,7 @@
 +                  RTICdrStream_getEncapsulationOptions()
 +*/
 +void
-+ConnextStaticRawDataPlugin_remove_padding_from_stream(struct RTICdrStream * stream)
++ConnextStaticSerializedDataPlugin_remove_padding_from_stream(struct RTICdrStream * stream)
 +{
 +  /* See http://issues.omg.org/browse/DDSXTY12-10 */
 +  DDS_UnsignedShort padding_size_mask = 0x0003;
@@ -151,7 +151,7 @@
  }
  
  RTIBool 
-@@ -458,114 +465,65 @@ ConnextStaticRawDataPlugin_deserialize_sample(
+@@ -458,114 +465,65 @@ ConnextStaticSerializedDataPlugin_deserialize_sample(
      RTIBool deserialize_sample, 
      void *endpoint_plugin_qos)
  {
@@ -174,7 +174,7 @@
 +  /* TODO. The call does not belong here. It should be pushed
 +   * inside RTICdrStream_deserializeAndSetCdrEncapsulation
 +   */
-+  ConnextStaticRawDataPlugin_remove_padding_from_stream(stream);
++  ConnextStaticSerializedDataPlugin_remove_padding_from_stream(stream);
 +
 +  if (deserialize_sample) {
 +    /* Note that sample->key_hash was already set by SerializedTypePlugin_deserialize()
@@ -210,7 +210,7 @@
 -        }
 -        if(deserialize_sample) {
 -
--            ConnextStaticRawData_initialize_ex(sample, RTI_FALSE, RTI_FALSE);
+-            ConnextStaticSerializedData_initialize_ex(sample, RTI_FALSE, RTI_FALSE);
 -
 -            if (!RTICdrStream_deserializePrimitiveArray(
 -                stream, (void*) sample->key_hash, ((KEY_HASH_LENGTH_16)), RTI_CDR_OCTET_TYPE)) {
@@ -322,7 +322,7 @@
  RTIBool
 @@ -971,7 +929,9 @@ Key Management functions:
  PRESTypePluginKeyKind 
- ConnextStaticRawDataPlugin_get_key_kind(void)
+ ConnextStaticSerializedDataPlugin_get_key_kind(void)
  {
 -    return PRES_TYPEPLUGIN_USER_KEY;
 +    // TODO(karsten1987): Whenever we introduce keys for our data types
@@ -331,23 +331,23 @@
  }
  
  RTIBool 
-@@ -1408,6 +1368,11 @@ ConnextStaticRawDataPlugin_serialized_sample_to_keyhash(
+@@ -1408,6 +1368,11 @@ ConnextStaticSerializedDataPlugin_serialized_sample_to_keyhash(
  * ------------------------------------------------------------------------ */
- struct PRESTypePlugin *ConnextStaticRawDataPlugin_new(void) 
+ struct PRESTypePlugin *ConnextStaticSerializedDataPlugin_new(void) 
  { 
 +  return NULL;
 +}
 +
-+struct PRESTypePlugin *ConnextStaticRawDataPlugin_new_external(struct DDS_TypeCode * external_type_code)
++struct PRESTypePlugin *ConnextStaticSerializedDataPlugin_new_external(struct DDS_TypeCode * external_type_code)
 +{
      struct PRESTypePlugin *plugin = NULL;
      const struct PRESTypePluginVersion PLUGIN_VERSION = 
      PRES_TYPE_PLUGIN_VERSION_2_0;
-@@ -1503,7 +1468,7 @@ struct PRESTypePlugin *ConnextStaticRawDataPlugin_new(void)
+@@ -1503,7 +1468,7 @@ struct PRESTypePlugin *ConnextStaticSerializedDataPlugin_new(void)
      (PRESTypePluginKeyToInstanceFunction)
-     ConnextStaticRawDataPlugin_key_to_instance;
+     ConnextStaticSerializedDataPlugin_key_to_instance;
      plugin->serializedKeyToKeyHashFnc = NULL; /* Not supported yet */
--    plugin->typeCode =  (struct RTICdrTypeCode *)ConnextStaticRawData_get_typecode();
+-    plugin->typeCode =  (struct RTICdrTypeCode *)ConnextStaticSerializedData_get_typecode();
 +    plugin->typeCode =  (struct RTICdrTypeCode *)external_type_code;
  
      plugin->languageKind = PRES_TYPEPLUGIN_CPP_LANG;

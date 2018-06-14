@@ -18,7 +18,7 @@
 #include "./type_support_common.hpp"
 
 // include patched generated code from the build folder
-#include "connext_static_raw_dataSupport.h"
+#include "connext_static_serialized_dataSupport.h"
 
 extern "C"
 {
@@ -26,7 +26,7 @@ rmw_ret_t
 rmw_serialize(
   const void * ros_message,
   const rosidl_message_type_support_t * type_support,
-  rmw_message_raw_t * raw_message)
+  rmw_serialized_message_t * serialized_message)
 {
   RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_support, ts, RMW_RET_ERROR)
 
@@ -38,24 +38,24 @@ rmw_serialize(
   }
 
   ConnextStaticCDRStream cdr_stream;
-  cdr_stream.buffer = raw_message->buffer;
-  cdr_stream.buffer_length = raw_message->buffer_length;
-  cdr_stream.buffer_capacity = raw_message->buffer_capacity;
-  cdr_stream.allocator = raw_message->allocator;
+  cdr_stream.buffer = serialized_message->buffer;
+  cdr_stream.buffer_length = serialized_message->buffer_length;
+  cdr_stream.buffer_capacity = serialized_message->buffer_capacity;
+  cdr_stream.allocator = serialized_message->allocator;
 
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
     return RMW_RET_ERROR;
   }
-  raw_message->buffer = cdr_stream.buffer;  // reassgin buffer because it might have been resized
-  raw_message->buffer_length = cdr_stream.buffer_length;
-  raw_message->buffer_capacity = cdr_stream.buffer_capacity;
+  serialized_message->buffer = cdr_stream.buffer;  // reassgin buffer because it might have been resized
+  serialized_message->buffer_length = cdr_stream.buffer_length;
+  serialized_message->buffer_capacity = cdr_stream.buffer_capacity;
   return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_deserialize(
-  const rmw_message_raw_t * raw_message,
+  const rmw_serialized_message_t * serialized_message,
   const rosidl_message_type_support_t * type_support,
   void * ros_message)
 {
@@ -69,10 +69,10 @@ rmw_deserialize(
   }
 
   ConnextStaticCDRStream cdr_stream;
-  cdr_stream.buffer = raw_message->buffer;
-  cdr_stream.buffer_length = raw_message->buffer_length;
-  cdr_stream.buffer_capacity = raw_message->buffer_capacity;
-  cdr_stream.allocator = raw_message->allocator;
+  cdr_stream.buffer = serialized_message->buffer;
+  cdr_stream.buffer_length = serialized_message->buffer_length;
+  cdr_stream.buffer_capacity = serialized_message->buffer_capacity;
+  cdr_stream.allocator = serialized_message->allocator;
   // convert the cdr stream to the message
   if (!callbacks->to_message(&cdr_stream, ros_message)) {
     RMW_SET_ERROR_MSG("can't convert cdr stream to ros message");

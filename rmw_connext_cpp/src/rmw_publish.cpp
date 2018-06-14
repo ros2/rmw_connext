@@ -22,19 +22,19 @@
 #include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 
 // include patched generated code from the build folder
-#include "connext_static_raw_dataSupport.h"
+#include "connext_static_serialized_dataSupport.h"
 
 bool
 publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
 {
-  ConnextStaticRawDataDataWriter * data_writer =
-    ConnextStaticRawDataDataWriter::narrow(dds_data_writer);
+  ConnextStaticSerializedDataDataWriter * data_writer =
+    ConnextStaticSerializedDataDataWriter::narrow(dds_data_writer);
   if (!data_writer) {
     RMW_SET_ERROR_MSG("failed to narrow data writer");
     return false;
   }
 
-  ConnextStaticRawData * instance = ConnextStaticRawDataTypeSupport::create_data();
+  ConnextStaticSerializedData * instance = ConnextStaticSerializedDataTypeSupport::create_data();
   if (!instance) {
     RMW_SET_ERROR_MSG("failed to create dds message instance");
     return false;
@@ -59,7 +59,7 @@ cleanup:
       fprintf(stderr, "failed to return loaned memory\n");
       status = DDS_RETCODE_ERROR;
     }
-    ConnextStaticRawDataTypeSupport::delete_data(instance);
+    ConnextStaticSerializedDataTypeSupport::delete_data(instance);
   }
 
   return status == DDS_RETCODE_OK;
@@ -114,7 +114,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     goto fail;
   }
   if (!cdr_stream.buffer) {
-    RMW_SET_ERROR_MSG("no raw message attached");
+    RMW_SET_ERROR_MSG("no serialized message attached");
     ret = RMW_RET_ERROR;
     goto fail;
   }
@@ -130,7 +130,8 @@ fail:
 }
 
 rmw_ret_t
-rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw_message)
+rmw_publish_serialized_message(
+  const rmw_publisher_t * publisher, const rmw_serialized_message_t * serialized_message)
 {
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
@@ -140,8 +141,8 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
     RMW_SET_ERROR_MSG("publisher handle is not from this rmw implementation");
     return RMW_RET_ERROR;
   }
-  if (!raw_message) {
-    RMW_SET_ERROR_MSG("raw message handle is null");
+  if (!serialized_message) {
+    RMW_SET_ERROR_MSG("serialized message handle is null");
     return RMW_RET_ERROR;
   }
 
@@ -163,9 +164,9 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
   }
 
   ConnextStaticCDRStream cdr_stream;
-  cdr_stream.buffer = raw_message->buffer;
-  cdr_stream.buffer_length = raw_message->buffer_length;
-  cdr_stream.buffer_capacity = raw_message->buffer_capacity;
+  cdr_stream.buffer = serialized_message->buffer;
+  cdr_stream.buffer_length = serialized_message->buffer_length;
+  cdr_stream.buffer_capacity = serialized_message->buffer_capacity;
   bool published = publish(topic_writer, &cdr_stream);
   if (!published) {
     RMW_SET_ERROR_MSG("failed to publish message");

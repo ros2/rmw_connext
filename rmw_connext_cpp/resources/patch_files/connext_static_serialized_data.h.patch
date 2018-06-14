@@ -1,5 +1,5 @@
---- a/rmw_connext_cpp/resources/patch_generated/connext_static_raw_data.h
-+++ b/rmw_connext_cpp/resources/patch_generated/connext_static_raw_data.h
+--- a/rmw_connext_cpp/resources/patch_generated/connext_static_serialized_data.h
++++ b/rmw_connext_cpp/resources/patch_generated/connext_static_serialized_data.h
 @@ -14,7 +14,7 @@ or consult the RTI Connext manual.
  
  #ifndef NDDS_STANDALONE_TYPE

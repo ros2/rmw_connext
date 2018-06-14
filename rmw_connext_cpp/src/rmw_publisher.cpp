@@ -30,7 +30,7 @@
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 
 // include patched generated code from the build folder
-#include "connext_static_raw_dataSupport.h"
+#include "connext_static_serialized_dataSupport.h"
 
 // Uncomment this to get extra console output about discovery.
 // This affects code in this file, but there is a similar variable in:
@@ -119,7 +119,7 @@ rmw_create_publisher(
   // which only publishes DDS_Octets
   // The purpose of this is to send only raw data DDS_Octets over the wire,
   // advertise the topic however with a type of the message, e.g. std_msgs::msg::dds_::String
-  status = ConnextStaticRawDataSupport_register_external_type(
+  status = ConnextStaticSerializedDataSupport_register_external_type(
     participant, type_name.c_str(), type_code);
   if (status != DDS_RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to register external type");

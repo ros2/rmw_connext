@@ -76,45 +76,45 @@ endif()
 set(generated_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/generated")
 file(MAKE_DIRECTORY ${generated_directory})
 set(generated_files
-  ${generated_directory}/connext_static_raw_data.cxx
-  ${generated_directory}/connext_static_raw_data.h
-  ${generated_directory}/connext_static_raw_dataPlugin.cxx
-  ${generated_directory}/connext_static_raw_dataPlugin.h
-  ${generated_directory}/connext_static_raw_dataSupport.cxx
-  ${generated_directory}/connext_static_raw_dataSupport.h
+  ${generated_directory}/connext_static_serialized_data.cxx
+  ${generated_directory}/connext_static_serialized_data.h
+  ${generated_directory}/connext_static_serialized_dataPlugin.cxx
+  ${generated_directory}/connext_static_serialized_dataPlugin.h
+  ${generated_directory}/connext_static_serialized_dataSupport.cxx
+  ${generated_directory}/connext_static_serialized_dataSupport.h
 )
 add_custom_command(
   OUTPUT ${generated_files}
-  COMMAND "${_idl_pp}" -language C++ -unboundedSupport "connext_static_raw_data.idl" -d ${generated_directory}
+  COMMAND "${_idl_pp}" -language C++ -unboundedSupport "connext_static_serialized_data.idl" -d ${generated_directory}
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
-  COMMENT "Generating raw type support for RTI Connext (using '${_idl_pp}')"
+  COMMENT "Generating serialized type support for RTI Connext (using '${_idl_pp}')"
   VERBATIM
 )
 
 # patch the generate code for raw data
 set(patch_files
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_data.cxx.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_data.h.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataPlugin.cxx.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataPlugin.h.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataSupport.cxx.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_raw_dataSupport.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_data.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_data.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataPlugin.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataPlugin.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataSupport.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataSupport.h.patch
 )
 set(patched_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/patched")
 file(MAKE_DIRECTORY ${patched_directory})
 set(patched_files
-  ${patched_directory}/connext_static_raw_data.cxx
-  ${patched_directory}/connext_static_raw_data.h
-  ${patched_directory}/connext_static_raw_dataPlugin.cxx
-  ${patched_directory}/connext_static_raw_dataPlugin.h
-  ${patched_directory}/connext_static_raw_dataSupport.cxx
-  ${patched_directory}/connext_static_raw_dataSupport.h
+  ${patched_directory}/connext_static_serialized_data.cxx
+  ${patched_directory}/connext_static_serialized_data.h
+  ${patched_directory}/connext_static_serialized_dataPlugin.cxx
+  ${patched_directory}/connext_static_serialized_dataPlugin.h
+  ${patched_directory}/connext_static_serialized_dataSupport.cxx
+  ${patched_directory}/connext_static_serialized_dataSupport.h
 )
 add_custom_command(
   OUTPUT ${patched_files}
   COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_SOURCE_DIR}/bin/apply-patch.py" --input ${generated_files} --patch ${patch_files} --out ${patched_files}
   DEPENDS ${generated_files}
-  COMMENT "Patching raw type support for RTI Connext"
+  COMMENT "Patching serialized type support for RTI Connext"
   VERBATIM
 )
 
