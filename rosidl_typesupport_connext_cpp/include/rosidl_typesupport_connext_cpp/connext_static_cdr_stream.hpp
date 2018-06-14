@@ -19,13 +19,13 @@
 
 extern "C"
 {
-// TODO(karsten1987): Join rmw_raw_message_t and this ConnextStaticCDRStream struct
+// TODO(karsten1987): Join rmw_serialized_message_t and this ConnextStaticCDRStream struct
 // inside rcutils to have only one implementation of it.
 typedef struct ConnextStaticCDRStream
 {
   char * buffer = NULL;
-  unsigned int buffer_length = 0;
-  unsigned int buffer_capacity = 0;
+  size_t buffer_length = 0;
+  size_t buffer_capacity = 0;
   rcutils_allocator_t allocator;
 } ConnextStaticCDRStream;
 }  // extern "C"
