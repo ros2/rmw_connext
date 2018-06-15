@@ -33,6 +33,22 @@ else
   _NDDSHOME_TO_USE=$NDDSHOME
 fi
 
+ament_prepend_unique_value PATH "$_NDDSHOME_TO_USE/bin"
+
+_Connext_LIBRARY_DIR_TO_USE=$_NDDSHOME_TO_USE/lib/@Connext_ARCHITECTURE_NAME@
+
+if [ ! -d "$_Connext_LIBRARY_DIR_TO_USE" ]; then
+  echo "[connext_cmake_module] Error:" \
+    "The expected location of Connext libraries [[$_Connext_LIBRARY_DIR_TO_USE]] does not exist." \
+    "A version of Connext for a different architecture may have been used when the workspace was" \
+    "built." \
+    "Support for Connext will not work correctly." 1>&2
+  unset _Connext_LIBRARY_DIR_TO_USE
+  unset _NDDSHOME_TO_USE
+  unset _BUILDTIME_NDDSHOME
+  return
+fi
+
 # detect if running on Darwin platform
 _UNAME=`uname -s`
 _IS_DARWIN=0
@@ -40,10 +56,6 @@ if [ "$_UNAME" = "Darwin" ]; then
   _IS_DARWIN=1
 fi
 unset _UNAME
-
-ament_prepend_unique_value PATH "$_NDDSHOME_TO_USE/bin"
-
-_Connext_LIBRARY_DIR_TO_USE=$_NDDSHOME_TO_USE/lib/@Connext_ARCHITECTURE_NAME@
 
 # add the libary dir on the (DY)LD_LIBRARY_PATH for the rtiddsgen tool
 ament_prepend_unique_value PATH "$_Connext_LIBRARY_DIR_TO_USE"
