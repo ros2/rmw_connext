@@ -348,7 +348,7 @@ to_cdr_stream(
     return false;
   }
   cdr_stream->buffer_length = expected_length;
-  if (cdr_stream->buffer_length > std::numeric_limits<unsigned int>::max()) {
+  if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
     fprintf(stderr, "cdr_stream->buffer_length, unexpectedly larger than max unsigned int\n");
     return false;
   }
@@ -383,7 +383,7 @@ to_message(
 
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message =
     @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
-  if (cdr_stream->buffer_length > std::numeric_limits<unsigned int>::max()) {
+  if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
     fprintf(stderr, "cdr_stream->buffer_length, unexpectedly larger than max unsigned int\n");
     return false;
   }
