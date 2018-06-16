@@ -66,9 +66,62 @@ register_rmw_implementation(
   "cpp:rosidl_typesupport_cpp:rosidl_typesupport_connext_cpp"
 )
 
+# generate code for raw data
+set(_idl_pp "${Connext_DDSGEN}")
+if(NOT "${Connext_DDSGEN_SERVER}" STREQUAL "")
+  # use the code generator in server mode when available
+  # because it speeds up the code generation step significantly
+  set(_idl_pp "${Connext_DDSGEN_SERVER}")
+endif()
+set(generated_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/generated")
+file(MAKE_DIRECTORY ${generated_directory})
+set(generated_files
+  ${generated_directory}/connext_static_serialized_data.cxx
+  ${generated_directory}/connext_static_serialized_data.h
+  ${generated_directory}/connext_static_serialized_dataPlugin.cxx
+  ${generated_directory}/connext_static_serialized_dataPlugin.h
+  ${generated_directory}/connext_static_serialized_dataSupport.cxx
+  ${generated_directory}/connext_static_serialized_dataSupport.h
+)
+add_custom_command(
+  OUTPUT ${generated_files}
+  COMMAND "${_idl_pp}" -language C++ -unboundedSupport "connext_static_serialized_data.idl" -d ${generated_directory}
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+  COMMENT "Generating serialized type support for RTI Connext (using '${_idl_pp}')"
+  VERBATIM
+)
+
+# patch the generate code for raw data
+set(patch_files
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_data.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_data.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataPlugin.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataPlugin.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataSupport.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataSupport.h.patch
+)
+set(patched_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/patched")
+file(MAKE_DIRECTORY ${patched_directory})
+set(patched_files
+  ${patched_directory}/connext_static_serialized_data.cxx
+  ${patched_directory}/connext_static_serialized_data.h
+  ${patched_directory}/connext_static_serialized_dataPlugin.cxx
+  ${patched_directory}/connext_static_serialized_dataPlugin.h
+  ${patched_directory}/connext_static_serialized_dataSupport.cxx
+  ${patched_directory}/connext_static_serialized_dataSupport.h
+)
+add_custom_command(
+  OUTPUT ${patched_files}
+  COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_SOURCE_DIR}/bin/apply-patch.py" --input ${generated_files} --patch ${patch_files} --out ${patched_files}
+  DEPENDS ${generated_files}
+  COMMENT "Patching serialized type support for RTI Connext"
+  VERBATIM
+)
+
 add_library(
   rmw_connext_cpp
   SHARED
+  ${patched_files}
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp
@@ -90,6 +143,7 @@ add_library(
   src/rmw_publisher.cpp
   src/rmw_request.cpp
   src/rmw_response.cpp
+  src/rmw_serialize.cpp
   src/rmw_service.cpp
   src/rmw_service_names_and_types.cpp
   src/rmw_service_server_is_available.cpp
@@ -108,6 +162,7 @@ ament_target_dependencies(rmw_connext_cpp
   "rosidl_typesupport_connext_c"
   "rosidl_typesupport_connext_cpp"
   "Connext")
+target_include_directories(rmw_connext_cpp PUBLIC ${patched_directory})
 ament_export_libraries(rmw_connext_cpp)
 
 # Causes the visibility macros to use dllexport rather than dllimport

@@ -51,7 +51,10 @@ if(WIN32)
     PRIVATE "ROSIDL_TYPESUPPORT_CONNEXT_C_BUILDING_DLL")
 endif()
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-ament_target_dependencies(${PROJECT_NAME} "rosidl_typesupport_connext_cpp")
+ament_target_dependencies(
+  ${PROJECT_NAME}
+  "Connext"
+  "rosidl_typesupport_connext_cpp")
 ament_export_libraries(${PROJECT_NAME})
 
 ament_index_register_resource("rosidl_typesupport_c")

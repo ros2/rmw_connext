@@ -20,6 +20,7 @@
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
+#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
 #include "rosidl_typesupport_connext_cpp/identifier.hpp"
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/message_type_support_decl.hpp"
@@ -59,16 +60,10 @@ namespace @(subfolder)
 namespace typesupport_connext_cpp
 {
 
-bool
-register_type__@(spec.base_type.type)(
-  void * untyped_participant,
-  const char * type_name)
+DDS_TypeCode *
+get_type_code__@(spec.base_type.type)()
 {
-  DDSDomainParticipant * participant = static_cast<DDSDomainParticipant *>(untyped_participant);
-  DDS_ReturnCode_t status =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::register_type(participant, type_name);
-
-  return status == DDS_RETCODE_OK;
+  return @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::get_typecode();
 }
 
 bool
@@ -147,41 +142,6 @@ convert_ros_message_to_dds(
 }
 
 bool
-publish__@(spec.base_type.type)(
-  void * untyped_topic_writer,
-  const void * untyped_ros_message)
-{
-  DDSDataWriter * topic_writer = static_cast<DDSDataWriter *>(untyped_topic_writer);
-
-  const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
-    *(const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
-  if (!dds_message) {
-    return false;
-  }
-
-  bool success = convert_ros_message_to_dds(ros_message, *dds_message);
-  if (success) {
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter * data_writer =
-      @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataWriter::narrow(topic_writer);
-    if (!data_writer) {
-      fprintf(stderr, "failed to narrow data writer\n");
-      success = false;
-    } else {
-      DDS_ReturnCode_t status = data_writer->write(*dds_message, DDS_HANDLE_NIL);
-      success = status == DDS_RETCODE_OK;
-    }
-  }
-
-  DDS_ReturnCode_t status =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message);
-  success &= status == DDS_RETCODE_OK;
-
-  return success;
-}
-
-bool
 convert_dds_message_to_ros(
   const @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message,
   @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message)
@@ -233,99 +193,113 @@ convert_dds_message_to_ros(
 }
 
 bool
-take__@(spec.base_type.type)(
-  void * untyped_topic_reader,
-  bool ignore_local_publications,
-  void * untyped_ros_message,
-  bool * taken,
-  void * sending_publication_handle)
+to_cdr_stream__@(spec.base_type.type)(
+  const void * untyped_ros_message,
+  ConnextStaticCDRStream * cdr_stream)
 {
-  if (!untyped_topic_reader) {
-    throw std::runtime_error("topic reader handle is null");
+  if (!cdr_stream) {
+    return false;
   }
   if (!untyped_ros_message) {
-    throw std::runtime_error("ros message handle is null");
-  }
-  if (!taken) {
-    throw std::runtime_error("taken handle is null");
-  }
-
-  DDSDataReader * topic_reader = static_cast<DDSDataReader *>(untyped_topic_reader);
-
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader * data_reader =
-    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_DataReader::narrow(topic_reader);
-  if (!data_reader) {
-    fprintf(stderr, "failed to narrow data reader\n");
     return false;
   }
 
-  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_Seq dds_messages;
-  DDS_SampleInfoSeq sample_infos;
-  DDS_ReturnCode_t status = data_reader->take(
-    dds_messages,
-    sample_infos,
-    1,
-    DDS_ANY_SAMPLE_STATE,
-    DDS_ANY_VIEW_STATE,
-    DDS_ANY_INSTANCE_STATE);
-  if (status == DDS_RETCODE_NO_DATA) {
-    *taken = false;
-    return true;
-  }
-  if (status != DDS_RETCODE_OK) {
-    fprintf(stderr, "take failed with status = %d\n", status);
+  // cast the untyped to the known ros message
+  const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
+    *(const @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
+
+  // create a respective connext dds type
+  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message = @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+  if (!dds_message) {
     return false;
   }
 
-  bool ignore_sample = false;
-  DDS_SampleInfo & sample_info = sample_infos[0];
-  if (!sample_info.valid_data) {
-    // skip sample without data
-    ignore_sample = true;
-  } else if (ignore_local_publications) {
-    // compare the lower 12 octets of the guids from the sender and this receiver
-    // if they are equal the sample has been sent from this process and should be ignored
-    DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
-    DDS_InstanceHandle_t receiver_instance_handle = topic_reader->get_instance_handle();
-    ignore_sample = true;
-    for (size_t i = 0; i < 12; ++i) {
-      DDS_Octet * sender_element = &(sender_guid.value[i]);
-      DDS_Octet * receiver_element = &(reinterpret_cast<DDS_Octet *>(&receiver_instance_handle)[i]);
-      if (*sender_element != *receiver_element) {
-        ignore_sample = false;
-        break;
-      }
-    }
-  }
-  if (sample_info.valid_data && sending_publication_handle) {
-    *static_cast<DDS_InstanceHandle_t *>(sending_publication_handle) =
-      sample_info.publication_handle;
+  // convert ros to dds
+  if (!convert_ros_message_to_dds(ros_message, *dds_message)) {
+    return false;
   }
 
-  bool success = true;
-  if (!ignore_sample) {
-    @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
-      *(@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
-    success = convert_dds_message_to_ros(dds_messages[0], ros_message);
-    if (success) {
-      *taken = true;
-    }
-  } else {
-    *taken = false;
+  // call the serialize function for the first time to get the expected length of the message
+  unsigned int expected_length;
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(
+      NULL,
+      &expected_length,
+      dds_message) != RTI_TRUE)
+  {
+    fprintf(stderr, "failed to call @(spec.base_type.type)_Plugin_serialize_to_cdr_buffer()\n");
+    return false;
   }
-  data_reader->return_loan(dds_messages, sample_infos);
+  cdr_stream->buffer_length = expected_length;
+  if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
+    fprintf(stderr, "cdr_stream->buffer_length, unexpectedly larger than max unsigned int\n");
+    return false;
+  }
+  if (cdr_stream->buffer_capacity < cdr_stream->buffer_length) {
+    cdr_stream->allocator.deallocate(cdr_stream->buffer, cdr_stream->allocator.state);
+    cdr_stream->buffer = static_cast<char *>(cdr_stream->allocator.allocate(cdr_stream->buffer_length, cdr_stream->allocator.state));
+  }
+  // call the function again and fill the buffer this time
+  unsigned int buffer_length_uint = static_cast<unsigned int>(cdr_stream->buffer_length);
+  if (@(spec.base_type.type)_Plugin_serialize_to_cdr_buffer(
+      cdr_stream->buffer,
+      &buffer_length_uint,
+      dds_message) != RTI_TRUE)
+  {
+    return false;
+  }
+  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK) {
+    return false;
+  }
+  return true;
+}
 
+bool
+to_message__@(spec.base_type.type)(
+  const ConnextStaticCDRStream * cdr_stream,
+  void * untyped_ros_message)
+{
+  if (!cdr_stream) {
+    return false;
+  }
+  if (!cdr_stream->buffer) {
+    fprintf(stderr, "cdr stream doesn't contain data\n");
+  }
+  if (!untyped_ros_message) {
+    return false;
+  }
+
+  @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ * dds_message =
+    @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::create_data();
+  if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
+    fprintf(stderr, "cdr_stream->buffer_length, unexpectedly larger than max unsigned int\n");
+    return false;
+  }
+  if (@(spec.base_type.type)_Plugin_deserialize_from_cdr_buffer(
+      dds_message,
+      cdr_stream->buffer,
+      static_cast<unsigned int>(cdr_stream->buffer_length)) != RTI_TRUE)
+  {
+    fprintf(stderr, "deserialize from cdr buffer failed\n");
+    return false;
+  }
+
+  @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message =
+    *(@(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) *)untyped_ros_message;
+  bool success = convert_dds_message_to_ros(*dds_message, ros_message);
+  if (@(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_TypeSupport::delete_data(dds_message) != DDS_RETCODE_OK) {
+    return false;
+  }
   return success;
 }
 
 static message_type_support_callbacks_t callbacks = {
   "@(spec.base_type.pkg_name)",
   "@(spec.base_type.type)",
-  &register_type__@(spec.base_type.type),
-  &publish__@(spec.base_type.type),
-  &take__@(spec.base_type.type),
+  &get_type_code__@(spec.base_type.type),
   nullptr,
-  nullptr
+  nullptr,
+  &to_cdr_stream__@(spec.base_type.type),
+  &to_message__@(spec.base_type.type)
 };
 
 static rosidl_message_type_support_t handle = {

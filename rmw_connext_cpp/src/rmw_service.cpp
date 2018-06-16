@@ -49,7 +49,7 @@ rmw_create_service(
     node->implementation_identifier, rti_connext_identifier,
     return NULL)
 
-  RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(type_supports, type_support)
+  RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(type_supports, type_support, NULL)
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");

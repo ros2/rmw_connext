@@ -39,9 +39,15 @@ header_guard_variable = '__'.join([x.upper() for x in header_guard_parts]) + '_'
 # endif
 #endif
 #include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Support.h"
+#include "@(spec.base_type.pkg_name)/@(subfolder)/dds_connext/@(spec.base_type.type)_Plugin.h"
+
+#include "ndds/ndds_cpp.h"
 #ifndef _WIN32
 # pragma GCC diagnostic pop
 #endif
+
+// forward declaration of internal CDR Stream
+struct ConnextStaticCDRStream;
 
 // forward declaration of DDS types
 class DDSDomainParticipant;
@@ -57,10 +63,8 @@ namespace @(subfolder)
 namespace typesupport_connext_cpp
 {
 
-bool
-register_type__@(spec.base_type.type)(
-  DDSDomainParticipant * participant,
-  const char * type_name);
+DDS_TypeCode *
+get_type_code__@(spec.base_type.type)();
 
 bool
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC_@(spec.base_type.pkg_name)
@@ -69,22 +73,20 @@ convert_ros_message_to_dds(
   @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message);
 
 bool
-publish__@(spec.base_type.type)(
-  DDSDataWriter * topic_writer,
-  const void * untyped_ros_message);
-
-bool
 ROSIDL_TYPESUPPORT_CONNEXT_CPP_PUBLIC_@(spec.base_type.pkg_name)
 convert_dds_message_to_ros(
   const @(spec.base_type.pkg_name)::@(subfolder)::dds_::@(spec.base_type.type)_ & dds_message,
   @(spec.base_type.pkg_name)::@(subfolder)::@(spec.base_type.type) & ros_message);
 
 bool
-take__@(spec.base_type.type)(
-  DDSDataReader * topic_reader,
-  bool ignore_local_publications,
-  void * untyped_ros_message,
-  bool * taken);
+to_cdr_stream__@(spec.base_type.type)(
+  const void * untyped_ros_message,
+  ConnextStaticCDRStream * cdr_stream);
+
+bool
+to_message__@(spec.base_type.type)(
+  const ConnextStaticCDRStream * cdr_stream,
+  void * untyped_ros_message);
 
 }  // namespace typesupport_connext_cpp
 
