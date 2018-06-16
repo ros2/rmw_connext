@@ -51,7 +51,8 @@ publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
   }
   if (!instance->serialized_data.loan_contiguous(
       reinterpret_cast<DDS_Octet *>(cdr_stream->buffer),
-      static_cast<DDS_Long>(cdr_stream->buffer_length), cdr_stream->buffer_length))
+      static_cast<DDS_Long>(cdr_stream->buffer_length),
+      static_cast<DDS_Long>(cdr_stream->buffer_length)))
   {
     RMW_SET_ERROR_MSG("failed to loan memory for message");
     goto cleanup;
