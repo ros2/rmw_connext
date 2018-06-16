@@ -18,7 +18,7 @@ if exist %_BUILDTIME_NDDSHOME% (
     goto :eof
   )
 
-  if not exist %NDDSHOME%\ (
+  if not exist "%NDDSHOME%\" (
     echo [connext_cmake_module] Warning: Neither the location at which Connext was found when the workspace was built [[%_BUILDTIME_NDDSHOME%]] nor the NDDSHOME environment variable [[%NDDSHOME%]] point to a valid directory. Support for Connext will not be available. 1>&2
     set "_BUILDTIME_NDDSHOME="
     goto :eof
