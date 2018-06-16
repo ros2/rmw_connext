@@ -26,7 +26,6 @@ if exist %_BUILDTIME_NDDSHOME% (
   set "_NDDSHOME_TO_USE=%NDDSHOME%"
 )
 
-:: Call RTI's env setup script, piping stdout to nul, since they have echo on.
 set "_Connext_ENV_SETUP_SCRIPT=%_NDDSHOME_TO_USE%\resource\scripts\rtisetenv_@Connext_ARCHITECTURE_NAME@.bat"
 if not exist "%_Connext_ENV_SETUP_SCRIPT%" (
   echo [connext_cmake_module] Error: The expected location of the Connext environment setup script [[%_Connext_ENV_SETUP_SCRIPT%]] does not exist. Support for Connext will not be available. 1>&2
@@ -36,7 +35,9 @@ if not exist "%_Connext_ENV_SETUP_SCRIPT%" (
   goto :eof
 )
 
+:: Call RTI's env setup script, piping stdout to nul, since they have echo on.
 call "%_Connext_ENV_SETUP_SCRIPT%" 1> nul
+
 set "_Connext_ENV_SETUP_SCRIPT="
 set "_BUILDTIME_NDDSHOME="
 set "_NDDSHOME_TO_USE="
