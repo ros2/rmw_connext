@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <limits>
+
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/types.h"
@@ -105,7 +107,14 @@ take(
     // TODO(karsten1987): This malloc has to go!
     cdr_stream->buffer =
       reinterpret_cast<char *>(malloc(cdr_stream->buffer_length * sizeof(char)));
-    for (size_t i = 0; i < cdr_stream->buffer_length; ++i) {
+
+    if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
+      RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than max unsiged int value");
+      data_reader->return_loan(dds_messages, sample_infos);
+      *taken = false;
+      return DDS_RETCODE_ERROR;
+    }
+    for (unsigned int i = 0; i < static_cast<unsigned int>(cdr_stream->buffer_length); ++i) {
       cdr_stream->buffer[i] = dds_messages[0].serialized_data[i];
     }
     *taken = true;

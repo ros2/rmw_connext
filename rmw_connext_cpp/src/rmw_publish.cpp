@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <limits>
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
@@ -43,9 +45,13 @@ publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
   DDS_ReturnCode_t status = DDS_RETCODE_ERROR;
 
   instance->serialized_data.maximum(0);
+  if (cdr_stream->buffer_length > (std::numeric_limits<DDS_Long>::max)()) {
+    RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than DDS_Long's max value");
+    return false;
+  }
   if (!instance->serialized_data.loan_contiguous(
       reinterpret_cast<DDS_Octet *>(cdr_stream->buffer),
-      cdr_stream->buffer_length, cdr_stream->buffer_length))
+      static_cast<DDS_Long>(cdr_stream->buffer_length), cdr_stream->buffer_length))
   {
     RMW_SET_ERROR_MSG("failed to loan memory for message");
     goto cleanup;
