@@ -27,10 +27,10 @@
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 #include "rosidl_typesupport_connext_cpp/service_type_support.h"
 
-#define RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(TYPE_SUPPORTS, TYPE_SUPPORT) \
+#define RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(TYPE_SUPPORTS, TYPE_SUPPORT, RET_VAL) \
   if (!TYPE_SUPPORTS) { \
     RMW_SET_ERROR_MSG("type supports handle is null"); \
-    return NULL; \
+    return RET_VAL; \
   } \
   const rosidl_message_type_support_t * TYPE_SUPPORT = \
     get_message_typesupport_handle( \
@@ -51,14 +51,14 @@
         rosidl_typesupport_connext_c__identifier, \
         static_cast<const void *>(rosidl_typesupport_connext_c__identifier)); \
       RMW_SET_ERROR_MSG(__msg); \
-      return NULL; \
+      return RET_VAL; \
     } \
   }
 
-#define RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(TYPE_SUPPORTS, TYPE_SUPPORT) \
+#define RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(TYPE_SUPPORTS, TYPE_SUPPORT, RET_VAL) \
   if (!TYPE_SUPPORTS) { \
     RMW_SET_ERROR_MSG("type supports handle is null"); \
-    return NULL; \
+    return RET_VAL; \
   } \
   const rosidl_service_type_support_t * TYPE_SUPPORT = \
     get_service_typesupport_handle( \
@@ -79,7 +79,7 @@
         rosidl_typesupport_connext_c__identifier, \
         static_cast<const void *>(rosidl_typesupport_connext_c__identifier)); \
       RMW_SET_ERROR_MSG(__msg); \
-      return NULL; \
+      return RET_VAL; \
     } \
   }
 
