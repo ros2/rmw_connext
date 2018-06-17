@@ -108,6 +108,28 @@ create_node(
   // https://community.rti.com/kb/types-matching
   participant_qos.resource_limits.type_code_max_serialized_length = 0;
 
+  rmw_node_t * node_handle = nullptr;
+  ConnextNodeInfo * node_info = nullptr;
+  rmw_guard_condition_t * graph_guard_condition = nullptr;
+  CustomPublisherListener * publisher_listener = nullptr;
+  CustomSubscriberListener * subscriber_listener = nullptr;
+  void * buf = nullptr;
+
+  DDSDomainParticipant * participant = nullptr;
+  DDSDataReader * data_reader = nullptr;
+  DDSPublicationBuiltinTopicDataDataReader * builtin_publication_datareader = nullptr;
+  DDSSubscriptionBuiltinTopicDataDataReader * builtin_subscription_datareader = nullptr;
+  DDSSubscriber * builtin_subscriber = nullptr;
+
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+
+  const char * srp = nullptr;
+  char * ca_cert_fn = nullptr;
+  char * cert_fn = nullptr;
+  char * key_fn = nullptr;
+  char * gov_fn = nullptr;
+  char * perm_fn = nullptr;
+
   if (security_options->security_root_path) {
     // enable some security stuff
     status = DDSPropertyQosPolicyHelper::add_property(
@@ -138,94 +160,103 @@ create_node(
       return NULL;
     }
 
-    const char * srp = security_options->security_root_path;  // save some typing
-    std::string ca_cert_fn = rcutils_join_path(srp, "ca.cert.pem");
-    std::string cert_fn = rcutils_join_path(srp, "cert.pem");
-    std::string key_fn = rcutils_join_path(srp, "key.pem");
-    std::string gov_fn = rcutils_join_path(srp, "governance.p7s");
-    std::string perm_fn = rcutils_join_path(srp, "permissions.p7s");
+    srp = security_options->security_root_path;  // save some typing
+    ca_cert_fn = rcutils_join_path(srp, "ca.cert.pem", allocator);
+    if (!ca_cert_fn) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for 'ca_cert_fn'");
+      goto fail;
+    }
+    cert_fn = rcutils_join_path(srp, "cert.pem", allocator);
+    if (!cert_fn) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for 'cert_fn'");
+      goto fail;
+    }
+    key_fn = rcutils_join_path(srp, "key.pem", allocator);
+    if (!key_fn) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for 'key_fn'");
+      goto fail;
+    }
+    gov_fn = rcutils_join_path(srp, "governance.p7s", allocator);
+    if (!gov_fn) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for 'gov_fn'");
+      goto fail;
+    }
+    perm_fn = rcutils_join_path(srp, "permissions.p7s", allocator);
+    if (!perm_fn) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for 'perm_fn'");
+      goto fail;
+    }
 
     // now try to pass these filenames to the Authentication plugin
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.authentication.ca_file",
-      ca_cert_fn.c_str(),
+      ca_cert_fn,
       DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
-      return NULL;
+      goto fail;
     }
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.authentication.certificate_file",
-      cert_fn.c_str(),
+      cert_fn,
       DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
-      return NULL;
+      goto fail;
     }
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.authentication.private_key_file",
-      key_fn.c_str(),
+      key_fn,
       DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
-      return NULL;
+      goto fail;
     }
 
     // pass filenames to the Access Control plugin
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.access_control.permissions_authority_file",
-      ca_cert_fn.c_str(),
+      ca_cert_fn,
       DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
-      return NULL;
+      goto fail;
     }
 
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.access_control.governance_file",
-      gov_fn.c_str(),
+      gov_fn,
       DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
-      return NULL;
+      goto fail;
     }
 
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.access_control.permissions_file",
-      perm_fn.c_str(),
+      perm_fn,
       DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
-      return NULL;
+      goto fail;
     }
   }
-  DDS_DomainId_t domain = static_cast<DDS_DomainId_t>(domain_id);
 
-  DDSDomainParticipant * participant = dpf_->create_participant(
-    domain, participant_qos, NULL,
+  participant = dpf_->create_participant(
+    static_cast<DDS_DomainId_t>(domain_id), participant_qos, NULL,
     DDS_STATUS_MASK_NONE);
   if (!participant) {
     RMW_SET_ERROR_MSG("failed to create participant");
-    return NULL;
+    goto fail;
   }
 
-  rmw_node_t * node_handle = nullptr;
-  ConnextNodeInfo * node_info = nullptr;
-  rmw_guard_condition_t * graph_guard_condition = nullptr;
-  CustomPublisherListener * publisher_listener = nullptr;
-  CustomSubscriberListener * subscriber_listener = nullptr;
-  void * buf = nullptr;
-
-  DDSDataReader * data_reader = nullptr;
-  DDSPublicationBuiltinTopicDataDataReader * builtin_publication_datareader = nullptr;
-  DDSSubscriptionBuiltinTopicDataDataReader * builtin_subscription_datareader = nullptr;
-  DDSSubscriber * builtin_subscriber = participant->get_builtin_subscriber();
+  builtin_subscriber = participant->get_builtin_subscriber();
   if (!builtin_subscriber) {
     RMW_SET_ERROR_MSG("builtin subscriber handle is null");
     goto fail;
@@ -360,6 +391,12 @@ fail:
   if (buf) {
     rmw_free(buf);
   }
+  // Note: allocator.deallocate(nullptr, ...); is allowed.
+  allocator.deallocate(ca_cert_fn, allocator.state);
+  allocator.deallocate(cert_fn, allocator.state);
+  allocator.deallocate(key_fn, allocator.state);
+  allocator.deallocate(gov_fn, allocator.state);
+  allocator.deallocate(perm_fn, allocator.state);
   return NULL;
 }
 
