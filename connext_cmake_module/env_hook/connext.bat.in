@@ -3,7 +3,7 @@ set "_BUILDTIME_NDDSHOME=@Connext_HOME@"
 :: Give priority to the Connext installation found when the workspace was built, if it's valid.
 :: If it's not valid, the current value of the NDDSHOME environment variable will be used.
 :: The one detected at buildtime may refer to an invalid path for users using "fat archive" binaries, for example.
-if exist %_BUILDTIME_NDDSHOME% (
+if exist "%_BUILDTIME_NDDSHOME%\" (
   :: Warn about unused environment variable.
   if "%NDDSHOME%" NEQ "" (
     if "%NDDSHOME%" NEQ "%_BUILDTIME_NDDSHOME%" (
