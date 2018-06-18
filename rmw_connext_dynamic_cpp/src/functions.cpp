@@ -748,6 +748,19 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   return RMW_RET_OK;
 }
 
+rmw_ret_t
+rmw_publish_serialized_message(
+  const rmw_publisher_t * publisher, const rmw_serialized_message_t * serialized_message)
+{
+  (void) publisher;
+  (void) serialized_message;
+
+  RMW_SET_ERROR_MSG(
+    "rmw_publish_serialized_message is not implemented for rmw_connext_dynamic_cpp");
+
+  return RMW_RET_ERROR;
+}
+
 rmw_subscription_t *
 rmw_create_subscription(
   const rmw_node_t * node,
@@ -1289,6 +1302,71 @@ rmw_take_with_info(
   detail->publication_handle = sending_publication_handle;
 
   return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_take_serialized_message(
+  const rmw_subscription_t * subscription,
+  rmw_serialized_message_t * serialized_message,
+  bool * taken)
+{
+  (void) subscription;
+  (void) serialized_message;
+  (void) taken;
+
+  RMW_SET_ERROR_MSG(
+    "rmw_take_serialized_message is not implemented for rmw_connext_dyamic_cpp");
+
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_take_serialized_message_with_info(
+  const rmw_subscription_t * subscription,
+  rmw_serialized_message_t * serialized_message,
+  bool * taken,
+  rmw_message_info_t * message_info)
+{
+  (void) subscription;
+  (void) serialized_message;
+  (void) taken;
+
+  RMW_SET_ERROR_MSG(
+    "rmw_take_serialized_message_with_info is not implemented for rmw_connext_dynamic_cpp");
+
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_serialize(
+  const void * ros_message,
+  const rosidl_message_type_support_t * type_support,
+  rmw_serialized_message_t * serialized_message)
+{
+  (void) ros_message;
+  (void) type_support;
+  (void) serialized_message;
+
+  RMW_SET_ERROR_MSG(
+    "rmw_serialize is not implemented for rmw_connext_dynamic_cpp");
+
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_deserialize(
+  const rmw_serialized_message_t * serialized_message,
+  const rosidl_message_type_support_t * type_support,
+  void * ros_message)
+{
+  (void) serialized_message;
+  (void) type_support;
+  (void) ros_message;
+
+  RMW_SET_ERROR_MSG(
+    "rmw_deserialize is not implemented for rmw_connext_dynamic_cpp");
+
+  return RMW_RET_ERROR;
 }
 
 rmw_guard_condition_t *
