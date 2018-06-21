@@ -9,21 +9,18 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>connext_cmake_module</buildtool_depend>
-  <buildtool_depend>libndds51-dev</buildtool_depend>
-  <buildtool_depend>ndds-tools</buildtool_depend>
   <buildtool_depend>rosidl_cmake</buildtool_depend>
   <buildtool_depend>rosidl_generator_c</buildtool_depend>
   <buildtool_depend>rosidl_generator_cpp</buildtool_depend>
+  <buildtool_depend>rti-connext-dds-5.3.1</buildtool_depend>
 
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
   <buildtool_export_depend>connext_cmake_module</buildtool_export_depend>
-  <buildtool_export_depend>libndds51-dev</buildtool_export_depend>
-  <buildtool_export_depend>libndds51</buildtool_export_depend>
-  <buildtool_export_depend>ndds-tools</buildtool_export_depend>
   <buildtool_export_depend>rosidl_cmake</buildtool_export_depend>
   <buildtool_export_depend>rosidl_generator_c</buildtool_export_depend>
   <buildtool_export_depend>rosidl_generator_cpp</buildtool_export_depend>
   <buildtool_export_depend>rosidl_generator_dds_idl</buildtool_export_depend>
+  <buildtool_export_depend>rti-connext-dds-5.3.1</buildtool_export_depend>
 
   <build_export_depend>rmw</build_export_depend>
 
