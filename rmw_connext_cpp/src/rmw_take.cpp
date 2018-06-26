@@ -76,6 +76,7 @@ take(
   if (status != DDS_RETCODE_OK) {
     RMW_SET_ERROR_MSG("take failed");
     data_reader->return_loan(dds_messages, sample_infos);
+    return false;
   }
 
   DDS_SampleInfo & sample_info = sample_infos[0];
@@ -112,7 +113,7 @@ take(
       RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than max unsiged int value");
       data_reader->return_loan(dds_messages, sample_infos);
       *taken = false;
-      return DDS_RETCODE_ERROR;
+      return false;
     }
     for (unsigned int i = 0; i < static_cast<unsigned int>(cdr_stream->buffer_length); ++i) {
       cdr_stream->buffer[i] = dds_messages[0].serialized_data[i];
@@ -181,7 +182,7 @@ _take(
     return RMW_RET_ERROR;
   }
   // convert the cdr stream to the message
-  if (!callbacks->to_message(&cdr_stream, ros_message)) {
+  if (*taken && !callbacks->to_message(&cdr_stream, ros_message)) {
     RMW_SET_ERROR_MSG("can't convert cdr stream to ros message");
     return RMW_RET_ERROR;
   }
