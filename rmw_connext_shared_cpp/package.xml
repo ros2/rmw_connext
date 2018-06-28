@@ -4,7 +4,7 @@
   <name>rmw_connext_shared_cpp</name>
   <version>0.5.0</version>
   <description>C++ types and functions shared by the ROS middleware interface to RTI Connext Static and RTI Connext Dynamic.</description>
-  <maintainer email="jackie@osrfoundation.org">Jackie Kay</maintainer>
+  <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
   <license>Apache License 2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
