@@ -132,6 +132,7 @@ add_library(
   src/rmw_client.cpp
   src/rmw_compare_gid_equals.cpp
   src/rmw_count.cpp
+  src/rmw_get_encoding_identifier.cpp
   src/rmw_get_gid_for_publisher.cpp
   src/rmw_get_implementation_identifier.cpp
   src/rmw_guard_condition.cpp
