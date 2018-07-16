@@ -15,4 +15,3 @@
 #include "rmw_connext_cpp/identifier.hpp"
 
 const char * const rti_connext_identifier = "rmw_connext_cpp";
-const char * const rti_connext_encoding_identifier = "cdr";

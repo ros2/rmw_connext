@@ -131,7 +131,7 @@ extern "C"
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
 const char * rti_connext_dynamic_identifier = "rmw_connext_dynamic_cpp";
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
-const char * rti_connext_dynamic_encoding_identifier = "cdr";
+const char * rti_connext_dynamic_serialization_format = "cdr";
 
 struct CustomPublisherInfo
 {
@@ -196,9 +196,9 @@ rmw_get_implementation_identifier()
 }
 
 const char *
-rmw_get_encoding_identifier()
+rmw_get_serialization_format()
 {
-  return rti_connext_dynamic_encoding_identifier;
+  return rti_connext_dynamic_serialization_format;
 }
 
 rmw_ret_t

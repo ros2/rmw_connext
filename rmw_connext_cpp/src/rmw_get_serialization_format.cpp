@@ -14,13 +14,13 @@
 
 #include "rmw/rmw.h"
 
-#include "rmw_connext_cpp/identifier.hpp"
+#include "rmw_connext_cpp/serialization_format.hpp"
 
 extern "C"
 {
 const char *
-rmw_get_encoding_identifier()
+rmw_get_serialization_format()
 {
-  return rti_connext_encoding_identifier;
+  return rti_connext_serialization_format;
 }
 }  // extern "C"

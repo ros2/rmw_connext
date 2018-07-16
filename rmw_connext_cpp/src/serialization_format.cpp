@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_CPP__IDENTIFIER_HPP_
-#define RMW_CONNEXT_CPP__IDENTIFIER_HPP_
+#include "rmw_connext_cpp/serialization_format.hpp"
 
-extern const char * const rti_connext_identifier;
-
-#endif  // RMW_CONNEXT_CPP__IDENTIFIER_HPP_
+const char * const rti_connext_serialization_format = "cdr";
