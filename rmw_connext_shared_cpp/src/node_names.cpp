@@ -65,11 +65,18 @@ get_node_names(
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return RMW_RET_ERROR;
   }
-  node_names->data[0] = rcutils_strdup(participant_qos.participant_name.name, allocator);
-  if (!node_names->data[0]) {
+
+  rcutils_string_array_t tmp_names_list = rcutils_get_zero_initialized_string_array();
+  rcutils_ret = rcutils_string_array_init(&tmp_names_list, length, &allocator);
+
+  tmp_names_list.data[0] = rcutils_strdup(participant_qos.participant_name.name, allocator);
+
+  if (!tmp_names_list.data[0]) {
     RMW_SET_ERROR_MSG("could not allocate memory for node name")
     return RMW_RET_BAD_ALLOC;
   }
+
+  int named_nodes_num = 0;
 
   for (auto i = 1; i < length; ++i) {
     DDS::ParticipantBuiltinTopicData pbtd;
@@ -90,15 +97,17 @@ get_node_names(
         }
       }
     }
+
+    // ignore discovered participants without a name
     if (name.empty()) {
-      // ignore discovered participants without a name
-      node_names->data[i] = nullptr;
       continue;
     }
-    node_names->data[i] = rcutils_strdup(name.c_str(), allocator);
-    if (!node_names->data[i]) {
+
+    tmp_names_list.data[named_nodes_num] = rcutils_strdup(name.c_str(), allocator);
+
+    if (!tmp_names_list.data[named_nodes_num]) {
       RMW_SET_ERROR_MSG("could not allocate memory for node name")
-      rcutils_ret = rcutils_string_array_fini(node_names);
+      rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
       if (rcutils_ret != RCUTILS_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rmw_connext_cpp",
@@ -106,7 +115,22 @@ get_node_names(
       }
       return RMW_RET_BAD_ALLOC;
     }
+
+    ++named_nodes_num;
   }
 
+  rcutils_ret = rcutils_string_array_init(node_names, named_nodes_num, &allocator);
+
+  for (auto i = 0; i < named_nodes_num; ++i) {
+    node_names->data[i] = tmp_names_list.data[i];
+    tmp_names_list.data[i] = nullptr;
+  }
+
+  rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rmw_connext_shared_cpp",
+      "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+  }
   return RMW_RET_OK;
 }
