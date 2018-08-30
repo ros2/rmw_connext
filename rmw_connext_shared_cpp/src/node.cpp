@@ -124,7 +124,8 @@ create_node(
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
   const char * srp = nullptr;
-  char * ca_cert_fn = nullptr;
+  char * identity_ca_cert_fn = nullptr;
+  char * permissions_ca_cert_fn = nullptr;
   char * cert_fn = nullptr;
   char * key_fn = nullptr;
   char * gov_fn = nullptr;
@@ -161,9 +162,14 @@ create_node(
     }
 
     srp = security_options->security_root_path;  // save some typing
-    ca_cert_fn = rcutils_join_path(srp, "ca.cert.pem", allocator);
-    if (!ca_cert_fn) {
-      RMW_SET_ERROR_MSG("failed to allocate memory for 'ca_cert_fn'");
+    identity_ca_cert_fn = rcutils_join_path(srp, "identity_ca.cert.pem", allocator);
+    if (!identity_ca_cert_fn) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for 'identity_ca_cert_fn'");
+      goto fail;
+    }
+    permissions_ca_cert_fn = rcutils_join_path(srp, "permissions_ca.cert.pem", allocator);
+    if (!permissions_ca_cert_fn) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for 'permissions_ca_cert_fn'");
       goto fail;
     }
     cert_fn = rcutils_join_path(srp, "cert.pem", allocator);
@@ -191,7 +197,7 @@ create_node(
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.authentication.ca_file",
-      ca_cert_fn,
+      identity_ca_cert_fn,
       DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
@@ -220,7 +226,7 @@ create_node(
     status = DDSPropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.access_control.permissions_authority_file",
-      ca_cert_fn,
+      permissions_ca_cert_fn,
       DDS_BOOLEAN_FALSE);
     if (status != DDS_RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
@@ -392,7 +398,8 @@ fail:
     rmw_free(buf);
   }
   // Note: allocator.deallocate(nullptr, ...); is allowed.
-  allocator.deallocate(ca_cert_fn, allocator.state);
+  allocator.deallocate(identity_ca_cert_fn, allocator.state);
+  allocator.deallocate(permissions_ca_cert_fn, allocator.state);
   allocator.deallocate(cert_fn, allocator.state);
   allocator.deallocate(key_fn, allocator.state);
   allocator.deallocate(gov_fn, allocator.state);
