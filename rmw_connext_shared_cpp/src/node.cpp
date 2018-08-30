@@ -63,8 +63,13 @@ create_node(
     return NULL;
   }
 
-  snprintf(reinterpret_cast<char *>(participant_qos.user_data.value.get_contiguous_buffer()),
-    length, "name=%s;namespace=%s;", name, namespace_);
+  size_t written =
+    snprintf(reinterpret_cast<char *>(participant_qos.user_data.value.get_contiguous_buffer()),
+      length, "name=%s;namespace=%s;", name, namespace_);
+  if (written < 0) {
+    RMW_SET_ERROR_MSG("failed to populate user_data buffer");
+    return NULL;
+  }
 
   // Accorinrding to the RTPS spec, ContentFilterProperty_t has the following fields:
   // -contentFilteredTopicName (max length 256)

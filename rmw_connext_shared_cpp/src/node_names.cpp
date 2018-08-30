@@ -117,29 +117,35 @@ get_node_names(
     node_names->data[i] = rcutils_strdup(name.c_str(), allocator);
     if (!node_names->data[i]) {
       RMW_SET_ERROR_MSG("could not allocate memory for node name")
-      rcutils_ret = rcutils_string_array_fini(node_names);
-      rcutils_ret = rcutils_string_array_fini(node_namespaces);
-      if (rcutils_ret != RCUTILS_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rmw_connext_cpp",
-          "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
-      }
-      return RMW_RET_BAD_ALLOC;
+      goto fail;
     }
 
     node_namespaces->data[i] = rcutils_strdup(namespace_.c_str(), allocator);
     if (!node_namespaces->data[i]) {
       RMW_SET_ERROR_MSG("could not allocate memory for node namespace")
-      rcutils_ret = rcutils_string_array_fini(node_names);
-      rcutils_ret = rcutils_string_array_fini(node_namespaces);
-      if (rcutils_ret != RCUTILS_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rmw_connext_cpp",
-          "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
-      }
-      return RMW_RET_BAD_ALLOC;
+      goto fail;
     }
   }
 
   return RMW_RET_OK;
+fail:
+  if (node_names) {
+    rcutils_ret = rcutils_string_array_fini(node_names);
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_connext_cpp",
+        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+      rcutils_reset_error();
+    }
+  }
+  if (node_namesspaces) {
+    rcutils_ret = rcutils_string_array_fini(node_namespaces);
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_connext_cpp",
+        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+      rcutils_reset_error();
+    }
+  }
+  return RMW_RET_BAD_ALLOC;
 }
