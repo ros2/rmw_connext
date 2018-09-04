@@ -63,10 +63,10 @@ create_node(
     return NULL;
   }
 
-  size_t written =
+  int written =
     snprintf(reinterpret_cast<char *>(participant_qos.user_data.value.get_contiguous_buffer()),
       length, "name=%s;namespace=%s;", name, namespace_);
-  if (written < 0) {
+  if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return NULL;
   }
