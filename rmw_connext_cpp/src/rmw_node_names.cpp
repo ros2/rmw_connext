@@ -25,8 +25,9 @@ extern "C"
 rmw_ret_t
 rmw_get_node_names(
   const rmw_node_t * node,
-  rcutils_string_array_t * node_names)
+  rcutils_string_array_t * node_names,
+  rcutils_string_array_t * node_namespaces)
 {
-  return get_node_names(rti_connext_identifier, node, node_names);
+  return get_node_names(rti_connext_identifier, node, node_names, node_namespaces);
 }
 }  // extern "C"
