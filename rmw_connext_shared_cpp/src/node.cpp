@@ -55,21 +55,21 @@ create_node(
   participant_qos.participant_name.name = DDS::String_dup(name);
   // since the participant name is not part of the DDS spec
   // the node name is also set in the user_data
-  DDS_Long name_length = static_cast<DDS_Long>(strlen(name));
-  const char prefix[6] = "name=";
-  bool success = participant_qos.user_data.value.length(name_length + sizeof(prefix));
+  size_t length = strlen(name) + strlen("name=;") +
+    strlen(namespace_) + strlen("namespace=;") + 1;
+  bool success = participant_qos.user_data.value.length(static_cast<DDS_Long>(length));
   if (!success) {
     RMW_SET_ERROR_MSG("failed to resize participant user_data");
     return NULL;
   }
-  memcpy(participant_qos.user_data.value.get_contiguous_buffer(), prefix, sizeof(prefix) - 1);
-  {
-    for (DDS_Long i = 0; i < name_length; ++i) {
-      participant_qos.user_data.value[sizeof(prefix) - 1 + i] = name[i];
-    }
-    participant_qos.user_data.value[sizeof(prefix) - 1 + name_length] = ';';
-  }
 
+  int written =
+    snprintf(reinterpret_cast<char *>(participant_qos.user_data.value.get_contiguous_buffer()),
+      length, "name=%s;namespace=%s;", name, namespace_);
+  if (written < 0 || written > static_cast<int>(length) - 1) {
+    RMW_SET_ERROR_MSG("failed to populate user_data buffer");
+    return NULL;
+  }
 
   // Accorinrding to the RTPS spec, ContentFilterProperty_t has the following fields:
   // -contentFilteredTopicName (max length 256)
