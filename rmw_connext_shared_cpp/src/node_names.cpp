@@ -62,6 +62,11 @@ get_node_names(
     RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
   }
+  rcutils_ret = rcutils_string_array_init(node_namespaces, length, &allocator);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+  }
 
   DDS::DomainParticipantQos participant_qos;
   DDS::ReturnCode_t status = participant->get_qos(participant_qos);
@@ -92,6 +97,11 @@ get_node_names(
   node_namespaces->data[0] = rcutils_strdup(node->namespace_, allocator);
   if (!node_namespaces->data[0]) {
     RMW_SET_ERROR_MSG("could not allocate memory for node namespace");
+    return RMW_RET_BAD_ALLOC;
+  }
+  node_namespaces->data[0] = rcutils_strdup(node->namespace_, allocator);
+  if (!node_names->data[0]) {
+    RMW_SET_ERROR_MSG("could not allocate memory for node namespace")
     return RMW_RET_BAD_ALLOC;
   }
 
@@ -125,6 +135,9 @@ get_node_names(
 
     // ignore discovered participants without a name
     if (name.empty()) {
+      // ignore discovered participants without a name
+      node_names->data[i] = nullptr;
+      node_namespaces->data[i] = nullptr;
       continue;
     }
 
@@ -139,6 +152,18 @@ get_node_names(
           "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
       }
       return RMW_RET_BAD_ALLOC;
+    }
+
+    node_names->data[i] = rcutils_strdup(name.c_str(), allocator);
+    if (!node_names->data[i]) {
+      RMW_SET_ERROR_MSG("could not allocate memory for node name")
+      goto fail;
+    }
+
+    node_namespaces->data[i] = rcutils_strdup(namespace_.c_str(), allocator);
+    if (!node_namespaces->data[i]) {
+      RMW_SET_ERROR_MSG("could not allocate memory for node namespace")
+      goto fail;
     }
 
     ++named_nodes_num;
