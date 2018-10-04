@@ -112,7 +112,7 @@ get_service_names_and_types(
     auto fail_cleanup = [&service_names_and_types]() {
         rmw_ret_t rmw_ret = rmw_names_and_types_fini(service_names_and_types);
         if (rmw_ret != RMW_RET_OK) {
-          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
+          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe());
         }
       };
     // For each service, store the name, initialize the string array for types, and store all types
