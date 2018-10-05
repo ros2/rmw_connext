@@ -156,7 +156,7 @@ fail:
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_connext_cpp",
-        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe());
       rcutils_reset_error();
     }
   }
@@ -165,7 +165,7 @@ fail:
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_connext_cpp",
-        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe());
       rcutils_reset_error();
     }
   }
