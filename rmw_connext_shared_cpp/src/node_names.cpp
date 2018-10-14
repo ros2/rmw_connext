@@ -54,11 +54,6 @@ get_node_names(
   }
   auto length = handles.length() + 1;  // add yourself
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  rcutils_ret_t rcutils_ret = rcutils_string_array_init(node_names, length, &allocator);
-  if (rcutils_ret != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
-    return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
-  }
   rcutils_ret = rcutils_string_array_init(node_namespaces, length, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
@@ -79,10 +74,19 @@ get_node_names(
 
   if (!tmp_names_list.data[0]) {
     RMW_SET_ERROR_MSG("could not allocate memory for node name")
+
+    rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_connext_shared_cpp",
+        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+      rcutils_reset_error();
+    }
+
     return RMW_RET_BAD_ALLOC;
   }
   node_namespaces->data[0] = rcutils_strdup(node->namespace_, allocator);
-  if (!node_names->data[0]) {
+  if (!node_namespaces->data[0]) {
     RMW_SET_ERROR_MSG("could not allocate memory for node namespace")
     return RMW_RET_BAD_ALLOC;
   }
@@ -103,10 +107,10 @@ get_node_names(
 
       if (name_found != map.end()) {
         name = std::string(name_found->second.begin(), name_found->second.end());
-      }
-      if (name_found != map.end()) {
         namespace_ = std::string(ns_found->second.begin(), ns_found->second.end());
       }
+
+      // ignore discovered participants without a name
       if (name.empty()) {
         // use participant name if no name was found in the user data
         if (pbtd.participant_name.name) {
