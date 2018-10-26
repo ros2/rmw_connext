@@ -20,7 +20,7 @@ import argparse
 import re
 
 # regular expression / pattern for patch header
-_hdr_pat = re.compile('^@@ -(\d+),?(\d+)? \+(\d+),?(\d+)? @@.*$')
+_hdr_pat = re.compile(r'^@@ -(\d+),?(\d+)? \+(\d+),?(\d+)? @@.*$')
 
 
 def apply_patch(s, patch):
