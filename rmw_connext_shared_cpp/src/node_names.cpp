@@ -56,12 +56,12 @@ get_node_names(
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rcutils_ret_t rcutils_ret = rcutils_string_array_init(node_names, length, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    RMW_SET_ERROR_MSG(rcutils_get_error_string().str)
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
   }
   rcutils_ret = rcutils_string_array_init(node_namespaces, length, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    RMW_SET_ERROR_MSG(rcutils_get_error_string().str)
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
   }
 
@@ -134,7 +134,7 @@ fail:
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_connext_cpp",
-        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe());
+        "failed to cleanup during error handling: %s", rcutils_get_error_string().str);
       rcutils_reset_error();
     }
   }
@@ -143,7 +143,7 @@ fail:
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_connext_cpp",
-        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe());
+        "failed to cleanup during error handling: %s", rcutils_get_error_string().str);
       rcutils_reset_error();
     }
   }

@@ -82,6 +82,6 @@ void CustomDataReaderListener::trigger_graph_guard_condition()
 #endif
   rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
   if (ret != RMW_RET_OK) {
-    fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string_safe());
+    fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string().str);
   }
 }
