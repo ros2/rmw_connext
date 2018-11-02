@@ -41,7 +41,7 @@ _process_topic_name(
 
   concat_str = rcutils_format_string(allocator, "%s%s", topic_prefix, topic_name);
   if (!concat_str) {
-    RMW_SET_ERROR_MSG("could not allocate memory for topic string")
+    RMW_SET_ERROR_MSG("could not allocate memory for topic string");
     success = false;
     goto end;
   }
@@ -79,7 +79,7 @@ _process_service_name(
     allocator,
     "%s%s%s", requester_prefix, service_name, "Request");
   if (!request_concat_str) {
-    RMW_SET_ERROR_MSG("could not allocate memory for request topic string")
+    RMW_SET_ERROR_MSG("could not allocate memory for request topic string");
     success = false;
     goto end;
   }
@@ -87,7 +87,7 @@ _process_service_name(
     allocator,
     "%s%s%s", response_prefix, service_name, "Reply");
   if (!response_concat_str) {
-    RMW_SET_ERROR_MSG("could not allocate memory for response topic string")
+    RMW_SET_ERROR_MSG("could not allocate memory for response topic string");
     success = false;
     goto end;
   }
