@@ -125,18 +125,18 @@
   } \
 
 
-#define SPECIALIZE_GENERIC_C_ARRAY(ROS_TYPE_ID, C_NAME, C_TYPE) \
+#define SPECIALIZE_GENERIC_C_SEQUENCE(ROS_TYPE_ID, C_NAME, C_TYPE) \
   template<> \
-  struct GenericCArray<rosidl_typesupport_introspection_c__ROS_TYPE_ ## ROS_TYPE_ID> \
+  struct GenericCSequence<rosidl_typesupport_introspection_c__ROS_TYPE_ ## ROS_TYPE_ID> \
   { \
-    using type = rosidl_generator_c__ ## C_NAME ## __Array; \
+    using type = rosidl_generator_c__ ## C_NAME ## __Sequence; \
  \
-    static void fini(type * array) { \
-      rosidl_generator_c__ ## C_NAME ## __Array__fini(array); \
+    static void fini(type * sequence) { \
+      rosidl_generator_c__ ## C_NAME ## __Sequence__fini(sequence); \
     } \
  \
-    static bool init(type * array, size_t size) { \
-      return rosidl_generator_c__ ## C_NAME ## __Array__init(array, size); \
+    static bool init(type * sequence, size_t size) { \
+      return rosidl_generator_c__ ## C_NAME ## __Sequence__init(sequence, size); \
     } \
   }; \
   template<> \
