@@ -61,26 +61,26 @@ struct GenericMembersT<rosidl_typesupport_introspection_c__MessageMember>
 
 // This struct is used to associate a C array with a struct that we can metaprogram with
 template<uint8_t Id>
-struct GenericCArray;
+struct GenericCSequence;
 
 template<uint8_t Id>
 struct IdTypeMap;
 
 // multiple definitions of ambiguous primitive types
-SPECIALIZE_GENERIC_C_ARRAY(STRING, String, rosidl_generator_c__String)
-SPECIALIZE_GENERIC_C_ARRAY(BOOL, bool, bool)
-SPECIALIZE_GENERIC_C_ARRAY(BYTE, byte, uint8_t)
-SPECIALIZE_GENERIC_C_ARRAY(CHAR, char, signed char)
-SPECIALIZE_GENERIC_C_ARRAY(FLOAT32, float32, float)
-SPECIALIZE_GENERIC_C_ARRAY(FLOAT64, float64, double)
-SPECIALIZE_GENERIC_C_ARRAY(INT8, int8, int8_t)
-SPECIALIZE_GENERIC_C_ARRAY(UINT8, uint8, uint8_t)
-SPECIALIZE_GENERIC_C_ARRAY(INT16, int16, int16_t)
-SPECIALIZE_GENERIC_C_ARRAY(UINT16, uint16, uint16_t)
-SPECIALIZE_GENERIC_C_ARRAY(INT32, int32, int32_t)
-SPECIALIZE_GENERIC_C_ARRAY(UINT32, uint32, uint32_t)
-SPECIALIZE_GENERIC_C_ARRAY(INT64, int64, int64_t)
-SPECIALIZE_GENERIC_C_ARRAY(UINT64, uint64, uint64_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(STRING, String, rosidl_generator_c__String)
+SPECIALIZE_GENERIC_C_SEQUENCE(BOOL, bool, bool)
+SPECIALIZE_GENERIC_C_SEQUENCE(BYTE, byte, uint8_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(CHAR, char, signed char)
+SPECIALIZE_GENERIC_C_SEQUENCE(FLOAT32, float32, float)
+SPECIALIZE_GENERIC_C_SEQUENCE(FLOAT64, float64, double)
+SPECIALIZE_GENERIC_C_SEQUENCE(INT8, int8, int8_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(UINT8, uint8, uint8_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(INT16, int16, int16_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(UINT16, uint16, uint16_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(INT32, int32, int32_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(UINT32, uint32, uint32_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(INT64, int64, int64_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(UINT64, uint64, uint64_t)
 
 /********** end utility structs **********/
 
@@ -218,7 +218,7 @@ size_t set_array_size_and_values(
     return member->array_size_;
   }
   const void * untyped_array = static_cast<const char *>(ros_message) + member->offset_;
-  auto output = static_cast<const typename GenericCArray<Id>::type *>(untyped_array);
+  auto output = static_cast<const typename GenericCSequence<Id>::type *>(untyped_array);
   ros_values = output->data;
   return output->size;
 }
@@ -811,15 +811,15 @@ bool resize_array_and_get_values(
     ros_values = reinterpret_cast<T *>(static_cast<char *>(ros_message) + member->offset_);
   } else {
     void * untyped_output = static_cast<char *>(ros_message) + member->offset_;
-    auto output = static_cast<typename GenericCArray<Id>::type *>(untyped_output);
+    auto output = static_cast<typename GenericCSequence<Id>::type *>(untyped_output);
     if (!output) {
       RMW_SET_ERROR_MSG("Failed to cast C array from ROS message");
       return false;
     }
 
     if (output->size < array_size) {
-      GenericCArray<Id>::fini(output);
-      if (!GenericCArray<Id>::init(output, array_size)) {
+      GenericCSequence<Id>::fini(output);
+      if (!GenericCSequence<Id>::init(output, array_size)) {
         RMW_SET_ERROR_MSG("Could not resize array");
         return false;
       }
