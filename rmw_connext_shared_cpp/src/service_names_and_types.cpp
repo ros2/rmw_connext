@@ -37,11 +37,11 @@ get_service_names_and_types(
   rmw_names_and_types_t * service_names_and_types)
 {
   if (!allocator) {
-    RMW_SET_ERROR_MSG("allocator is null")
+    RMW_SET_ERROR_MSG("allocator is null");
     return RMW_RET_INVALID_ARGUMENT;
   }
   if (!node) {
-    RMW_SET_ERROR_MSG_ALLOC("null node handle", *allocator)
+    RMW_SET_ERROR_MSG("null node handle");
     return RMW_RET_INVALID_ARGUMENT;
   }
   if (node->implementation_identifier != implementation_identifier) {
@@ -112,7 +112,7 @@ get_service_names_and_types(
     auto fail_cleanup = [&service_names_and_types]() {
         rmw_ret_t rmw_ret = rmw_names_and_types_fini(service_names_and_types);
         if (rmw_ret != RMW_RET_OK) {
-          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe());
+          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string().str);
         }
       };
     // For each service, store the name, initialize the string array for types, and store all types
@@ -121,7 +121,7 @@ get_service_names_and_types(
       // Duplicate and store the service_name
       char * service_name = rcutils_strdup(service_n_types.first.c_str(), *allocator);
       if (!service_name) {
-        RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for service name", *allocator);
+        RMW_SET_ERROR_MSG("failed to allocate memory for service name");
         fail_cleanup();
         return RMW_RET_BAD_ALLOC;
       }
@@ -133,7 +133,7 @@ get_service_names_and_types(
           service_n_types.second.size(),
           allocator);
         if (rcutils_ret != RCUTILS_RET_OK) {
-          RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+          RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
           fail_cleanup();
           return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
         }
@@ -143,7 +143,7 @@ get_service_names_and_types(
       for (const auto & type : service_n_types.second) {
         char * type_name = rcutils_strdup(type.c_str(), *allocator);
         if (!type_name) {
-          RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for type name", *allocator)
+          RMW_SET_ERROR_MSG("failed to allocate memory for type name");
           fail_cleanup();
           return RMW_RET_BAD_ALLOC;
         }
