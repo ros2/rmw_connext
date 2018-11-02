@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "rosidl_generator_c/primitives_array_functions.h"
+#include "rosidl_generator_c/primitives_sequence_functions.h"
 #include "rosidl_generator_c/string.h"
 #include "rosidl_generator_c/string_functions.h"
 
