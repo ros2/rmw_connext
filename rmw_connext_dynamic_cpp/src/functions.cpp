@@ -52,6 +52,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/get_service_names_and_types.h"
 #include "rmw/get_topic_names_and_types.h"
+#include "rmw/init.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
@@ -202,18 +203,84 @@ rmw_get_serialization_format()
 }
 
 rmw_ret_t
-rmw_init()
+rmw_init_options_init(rmw_init_options_t * init_options, rcutils_allocator_t allocator)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(init_options, RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_ALLOCATOR(&allocator, return RMW_RET_INVALID_ARGUMENT);
+  if (NULL != init_options->implementation_identifier) {
+    RMW_SET_ERROR_MSG("expected zero-initialized init_options");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  init_options->instance_id = 0;
+  init_options->implementation_identifier = rti_connext_dynamic_identifier;
+  init_options->allocator = allocator;
+  init_options->impl = nullptr;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_init_options_copy(const rmw_init_options_t * src, rmw_init_options_t * dst)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(src, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(dst, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    src,
+    src->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (NULL != dst->implementation_identifier) {
+    RMW_SET_ERROR_MSG("expected zero-initialized dst");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  *dst = *src;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_init_options_fini(rmw_init_options_t * init_options)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(init_options, RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_ALLOCATOR(&(init_options->allocator), return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init_options,
+    init_options->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  *init_options = rmw_get_zero_initialized_init_options();
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
+{
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(options, RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    options,
+    options->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  context->instance_id = options->instance_id;
+  context->implementation_identifier = rti_connext_dynamic_identifier;
+  context->impl = nullptr;
   return init();
 }
 
 rmw_node_t *
 rmw_create_node(
+  rmw_context_t * context,
   const char * name,
   const char * namespace_,
   size_t domain_id,
   const rmw_node_security_options_t * security_options)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return NULL);
   return create_node(
     rti_connext_dynamic_identifier, name, namespace_, domain_id, security_options);
 }
@@ -254,7 +321,7 @@ DDS_TypeCode * _create_type_code(
       type_name, untyped_members, typesupport);
   }
 
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier")
+  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
   return NULL;
 }
 
@@ -372,7 +439,7 @@ rmw_create_publisher(
   // partition operater takes ownership of it.
   printf("Original publisher topic name: %s\n", topic_name);
   if (rcutils_split_last(topic_name, '/', allocator, &name_tokens) != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string().str)
+    RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     goto fail;
   }
   partition_str = NULL;
@@ -1379,8 +1446,15 @@ rmw_deserialize(
 }
 
 rmw_guard_condition_t *
-rmw_create_guard_condition()
+rmw_create_guard_condition(rmw_context_t * context)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return NULL);
   return create_guard_condition(rti_connext_dynamic_identifier);
 }
 
