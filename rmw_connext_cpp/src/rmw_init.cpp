@@ -21,7 +21,6 @@
 
 extern "C"
 {
-
 rmw_ret_t
 rmw_init_options_init(rmw_init_options_t * init_options, rcutils_allocator_t allocator)
 {
@@ -85,5 +84,4 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
   context->impl = nullptr;
   return init();
 }
-
 }  // extern "C"
