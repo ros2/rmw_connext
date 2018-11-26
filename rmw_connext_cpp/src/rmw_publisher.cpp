@@ -94,7 +94,9 @@ rmw_create_publisher(
   DDSDataWriter * topic_writer = nullptr;
   DDSTopic * topic = nullptr;
   DDSTopicDescription * topic_description = nullptr;
-  void * buf = nullptr;
+  void * info_buf = nullptr;
+  void * listener_buf = nullptr;
+  ConnextPublisherListener * publisher_listener = nullptr;
   ConnextStaticPublisherInfo * publisher_info = nullptr;
   rmw_publisher_t * publisher = nullptr;
   std::string mangled_name = "";
@@ -141,8 +143,18 @@ rmw_create_publisher(
     goto fail;
   }
 
+  // Allocate memory for the PublisherListener object.
+  listener_buf = rmw_allocate(sizeof(ConnextPublisherListener));
+  if (!listener_buf) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for publisher listener");
+    goto fail;
+  }
+  // Use a placement new to construct the PublisherListener in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(publisher_listener, listener_buf, goto fail, ConnextPublisherListener, )
+  listener_buf = nullptr;  // Only free the buffer pointer.
+
   dds_publisher = participant->create_publisher(
-    publisher_qos, NULL, DDS_STATUS_MASK_NONE);
+    publisher_qos, publisher_listener, DDS_STATUS_MASK_NONE);
   if (!dds_publisher) {
     RMW_SET_ERROR_MSG("failed to create publisher");
     goto fail;
@@ -188,18 +200,20 @@ rmw_create_publisher(
   }
 
   // Allocate memory for the ConnextStaticPublisherInfo object.
-  buf = rmw_allocate(sizeof(ConnextStaticPublisherInfo));
-  if (!buf) {
-    RMW_SET_ERROR_MSG("failed to allocate memory");
+  info_buf = rmw_allocate(sizeof(ConnextStaticPublisherInfo));
+  if (!info_buf) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for publisher info");
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticPublisherInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(publisher_info, buf, goto fail, ConnextStaticPublisherInfo, )
-  buf = nullptr;  // Only free the publisher_info pointer; don't need the buf pointer anymore.
+  RMW_TRY_PLACEMENT_NEW(publisher_info, info_buf, goto fail, ConnextStaticPublisherInfo, )
+  info_buf = nullptr;  // Only free the publisher_info pointer; don't need the buf pointer anymore.
   publisher_info->dds_publisher_ = dds_publisher;
   publisher_info->topic_writer_ = topic_writer;
   publisher_info->callbacks_ = callbacks;
   publisher_info->publisher_gid.implementation_identifier = rti_connext_identifier;
+  publisher_info->listener_ = publisher_listener;
+  publisher_listener = nullptr;
   static_assert(
     sizeof(ConnextPublisherGID) <= RMW_GID_STORAGE_SIZE,
     "RMW_GID_STORAGE_SIZE insufficient to store the rmw_connext_cpp GID implemenation."
@@ -266,13 +280,26 @@ fail:
       (std::cerr << ss.str()).flush();
     }
   }
+  if (publisher_listener) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      publisher_listener->~ConnextPublisherListener(), ConnextPublisherListener)
+    rmw_free(publisher_listener);
+  }
   if (publisher_info) {
+    if (publisher_info->listener_) {
+      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+        publisher_info->listener_->~ConnextPublisherListener(), ConnextPublisherListener)
+      rmw_free(publisher_info->listener_);
+    }
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
       publisher_info->~ConnextStaticPublisherInfo(), ConnextStaticPublisherInfo)
     rmw_free(publisher_info);
   }
-  if (buf) {
-    rmw_free(buf);
+  if (info_buf) {
+    rmw_free(info_buf);
+  }
+  if (listener_buf) {
+    rmw_free(listener_buf);
   }
 
   return NULL;
@@ -293,8 +320,12 @@ rmw_publisher_count_matched_subscriptions(
     return RMW_RET_INVALID_ARGUMENT;
   }
 
-  RMW_SET_ERROR_MSG("Not implemented.");
-  return RMW_RET_ERROR;
+  auto info = static_cast<ConnextStaticPublisherInfo *>(publisher->data);
+  if (info != nullptr) {
+    *subscription_count = info->listener_->subscription_count();
+  }
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
@@ -336,6 +367,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
     node_info->publisher_listener->trigger_graph_guard_condition();
     DDSPublisher * dds_publisher = publisher_info->dds_publisher_;
+
     if (dds_publisher) {
       if (publisher_info->topic_writer_) {
         if (dds_publisher->delete_datawriter(publisher_info->topic_writer_) != DDS_RETCODE_OK) {
@@ -353,6 +385,15 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       RMW_SET_ERROR_MSG("cannot delete datawriter because the publisher is null");
       return RMW_RET_ERROR;
     }
+
+    ConnextPublisherListener * pub_listener = publisher_info->listener_;
+    if (pub_listener) {
+      RMW_TRY_DESTRUCTOR(
+        pub_listener->~ConnextPublisherListener(),
+        ConnextPublisherListener, return RMW_RET_ERROR)
+      rmw_free(pub_listener);
+    }
+
     RMW_TRY_DESTRUCTOR(
       publisher_info->~ConnextStaticPublisherInfo(),
       ConnextStaticPublisherInfo, return RMW_RET_ERROR)

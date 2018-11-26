@@ -15,19 +15,44 @@
 #ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_
 #define RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_
 
+#include <atomic>
+
 #include "rmw_connext_shared_cpp/types.hpp"
 
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
+
+class ConnextPublisherListener;
 
 extern "C"
 {
 struct ConnextStaticPublisherInfo
 {
   DDSPublisher * dds_publisher_;
+  ConnextPublisherListener * listener_;
   DDSDataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
 };
 }  // extern "C"
+
+class ConnextPublisherListener : public DDSPublisherListener
+{
+public:
+  virtual void on_publication_matched(
+    DDSDataWriter * writer,
+    const DDS_PublicationMatchedStatus & status)
+  {
+    (void) writer;
+    current_count = status.current_count;
+  }
+
+  size_t subscription_count()
+  {
+    return current_count;
+  }
+
+private:
+  std::atomic<size_t> current_count;
+};
 
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_
