@@ -23,8 +23,6 @@
 #include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
-#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
-
 // include patched generated code from the build folder
 #include "./connext_static_serialized_dataSupport.h"
 #include "./connext_static_serialized_data.h"
@@ -33,7 +31,7 @@ static bool
 take(
   DDSDataReader * dds_data_reader,
   bool ignore_local_publications,
-  ConnextStaticCDRStream * cdr_stream,
+  rcutils_uint8_array_t * cdr_stream,
   bool * taken,
   void * sending_publication_handle)
 {
@@ -107,7 +105,7 @@ take(
     cdr_stream->buffer_length = dds_messages[0].serialized_data.length();
     // TODO(karsten1987): This malloc has to go!
     cdr_stream->buffer =
-      reinterpret_cast<char *>(malloc(cdr_stream->buffer_length * sizeof(char)));
+      reinterpret_cast<uint8_t *>(malloc(cdr_stream->buffer_length * sizeof(uint8_t)));
 
     if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
       RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than max unsiged int value");
@@ -173,7 +171,7 @@ _take(
   }
 
   // fetch the incoming message as cdr stream
-  ConnextStaticCDRStream cdr_stream;
+  rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   if (!take(
       topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
       sending_publication_handle))
@@ -270,19 +268,13 @@ _take_serialized_message(
   }
 
   // fetch the incoming message as cdr stream
-  ConnextStaticCDRStream cdr_stream;
   if (!take(
-      topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
+      topic_reader, subscriber_info->ignore_local_publications, serialized_message, taken,
       sending_publication_handle))
   {
     RMW_SET_ERROR_MSG("error occured while taking message");
     return RMW_RET_ERROR;
   }
-
-  serialized_message->buffer_length = cdr_stream.buffer_length;
-  // we don't free the allocated memory
-  // and thus can directly set the pointer
-  serialized_message->buffer = cdr_stream.buffer;
 
   return RMW_RET_OK;
 }
