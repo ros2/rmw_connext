@@ -37,20 +37,11 @@ rmw_serialize(
     return RMW_RET_ERROR;
   }
 
-  ConnextStaticCDRStream cdr_stream;
-  cdr_stream.buffer = serialized_message->buffer;
-  cdr_stream.buffer_length = serialized_message->buffer_length;
-  cdr_stream.buffer_capacity = serialized_message->buffer_capacity;
-  cdr_stream.allocator = serialized_message->allocator;
-
-  if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
+  if (!callbacks->to_cdr_stream(ros_message, serialized_message)) {
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
     return RMW_RET_ERROR;
   }
-  // reassgin buffer because it might have been resized
-  serialized_message->buffer = cdr_stream.buffer;
-  serialized_message->buffer_length = cdr_stream.buffer_length;
-  serialized_message->buffer_capacity = cdr_stream.buffer_capacity;
+
   return RMW_RET_OK;
 }
 
@@ -69,13 +60,8 @@ rmw_deserialize(
     return RMW_RET_ERROR;
   }
 
-  ConnextStaticCDRStream cdr_stream;
-  cdr_stream.buffer = serialized_message->buffer;
-  cdr_stream.buffer_length = serialized_message->buffer_length;
-  cdr_stream.buffer_capacity = serialized_message->buffer_capacity;
-  cdr_stream.allocator = serialized_message->allocator;
   // convert the cdr stream to the message
-  if (!callbacks->to_message(&cdr_stream, ros_message)) {
+  if (!callbacks->to_message(serialized_message, ros_message)) {
     RMW_SET_ERROR_MSG("can't convert cdr stream to ros message");
     return RMW_RET_ERROR;
   }

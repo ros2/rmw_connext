@@ -21,13 +21,11 @@
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
-#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
-
 // include patched generated code from the build folder
 #include "connext_static_serialized_dataSupport.h"
 
 bool
-publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
+publish(DDSDataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_stream)
 {
   ConnextStaticSerializedDataDataWriter * data_writer =
     ConnextStaticSerializedDataDataWriter::narrow(dds_data_writer);
@@ -108,8 +106,9 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   }
 
   auto ret = RMW_RET_OK;
-  ConnextStaticCDRStream cdr_stream;
+  rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   cdr_stream.allocator = rcutils_get_default_allocator();
+
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
     ret = RMW_RET_ERROR;
@@ -170,11 +169,7 @@ rmw_publish_serialized_message(
     return RMW_RET_ERROR;
   }
 
-  ConnextStaticCDRStream cdr_stream;
-  cdr_stream.buffer = serialized_message->buffer;
-  cdr_stream.buffer_length = serialized_message->buffer_length;
-  cdr_stream.buffer_capacity = serialized_message->buffer_capacity;
-  bool published = publish(topic_writer, &cdr_stream);
+  bool published = publish(topic_writer, serialized_message);
   if (!published) {
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;
