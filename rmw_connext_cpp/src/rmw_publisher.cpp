@@ -279,6 +279,25 @@ fail:
 }
 
 rmw_ret_t
+rmw_publisher_count_matched_subscriptions(
+  const rmw_publisher_t * publisher,
+  size_t * subscription_count)
+{
+  if (!publisher) {
+    RMW_SET_ERROR_MSG("publisher handle is null");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  if (!subscription_count) {
+    RMW_SET_ERROR_MSG("subscription_count is null");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  RMW_SET_ERROR_MSG("Not implemented.");
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
 rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 {
   if (!node) {
