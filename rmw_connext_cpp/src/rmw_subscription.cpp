@@ -150,7 +150,7 @@ rmw_create_subscription(
   listener_buf = nullptr;  // Only free the buffer pointer.
 
   dds_subscriber = participant->create_subscriber(
-    subscriber_qos, subscriber_listener, DDS_STATUS_MASK_NONE);
+    subscriber_qos, subscriber_listener, DDS_SUBSCRIPTION_MATCHED_STATUS);
   if (!dds_subscriber) {
     RMW_SET_ERROR_MSG("failed to create subscriber");
     goto fail;
@@ -326,8 +326,19 @@ rmw_subscription_count_matched_publishers(
     return RMW_RET_INVALID_ARGUMENT;
   }
 
-  RMW_SET_ERROR_MSG("Not implemented.");
-  return RMW_RET_ERROR;
+  auto info = static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
+  if (info == nullptr) {
+    RMW_SET_ERROR_MSG("subscriber internal data is invalid");
+    return RMW_RET_ERROR;
+  }
+  if (info->listener_ == nullptr) {
+    RMW_SET_ERROR_MSG("subscriber internal listener is invalid");
+    return RMW_RET_ERROR;
+  }
+
+  *publisher_count = info->listener_->current_count();
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t

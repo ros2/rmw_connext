@@ -154,7 +154,7 @@ rmw_create_publisher(
   listener_buf = nullptr;  // Only free the buffer pointer.
 
   dds_publisher = participant->create_publisher(
-    publisher_qos, publisher_listener, DDS_STATUS_MASK_NONE);
+    publisher_qos, publisher_listener, DDS_PUBLICATION_MATCHED_STATUS);
   if (!dds_publisher) {
     RMW_SET_ERROR_MSG("failed to create publisher");
     goto fail;
@@ -321,9 +321,16 @@ rmw_publisher_count_matched_subscriptions(
   }
 
   auto info = static_cast<ConnextStaticPublisherInfo *>(publisher->data);
-  if (info != nullptr) {
-    *subscription_count = info->listener_->subscription_count();
+  if (info == nullptr) {
+    RMW_SET_ERROR_MSG("publisher internal data is invalid");
+    return RMW_RET_ERROR;
   }
+  if (info->listener_ == nullptr) {
+    RMW_SET_ERROR_MSG("publisher internal listener is invalid");
+    return RMW_RET_ERROR;
+  }
+
+  *subscription_count = info->listener_->current_count();
 
   return RMW_RET_OK;
 }
