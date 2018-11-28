@@ -321,11 +321,11 @@ rmw_publisher_count_matched_subscriptions(
   }
 
   auto info = static_cast<ConnextStaticPublisherInfo *>(publisher->data);
-  if (info == nullptr) {
+  if (!info) {
     RMW_SET_ERROR_MSG("publisher internal data is invalid");
     return RMW_RET_ERROR;
   }
-  if (info->listener_ == nullptr) {
+  if (!info->listener_) {
     RMW_SET_ERROR_MSG("publisher internal listener is invalid");
     return RMW_RET_ERROR;
   }
