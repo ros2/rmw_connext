@@ -73,4 +73,24 @@ private:
   std::atomic<std::size_t> current_count_;
 };
 
+class ConnextPublisherListener : public DDSPublisherListener
+{
+public:
+  virtual void on_publication_matched(
+    DDSDataWriter * writer,
+    const DDS_PublicationMatchedStatus & status)
+  {
+    (void) writer;
+    current_count_ = status.current_count;
+  }
+
+  std::size_t current_count() const
+  {
+    return current_count_;
+  }
+
+private:
+  std::atomic<std::size_t> current_count_;
+};
+
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_
