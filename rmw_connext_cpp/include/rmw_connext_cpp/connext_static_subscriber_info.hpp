@@ -15,20 +15,45 @@
 #ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
 #define RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
 
+#include <atomic>
+
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
+
+class ConnextSubscriberListener;
 
 extern "C"
 {
 struct ConnextStaticSubscriberInfo
 {
   DDSSubscriber * dds_subscriber_;
+  ConnextSubscriberListener * listener_;
   DDSDataReader * topic_reader_;
   DDSReadCondition * read_condition_;
   bool ignore_local_publications;
   const message_type_support_callbacks_t * callbacks_;
 };
 }  // extern "C"
+
+class ConnextSubscriberListener : public DDSSubscriberListener
+{
+public:
+  virtual void on_subscription_matched(
+    DDSDataReader * reader,
+    const DDS_SubscriptionMatchedStatus & status)
+  {
+    (void) reader;
+    current_count_ = status.current_count;
+  }
+
+  std::size_t current_count() const
+  {
+    return current_count_;
+  }
+
+private:
+  std::atomic<std::size_t> current_count_;
+};
 
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
