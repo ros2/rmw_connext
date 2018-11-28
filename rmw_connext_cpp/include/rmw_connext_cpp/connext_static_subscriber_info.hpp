@@ -55,4 +55,24 @@ private:
   std::atomic<std::size_t> current_count_;
 };
 
+class ConnextSubscriberListener : public DDSSubscriberListener
+{
+public:
+  virtual void on_subscription_matched(
+    DDSDataReader * reader,
+    const DDS_SubscriptionMatchedStatus & status)
+  {
+    (void) reader;
+    current_count_ = status.current_count;
+  }
+
+  std::size_t current_count() const
+  {
+    return current_count_;
+  }
+
+private:
+  std::atomic<std::size_t> current_count_;
+};
+
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
