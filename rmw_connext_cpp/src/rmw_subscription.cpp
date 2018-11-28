@@ -90,7 +90,9 @@ rmw_create_subscription(
   DDSTopicDescription * topic_description = nullptr;
   DDSDataReader * topic_reader = nullptr;
   DDSReadCondition * read_condition = nullptr;
-  void * buf = nullptr;
+  void * info_buf = nullptr;
+  void * listener_buf = nullptr;
+  ConnextSubscriberListener * subscriber_listener = nullptr;
   ConnextStaticSubscriberInfo * subscriber_info = nullptr;
   rmw_subscription_t * subscription = nullptr;
   std::string mangled_name;
@@ -137,8 +139,18 @@ rmw_create_subscription(
     goto fail;
   }
 
+  // Allocate memory for the SubscriberListener object.
+  listener_buf = rmw_allocate(sizeof(ConnextSubscriberListener));
+  if (!listener_buf) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for subscriber listener");
+    goto fail;
+  }
+  // Use a placement new to construct the ConnextSubscriberListener in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(subscriber_listener, listener_buf, goto fail, ConnextSubscriberListener, )
+  listener_buf = nullptr;  // Only free the buffer pointer.
+
   dds_subscriber = participant->create_subscriber(
-    subscriber_qos, NULL, DDS_STATUS_MASK_NONE);
+    subscriber_qos, subscriber_listener, DDS_SUBSCRIPTION_MATCHED_STATUS);
   if (!dds_subscriber) {
     RMW_SET_ERROR_MSG("failed to create subscriber");
     goto fail;
@@ -192,19 +204,21 @@ rmw_create_subscription(
   }
 
   // Allocate memory for the ConnextStaticSubscriberInfo object.
-  buf = rmw_allocate(sizeof(ConnextStaticSubscriberInfo));
-  if (!buf) {
+  info_buf = rmw_allocate(sizeof(ConnextStaticSubscriberInfo));
+  if (!info_buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticSubscriberInfo in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(subscriber_info, buf, goto fail, ConnextStaticSubscriberInfo, )
-  buf = nullptr;  // Only free the subscriber_info pointer; don't need the buf pointer anymore.
+  RMW_TRY_PLACEMENT_NEW(subscriber_info, info_buf, goto fail, ConnextStaticSubscriberInfo, )
+  info_buf = nullptr;  // Only free the subscriber_info pointer; don't need the buf pointer anymore.
   subscriber_info->dds_subscriber_ = dds_subscriber;
   subscriber_info->topic_reader_ = topic_reader;
   subscriber_info->read_condition_ = read_condition;
   subscriber_info->callbacks_ = callbacks;
   subscriber_info->ignore_local_publications = ignore_local_publications;
+  subscriber_info->listener_ = subscriber_listener;
+  subscriber_listener = nullptr;
 
   subscription->implementation_identifier = rti_connext_identifier;
   subscription->data = subscriber_info;
@@ -272,16 +286,59 @@ fail:
       (std::cerr << ss.str()).flush();
     }
   }
+  if (subscriber_listener) {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      subscriber_listener->~ConnextSubscriberListener(), ConnextSubscriberListener)
+    rmw_free(subscriber_listener);
+  }
   if (subscriber_info) {
+    if (subscriber_info->listener_) {
+      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+        subscriber_info->listener_->~ConnextSubscriberListener(), ConnextSubscriberListener)
+      rmw_free(subscriber_info->listener_);
+    }
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
       subscriber_info->~ConnextStaticSubscriberInfo(), ConnextStaticSubscriberInfo)
     rmw_free(subscriber_info);
   }
-  if (buf) {
-    rmw_free(buf);
+  if (info_buf) {
+    rmw_free(info_buf);
+  }
+  if (listener_buf) {
+    rmw_free(listener_buf);
   }
 
   return NULL;
+}
+
+rmw_ret_t
+rmw_subscription_count_matched_publishers(
+  const rmw_subscription_t * subscription,
+  size_t * publisher_count)
+{
+  if (!subscription) {
+    RMW_SET_ERROR_MSG("subscription handle is null");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  if (!publisher_count) {
+    RMW_SET_ERROR_MSG("publisher_count is null");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  auto info = static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
+  if (!info) {
+    RMW_SET_ERROR_MSG("subscriber internal data is invalid");
+    return RMW_RET_ERROR;
+  }
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("subscriber internal listener is invalid");
+    return RMW_RET_ERROR;
+  }
+
+  *publisher_count = info->listener_->current_count();
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
