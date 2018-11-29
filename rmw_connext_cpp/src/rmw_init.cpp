@@ -94,7 +94,8 @@ rmw_shutdown(rmw_context_t * context)
     context->implementation_identifier,
     rti_connext_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
+  // context impl is explicitly supposed to be nullptr for now, see rmw_init's code
+  // RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
   *context = rmw_get_zero_initialized_context();
   return RMW_RET_OK;
 }
