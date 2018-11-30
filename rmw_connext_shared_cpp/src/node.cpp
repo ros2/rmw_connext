@@ -28,11 +28,19 @@
 rmw_node_t *
 create_node(
   const char * implementation_identifier,
+  rmw_context_t * context,
   const char * name,
   const char * namespace_,
   size_t domain_id,
   const rmw_node_security_options_t * security_options)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    implementation_identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return NULL);
   if (!security_options) {
     RMW_SET_ERROR_MSG("security_options is null");
     return nullptr;
@@ -277,7 +285,7 @@ create_node(
     goto fail;
   }
 
-  graph_guard_condition = create_guard_condition(implementation_identifier);
+  graph_guard_condition = create_guard_condition(implementation_identifier, context);
   if (!graph_guard_condition) {
     RMW_SET_ERROR_MSG("failed to create graph guard condition");
     goto fail;

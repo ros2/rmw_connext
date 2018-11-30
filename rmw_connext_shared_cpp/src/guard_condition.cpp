@@ -20,8 +20,15 @@
 #include "rmw/impl/cpp/macros.hpp"
 
 rmw_guard_condition_t *
-create_guard_condition(const char * implementation_identifier)
+create_guard_condition(const char * implementation_identifier, rmw_context_t * context)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    implementation_identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return NULL);
   rmw_guard_condition_t * guard_condition = rmw_guard_condition_allocate();
   if (!guard_condition) {
     RMW_SET_ERROR_MSG("failed to allocate guard condition");

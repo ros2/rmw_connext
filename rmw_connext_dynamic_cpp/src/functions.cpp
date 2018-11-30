@@ -289,15 +289,8 @@ rmw_create_node(
   size_t domain_id,
   const rmw_node_security_options_t * security_options)
 {
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    init context,
-    context->implementation_identifier,
-    rti_connext_dynamic_identifier,
-    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
-    return NULL);
   return create_node(
-    rti_connext_dynamic_identifier, name, namespace_, domain_id, security_options);
+    rti_connext_dynamic_identifier, context, name, namespace_, domain_id, security_options);
 }
 
 rmw_ret_t
@@ -1463,14 +1456,7 @@ rmw_deserialize(
 rmw_guard_condition_t *
 rmw_create_guard_condition(rmw_context_t * context)
 {
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    init context,
-    context->implementation_identifier,
-    rti_connext_dynamic_identifier,
-    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
-    return NULL);
-  return create_guard_condition(rti_connext_dynamic_identifier);
+  return create_guard_condition(rti_connext_dynamic_identifier, context);
 }
 
 rmw_ret_t
