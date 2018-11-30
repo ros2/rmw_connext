@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
 #include "rmw_connext_shared_cpp/guard_condition.hpp"
@@ -21,8 +22,15 @@
 extern "C"
 {
 rmw_guard_condition_t *
-rmw_create_guard_condition()
+rmw_create_guard_condition(rmw_context_t * context)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    rti_connext_identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return NULL);
   return create_guard_condition(rti_connext_identifier);
 }
 
