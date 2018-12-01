@@ -51,8 +51,6 @@ void CustomDataReaderListener::add_information(
 
 void CustomDataReaderListener::remove_information(
   const DDS_InstanceHandle_t & instance_handle,
-  const std::string & topic_name,
-  const std::string & type_name,
   EntityType entity_type)
 {
   (void)entity_type;
@@ -63,7 +61,7 @@ void CustomDataReaderListener::remove_information(
   DDS_InstanceHandle_to_GUID(&guid, instance_handle);
 
   // remove entries
-  topic_cache.removeTopic(guid, topic_name, type_name);
+  topic_cache.removeParticipant(guid);
 }
 
 void CustomDataReaderListener::trigger_graph_guard_condition()

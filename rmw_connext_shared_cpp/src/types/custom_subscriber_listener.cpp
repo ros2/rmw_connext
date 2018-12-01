@@ -45,8 +45,6 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
     } else {
       remove_information(
         info_seq[i].instance_handle,
-        data_seq[i].topic_name,
-        data_seq[i].type_name,
         EntityType::Subscriber);
     }
   }

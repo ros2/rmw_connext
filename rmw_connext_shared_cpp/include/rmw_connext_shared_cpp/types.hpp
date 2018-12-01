@@ -53,8 +53,6 @@ public:
 
   virtual void remove_information(
     const DDS_InstanceHandle_t & instance_handle,
-    const std::string & topic_name,
-    const std::string & type_name,
     EntityType entity_type);
 
   virtual void trigger_graph_guard_condition();

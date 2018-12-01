@@ -38,8 +38,8 @@
 template<typename GUID_t>
 class TopicCache{
 private:
-  typedef std::map<GUID_t, std::unordered_map<std::string, std::vector<std::string>>> ParticipantTopicMap;
   typedef std::unordered_map<std::string, std::vector<std::string>> TopicToTypes;
+  typedef std::map<GUID_t, TopicToTypes> ParticipantTopicMap;
 
   /**
    * Map of topic names to a vector of types that topic may use.
@@ -146,23 +146,32 @@ public:
         topic_name.c_str(), type_name.c_str());
       return false;
     }
-    {
-      auto & type_vec = topic_to_types_[topic_name];
-      type_vec.erase(std::find(type_vec.begin(), type_vec.end(), type_name));
-      if (type_vec.size() == 0) {
-        topic_to_types_.erase(topic_name);
+
+    auto guid_topics_iter = participant_to_topics_.find(guid);
+    if (guid_topics_iter != participant_to_topics_.end()
+        && guid_topics_iter->second.find(topic_name) != guid_topics_iter->second.end()) {
+
+      std::vector<std::string> & ref_type_vec = guid_topics_iter->second[topic_name];
+      std::vector<std::string> & tgt_type_vec = topic_to_types_[topic_name];
+      auto type_iter = std::find(ref_type_vec.begin(), ref_type_vec.end(), type_name);
+      if (type_iter != ref_type_vec.end()) {
+        ref_type_vec.erase(type_iter);
+        tgt_type_vec.erase(std::find(tgt_type_vec.begin(), tgt_type_vec.end(), type_name));
+      } else {
+        RCUTILS_LOG_DEBUG_NAMED(
+          "rmw_connext_shared_cpp",
+          "Unable to remove topic type, topic '%s' does not contain type '%s'",
+        topic_name.c_str(), type_name.c_str());
+        return false;
       }
-    }
 
-    auto guid_topics_pair = participant_to_topics_.find(guid);
-    if (guid_topics_pair != participant_to_topics_.end()
-        && guid_topics_pair->second.find(topic_name) != guid_topics_pair->second.end()) {
-
-      auto & type_vec = guid_topics_pair->second[topic_name];
-      type_vec.erase(std::find(type_vec.begin(), type_vec.end(), type_name));
-      if (type_vec.size() == 0) {
+      if (ref_type_vec.size() == 0) {
         participant_to_topics_[guid].erase(topic_name);
       }
+      if (tgt_type_vec.size() == 0) {
+        topic_to_types_.erase(topic_name);
+      } 
+
       if (participant_to_topics_[guid].size() == 0) {
         participant_to_topics_.erase(guid);
       }
@@ -171,7 +180,47 @@ public:
         "rmw_connext_shared_cpp",
         "Unable to remove topic, does not exist '%s' with type '%s'",
         topic_name.c_str(), type_name.c_str());
+      return false;
     }
+
+    return true;
+  }
+
+  /**
+   * Remove participant and its topics and topic types
+   *
+   * @param guid
+   * @return true if a change has been recorded
+   */
+  bool removeParticipant(const GUID_t & guid)
+  {
+    auto p_iter = participant_to_topics_.find(guid);
+    if (p_iter == participant_to_topics_.end()) {
+      if (rcutils_logging_logger_is_enabled_for("rmw_connext_shared_cpp", RCUTILS_LOG_SEVERITY_DEBUG)) {
+        std::stringstream guid_stream;
+        guid_stream << guid;
+        RCUTILS_LOG_DEBUG_NAMED(
+          "rmw_connext_shared_cpp",
+          "unexpected removal of participant '%s'",
+          guid_stream.str().c_str());
+      }
+      return false;
+    }
+
+    const TopicToTypes & topic_map = p_iter->second;
+    for (auto name_iter = topic_map.begin(); name_iter != topic_map.end(); ++name_iter) {
+      const std::vector<std::string> & ref_type_vec = name_iter->second;
+      std::vector<std::string> & tgt_type_vec = topic_to_types_[name_iter->first];
+      for (auto type_iter = ref_type_vec.begin(); type_iter != ref_type_vec.end(); ++type_iter) {
+        tgt_type_vec.erase(std::find(tgt_type_vec.begin(), tgt_type_vec.end(), *type_iter));
+      }
+      if (tgt_type_vec.size() == 0) {
+        topic_to_types_.erase(name_iter->first);
+      }
+    }
+
+    participant_to_topics_.erase(p_iter);
+
     return true;
   }
 };
