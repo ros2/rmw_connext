@@ -60,7 +60,7 @@ register_rmw_implementation(
   "cpp:rosidl_typesupport_cpp:rosidl_typesupport_introspection_cpp"
 )
 
-add_library(rmw_connext_dynamic_cpp SHARED src/functions.cpp src/publish_take.cpp)
+add_library(rmw_connext_dynamic_cpp SHARED src/functions.cpp src/publish_take.cpp src/rmw_node_info_and_types.cpp)
 ament_target_dependencies(rmw_connext_dynamic_cpp
   "rcutils"
   "rosidl_typesupport_introspection_c"

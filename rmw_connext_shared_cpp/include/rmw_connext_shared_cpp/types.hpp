@@ -28,8 +28,9 @@
 #include <string>
 
 #include "rmw/rmw.h"
-
+#include "topic_cache.hpp"
 #include "ndds_include.hpp"
+
 
 enum EntityType {Publisher, Subscriber};
 
@@ -44,8 +45,6 @@ public:
     implementation_identifier_(implementation_identifier)
   {}
 
-  std::map<std::string, std::multiset<std::string>> topic_names_and_types;
-
   virtual void add_information(
     const DDS_InstanceHandle_t & instance_handle,
     const std::string & topic_name,
@@ -54,19 +53,35 @@ public:
 
   virtual void remove_information(
     const DDS_InstanceHandle_t & instance_handle,
+    const std::string & topic_name,
+    const std::string & type_name,
     EntityType entity_type);
 
   virtual void trigger_graph_guard_condition();
 
+  size_t count_topic(const char * topic_name);
+
+  void fill_topic_names_and_types(
+    bool no_demangle,
+    std::map<std::string, std::set<std::string>> & tnat);
+
+  void fill_service_names_and_types(
+    std::map<std::string, std::set<std::string>> & services);
+
+  void fill_topic_names_and_types_by_guid(
+    bool no_demangle,
+    std::map<std::string, std::set<std::string>> & tnat,
+    DDS_GUID_t & guid);
+
+  void fill_service_names_and_types_by_guid(
+    std::map<std::string, std::set<std::string>> & services,
+    DDS_GUID_t & guid);
+
+protected:
+  std::mutex mutex_;
+  TopicCache<DDS_GUID_t> topic_cache;
+
 private:
-  mutable std::mutex topic_descriptor_mutex_;
-  struct TopicDescriptor
-  {
-    DDS_InstanceHandle_t instance_handle;
-    std::string name;
-    std::string type;
-  };
-  std::list<TopicDescriptor> topic_descriptors;
   rmw_guard_condition_t * graph_guard_condition_;
   const char * implementation_identifier_;
 };

@@ -31,5 +31,7 @@
 #include "types.hpp"
 #include "wait.hpp"
 #include "wait_set.hpp"
+#include "publisher_names_and_types.hpp"
+#include "subscriber_names_and_types.hpp"
 
 #endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_

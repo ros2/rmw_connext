@@ -281,15 +281,17 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
   if (client_info) {
     auto response_datareader = client_info->response_datareader_;
 
-    node_info->subscriber_listener->remove_information(
-      client_info->response_datareader_->get_instance_handle(), EntityType::Subscriber);
+    // TODO
+    // node_info->subscriber_listener->remove_information(
+    //   client_info->response_datareader_->get_instance_handle(), EntityType::Subscriber);
     DDS::DataWriter * request_datawriter = static_cast<DDS::DataWriter *>(
       client_info->callbacks_->get_request_datawriter(client_info->requester_));
     node_info->subscriber_listener->trigger_graph_guard_condition();
 
-    node_info->publisher_listener->remove_information(
-      request_datawriter->get_instance_handle(),
-      EntityType::Publisher);
+    // TODO
+    // node_info->publisher_listener->remove_information(
+    //   request_datawriter->get_instance_handle(),
+    //   EntityType::Publisher);
     node_info->publisher_listener->trigger_graph_guard_condition();
 
     if (response_datareader) {

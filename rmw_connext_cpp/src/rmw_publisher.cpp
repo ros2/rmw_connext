@@ -370,8 +370,9 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   ConnextStaticPublisherInfo * publisher_info =
     static_cast<ConnextStaticPublisherInfo *>(publisher->data);
   if (publisher_info) {
-    node_info->publisher_listener->remove_information(
-      publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
+    // TODO
+    // node_info->publisher_listener->remove_information(
+    //   publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
     node_info->publisher_listener->trigger_graph_guard_condition();
     DDSPublisher * dds_publisher = publisher_info->dds_publisher_;
 

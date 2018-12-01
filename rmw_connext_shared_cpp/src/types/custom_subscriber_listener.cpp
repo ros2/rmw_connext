@@ -37,15 +37,17 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
 
   for (auto i = 0; i < data_seq.length(); ++i) {
     if (info_seq[i].valid_data) {
-      auto sub_fqdn = std::string("");
-      sub_fqdn = data_seq[i].topic_name;
       add_information(
         info_seq[i].instance_handle,
-        sub_fqdn,
+        data_seq[i].topic_name,
         data_seq[i].type_name,
         EntityType::Subscriber);
     } else {
-      remove_information(info_seq[i].instance_handle, EntityType::Subscriber);
+      remove_information(
+        info_seq[i].instance_handle,
+        data_seq[i].topic_name,
+        data_seq[i].type_name,
+        EntityType::Subscriber);
     }
   }
 

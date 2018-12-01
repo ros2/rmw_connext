@@ -706,8 +706,9 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 
   auto custom_publisher_info = static_cast<CustomPublisherInfo *>(publisher->data);
   if (custom_publisher_info) {
-    node_info->publisher_listener->remove_information(
-      custom_publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
+    // TODO
+    // node_info->publisher_listener->remove_information(
+    //   custom_publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
     node_info->publisher_listener->trigger_graph_guard_condition();
     DDSDynamicDataTypeSupport * ddts = custom_publisher_info->dynamic_data_type_support_;
     if (ddts) {
@@ -1186,8 +1187,9 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 
   auto custom_subscription_info = static_cast<CustomSubscriberInfo *>(subscription->data);
   if (custom_subscription_info) {
-    node_info->subscriber_listener->remove_information(
-      custom_subscription_info->dds_subscriber_->get_instance_handle(), EntityType::Subscriber);
+    // TODO
+    // node_info->subscriber_listener->remove_information(
+    //   custom_subscription_info->dds_subscriber_->get_instance_handle(), EntityType::Subscriber);
     node_info->subscriber_listener->trigger_graph_guard_condition();
     DDSDynamicDataTypeSupport * ddts = custom_subscription_info->dynamic_data_type_support_;
     if (ddts) {

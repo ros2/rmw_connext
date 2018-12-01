@@ -54,22 +54,8 @@ count_publishers(
     return RMW_RET_ERROR;
   }
 
-  const auto & topic_names_and_types = node_info->publisher_listener->topic_names_and_types;
-  auto it = std::find_if(
-    topic_names_and_types.begin(),
-    topic_names_and_types.end(),
-    [&](auto tnt) -> bool {
-      auto fqdn = _demangle_if_ros_topic(tnt.first);
-      if (fqdn == topic_name) {
-        return true;
-      }
-      return false;
-    });
-  if (it == topic_names_and_types.end()) {
-    *count = 0;
-  } else {
-    *count = it->second.size();
-  }
+  *count = node_info->publisher_listener->count_topic(topic_name);
+  
   return RMW_RET_OK;
 }
 
@@ -107,21 +93,7 @@ count_subscribers(
     return RMW_RET_ERROR;
   }
 
-  const auto & topic_names_and_types = node_info->subscriber_listener->topic_names_and_types;
-  auto it = std::find_if(
-    topic_names_and_types.begin(),
-    topic_names_and_types.end(),
-    [&](auto tnt) -> bool {
-      auto fqdn = _demangle_if_ros_topic(tnt.first);
-      if (fqdn == topic_name) {
-        return true;
-      }
-      return false;
-    });
-  if (it == topic_names_and_types.end()) {
-    *count = 0;
-  } else {
-    *count = it->second.size();
-  }
+  *count = node_info->subscriber_listener->count_topic(topic_name);
+  
   return RMW_RET_OK;
 }

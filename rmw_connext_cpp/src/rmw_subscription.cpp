@@ -377,8 +377,9 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   ConnextStaticSubscriberInfo * subscriber_info =
     static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
   if (subscriber_info) {
-    node_info->subscriber_listener->remove_information(
-      subscriber_info->dds_subscriber_->get_instance_handle(), EntityType::Subscriber);
+    // TODO
+    // node_info->subscriber_listener->remove_information(
+    //   subscriber_info->dds_subscriber_->get_instance_handle(), EntityType::Subscriber);
     node_info->subscriber_listener->trigger_graph_guard_condition();
     auto dds_subscriber = subscriber_info->dds_subscriber_;
     if (dds_subscriber) {
