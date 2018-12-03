@@ -21,7 +21,7 @@
 #include <utility>
 #include <set>
 #include <string>
-#include <vector>
+#include <multiset>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
@@ -31,6 +31,7 @@
 #include "ndds/ndds_cpp.h"
 #include "ndds/ndds_namespace_cpp.h"
 
+typedef std::map<std::string, std::set<std::string>> TopicsTypes;
 
 /**
  * Topic cache data structure. Manages relationships between participants and topics.
@@ -38,47 +39,54 @@
 template<typename GUID_t>
 class TopicCache{
 private:
-  typedef std::unordered_map<std::string, std::vector<std::string>> TopicToTypes;
-  typedef std::map<GUID_t, TopicToTypes> ParticipantTopicMap;
+  struct TopicInfo {
+    GUID_t participant_guid;
+    GUID_t topic_guid;
+    std::string name;
+    std::string type;
+  };
+
+  bool operator<(TopicInfo &left, TopicInfo &right) {
+    return left.topic_guid < right.topic_guid;
+  }
+
+  bool operator==(TopicInfo &left, TopicInfo &right) {
+    return left.topic_guid == right.topic_guid;
+  }
+
+  bool operator>(TopicInfo &left, TopicInfo &right) {
+    return left.topic_guid > right.topic_guid;
+  }
+
+  typedef std::map<GUID_t, std::multiset<GUID_t>> ParticipantToTopicGuidMap;
+  typedef std::map<GUID_t, TopicInfo> TopicGuidToInfo;
 
   /**
-   * Map of topic names to a vector of types that topic may use.
+   * Map of topic guid to topic info may use.
    * Topics here are represented as one to many, DDS XTypes 1.2
    * specifies application code 'generally' uses a 1-1 relationship.
    * However, generic services such as logger and monitor, can discover
    * multiple types on the same topic.
    *
    */
-  TopicToTypes topic_to_types_;
+  TopicGuidToInfo topic_guid_to_info_;
 
   /**
    * Map of participant GUIDS to a set of topic-type.
    */
-  ParticipantTopicMap participant_to_topics_;
-
-  /**
-   * Helper function to initialize a topic vector.
-   *
-   * @param topic_name
-   */
-  void initializeTopic(const std::string & topic_name, TopicToTypes & topic_to_types)
-  {
-    if (topic_to_types.find(topic_name) == topic_to_types.end()) {
-      topic_to_types[topic_name] = std::vector<std::string>();
-    }
-  }
+  ParticipantToTopicGuidMap participant_to_topic_guids_;
 
   /**
    * Helper function to initialize the set inside a participant map.
    *
    * @param map
-   * @param guid
+   * @param participant_guid
    */
-  void initializeParticipantMap(ParticipantTopicMap & map,
-                                GUID_t guid)
+  void InitializeParticipantMap(ParticipantToTopicGuidMap & map,
+                                GUID_t participant_guid)
   {
-    if (map.find(guid) == map.end()) {
-      map[guid] = TopicToTypes();
+    if (map.find(participant_guid) == map.end()) {
+      map[participant_guid] = std::multiset<GUID_t>();
     }
   }
 
@@ -86,34 +94,41 @@ public:
   /**
    * @return a map of topic name to the vector of topic types used.
    */
-  const TopicToTypes & getTopicToTypes() const
+  const TopicGuidToInfo & getTopicGuidToInfo() const
   {
-    return topic_to_types_;
+    return topic_guid_to_info;
   }
 
   /**
    * @return a map of participant guid to the vector of topic names used.
    */
-  const ParticipantTopicMap & getParticipantToTopics() const
+  const ParticipantToTopicGuidMap & getParticipantToTopicGuidMap() const
   {
-    return participant_to_topics_;
+    return participant_to_topic_guids_;
+  }
+
+  /**
+   * @return a map of participant guid to the vector of topic names used.
+   */
+  const ParticipantToTopicGuidMap & getParticipantToTopicGuidMap() const
+  {
+    return participant_to_topic_guids_;
   }
 
   /**
    * Add a topic based on discovery.
    *
-   * @param guid
+   * @param participant_guid
    * @param topic_name
    * @param type_name
    * @return true if a change has been recorded
    */
-  bool addTopic(const GUID_t & guid,
+  bool AddTopic(const GUID_t & participant_guid,
+                const GUID_t & topic_guid,
                 const std::string & topic_name,
                 const std::string & type_name)
   {
-    initializeTopic(topic_name, topic_to_types_);
-    initializeParticipantMap(participant_to_topics_, guid);
-    initializeTopic(topic_name, participant_to_topics_[guid]);
+    InitializeParticipantMap(participant_to_topic_guids_, participant_guid);
     if (rcutils_logging_logger_is_enabled_for("rmw_connext_shared_cpp", RCUTILS_LOG_SEVERITY_DEBUG)) {
       std::stringstream guid_stream;
       guid_stream << guid;
@@ -122,8 +137,8 @@ public:
         "Adding topic '%s' with type '%s' for node '%s'",
         topic_name.c_str(), type_name.c_str(), guid_stream.str().c_str());
     }
-    topic_to_types_[topic_name].push_back(type_name);
-    participant_to_topics_[guid][topic_name].push_back(type_name);
+    topic_guid_to_info_[topic_guid] = TopicInfo {participant_guid, topic_guid, topic_name, type_name};
+    participant_to_topic_guids_[participant_guid].insert(topic_guid);
     return true;
   }
 
@@ -131,99 +146,78 @@ public:
    * Remove a topic based on discovery.
    *
    * @param guid
-   * @param topic_name
-   * @param type_name
    * @return true if a change has been recorded
    */
-  bool removeTopic(const GUID_t & guid,
-                   const std::string & topic_name,
-                   const std::string & type_name)
+  bool RemoveTopic(const GUID_t & topic_guid)
   {
-    if (topic_to_types_.find(topic_name) == topic_to_types_.end()) {
+    auto topic_info_it = topic_guid_to_info_.find(topic_guid);
+    if (topic_info_it == topic_guid_to_info_.end()) {
       RCUTILS_LOG_DEBUG_NAMED(
         "rmw_connext_shared_cpp",
-        "unexpected removal on topic '%s' with type '%s'",
+        "unexpected topic removal.");
+      return false;
+    }
+
+    std::string topic_name = topic_info_it->second().name;
+    std::string type_name = topic_info_it->second().type;
+
+    auto participant_guid = topic_info_it->second().participant_guid;
+    auto participant_to_topic_guid = participant_to_topic_guids_.find(participant_guid);
+    if (participant_to_topic_guid == participant_to_topic_guids_.end()) {
+      RCUTILS_LOG_DEBUG_NAMED(
+        "rmw_connext_shared_cpp",
+        "Unable to remove topic, participant guid does not exist for topic name '%s' with type '%s'",
         topic_name.c_str(), type_name.c_str());
       return false;
     }
 
-    auto guid_topics_iter = participant_to_topics_.find(guid);
-    if (guid_topics_iter != participant_to_topics_.end()
-        && guid_topics_iter->second.find(topic_name) != guid_topics_iter->second.end()) {
-
-      std::vector<std::string> & ref_type_vec = guid_topics_iter->second[topic_name];
-      std::vector<std::string> & tgt_type_vec = topic_to_types_[topic_name];
-      auto type_iter = std::find(ref_type_vec.begin(), ref_type_vec.end(), type_name);
-      if (type_iter != ref_type_vec.end()) {
-        ref_type_vec.erase(type_iter);
-        tgt_type_vec.erase(std::find(tgt_type_vec.begin(), tgt_type_vec.end(), type_name));
-      } else {
-        RCUTILS_LOG_DEBUG_NAMED(
-          "rmw_connext_shared_cpp",
-          "Unable to remove topic type, topic '%s' does not contain type '%s'",
-        topic_name.c_str(), type_name.c_str());
-        return false;
-      }
-
-      if (ref_type_vec.size() == 0) {
-        participant_to_topics_[guid].erase(topic_name);
-      }
-      if (tgt_type_vec.size() == 0) {
-        topic_to_types_.erase(topic_name);
-      } 
-
-      if (participant_to_topics_[guid].size() == 0) {
-        participant_to_topics_.erase(guid);
-      }
-    } else {
+    auto topic_guid_to_remove = participant_to_topic_guid->second().find(topic_guid);
+    if (topic_guid_to_remove == participant_to_topic_guid.end()) {
       RCUTILS_LOG_DEBUG_NAMED(
         "rmw_connext_shared_cpp",
-        "Unable to remove topic, does not exist '%s' with type '%s'",
+        "Unable to remove topic, topic guid does not exist in participant guid: topic name '%s' with type '%s'",
         topic_name.c_str(), type_name.c_str());
       return false;
     }
 
+    topic_guid_to_info_.erase(topic_info_it);
+    participant_to_topic_guid.erase(topic_guid_to_remove);
+    if (participant_to_topic_guids_.empty()) {
+      participant_to_topic_guids_.erase(participant_to_topic_guid);
+    }
     return true;
   }
 
-  /**
-   * Remove participant and its topics and topic types
-   *
-   * @param guid
-   * @return true if a change has been recorded
-   */
-  bool removeParticipant(const GUID_t & guid)
+  TopicsTypes filter(const GUID_t & participant_guid)
   {
-    auto p_iter = participant_to_topics_.find(guid);
-    if (p_iter == participant_to_topics_.end()) {
-      if (rcutils_logging_logger_is_enabled_for("rmw_connext_shared_cpp", RCUTILS_LOG_SEVERITY_DEBUG)) {
-        std::stringstream guid_stream;
-        guid_stream << guid;
-        RCUTILS_LOG_DEBUG_NAMED(
-          "rmw_connext_shared_cpp",
-          "unexpected removal of participant '%s'",
-          guid_stream.str().c_str());
-      }
-      return false;
+    TopicsTypes topics_types;
+    auto participant_to_topic_guids = participant_to_topic_guids_.find(participant_guid);
+    if (participant_to_topic_guids == participant_to_topic_guids_.end()) {
+      return topics_types;
     }
 
-    const TopicToTypes & topic_map = p_iter->second;
-    for (auto name_iter = topic_map.begin(); name_iter != topic_map.end(); ++name_iter) {
-      const std::vector<std::string> & ref_type_vec = name_iter->second;
-      std::vector<std::string> & tgt_type_vec = topic_to_types_[name_iter->first];
-      for (auto type_iter = ref_type_vec.begin(); type_iter != ref_type_vec.end(); ++type_iter) {
-        tgt_type_vec.erase(std::find(tgt_type_vec.begin(), tgt_type_vec.end(), *type_iter));
+    for (auto topic_guid : participant_to_topic_guids->second()) {
+      auto topic_info = topic_guid_to_info_.find(topic_guid);
+      if (topic_info == topic_guid_to_info_.end()) {
+        continue;
       }
-      if (tgt_type_vec.size() == 0) {
-        topic_to_types_.erase(name_iter->first);
+      auto topic_name = topic_info.name;
+      auto topic_entry = topics_types.find(topic_name);
+      if (topic_entry == topics_types.end()) {
+        topics_types[topic_name] = std::set<std::string>();
       }
+      topics_types[topic_name].insert(topic_info.type);
     }
-
-    participant_to_topics_.erase(p_iter);
-
-    return true;
+    return topics_types;
   }
-};
+}
+
+TopicsTypes& operator<<(TopicsTypes& topics_types, const TopicGuidToInfo& topic_guid_info) {
+  for (auto& topic_guid : topic_guid_info) {
+    topic_types[topic_guid.second.name].insert(topic_guid.second.type);
+  }
+  return topics_types;
+}
 
 template<typename GUID_t>
 inline std::ostream & operator<<(std::ostream & ostream,

@@ -65,12 +65,13 @@ inline void DDS_BuiltinTopicKey_to_GUID(DDS_GUID_t * guid, DDS_BuiltinTopicKey_t
   /* Little Endian */
   DDS_Octet * guidElement
   DDS_Octet * keyBufferElement;
-  for (uint i = 0; i < 3; ++i) {
-    DDS_Octet * guidElement = &(guid->value[i * 3]);
-    DDS_Octet * keyBufferElement  = (DDS_Octet *)(&buitinTopicKey[i * 3]);
-    guidElement[0] = keyBufferElement[2];
-    guidElement[1] = keyBufferElement[1];
-    guidElement[2] = keyBufferElement[0];
+  for (uint i = 0; i < 4; ++i) {
+    DDS_Octet * guidElement = &(guid->value[i * 4]);
+    DDS_Octet * keyBufferElement  = (DDS_Octet *)(&buitinTopicKey[i * 4]);
+    guidElement[0] = keyBufferElement[3];
+    guidElement[1] = keyBufferElement[2];
+    guidElement[2] = keyBufferElement[1];
+    guidElement[3] = keyBufferElement[0];
   }
 #endif
 }

@@ -134,7 +134,7 @@ validate_names_and_namespace(const char * node_name,
     RMW_SET_ERROR_MSG("null node namespace");
     return RMW_RET_INVALID_ARGUMENT;
   }
-  return RMW_RET_ERROR;
+  return RMW_RET_OK;
 }
 
 rmw_ret_t

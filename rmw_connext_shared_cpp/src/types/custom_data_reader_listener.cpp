@@ -27,7 +27,8 @@
 // #define DISCOVERY_DEBUG_LOGGING 1
 
 void CustomDataReaderListener::add_information(
-  const DDS_InstanceHandle_t & instance_handle,
+  const DDS_GUID_t & participant_guid,
+  const DDS_GUID_t & guid,
   const std::string & topic_name,
   const std::string & type_name,
   EntityType entity_type)
@@ -35,11 +36,8 @@ void CustomDataReaderListener::add_information(
   (void)entity_type;
   std::lock_guard<std::mutex> lock(mutex_);
 
-  DDS_GUID_t guid;
-  DDS_InstanceHandle_to_GUID(&guid, instance_handle);
-
   // store topic name and type name
-  topic_cache.addTopic(guid, topic_name, type_name);
+  topic_cache.AddTopic(participant_guid, guid, topic_name, type_name);
 
 #ifdef DISCOVERY_DEBUG_LOGGING
   printf("+%s %s <%s>\n",
@@ -50,18 +48,14 @@ void CustomDataReaderListener::add_information(
 }
 
 void CustomDataReaderListener::remove_information(
-  const DDS_InstanceHandle_t & instance_handle,
+  const DDS_GUID_t & guid,
   EntityType entity_type)
 {
   (void)entity_type;
   std::lock_guard<std::mutex> lock(mutex_);
 
-  // find entry by instance handle
-  DDS_GUID_t guid;
-  DDS_InstanceHandle_to_GUID(&guid, instance_handle);
-
   // remove entries
-  topic_cache.removeParticipant(guid);
+  topic_cache.RemoveTopic(guid);
 }
 
 void CustomDataReaderListener::trigger_graph_guard_condition()
@@ -99,16 +93,14 @@ size_t CustomDataReaderListener::count_topic(const char * topic_name)
 
 void CustomDataReaderListener::fill_topic_names_and_types(
   bool no_demangle,
-  std::map<std::string, std::set<std::string>> & tnat)
+  std::map<std::string, std::set<std::string>> & topic_names_to_types)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  for (auto it : topic_cache.getTopicToTypes()) {
-    if (!no_demangle && (_get_ros_prefix_if_exists(it.first) != ros_topic_prefix)) {
+  for (auto topic_name_to_types : topic_cache.getTopicGuidToInfo()) {
+    if (!no_demangle && (_get_ros_prefix_if_exists(topic_name_to_types.first) != ros_topic_prefix)) {
       continue;
     }
-    for (auto & jt : it.second) {
-      tnat[it.first].insert(jt);
-    }
+    topic_names_to_types[topic_name_to_types.second.name].insert(topic_name_to_types.second.type);
   }
 }
 
@@ -116,61 +108,59 @@ void
 CustomDataReaderListener::fill_service_names_and_types(
   std::map<std::string, std::set<std::string>> & services)
 {
-  for (auto it : topic_cache.getTopicToTypes()) {
-    std::string service_name = _demangle_service_from_topic(it.first);
+  for (auto topic_guid_to_info : topic_cache.getTopicGuidToInfo()) {
+    std::string service_name = _demangle_service_from_topic(topic_guid_to_info.second.name);
     if (!service_name.length()) {
       // not a service
       continue;
     }
-    for (auto & itt : it.second) {
-      std::string service_type = _demangle_service_type_only(itt);
-      if (service_type.length()) {
-        services[service_name].insert(service_type);
-      }
+    std::string service_type = _demangle_service_type_only(topic_guid_to_info.second.type);
+    if (service_type.size() != 0) {
+      services[service_name].insert(service_type);
     }
+
   }
 }
 
 void CustomDataReaderListener::fill_topic_names_and_types_by_guid(
   bool no_demangle,
-  std::map<std::string, std::set<std::string>> & tnat,
-  DDS_GUID_t & guid)
+  std::map<std::string, std::set<std::string>> & topic_names_to_types_by_guid,
+  DDS_GUID_t & participant_guid)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  const auto & map = topic_cache.getParticipantToTopics().find(guid);
-  if (map == topic_cache.getParticipantToTopics().end()) {
-    return;
-  }
-  for (auto & it : map->second) {
-    if (!no_demangle && (_get_ros_prefix_if_exists(it.first) != ros_topic_prefix)) {
+
+  auto tmp_map = topic_cache.filter(participant_guid);
+  for (auto & topics : tmp_map) {
+    if (!no_demangle && (_get_ros_prefix_if_exists(topics.first()) != ros_topic_prefix)) {
       continue;
     }
-    for (auto & jt : it.second) {
-      tnat[it.first].insert(jt);
+    if(topic_names_to_types_by_guid.find(topics.first()) == tmp_map.end()) {
+      topic_names_to_types_by_guid[topics.first()] = std::set<std::string>();
+    }
+    for (auto &  type : topics->second()) {
+      topic_names_to_types_by_guid[topics.first()].insert(type);
     }
   }
 }
 
 void CustomDataReaderListener::fill_service_names_and_types_by_guid(
     std::map<std::string, std::set<std::string>> & services,
-    DDS_GUID_t & guid)
+    DDS_GUID_t & participant_guid)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  const auto& map = topic_cache.getParticipantToTopics().find(guid);
-  if (map == topic_cache.getParticipantToTopics().end()) {
-    return;
-  }
-  for (auto& it : map->second) {
-    std::string service_name = _demangle_service_from_topic(it.first);
+
+  auto tmp_map = topic_cache.filter(participant_guid);
+  for (auto & service : tmp_map) {
+    std::string service_name = _demangle_service_from_topic(service.first());
     if (!service_name.length()) {
       // not a service
       continue;
     }
-    for (auto & itt : it.second) {
-      std::string service_type = _demangle_service_type_only(itt);
-      if (service_type.length()) {
-        services[service_name].insert(service_type);
-      }
+    if(services.find(service_name) == tmp_map.end()) {
+      services[service_name] = std::set<std::string>();
+    }
+    for (auto & type : service->second()) {
+      services[service_name].insert(type);
     }
   }
 }

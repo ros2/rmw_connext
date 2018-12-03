@@ -36,15 +36,20 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
   }
 
   for (auto i = 0; i < data_seq.length(); ++i) {
+    DDS_GUID_t guid;
+    DDS_InstanceHandle_to_GUID(&guid, info_seq[i].instance_handle);
     if (info_seq[i].valid_data) {
+      DDS_GUID_t participant_guid;
+      DDS_BuiltinTopicKey_to_GUID(participant_guid, data_seq[i].participant_key);
       add_information(
-        info_seq[i].instance_handle,
+        participant_guid,
+        guid,
         data_seq[i].topic_name,
         data_seq[i].type_name,
         EntityType::Subscriber);
     } else {
       remove_information(
-        info_seq[i].instance_handle,
+        guid,
         EntityType::Subscriber);
     }
   }

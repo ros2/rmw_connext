@@ -61,19 +61,19 @@ public:
 
   void fill_topic_names_and_types(
     bool no_demangle,
-    std::map<std::string, std::set<std::string>> & tnat);
+    std::map<std::string, std::set<std::string>> & topic_names_to_types);
 
   void fill_service_names_and_types(
     std::map<std::string, std::set<std::string>> & services);
 
   void fill_topic_names_and_types_by_guid(
     bool no_demangle,
-    std::map<std::string, std::set<std::string>> & tnat,
-    DDS_GUID_t & guid);
+    std::map<std::string, std::set<std::string>> & topic_names_to_types_by_guid,
+    DDS_GUID_t & participant_guid);
 
   void fill_service_names_and_types_by_guid(
     std::map<std::string, std::set<std::string>> & services,
-    DDS_GUID_t & guid);
+    DDS_GUID_t & participant_guid);
 
 protected:
   std::mutex mutex_;
