@@ -14,6 +14,7 @@
 
 #include <string>
 
+#include "rmw_connext_shared_cpp/guid_helper.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
 void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
@@ -37,10 +38,13 @@ void CustomSubscriberListener::on_data_available(DDSDataReader * reader)
 
   for (auto i = 0; i < data_seq.length(); ++i) {
     DDS_GUID_t guid;
+
     DDS_InstanceHandle_to_GUID(&guid, info_seq[i].instance_handle);
-    if (info_seq[i].valid_data) {
+    if (info_seq[i].valid_data &&
+      info_seq[i].instance_state == DDS_InstanceStateKind::DDS_ALIVE_INSTANCE_STATE)
+    {
       DDS_GUID_t participant_guid;
-      DDS_BuiltinTopicKey_to_GUID(participant_guid, data_seq[i].participant_key);
+      DDS_BuiltinTopicKey_to_GUID(&participant_guid, data_seq[i].participant_key);
       add_information(
         participant_guid,
         guid,

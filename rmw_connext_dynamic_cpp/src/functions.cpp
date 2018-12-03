@@ -573,7 +573,11 @@ rmw_create_publisher(
   memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
   node_info->publisher_listener->add_information(
-    dds_publisher->get_instance_handle(), topic_name, type_name, EntityType::Publisher);
+    node_info->participant->get_instance_handle(),
+    dds_publisher->get_instance_handle(),
+    topic_name,
+    type_name,
+    EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
   return publisher;
@@ -1051,7 +1055,11 @@ rmw_create_subscription(
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
 
   node_info->subscriber_listener->add_information(
-    dds_subscriber->get_instance_handle(), topic_name, type_name, EntityType::Subscriber);
+    node_info->participant->get_instance_handle(),
+    dds_subscriber->get_instance_handle(),
+    topic_name,
+    type_name,
+    EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
   return subscription;

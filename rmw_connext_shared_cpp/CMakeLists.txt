@@ -45,6 +45,7 @@ add_library(
   src/node.cpp
   src/node_names.cpp
   src/qos.cpp
+  src/names_and_types_helpers.cpp
   src/node_info_and_types.cpp
   src/service_names_and_types.cpp
   src/topic_names_and_types.cpp

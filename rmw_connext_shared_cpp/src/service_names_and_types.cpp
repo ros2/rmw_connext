@@ -25,16 +25,10 @@
 #include "rmw/error_handling.h"
 
 #include "rmw_connext_shared_cpp/demangle.hpp"
+#include "rmw_connext_shared_cpp/names_and_types_helpers.hpp"
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/service_names_and_types.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
-
-
-rmw_ret_t
-copy_services_to_names_and_types(const std::map<std::string, std::set<std::string>> &services,
-                                 rcutils_allocator_t *allocator,
-                                 rmw_names_and_types_t *service_names_and_types);
-
 
 rmw_ret_t
 get_service_names_and_types(

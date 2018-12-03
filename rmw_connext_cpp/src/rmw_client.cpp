@@ -198,6 +198,7 @@ rmw_create_client(
   mangled_name =
     response_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
+    node_info->participant->get_instance_handle(),
     response_datareader->get_instance_handle(),
     mangled_name.c_str(),
     response_datareader->get_topicdescription()->get_type_name(),
@@ -207,6 +208,7 @@ rmw_create_client(
   mangled_name =
     request_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
+    node_info->participant->get_instance_handle(),
     request_datawriter->get_instance_handle(),
     mangled_name.c_str(),
     request_datawriter->get_topic()->get_type_name(),

@@ -55,7 +55,7 @@ count_publishers(
   }
 
   *count = node_info->publisher_listener->count_topic(topic_name);
-  
+
   return RMW_RET_OK;
 }
 
@@ -94,6 +94,6 @@ count_subscribers(
   }
 
   *count = node_info->subscriber_listener->count_topic(topic_name);
-  
+
   return RMW_RET_OK;
 }

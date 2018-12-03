@@ -46,12 +46,24 @@ public:
   {}
 
   virtual void add_information(
-    const DDS_InstanceHandle_t & instance_handle,
+    const DDS_GUID_t & participant_guid,
+    const DDS_GUID_t & guid,
     const std::string & topic_name,
     const std::string & type_name,
     EntityType entity_type);
 
   virtual void remove_information(
+    const DDS_GUID_t & guid,
+    EntityType entity_type);
+
+  void add_information(
+    const DDS_InstanceHandle_t & participant_instance_handle,
+    const DDS_InstanceHandle_t & instance_handle,
+    const std::string & topic_name,
+    const std::string & type_name,
+    EntityType entity_type);
+
+  void remove_information(
     const DDS_InstanceHandle_t & instance_handle,
     EntityType entity_type);
 

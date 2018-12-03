@@ -24,16 +24,10 @@
 
 #include "rmw_connext_shared_cpp/demangle.hpp"
 #include "rmw_connext_shared_cpp/namespace_prefix.hpp"
+#include "rmw_connext_shared_cpp/names_and_types_helpers.hpp"
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/topic_names_and_types.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
-
-
-rmw_ret_t
-copy_topics_names_and_types(const std::map<std::string, std::set<std::string>> &topics,
-                            rcutils_allocator_t *allocator,
-                            bool no_demangle,
-                            rmw_names_and_types_t *topic_names_and_types);
 
 rmw_ret_t
 get_topic_names_and_types(

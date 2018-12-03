@@ -199,6 +199,7 @@ rmw_create_service(
   mangled_name =
     request_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
+    node_info->participant->get_instance_handle(),
     request_datareader->get_instance_handle(),
     mangled_name.c_str(),
     request_datareader->get_topicdescription()->get_type_name(),
@@ -208,6 +209,7 @@ rmw_create_service(
   mangled_name =
     response_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
+    node_info->participant->get_instance_handle(),
     response_datawriter->get_instance_handle(),
     mangled_name.c_str(),
     response_datawriter->get_topic()->get_type_name(),

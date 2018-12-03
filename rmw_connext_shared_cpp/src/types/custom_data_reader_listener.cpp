@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <map>
 #include <mutex>
+#include <set>
 #include <string>
+#include <strstream>
 
 #include "rmw/error_handling.h"
 
@@ -38,10 +41,12 @@ void CustomDataReaderListener::add_information(
 
   // store topic name and type name
   topic_cache.AddTopic(participant_guid, guid, topic_name, type_name);
-
 #ifdef DISCOVERY_DEBUG_LOGGING
-  printf("+%s %s <%s>\n",
+  std::stringstream ss;
+  ss << participant_guid << ":" << guid;
+  printf("+%s %s %s <%s>\n",
     entity_type == EntityType::Publisher ? "P" : "S",
+    ss.str().c_str(),
     topic_name.c_str(),
     type_name.c_str());
 #endif
@@ -56,6 +61,35 @@ void CustomDataReaderListener::remove_information(
 
   // remove entries
   topic_cache.RemoveTopic(guid);
+#ifdef DISCOVERY_DEBUG_LOGGING
+  std::stringstream ss;
+  ss << guid;
+  printf("-%s %s\n",
+    entity_type == EntityType::Publisher ? "P" : "S",
+    ss.str().c_str());
+#endif
+}
+
+void CustomDataReaderListener::add_information(
+  const DDS_InstanceHandle_t & participant_instance_handle,
+  const DDS_InstanceHandle_t & instance_handle,
+  const std::string & topic_name,
+  const std::string & type_name,
+  EntityType entity_type)
+{
+  DDS_GUID_t guid, participant_guid;
+  DDS_InstanceHandle_to_GUID(&guid, instance_handle);
+  DDS_InstanceHandle_to_GUID(&guid, participant_instance_handle);
+  add_information(participant_guid, guid, topic_name, type_name, entity_type);
+}
+
+void CustomDataReaderListener::remove_information(
+  const DDS_InstanceHandle_t & instance_handle,
+  EntityType entity_type)
+{
+  DDS_GUID_t guid;
+  DDS_InstanceHandle_to_GUID(&guid, instance_handle);
+  remove_information(guid, entity_type);
 }
 
 void CustomDataReaderListener::trigger_graph_guard_condition()
@@ -72,23 +106,14 @@ void CustomDataReaderListener::trigger_graph_guard_condition()
 size_t CustomDataReaderListener::count_topic(const char * topic_name)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  auto it = std::find_if(
-    topic_cache.getTopicToTypes().begin(),
-    topic_cache.getTopicToTypes().end(),
+  auto count = std::count_if(
+    topic_cache.GetTopicGuidToInfo().begin(),
+    topic_cache.GetTopicGuidToInfo().end(),
     [&](auto tnt) -> bool {
-      auto fqdn = _demangle_if_ros_topic(tnt.first);
-      if (fqdn == topic_name) {
-        return true;
-      }
-      return false;
+      auto fqdn = _demangle_if_ros_topic(tnt.second.name);
+      return fqdn == topic_name;
     });
-  size_t count;
-  if (it == topic_cache.getTopicToTypes().end()) {
-    count = 0;
-  } else {
-    count = it->second.size();
-  }
-  return count;
+  return (size_t) count;
 }
 
 void CustomDataReaderListener::fill_topic_names_and_types(
@@ -96,11 +121,13 @@ void CustomDataReaderListener::fill_topic_names_and_types(
   std::map<std::string, std::set<std::string>> & topic_names_to_types)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  for (auto topic_name_to_types : topic_cache.getTopicGuidToInfo()) {
-    if (!no_demangle && (_get_ros_prefix_if_exists(topic_name_to_types.first) != ros_topic_prefix)) {
+  for (auto it : topic_cache.GetTopicGuidToInfo()) {
+    if (!no_demangle &&
+      (_get_ros_prefix_if_exists(it.second.name) != ros_topic_prefix))
+    {
       continue;
     }
-    topic_names_to_types[topic_name_to_types.second.name].insert(topic_name_to_types.second.type);
+    topic_names_to_types[it.second.name].insert(it.second.type);
   }
 }
 
@@ -108,17 +135,16 @@ void
 CustomDataReaderListener::fill_service_names_and_types(
   std::map<std::string, std::set<std::string>> & services)
 {
-  for (auto topic_guid_to_info : topic_cache.getTopicGuidToInfo()) {
-    std::string service_name = _demangle_service_from_topic(topic_guid_to_info.second.name);
+  for (auto it : topic_cache.GetTopicGuidToInfo()) {
+    std::string service_name = _demangle_service_from_topic(it.second.name);
     if (!service_name.length()) {
       // not a service
       continue;
     }
-    std::string service_type = _demangle_service_type_only(topic_guid_to_info.second.type);
-    if (service_type.size() != 0) {
+    std::string service_type = _demangle_service_type_only(it.second.type);
+    if (service_type.length()) {
       services[service_name].insert(service_type);
     }
-
   }
 }
 
@@ -128,39 +154,46 @@ void CustomDataReaderListener::fill_topic_names_and_types_by_guid(
   DDS_GUID_t & participant_guid)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-
-  auto tmp_map = topic_cache.filter(participant_guid);
-  for (auto & topics : tmp_map) {
-    if (!no_demangle && (_get_ros_prefix_if_exists(topics.first()) != ros_topic_prefix)) {
+  const auto & map = topic_cache.GetTopicTypesByGuid(participant_guid);
+  if (map.size() == 0) {
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_opensplice_cpp",
+      "No topics for participant_guid");
+    return;
+  }
+  for (auto & it : map) {
+    if (!no_demangle && (_get_ros_prefix_if_exists(it.first) !=
+      ros_topic_prefix))
+    {
       continue;
     }
-    if(topic_names_to_types_by_guid.find(topics.first()) == tmp_map.end()) {
-      topic_names_to_types_by_guid[topics.first()] = std::set<std::string>();
-    }
-    for (auto &  type : topics->second()) {
-      topic_names_to_types_by_guid[topics.first()].insert(type);
-    }
+    topic_names_to_types_by_guid[it.first].insert(it.second.begin(), it.second.end());
   }
 }
 
 void CustomDataReaderListener::fill_service_names_and_types_by_guid(
-    std::map<std::string, std::set<std::string>> & services,
-    DDS_GUID_t & participant_guid)
+  std::map<std::string, std::set<std::string>> & services,
+  DDS_GUID_t & participant_guid)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-
-  auto tmp_map = topic_cache.filter(participant_guid);
-  for (auto & service : tmp_map) {
-    std::string service_name = _demangle_service_from_topic(service.first());
+  const auto & map = topic_cache.GetTopicTypesByGuid(participant_guid);
+  if (map.size() == 0) {
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_opensplice_cpp",
+      "No services for participant_guid");
+    return;
+  }
+  for (auto & it : map) {
+    std::string service_name = _demangle_service_from_topic(it.first);
     if (!service_name.length()) {
       // not a service
       continue;
     }
-    if(services.find(service_name) == tmp_map.end()) {
-      services[service_name] = std::set<std::string>();
-    }
-    for (auto & type : service->second()) {
-      services[service_name].insert(type);
+    for (auto & itt : it.second) {
+      std::string service_type = _demangle_service_type_only(itt);
+      if (service_type.length()) {
+        services[service_name].insert(service_type);
+      }
     }
   }
 }

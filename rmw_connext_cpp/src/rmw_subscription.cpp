@@ -238,6 +238,7 @@ rmw_create_subscription(
     mangled_name = topic_name;
   }
   node_info->subscriber_listener->add_information(
+    node_info->participant->get_instance_handle(),
     dds_subscriber->get_instance_handle(),
     mangled_name.c_str(),
     type_name,

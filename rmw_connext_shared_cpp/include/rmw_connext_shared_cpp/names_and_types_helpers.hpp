@@ -12,23 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__PUBLISHER_NAMES_AND_TYPES_HPP_
-#define RMW_CONNEXT_SHARED_CPP__PUBLISHER_NAMES_AND_TYPES_HPP_
+#ifndef RMW_CONNEXT_SHARED_CPP__NAMES_AND_TYPES_HELPERS_HPP_
+#define RMW_CONNEXT_SHARED_CPP_NAMES__AND_TYPES_HELPERS_HPP_
+
+#include <map>
+#include <set>
+#include <string>
 
 #include "rcutils/allocator.h"
 
-#include "rmw_connext_shared_cpp/visibility_control.h"
+#include "rmw/convert_rcutils_ret_to_rmw_ret.h"
+#include "rmw/error_handling.h"
+#include "rmw/names_and_types.h"
+#include "rmw/rmw.h"
 
-
-RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
-get_publisher_names_and_types_by_node(
-  const char * implementation_identifier,
-  const rmw_node_t * node,
+copy_services_to_names_and_types(
+  const std::map<std::string, std::set<std::string>> & services,
   rcutils_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
+  rmw_names_and_types_t * service_names_and_types);
+
+rmw_ret_t
+copy_topics_names_and_types(
+  const std::map<std::string, std::set<std::string>> & topics,
+  rcutils_allocator_t * allocator,
   bool no_demangle,
   rmw_names_and_types_t * topic_names_and_types);
 
-#endif  // RMW_CONNEXT_SHARED_CPP__PUBLISHER_NAMES_AND_TYPES_HPP_
+
+#endif  // RMW_CONNEXT_SHARED_CPP__NAMES_AND_TYPES_HELPERS_HPP_

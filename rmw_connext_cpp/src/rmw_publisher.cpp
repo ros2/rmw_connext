@@ -243,7 +243,11 @@ rmw_create_publisher(
     mangled_name = topic_name;
   }
   node_info->publisher_listener->add_information(
-    dds_publisher->get_instance_handle(), mangled_name.c_str(), type_name, EntityType::Publisher);
+    node_info->participant->get_instance_handle(),
+    dds_publisher->get_instance_handle(),
+    mangled_name.c_str(),
+    type_name,
+    EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
 // TODO(karsten1987): replace this block with logging macros
