@@ -39,8 +39,17 @@
 #include "rmw_connext_shared_cpp/names_and_types_helpers.hpp"
 #include "rmw_connext_shared_cpp/guid_helper.hpp"
 
+/**
+ * Check to see if a node name and namespace match the user data QoS policy
+ * of a node.
+ *
+ * @param user_data_qos to inspect
+ * @param node_name to match
+ * @param node_namespace to match
+ * @return true if match
+ */
 bool
-is_node_match(
+__is_node_match(
   DDS_UserDataQosPolicy & user_data_qos,
   const char * node_name,
   const char * node_namespace)
@@ -61,23 +70,31 @@ is_node_match(
   return false;
 }
 
+/**
+ * Get a DDS GUID key for the discovered participant which matches the
+ * node_name and node_namepace supplied.
+ *
+ * @param node_info to discover nodes
+ * @param node_name to match
+ * @param node_namespace to match
+ * @param key [out] guid key that matches the node name and namespace
+ *
+ * @return RMW_RET_OK if success, ERROR otherwise
+ */
 rmw_ret_t
-get_key(
+__get_key(
   ConnextNodeInfo * node_info,
   const char * node_name,
   const char * node_namespace,
-  DDS_GUID_t * key)
+  DDS_GUID_t & key)
 {
   auto participant = node_info->participant;
-  if (!participant) {
-    RMW_SET_ERROR_MSG("participant handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_FOR_NULL_WITH_MSG(participant, "participant handle is null", return RMW_RET_ERROR);
 
   DDS_DomainParticipantQos dpqos;
   auto dds_ret = participant->get_qos(dpqos);
-  if (dds_ret == DDS_RETCODE_OK && is_node_match(dpqos.user_data, node_name, node_namespace)) {
-    DDS_InstanceHandle_to_GUID(key, node_info->participant->get_instance_handle());
+  if (dds_ret == DDS_RETCODE_OK && __is_node_match(dpqos.user_data, node_name, node_namespace)) {
+    DDS_InstanceHandle_to_GUID(&key, participant->get_instance_handle());
     return RMW_RET_OK;
   }
 
@@ -104,7 +121,7 @@ get_key(
           if (strcmp(node_name, name.c_str()) == 0 &&
             strcmp(node_namespace, ns.c_str()) == 0)
           {
-            DDS_BuiltinTopicKey_to_GUID(key, pbtd.key);
+            DDS_BuiltinTopicKey_to_GUID(&key, pbtd.key);
             return RMW_RET_OK;
           }
         }
@@ -169,7 +186,7 @@ get_subscriber_names_and_types_by_node(
   }
 
   DDS_GUID_t key;
-  auto get_guid_err = get_key(node_info, node_name, node_namespace, &key);
+  auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
   if (get_guid_err != RMW_RET_OK) {
     return get_guid_err;
   }
@@ -222,7 +239,7 @@ get_publisher_names_and_types_by_node(
   }
 
   DDS_GUID_t key;
-  auto get_guid_err = get_key(node_info, node_name, node_namespace, &key);
+  auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
   if (get_guid_err != RMW_RET_OK) {
     return get_guid_err;
   }
@@ -270,7 +287,7 @@ get_service_names_and_types_by_node(
   }
 
   DDS_GUID_t key;
-  auto get_guid_err = get_key(node_info, node_name, node_namespace, &key);
+  auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
   if (get_guid_err != RMW_RET_OK) {
     return get_guid_err;
   }
