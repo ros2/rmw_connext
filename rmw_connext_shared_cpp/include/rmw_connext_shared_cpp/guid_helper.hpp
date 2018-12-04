@@ -17,7 +17,7 @@
 
 #include <cstring>
 #include <iostream>
-#include "ndds/ndds_cpp.h"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "ndds/ndds_namespace_cpp.h"
 
 
