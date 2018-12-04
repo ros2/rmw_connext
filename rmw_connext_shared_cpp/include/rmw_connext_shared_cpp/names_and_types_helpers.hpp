@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #ifndef RMW_CONNEXT_SHARED_CPP__NAMES_AND_TYPES_HELPERS_HPP_
-#define RMW_CONNEXT_SHARED_CPP_NAMES__AND_TYPES_HELPERS_HPP_
+#define RMW_CONNEXT_SHARED_CPP__NAMES_AND_TYPES_HELPERS_HPP_
 
 #include <map>
 #include <set>

@@ -15,17 +15,19 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__TOPIC_CACHE_HPP_
 #define RMW_CONNEXT_SHARED_CPP__TOPIC_CACHE_HPP_
 
-
-#include <utility>
-#include <set>
-#include <string>
-#include <map>
-#include <sstream>
-#include <iterator>
 #include <algorithm>
+#include <iterator>
+#include <map>
 #include <mutex>
+#include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+
 #include "rcutils/logging_macros.h"
-#include <rmw_connext_shared_cpp/guid_helper.hpp>
+
+#include "rmw_connext_shared_cpp/guid_helper.hpp"
+
 
 /**
  * Topics to types.

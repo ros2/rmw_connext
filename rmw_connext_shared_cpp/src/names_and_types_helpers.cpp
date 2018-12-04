@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_connext_shared_cpp/names_and_types_helpers.hpp"
+#include <set>
+#include <map>
+#include <string>
 
 #include "rcutils/error_handling.h"
 #include "rcutils/logging_macros.h"

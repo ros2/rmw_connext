@@ -16,7 +16,7 @@
 #include <mutex>
 #include <set>
 #include <string>
-#include <strstream>
+#include <iostream>
 
 #include "rmw/error_handling.h"
 
@@ -41,6 +41,7 @@ void CustomDataReaderListener::add_information(
 
   // store topic name and type name
   topic_cache.AddTopic(participant_guid, guid, topic_name, type_name);
+
 #ifdef DISCOVERY_DEBUG_LOGGING
   std::stringstream ss;
   ss << participant_guid << ":" << guid;
@@ -79,7 +80,7 @@ void CustomDataReaderListener::add_information(
 {
   DDS_GUID_t guid, participant_guid;
   DDS_InstanceHandle_to_GUID(&guid, instance_handle);
-  DDS_InstanceHandle_to_GUID(&guid, participant_instance_handle);
+  DDS_InstanceHandle_to_GUID(&participant_guid, participant_instance_handle);
   add_information(participant_guid, guid, topic_name, type_name, entity_type);
 }
 
