@@ -74,7 +74,7 @@ inline void DDS_BuiltinTopicKey_to_GUID(DDS_GUID_t * guid, DDS_BuiltinTopicKey_t
   /* little endian */
   DDS_Octet * guidElement
   DDS_Octet * keyBufferElement;
-  for (uint i = 0; i < 4; ++i) {
+  for (uint8_t i = 0; i < 4; ++i) {
     DDS_Octet * guidElement = &(guid->value[i * 4]);
     DDS_Octet * keyBufferElement = reinterpret_cast<DDS_Octet *>(&builtinTopicKey)[i * 4];
     guidElement[0] = keyBufferElement[3];
