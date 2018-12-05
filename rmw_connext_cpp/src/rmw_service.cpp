@@ -201,7 +201,7 @@ rmw_create_service(
   node_info->subscriber_listener->add_information(
     node_info->participant->get_instance_handle(),
     request_datareader->get_instance_handle(),
-    mangled_name.c_str(),
+    mangled_name,
     request_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
@@ -211,7 +211,7 @@ rmw_create_service(
   node_info->publisher_listener->add_information(
     node_info->participant->get_instance_handle(),
     response_datawriter->get_instance_handle(),
-    mangled_name.c_str(),
+    mangled_name,
     response_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();

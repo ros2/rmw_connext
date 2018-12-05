@@ -28,7 +28,6 @@
 
 #include "rmw_connext_shared_cpp/guid_helper.hpp"
 
-
 /**
  * Topics to types.
  */

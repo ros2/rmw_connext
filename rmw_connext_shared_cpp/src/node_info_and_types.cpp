@@ -37,6 +37,7 @@
 
 #include "rmw_connext_shared_cpp/types.hpp"
 #include "rmw_connext_shared_cpp/names_and_types_helpers.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/guid_helper.hpp"
 
 /**

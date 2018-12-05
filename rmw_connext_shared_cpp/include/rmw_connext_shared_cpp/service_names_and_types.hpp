@@ -29,14 +29,4 @@ get_service_names_and_types(
   rcutils_allocator_t * allocator,
   rmw_names_and_types_t * service_names_and_types);
 
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-rmw_ret_t
-get_service_names_and_types_by_node(
-  const char * implementation_identifier,
-  const rmw_node_t * node,
-  rcutils_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
-  rmw_names_and_types_t * service_names_and_types);
-
 #endif  // RMW_CONNEXT_SHARED_CPP__SERVICE_NAMES_AND_TYPES_HPP_

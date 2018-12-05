@@ -245,7 +245,7 @@ rmw_create_publisher(
   node_info->publisher_listener->add_information(
     node_info->participant->get_instance_handle(),
     dds_publisher->get_instance_handle(),
-    mangled_name.c_str(),
+    mangled_name,
     type_name,
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();

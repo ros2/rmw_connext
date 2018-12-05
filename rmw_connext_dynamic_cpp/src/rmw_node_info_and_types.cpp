@@ -19,9 +19,7 @@
 #include "rmw/names_and_types.h"
 #include "rmw/rmw.h"
 
-#include "rmw_connext_shared_cpp/service_names_and_types.hpp"
-#include "rmw_connext_shared_cpp/publisher_names_and_types.hpp"
-#include "rmw_connext_shared_cpp/subscriber_names_and_types.hpp"
+#include "rmw_connext_shared_cpp/node_info_and_types.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
 extern "C"

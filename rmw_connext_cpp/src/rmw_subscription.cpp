@@ -240,7 +240,7 @@ rmw_create_subscription(
   node_info->subscriber_listener->add_information(
     node_info->participant->get_instance_handle(),
     dds_subscriber->get_instance_handle(),
-    mangled_name.c_str(),
+    mangled_name,
     type_name,
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
