@@ -29,7 +29,8 @@
 
 #include "rmw/rmw.h"
 #include "topic_cache.hpp"
-#include "ndds_include.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/visibility_control.h"
 
 
 enum EntityType {Publisher, Subscriber};
@@ -45,6 +46,7 @@ public:
     implementation_identifier_(implementation_identifier)
   {}
 
+  RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void add_information(
     const DDS_GUID_t & participant_guid,
     const DDS_GUID_t & guid,
@@ -52,6 +54,7 @@ public:
     const std::string & type_name,
     EntityType entity_type);
 
+  RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void remove_information(
     const DDS_GUID_t & guid,
     EntityType entity_type);
