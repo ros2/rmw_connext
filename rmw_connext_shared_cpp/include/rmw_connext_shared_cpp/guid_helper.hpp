@@ -72,11 +72,10 @@ inline void DDS_BuiltinTopicKey_to_GUID(DDS_GUID_t * guid, DDS_BuiltinTopicKey_t
   memcpy(guid->value, reinterpret_cast<DDS_Octet const *>(&builtinTopicKey), 16);
 #else
   /* little endian */
-  DDS_Octet * guidElement
-  DDS_Octet * keyBufferElement;
+  DDS_Octet const * keyBuffer = reinterpret_cast<DDS_Octet *>(&builtinTopicKey);
   for (uint8_t i = 0; i < 4; ++i) {
     DDS_Octet * guidElement = &(guid->value[i * 4]);
-    DDS_Octet * keyBufferElement = reinterpret_cast<DDS_Octet *>(&builtinTopicKey)[i * 4];
+    DDS_Octet const * keyBufferElement = keyBuffer + (i * 4);
     guidElement[0] = keyBufferElement[3];
     guidElement[1] = keyBufferElement[2];
     guidElement[2] = keyBufferElement[1];
