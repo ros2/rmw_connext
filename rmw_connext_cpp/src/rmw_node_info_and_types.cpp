@@ -63,5 +63,4 @@ rmw_get_service_names_and_types_by_node(
   return get_service_names_and_types_by_node(
     rti_connext_identifier, node, allocator, node_name, node_namespace, service_names_and_types);
 }
-
 }  // extern "C"

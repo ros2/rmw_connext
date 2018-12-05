@@ -1,5 +1,4 @@
-// Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// SPDX-License-Identifier: Apache-2.0
+// Copyright 2015-2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -53,4 +52,4 @@ get_subscriber_names_and_types_by_node(
   bool no_demangle,
   rmw_names_and_types_t * topic_names_and_types);
 
-#endif // RMW_CONNEXT_SHARED_CPP__NODE_INFO_AND_TYPES_HPP_
+#endif  // RMW_CONNEXT_SHARED_CPP__NODE_INFO_AND_TYPES_HPP_
