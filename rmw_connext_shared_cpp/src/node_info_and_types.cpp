@@ -35,6 +35,7 @@
 #include "rmw/names_and_types.h"
 #include "rmw/rmw.h"
 
+#include "rmw_connext_shared_cpp/node_info_and_types.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 #include "rmw_connext_shared_cpp/names_and_types_helpers.hpp"
 #include "rmw_connext_shared_cpp/ndds_include.hpp"

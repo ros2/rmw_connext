@@ -16,6 +16,7 @@
 #define RMW_CONNEXT_SHARED_CPP__NODE_INFO_AND_TYPES_HPP_
 
 #include "rcutils/allocator.h"
+
 #include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
