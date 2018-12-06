@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <set>
 #include <map>
+#include <set>
 #include <string>
 
 #include "rcutils/error_handling.h"
