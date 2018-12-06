@@ -17,6 +17,7 @@
 
 #include "rcutils/allocator.h"
 
+#include "rmw/names_and_types.h"
 #include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
