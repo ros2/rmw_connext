@@ -20,9 +20,10 @@
 #include "demangle.hpp"
 #include "guard_condition.hpp"
 #include "init.hpp"
-#include "ndds_include.hpp"
 #include "namespace_prefix.hpp"
+#include "ndds_include.hpp"
 #include "node.hpp"
+#include "node_info_and_types.hpp"
 #include "node_names.hpp"
 #include "qos.hpp"
 #include "service_names_and_types.hpp"
@@ -31,6 +32,5 @@
 #include "types.hpp"
 #include "wait.hpp"
 #include "wait_set.hpp"
-#include "node_info_and_types.hpp"
 
 #endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_

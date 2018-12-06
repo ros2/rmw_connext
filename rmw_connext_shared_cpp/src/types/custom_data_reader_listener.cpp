@@ -40,7 +40,7 @@ void CustomDataReaderListener::add_information(
   std::lock_guard<std::mutex> lock(mutex_);
 
   // store topic name and type name
-  topic_cache.AddTopic(participant_guid, guid, topic_name, type_name);
+  topic_cache.add_topic(participant_guid, guid, topic_name, type_name);
 
 #ifdef DISCOVERY_DEBUG_LOGGING
   std::stringstream ss;
@@ -61,7 +61,7 @@ void CustomDataReaderListener::remove_information(
   std::lock_guard<std::mutex> lock(mutex_);
 
   // remove entries
-  topic_cache.RemoveTopic(guid);
+  topic_cache.remove_topic(guid);
 #ifdef DISCOVERY_DEBUG_LOGGING
   std::stringstream ss;
   ss << guid;
@@ -108,8 +108,8 @@ size_t CustomDataReaderListener::count_topic(const char * topic_name)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   auto count = std::count_if(
-    topic_cache.GetTopicGuidToInfo().begin(),
-    topic_cache.GetTopicGuidToInfo().end(),
+    topic_cache.get_topic_guid_to_info().begin(),
+    topic_cache.get_topic_guid_to_info().end(),
     [&](auto tnt) -> bool {
       auto fqdn = _demangle_if_ros_topic(tnt.second.name);
       return fqdn == topic_name;
@@ -122,7 +122,7 @@ void CustomDataReaderListener::fill_topic_names_and_types(
   std::map<std::string, std::set<std::string>> & topic_names_to_types)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  for (auto it : topic_cache.GetTopicGuidToInfo()) {
+  for (auto it : topic_cache.get_topic_guid_to_info()) {
     if (!no_demangle &&
       (_get_ros_prefix_if_exists(it.second.name) != ros_topic_prefix))
     {
@@ -136,7 +136,7 @@ void
 CustomDataReaderListener::fill_service_names_and_types(
   std::map<std::string, std::set<std::string>> & services)
 {
-  for (auto it : topic_cache.GetTopicGuidToInfo()) {
+  for (auto it : topic_cache.get_topic_guid_to_info()) {
     std::string service_name = _demangle_service_from_topic(it.second.name);
     if (!service_name.length()) {
       // not a service
@@ -155,7 +155,7 @@ void CustomDataReaderListener::fill_topic_names_and_types_by_guid(
   DDS_GUID_t & participant_guid)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  const auto & map = topic_cache.GetTopicTypesByGuid(participant_guid);
+  const auto & map = topic_cache.get_topic_types_by_guid(participant_guid);
   if (map.size() == 0) {
     RCUTILS_LOG_DEBUG_NAMED(
       "rmw_opensplice_cpp",
@@ -177,7 +177,7 @@ void CustomDataReaderListener::fill_service_names_and_types_by_guid(
   DDS_GUID_t & participant_guid)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  const auto & map = topic_cache.GetTopicTypesByGuid(participant_guid);
+  const auto & map = topic_cache.get_topic_types_by_guid(participant_guid);
   if (map.size() == 0) {
     RCUTILS_LOG_DEBUG_NAMED(
       "rmw_opensplice_cpp",

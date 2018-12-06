@@ -76,7 +76,7 @@ private:
    * @param map
    * @param participant_guid
    */
-  void InitializeParticipantMap(
+  void initialize_participant_map(
     ParticipantToTopicGuidMap & map,
     const GUID_t & participant_guid)
   {
@@ -89,7 +89,7 @@ public:
   /**
    * @return a map of topic name to the vector of topic types used.
    */
-  const TopicGuidToInfo & GetTopicGuidToInfo() const
+  const TopicGuidToInfo & get_topic_guid_to_info() const
   {
     return topic_guid_to_info_;
   }
@@ -97,7 +97,7 @@ public:
   /**
    * @return a map of participant guid to the vector of topic names used.
    */
-  const ParticipantToTopicGuidMap & GetParticipantToTopicGuidMap() const
+  const ParticipantToTopicGuidMap & get_participant_to_topic_guid_map() const
   {
     return participant_to_topic_guids_;
   }
@@ -110,13 +110,13 @@ public:
    * @param type_name
    * @return true if a change has been recorded
    */
-  bool AddTopic(
+  bool add_topic(
     const GUID_t & participant_guid,
     const GUID_t & topic_guid,
     const std::string & topic_name,
     const std::string & type_name)
   {
-    InitializeParticipantMap(participant_to_topic_guids_, participant_guid);
+    initialize_participant_map(participant_to_topic_guids_, participant_guid);
     if (rcutils_logging_logger_is_enabled_for("rmw_connext_shared_cpp",
       RCUTILS_LOG_SEVERITY_DEBUG))
     {
@@ -146,7 +146,7 @@ public:
    * @param guid
    * @return true if a change has been recorded
    */
-  bool RemoveTopic(const GUID_t & topic_guid)
+  bool remove_topic(const GUID_t & topic_guid)
   {
     auto topic_info_it = topic_guid_to_info_.find(topic_guid);
     if (topic_info_it == topic_guid_to_info_.end()) {
@@ -193,7 +193,7 @@ public:
    * @param participant_guid to find topic types
    * @return topic types corresponding to that guid
    */
-  TopicsTypes GetTopicTypesByGuid(const GUID_t & participant_guid)
+  TopicsTypes get_topic_types_by_guid(const GUID_t & participant_guid)
   {
     TopicsTypes topics_types;
     const auto participant_to_topic_guids =
