@@ -52,10 +52,12 @@ public:
     const std::string & type_name,
     EntityType entity_type);
 
+  RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void remove_information(
     const DDS_InstanceHandle_t & instance_handle,
     EntityType entity_type);
 
+  RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void trigger_graph_guard_condition();
 
 private:
