@@ -142,6 +142,7 @@ add_library(
   src/rmw_init.cpp
   src/rmw_logging.cpp
   src/rmw_node.cpp
+  src/rmw_node_info_and_types.cpp
   src/rmw_node_names.cpp
   src/rmw_publish.cpp
   src/rmw_publisher.cpp
