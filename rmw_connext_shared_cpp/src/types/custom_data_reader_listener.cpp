@@ -12,67 +12,85 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <map>
 #include <mutex>
+#include <set>
 #include <string>
+#include <iostream>
 
 #include "rmw/error_handling.h"
 
 #include "rmw_connext_shared_cpp/trigger_guard_condition.hpp"
+#include "rmw_connext_shared_cpp/namespace_prefix.hpp"
+#include "rmw_connext_shared_cpp/demangle.hpp"
+#include "rmw_connext_shared_cpp/guid_helper.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
 // Uncomment this to get extra console output about discovery.
 // #define DISCOVERY_DEBUG_LOGGING 1
 
 void CustomDataReaderListener::add_information(
-  const DDS_InstanceHandle_t & instance_handle,
+  const DDS_GUID_t & participant_guid,
+  const DDS_GUID_t & guid,
   const std::string & topic_name,
   const std::string & type_name,
   EntityType entity_type)
 {
   (void)entity_type;
-  std::lock_guard<std::mutex> topic_descriptor_lock(topic_descriptor_mutex_);
+  std::lock_guard<std::mutex> lock(mutex_);
+
   // store topic name and type name
-  auto & topic_types = topic_names_and_types[topic_name];
-  topic_types.insert(type_name);
-  // store mapping to instance handle
-  TopicDescriptor topic_descriptor;
-  topic_descriptor.instance_handle = instance_handle;
-  topic_descriptor.name = topic_name;
-  topic_descriptor.type = type_name;
-  topic_descriptors.push_back(topic_descriptor);
+  topic_cache.add_topic(participant_guid, guid, topic_name, type_name);
+
 #ifdef DISCOVERY_DEBUG_LOGGING
-  printf("+%s %s <%s>\n",
+  std::stringstream ss;
+  ss << participant_guid << ":" << guid;
+  printf("+%s %s %s <%s>\n",
     entity_type == EntityType::Publisher ? "P" : "S",
+    ss.str().c_str(),
     topic_name.c_str(),
     type_name.c_str());
 #endif
 }
 
 void CustomDataReaderListener::remove_information(
-  const DDS_InstanceHandle_t & instance_handle,
+  const DDS_GUID_t & guid,
   EntityType entity_type)
 {
   (void)entity_type;
-  std::lock_guard<std::mutex> topic_descriptor_lock(topic_descriptor_mutex_);
-  // find entry by instance handle
-  for (auto it = topic_descriptors.begin(); it != topic_descriptors.end(); ++it) {
-    if (DDS_InstanceHandle_equals(&it->instance_handle, &instance_handle)) {
-      // remove entries
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  // remove entries
+  topic_cache.remove_topic(guid);
 #ifdef DISCOVERY_DEBUG_LOGGING
-      printf("-%s %s <%s>\n",
-        entity_type == EntityType::Publisher ? "P" : "S",
-        it->name.c_str(),
-        it->type.c_str());
+  std::stringstream ss;
+  ss << guid;
+  printf("-%s %s\n",
+    entity_type == EntityType::Publisher ? "P" : "S",
+    ss.str().c_str());
 #endif
-      auto & topic_types = topic_names_and_types[it->name];
-      topic_types.erase(topic_types.find(it->type));
-      if (topic_types.empty()) {
-        topic_names_and_types.erase(it->name);
-      }
-      topic_descriptors.erase(it);
-      break;
-    }
-  }
+}
+
+void CustomDataReaderListener::add_information(
+  const DDS_InstanceHandle_t & participant_instance_handle,
+  const DDS_InstanceHandle_t & instance_handle,
+  const std::string & topic_name,
+  const std::string & type_name,
+  EntityType entity_type)
+{
+  DDS_GUID_t guid, participant_guid;
+  DDS_InstanceHandle_to_GUID(&guid, instance_handle);
+  DDS_InstanceHandle_to_GUID(&participant_guid, participant_instance_handle);
+  add_information(participant_guid, guid, topic_name, type_name, entity_type);
+}
+
+void CustomDataReaderListener::remove_information(
+  const DDS_InstanceHandle_t & instance_handle,
+  EntityType entity_type)
+{
+  DDS_GUID_t guid;
+  DDS_InstanceHandle_to_GUID(&guid, instance_handle);
+  remove_information(guid, entity_type);
 }
 
 void CustomDataReaderListener::trigger_graph_guard_condition()
@@ -83,5 +101,100 @@ void CustomDataReaderListener::trigger_graph_guard_condition()
   rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
   if (ret != RMW_RET_OK) {
     fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string().str);
+  }
+}
+
+size_t CustomDataReaderListener::count_topic(const char * topic_name)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  auto count = std::count_if(
+    topic_cache.get_topic_guid_to_info().begin(),
+    topic_cache.get_topic_guid_to_info().end(),
+    [&](auto tnt) -> bool {
+      auto fqdn = _demangle_if_ros_topic(tnt.second.name);
+      return fqdn == topic_name;
+    });
+  return (size_t) count;
+}
+
+void CustomDataReaderListener::fill_topic_names_and_types(
+  bool no_demangle,
+  std::map<std::string, std::set<std::string>> & topic_names_to_types)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  for (auto it : topic_cache.get_topic_guid_to_info()) {
+    if (!no_demangle &&
+      (_get_ros_prefix_if_exists(it.second.name) != ros_topic_prefix))
+    {
+      continue;
+    }
+    topic_names_to_types[it.second.name].insert(it.second.type);
+  }
+}
+
+void
+CustomDataReaderListener::fill_service_names_and_types(
+  std::map<std::string, std::set<std::string>> & services)
+{
+  for (auto it : topic_cache.get_topic_guid_to_info()) {
+    std::string service_name = _demangle_service_from_topic(it.second.name);
+    if (!service_name.length()) {
+      // not a service
+      continue;
+    }
+    std::string service_type = _demangle_service_type_only(it.second.type);
+    if (service_type.length()) {
+      services[service_name].insert(service_type);
+    }
+  }
+}
+
+void CustomDataReaderListener::fill_topic_names_and_types_by_guid(
+  bool no_demangle,
+  std::map<std::string, std::set<std::string>> & topic_names_to_types_by_guid,
+  DDS_GUID_t & participant_guid)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  const auto & map = topic_cache.get_topic_types_by_guid(participant_guid);
+  if (map.size() == 0) {
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_opensplice_cpp",
+      "No topics for participant_guid");
+    return;
+  }
+  for (auto & it : map) {
+    if (!no_demangle && (_get_ros_prefix_if_exists(it.first) !=
+      ros_topic_prefix))
+    {
+      continue;
+    }
+    topic_names_to_types_by_guid[it.first].insert(it.second.begin(), it.second.end());
+  }
+}
+
+void CustomDataReaderListener::fill_service_names_and_types_by_guid(
+  std::map<std::string, std::set<std::string>> & services,
+  DDS_GUID_t & participant_guid)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  const auto & map = topic_cache.get_topic_types_by_guid(participant_guid);
+  if (map.size() == 0) {
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_opensplice_cpp",
+      "No services for participant_guid");
+    return;
+  }
+  for (auto & it : map) {
+    std::string service_name = _demangle_service_from_topic(it.first);
+    if (!service_name.length()) {
+      // not a service
+      continue;
+    }
+    for (auto & itt : it.second) {
+      std::string service_type = _demangle_service_type_only(itt);
+      if (service_type.length()) {
+        services[service_name].insert(service_type);
+      }
+    }
   }
 }
