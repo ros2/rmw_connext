@@ -14,6 +14,7 @@
 
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/trigger_guard_condition.hpp"
