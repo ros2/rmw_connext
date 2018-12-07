@@ -14,6 +14,7 @@
 
 #include <string>
 
+#include "rmw_connext_shared_cpp/guid_helper.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
 // Uncomment this to get extra console output about discovery.
@@ -39,16 +40,23 @@ void CustomPublisherListener::on_data_available(DDSDataReader * reader)
   }
 
   for (auto i = 0; i < data_seq.length(); ++i) {
-    if (info_seq[i].valid_data) {
-      auto pub_fqdn = std::string("");
-      pub_fqdn = data_seq[i].topic_name;
+    DDS_GUID_t guid;
+    DDS_InstanceHandle_to_GUID(&guid, info_seq[i].instance_handle);
+    if (info_seq[i].valid_data &&
+      info_seq[i].instance_state == DDS_InstanceStateKind::DDS_ALIVE_INSTANCE_STATE)
+    {
+      DDS_GUID_t participant_guid;
+      DDS_BuiltinTopicKey_to_GUID(&participant_guid, data_seq[i].participant_key);
       add_information(
-        info_seq[i].instance_handle,
-        pub_fqdn,
+        participant_guid,
+        guid,
+        data_seq[i].topic_name,
         data_seq[i].type_name,
         EntityType::Publisher);
     } else {
-      remove_information(info_seq[i].instance_handle, EntityType::Publisher);
+      remove_information(
+        guid,
+        EntityType::Publisher);
     }
   }
 
