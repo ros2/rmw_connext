@@ -71,7 +71,7 @@ create_node(
     return NULL;
   }
 
-  // Accorinrding to the RTPS spec, ContentFilterProperty_t has the following fields:
+  // According to the RTPS spec, ContentFilterProperty_t has the following fields:
   // -contentFilteredTopicName (max length 256)
   // -relatedTopicName (max length 256)
   // -filterClassName (max length 256)
