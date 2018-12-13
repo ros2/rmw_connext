@@ -71,7 +71,8 @@ get_topic_names_and_types(
 
   // Copy data to results handle
   if (topics.size() > 0) {
-    rmw_ret_t rmw_ret = copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
+    rmw_ret_t rmw_ret =
+      copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
     if (rmw_ret != RMW_RET_OK) {
       return rmw_ret;
     }

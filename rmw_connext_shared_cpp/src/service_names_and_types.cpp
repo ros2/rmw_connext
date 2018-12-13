@@ -75,7 +75,8 @@ get_service_names_and_types(
 
   // Fill out service_names_and_types
   if (services.size()) {
-    rmw_ret_t rmw_ret = copy_services_to_names_and_types(services, allocator, service_names_and_types);
+    rmw_ret_t rmw_ret =
+      copy_services_to_names_and_types(services, allocator, service_names_and_types);
     if (rmw_ret != RMW_RET_OK) {
       return rmw_ret;
     }
