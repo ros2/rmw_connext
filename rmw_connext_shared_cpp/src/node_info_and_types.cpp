@@ -66,7 +66,7 @@ __is_node_match(
     if (name_found != map.end() && ns_found != map.end()) {
       std::string name(name_found->second.begin(), name_found->second.end());
       std::string ns(ns_found->second.begin(), ns_found->second.end());
-      return ((name == node_name) && (ns == node_namespace));
+      return (name == node_name) && (ns == node_namespace);
     }
   }
   return false;
@@ -120,8 +120,7 @@ __get_key(
         if (name_found != map.end() && ns_found != map.end()) {
           std::string name(name_found->second.begin(), name_found->second.end());
           std::string ns(ns_found->second.begin(), ns_found->second.end());
-          if ((name == node_name) && (ns == node_namespace))
-          {
+          if ((name == node_name) && (ns == node_namespace)) {
             DDS_BuiltinTopicKey_to_GUID(&key, pbtd.key);
             return RMW_RET_OK;
           }
