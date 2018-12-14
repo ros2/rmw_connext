@@ -195,7 +195,6 @@ rmw_service_server_is_available(
     number_of_response_publishers);
 #endif
   if (number_of_response_publishers == 0) {
-    fprintf(stderr, "Number of response publishers is 0\n");
     // not ready
     return RMW_RET_OK;
   }
