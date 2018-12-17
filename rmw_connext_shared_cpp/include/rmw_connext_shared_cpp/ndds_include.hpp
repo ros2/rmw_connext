@@ -23,7 +23,7 @@
 #  pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 # endif
 #endif
-#include <ndds/ndds_cpp.h>
+#include <ndds/ndds_namespace_cpp.h>
 #include <ndds/ndds_requestreply_cpp.h>
 #ifndef _WIN32
 # pragma GCC diagnostic pop

@@ -35,25 +35,25 @@ create_wait_set(const char * implementation_identifier, size_t max_conditions)
     goto fail;
   }
 
-  wait_set_info->wait_set = static_cast<DDSWaitSet *>(rmw_allocate(sizeof(DDSWaitSet)));
+  wait_set_info->wait_set = static_cast<DDS::WaitSet *>(rmw_allocate(sizeof(DDS::WaitSet)));
   if (!wait_set_info->wait_set) {
     RMW_SET_ERROR_MSG("failed to allocate wait set");
     goto fail;
   }
 
   RMW_TRY_PLACEMENT_NEW(
-    wait_set_info->wait_set, wait_set_info->wait_set, goto fail, DDSWaitSet, )
+    wait_set_info->wait_set, wait_set_info->wait_set, goto fail, DDS::WaitSet, )
 
   // Now allocate storage for the ConditionSeq objects
   wait_set_info->active_conditions =
-    static_cast<DDSConditionSeq *>(rmw_allocate(sizeof(DDSConditionSeq)));
+    static_cast<DDS::ConditionSeq *>(rmw_allocate(sizeof(DDS::ConditionSeq)));
   if (!wait_set_info->active_conditions) {
     RMW_SET_ERROR_MSG("failed to allocate active_conditions sequence");
     goto fail;
   }
 
   wait_set_info->attached_conditions =
-    static_cast<DDSConditionSeq *>(rmw_allocate(sizeof(DDSConditionSeq)));
+    static_cast<DDS::ConditionSeq *>(rmw_allocate(sizeof(DDS::ConditionSeq)));
   if (!wait_set_info->attached_conditions) {
     RMW_SET_ERROR_MSG("failed to allocate attached_conditions sequence");
     goto fail;
@@ -63,22 +63,22 @@ create_wait_set(const char * implementation_identifier, size_t max_conditions)
   if (max_conditions > 0) {
     RMW_TRY_PLACEMENT_NEW(
       wait_set_info->active_conditions, wait_set_info->active_conditions, goto fail,
-      DDSConditionSeq, static_cast<DDS_Long>(max_conditions))
+      DDS::ConditionSeq, static_cast<DDS::Long>(max_conditions))
 
     RMW_TRY_PLACEMENT_NEW(
       wait_set_info->attached_conditions, wait_set_info->attached_conditions, goto fail,
-      DDSConditionSeq,
-      static_cast<DDS_Long>(max_conditions))
+      DDS::ConditionSeq,
+      static_cast<DDS::Long>(max_conditions))
   } else {
     // Else, don't preallocate: the vectors will size dynamically when rmw_wait is called.
     // Default-construct the ConditionSeqs.
     RMW_TRY_PLACEMENT_NEW(
       wait_set_info->active_conditions, wait_set_info->active_conditions,
-      goto fail, DDSConditionSeq, )
+      goto fail, DDS::ConditionSeq, )
 
     RMW_TRY_PLACEMENT_NEW(
       wait_set_info->attached_conditions, wait_set_info->attached_conditions, goto fail,
-      DDSConditionSeq, )
+      DDS::ConditionSeq, )
   }
 
   return wait_set;
@@ -88,16 +88,16 @@ fail:
     if (wait_set_info->active_conditions) {
       // How to know which constructor threw?
       RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-        wait_set_info->active_conditions->~DDSConditionSeq(), DDSConditionSeq)
+        wait_set_info->active_conditions->DDS::ConditionSeq::~ConditionSeq(), DDS::ConditionSeq)
       rmw_free(wait_set_info->active_conditions);
     }
     if (wait_set_info->attached_conditions) {
       RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-        wait_set_info->attached_conditions->~DDSConditionSeq(), DDSConditionSeq)
+        wait_set_info->attached_conditions->DDS::ConditionSeq::~ConditionSeq(), DDS::ConditionSeq)
       rmw_free(wait_set_info->attached_conditions);
     }
     if (wait_set_info->wait_set) {
-      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(wait_set_info->wait_set->~DDSWaitSet(), DDSWaitSet)
+      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(wait_set_info->wait_set->DDS::WaitSet::~WaitSet(), DDS::WaitSet)
       rmw_free(wait_set_info->wait_set);
     }
     wait_set_info = nullptr;
@@ -129,16 +129,16 @@ destroy_wait_set(const char * implementation_identifier, rmw_wait_set_t * wait_s
   // Explicitly call destructor since the "placement new" was used
   if (wait_set_info->active_conditions) {
     RMW_TRY_DESTRUCTOR(
-      wait_set_info->active_conditions->~DDSConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
+      wait_set_info->active_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
     rmw_free(wait_set_info->active_conditions);
   }
   if (wait_set_info->attached_conditions) {
     RMW_TRY_DESTRUCTOR(
-      wait_set_info->attached_conditions->~DDSConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
+      wait_set_info->attached_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
     rmw_free(wait_set_info->attached_conditions);
   }
   if (wait_set_info->wait_set) {
-    RMW_TRY_DESTRUCTOR(wait_set_info->wait_set->~DDSWaitSet(), WaitSet, result = RMW_RET_ERROR)
+    RMW_TRY_DESTRUCTOR(wait_set_info->wait_set->DDS::WaitSet::~WaitSet(), WaitSet, result = RMW_RET_ERROR)
     rmw_free(wait_set_info->wait_set);
   }
   wait_set_info = nullptr;

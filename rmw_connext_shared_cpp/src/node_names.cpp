@@ -46,9 +46,9 @@ get_node_names(
     return RMW_RET_ERROR;
   }
 
-  DDSDomainParticipant * participant = static_cast<ConnextNodeInfo *>(node->data)->participant;
-  DDS_InstanceHandleSeq handles;
-  if (participant->get_discovered_participants(handles) != DDS_RETCODE_OK) {
+  DDS::DomainParticipant * participant = static_cast<ConnextNodeInfo *>(node->data)->participant;
+  DDS::InstanceHandleSeq handles;
+  if (participant->get_discovered_participants(handles) != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("unable to fetch discovered participants.");
     return RMW_RET_ERROR;
   }
@@ -65,9 +65,9 @@ get_node_names(
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
   }
 
-  DDS_DomainParticipantQos participant_qos;
-  DDS_ReturnCode_t status = participant->get_qos(participant_qos);
-  if (status != DDS_RETCODE_OK) {
+  DDS::DomainParticipantQos participant_qos;
+  DDS::ReturnCode_t status = participant->get_qos(participant_qos);
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return RMW_RET_ERROR;
   }
@@ -87,7 +87,7 @@ get_node_names(
     auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i - 1]);
     std::string name;
     std::string namespace_;
-    if (DDS_RETCODE_OK == dds_ret) {
+    if (DDS::RETCODE_OK == dds_ret) {
       auto data = static_cast<unsigned char *>(pbtd.user_data.value.get_contiguous_buffer());
       std::vector<uint8_t> kv(data, data + pbtd.user_data.value.length());
       auto map = rmw::impl::cpp::parse_key_value(kv);

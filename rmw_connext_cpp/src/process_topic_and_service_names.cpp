@@ -45,7 +45,7 @@ _process_topic_name(
     success = false;
     goto end;
   }
-  *topic_str = DDS_String_dup(concat_str);
+  *topic_str = DDS::String_dup(concat_str);
 
 end:
   if (concat_str) {
@@ -91,8 +91,8 @@ _process_service_name(
     success = false;
     goto end;
   }
-  *request_topic_str = DDS_String_dup(request_concat_str);
-  *response_topic_str = DDS_String_dup(response_concat_str);
+  *request_topic_str = DDS::String_dup(request_concat_str);
+  *response_topic_str = DDS::String_dup(response_concat_str);
 
 end:
   if (request_concat_str) {
