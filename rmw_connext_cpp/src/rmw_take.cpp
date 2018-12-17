@@ -89,7 +89,7 @@ take(
     ignore_sample = true;
     for (size_t i = 0; i < 12; ++i) {
       DDS::Octet * sender_element = &(sender_guid.value[i]);
-      DDS::Octet * receiver_element = 
+      DDS::Octet * receiver_element =
         &(reinterpret_cast<DDS::Octet *>(&receiver_instance_handle)[i]);
       if (*sender_element != *receiver_element) {
         ignore_sample = false;
