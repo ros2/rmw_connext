@@ -97,7 +97,8 @@ fail:
       rmw_free(wait_set_info->attached_conditions);
     }
     if (wait_set_info->wait_set) {
-      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(wait_set_info->wait_set->DDS::WaitSet::~WaitSet(), DDS::WaitSet)
+      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+		wait_set_info->wait_set->DDS::WaitSet::~WaitSet(), DDS::WaitSet)
       rmw_free(wait_set_info->wait_set);
     }
     wait_set_info = nullptr;
@@ -129,16 +130,19 @@ destroy_wait_set(const char * implementation_identifier, rmw_wait_set_t * wait_s
   // Explicitly call destructor since the "placement new" was used
   if (wait_set_info->active_conditions) {
     RMW_TRY_DESTRUCTOR(
-      wait_set_info->active_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
+      wait_set_info->active_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq, 
+	  result = RMW_RET_ERROR)
     rmw_free(wait_set_info->active_conditions);
   }
   if (wait_set_info->attached_conditions) {
     RMW_TRY_DESTRUCTOR(
-      wait_set_info->attached_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq, result = RMW_RET_ERROR)
+      wait_set_info->attached_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq, 
+	  result = RMW_RET_ERROR)
     rmw_free(wait_set_info->attached_conditions);
   }
   if (wait_set_info->wait_set) {
-    RMW_TRY_DESTRUCTOR(wait_set_info->wait_set->DDS::WaitSet::~WaitSet(), WaitSet, result = RMW_RET_ERROR)
+    RMW_TRY_DESTRUCTOR(
+	  wait_set_info->wait_set->DDS::WaitSet::~WaitSet(), WaitSet, result = RMW_RET_ERROR)
     rmw_free(wait_set_info->wait_set);
   }
   wait_set_info = nullptr;
