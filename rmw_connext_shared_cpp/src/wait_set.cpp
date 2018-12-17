@@ -130,13 +130,13 @@ destroy_wait_set(const char * implementation_identifier, rmw_wait_set_t * wait_s
   // Explicitly call destructor since the "placement new" was used
   if (wait_set_info->active_conditions) {
     RMW_TRY_DESTRUCTOR(
-      wait_set_info->active_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq, 
+      wait_set_info->active_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq,
       result = RMW_RET_ERROR)
     rmw_free(wait_set_info->active_conditions);
   }
   if (wait_set_info->attached_conditions) {
     RMW_TRY_DESTRUCTOR(
-      wait_set_info->attached_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq, 
+      wait_set_info->attached_conditions->DDS::ConditionSeq::~ConditionSeq(), ConditionSeq,
       result = RMW_RET_ERROR)
     rmw_free(wait_set_info->attached_conditions);
   }

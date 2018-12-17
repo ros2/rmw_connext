@@ -66,7 +66,8 @@ destroy_guard_condition(
 
   auto result = RMW_RET_OK;
   RMW_TRY_DESTRUCTOR(
-    static_cast<DDS::GuardCondition *>(guard_condition->data)->DDS::GuardCondition::~GuardCondition(),
+    static_cast<DDS::GuardCondition *>(guard_condition->data)
+      ->DDS::GuardCondition::~GuardCondition(),
     DDS::GuardCondition, result = RMW_RET_ERROR)
   rmw_free(guard_condition->data);
   rmw_guard_condition_free(guard_condition);
