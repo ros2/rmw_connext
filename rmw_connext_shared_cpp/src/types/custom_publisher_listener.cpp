@@ -23,7 +23,7 @@
 void CustomPublisherListener::on_data_available(DDS::DataReader * reader)
 {
   DDS::PublicationBuiltinTopicDataDataReader * builtin_reader =
-    static_cast<DDS::PublicationBuiltinTopicDataDataReader *>(reader);
+    DDS::PublicationBuiltinTopicDataDataReader::narrow(reader);
 
   DDS::PublicationBuiltinTopicDataSeq data_seq;
   DDS::SampleInfoSeq info_seq;
