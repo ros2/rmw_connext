@@ -27,16 +27,16 @@ extern "C"
 {
 struct ConnextStaticSubscriberInfo
 {
-  DDSSubscriber * dds_subscriber_;
+  DDS::Subscriber * dds_subscriber_;
   ConnextSubscriberListener * listener_;
-  DDSDataReader * topic_reader_;
-  DDSReadCondition * read_condition_;
+  DDS::DataReader * topic_reader_;
+  DDS::ReadCondition * read_condition_;
   bool ignore_local_publications;
   const message_type_support_callbacks_t * callbacks_;
 };
 }  // extern "C"
 
-class ConnextSubscriberListener : public DDSSubscriberListener
+class ConnextSubscriberListener : public DDS::SubscriberListener
 {
 public:
   virtual void on_subscription_matched(

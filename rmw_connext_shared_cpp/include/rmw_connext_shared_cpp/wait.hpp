@@ -113,8 +113,8 @@ wait(
     return RMW_RET_ERROR;
   }
 
-  DDSConditionSeq * active_conditions =
-    static_cast<DDSConditionSeq *>(wait_set_info->active_conditions);
+  DDS::ConditionSeq * active_conditions =
+    static_cast<DDS::ConditionSeq *>(wait_set_info->active_conditions);
   if (!active_conditions) {
     RMW_SET_ERROR_MSG("DDS condition sequence handle is null");
     return RMW_RET_ERROR;
@@ -129,7 +129,7 @@ wait(
         RMW_SET_ERROR_MSG("subscriber info handle is null");
         return RMW_RET_ERROR;
       }
-      DDSReadCondition * read_condition = subscriber_info->read_condition_;
+      DDS::ReadCondition * read_condition = subscriber_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
@@ -145,8 +145,8 @@ wait(
   // add a condition for each guard condition
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
-      DDSGuardCondition * guard_condition =
-        static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
+      DDS::GuardCondition * guard_condition =
+        static_cast<DDS::GuardCondition *>(guard_conditions->guard_conditions[i]);
       if (!guard_condition) {
         RMW_SET_ERROR_MSG("guard condition handle is null");
         return RMW_RET_ERROR;
@@ -170,7 +170,7 @@ wait(
         return RMW_RET_ERROR;
       }
 
-      DDSReadCondition * read_condition = service_info->read_condition_;
+      DDS::ReadCondition * read_condition = service_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
@@ -193,14 +193,14 @@ wait(
         return RMW_RET_ERROR;
       }
 
-      DDSDataReader * response_datareader = client_info->response_datareader_;
+      DDS::DataReader * response_datareader = client_info->response_datareader_;
       if (!response_datareader) {
         RMW_SET_ERROR_MSG("response datareader handle is null");
         return RMW_RET_ERROR;
       }
 
       // MIGHT BE IMPORTANT !!!
-      DDSReadCondition * read_condition = client_info->read_condition_;
+      DDS::ReadCondition * read_condition = client_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
@@ -238,7 +238,7 @@ wait(
         RMW_SET_ERROR_MSG("subscriber info handle is null");
         return RMW_RET_ERROR;
       }
-      DDSReadCondition * read_condition = subscriber_info->read_condition_;
+      DDS::ReadCondition * read_condition = subscriber_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
@@ -267,7 +267,7 @@ wait(
   // set guard condition handles to zero for all not triggered conditions
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
-      DDSCondition * condition =
+      DDS::Condition * condition =
         static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
       if (!condition) {
         RMW_SET_ERROR_MSG("condition handle is null");
@@ -309,7 +309,7 @@ wait(
         RMW_SET_ERROR_MSG("service info handle is null");
         return RMW_RET_ERROR;
       }
-      DDSReadCondition * read_condition = service_info->read_condition_;
+      DDS::ReadCondition * read_condition = service_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
@@ -344,7 +344,7 @@ wait(
         RMW_SET_ERROR_MSG("client info handle is null");
         return RMW_RET_ERROR;
       }
-      DDSReadCondition * read_condition = client_info->read_condition_;
+      DDS::ReadCondition * read_condition = client_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;

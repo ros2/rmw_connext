@@ -30,7 +30,7 @@ namespace rmw_connext_cpp
  * \return native Connext data writer handle if successful, otherwise `NULL`
  */
 RMW_CONNEXT_CPP_PUBLIC
-DDSDataWriter *
+DDS::DataWriter *
 get_data_writer(rmw_publisher_t * publisher);
 
 }  // namespace rmw_connext_cpp
