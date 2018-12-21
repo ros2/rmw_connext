@@ -138,7 +138,7 @@ CustomDataReaderListener::fill_service_names_and_types(
 {
   for (auto it : topic_cache.get_topic_guid_to_info()) {
     std::string service_name = _demangle_service_from_topic(it.second.name);
-    if (!service_name.empty()) {
+    if (service_name.empty()) {
       // not a service
       continue;
     }
