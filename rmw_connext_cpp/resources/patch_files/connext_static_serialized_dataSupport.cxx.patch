@@ -3,7 +3,7 @@
 @@ -115,3 +115,62 @@ Defines:   TTypeSupport, TData, TDataReader, TDataWriter
  #undef TPlugin_new
  #undef TPlugin_delete
- 
+
 +DDS_ReturnCode_t
 +ConnextStaticSerializedDataSupport_register_external_type(
 +  DDSDomainParticipant * participant,
