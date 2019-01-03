@@ -27,7 +27,7 @@ std::string
 _demangle_if_ros_topic(const std::string & topic_name)
 {
   std::string prefix = _get_ros_prefix_if_exists(topic_name);
-  if (prefix.length()) {
+  if (!prefix.empty()) {
     return topic_name.substr(strlen(ros_topic_prefix));
   }
   return topic_name;
@@ -55,7 +55,7 @@ std::string
 _demangle_service_from_topic(const std::string & topic_name)
 {
   std::string prefix = _get_ros_prefix_if_exists(topic_name);
-  if (!prefix.length()) {
+  if (prefix.empty()) {
     // not a ROS topic or service
     return "";
   }
