@@ -71,7 +71,7 @@ get_topic_names_and_types(
   node_info->subscriber_listener->fill_topic_names_and_types(no_demangle, topics);
 
   // Copy data to results handle
-  if (topics.size() > 0) {
+  if (!topics.empty()) {
     rmw_ret_t rmw_ret;
     rmw_ret = copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
     if (rmw_ret != RMW_RET_OK) {
