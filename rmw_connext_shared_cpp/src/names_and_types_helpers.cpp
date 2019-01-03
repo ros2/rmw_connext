@@ -37,7 +37,7 @@ copy_topics_names_and_types(
   rmw_names_and_types_t * topic_names_and_types)
 {
   // Copy data to results handle
-  if (topics.size() > 0) {
+  if (!topics.empty()) {
     // Setup string array to store names
     rmw_ret_t rmw_ret = rmw_names_and_types_init(topic_names_and_types, topics.size(), allocator);
     if (rmw_ret != RMW_RET_OK) {
@@ -108,7 +108,7 @@ copy_services_to_names_and_types(
   rmw_names_and_types_t * service_names_and_types)
 {
   // Fill out service_names_and_types
-  if (services.size()) {
+  if (!services.empty()) {
     // Setup string array to store names
     rmw_ret_t rmw_ret =
       rmw_names_and_types_init(service_names_and_types, services.size(), allocator);

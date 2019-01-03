@@ -74,7 +74,7 @@ get_service_names_and_types(
   node_info->subscriber_listener->fill_service_names_and_types(services);
 
   // Fill out service_names_and_types
-  if (services.size()) {
+  if (!services.empty()) {
     rmw_ret_t rmw_ret;
     rmw_ret = copy_services_to_names_and_types(services, allocator, service_names_and_types);
     if (rmw_ret != RMW_RET_OK) {
