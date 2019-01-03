@@ -138,12 +138,12 @@ CustomDataReaderListener::fill_service_names_and_types(
 {
   for (auto it : topic_cache.get_topic_guid_to_info()) {
     std::string service_name = _demangle_service_from_topic(it.second.name);
-    if (!service_name.length()) {
+    if (service_name.empty()) {
       // not a service
       continue;
     }
     std::string service_type = _demangle_service_type_only(it.second.type);
-    if (service_type.length()) {
+    if (!service_type.empty()) {
       services[service_name].insert(service_type);
     }
   }
@@ -186,13 +186,13 @@ void CustomDataReaderListener::fill_service_names_and_types_by_guid(
   }
   for (auto & it : map) {
     std::string service_name = _demangle_service_from_topic(it.first);
-    if (!service_name.length()) {
+    if (service_name.empty()) {
       // not a service
       continue;
     }
     for (auto & itt : it.second) {
       std::string service_type = _demangle_service_type_only(itt);
-      if (service_type.length()) {
+      if (!service_type.empty()) {
         services[service_name].insert(service_type);
       }
     }
