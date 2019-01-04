@@ -65,6 +65,9 @@ destroy_guard_condition(
     return RMW_RET_ERROR)
 
   auto result = RMW_RET_OK;
+#if defined __clang__
+  using DDS::GuardCondition;
+#endif
   RMW_TRY_DESTRUCTOR(
     static_cast<DDS::GuardCondition *>(guard_condition->data)
     ->DDS::GuardCondition::~GuardCondition(),
