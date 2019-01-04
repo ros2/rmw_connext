@@ -45,8 +45,7 @@ get_topic_names_and_types(
     RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
     return RMW_RET_ERROR;
   }
-  rmw_ret_t rmw_ret;
-  rmw_ret = rmw_names_and_types_check_zero(topic_names_and_types);
+  rmw_ret_t rmw_ret = rmw_names_and_types_check_zero(topic_names_and_types);
   if (rmw_ret != RMW_RET_OK) {
     return rmw_ret;
   }
@@ -72,8 +71,8 @@ get_topic_names_and_types(
 
   // Copy data to results handle
   if (!topics.empty()) {
-    rmw_ret_t rmw_ret;
-    rmw_ret = copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
+    rmw_ret_t rmw_ret =
+      copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
     if (rmw_ret != RMW_RET_OK) {
       return rmw_ret;
     }
