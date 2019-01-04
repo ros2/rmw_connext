@@ -195,13 +195,7 @@ get_subscriber_names_and_types_by_node(
   std::map<std::string, std::set<std::string>> topics;
   node_info->subscriber_listener->fill_topic_names_and_types_by_guid(no_demangle, topics, key);
 
-  rmw_ret_t rmw_ret;
-  rmw_ret = copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
-  if (rmw_ret != RMW_RET_OK) {
-    return rmw_ret;
-  }
-
-  return RMW_RET_OK;
+  return copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
 }
 
 rmw_ret_t
@@ -248,13 +242,7 @@ get_publisher_names_and_types_by_node(
   std::map<std::string, std::set<std::string>> topics;
   node_info->publisher_listener->fill_topic_names_and_types_by_guid(no_demangle, topics, key);
 
-  rmw_ret_t rmw_ret;
-  rmw_ret = copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
-  if (rmw_ret != RMW_RET_OK) {
-    return rmw_ret;
-  }
-
-  return RMW_RET_OK;
+  return copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
 }
 
 rmw_ret_t
@@ -296,8 +284,8 @@ get_service_names_and_types_by_node(
   std::map<std::string, std::set<std::string>> services;
   node_info->subscriber_listener->fill_service_names_and_types_by_guid(services, key);
 
-  rmw_ret_t rmw_ret;
-  rmw_ret = copy_services_to_names_and_types(services, allocator, service_names_and_types);
+  rmw_ret_t rmw_ret =
+    copy_services_to_names_and_types(services, allocator, service_names_and_types);
   if (rmw_ret != RMW_RET_OK) {
     return rmw_ret;
   }
