@@ -36,7 +36,7 @@
 enum EntityType {Publisher, Subscriber};
 
 class CustomDataReaderListener
-  : public DDSDataReaderListener
+  : public DDS::DataReaderListener
 {
 public:
   explicit
@@ -48,27 +48,27 @@ public:
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void add_information(
-    const DDS_GUID_t & participant_guid,
-    const DDS_GUID_t & guid,
+    const DDS::GUID_t & participant_guid,
+    const DDS::GUID_t & guid,
     const std::string & topic_name,
     const std::string & type_name,
     EntityType entity_type);
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void remove_information(
-    const DDS_GUID_t & guid,
+    const DDS::GUID_t & guid,
     EntityType entity_type);
 
   virtual void add_information(
-    const DDS_InstanceHandle_t & participant_instance_handle,
-    const DDS_InstanceHandle_t & instance_handle,
+    const DDS::InstanceHandle_t & participant_instance_handle,
+    const DDS::InstanceHandle_t & instance_handle,
     const std::string & topic_name,
     const std::string & type_name,
     EntityType entity_type);
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void remove_information(
-    const DDS_InstanceHandle_t & instance_handle,
+    const DDS::InstanceHandle_t & instance_handle,
     EntityType entity_type);
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
@@ -94,7 +94,7 @@ public:
 
 protected:
   std::mutex mutex_;
-  TopicCache<DDS_GUID_t> topic_cache;
+  TopicCache<DDS::GUID_t> topic_cache;
 
 private:
   rmw_guard_condition_t * graph_guard_condition_;
@@ -110,7 +110,7 @@ public:
   : CustomDataReaderListener(implementation_identifier, graph_guard_condition)
   {}
 
-  virtual void on_data_available(DDSDataReader * reader);
+  virtual void on_data_available(DDS::DataReader * reader);
 };
 
 class CustomSubscriberListener
@@ -122,12 +122,12 @@ public:
   : CustomDataReaderListener(implementation_identifier, graph_guard_condition)
   {}
 
-  virtual void on_data_available(DDSDataReader * reader);
+  virtual void on_data_available(DDS::DataReader * reader);
 };
 
 struct ConnextNodeInfo
 {
-  DDSDomainParticipant * participant;
+  DDS::DomainParticipant * participant;
   CustomPublisherListener * publisher_listener;
   CustomSubscriberListener * subscriber_listener;
   rmw_guard_condition_t * graph_guard_condition;
@@ -135,14 +135,14 @@ struct ConnextNodeInfo
 
 struct ConnextPublisherGID
 {
-  DDS_InstanceHandle_t publication_handle;
+  DDS::InstanceHandle_t publication_handle;
 };
 
 struct ConnextWaitSetInfo
 {
-  DDSWaitSet * wait_set;
-  DDSConditionSeq * active_conditions;
-  DDSConditionSeq * attached_conditions;
+  DDS::WaitSet * wait_set;
+  DDS::ConditionSeq * active_conditions;
+  DDS::ConditionSeq * attached_conditions;
 };
 
 #endif  // RMW_CONNEXT_SHARED_CPP__TYPES_HPP_

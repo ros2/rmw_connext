@@ -72,7 +72,7 @@ rmw_create_publisher(
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -86,14 +86,14 @@ rmw_create_publisher(
   }
   std::string type_name = _create_type_name(callbacks, "msg");
   // Past this point, a failure results in unrolling code in the goto fail block.
-  DDS_TypeCode * type_code = nullptr;
-  DDS_DataWriterQos datawriter_qos;
-  DDS_PublisherQos publisher_qos;
-  DDS_ReturnCode_t status;
-  DDSPublisher * dds_publisher = nullptr;
-  DDSDataWriter * topic_writer = nullptr;
-  DDSTopic * topic = nullptr;
-  DDSTopicDescription * topic_description = nullptr;
+  DDS::TypeCode * type_code = nullptr;
+  DDS::DataWriterQos datawriter_qos;
+  DDS::PublisherQos publisher_qos;
+  DDS::ReturnCode_t status;
+  DDS::Publisher * dds_publisher = nullptr;
+  DDS::DataWriter * topic_writer = nullptr;
+  DDS::Topic * topic = nullptr;
+  DDS::TopicDescription * topic_description = nullptr;
   void * info_buf = nullptr;
   void * listener_buf = nullptr;
   ConnextPublisherListener * publisher_listener = nullptr;
@@ -123,13 +123,13 @@ rmw_create_publisher(
   // advertise the topic however with a type of the message, e.g. std_msgs::msg::dds_::String
   status = ConnextStaticSerializedDataSupport_register_external_type(
     participant, type_name.c_str(), type_code);
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to register external type");
     goto fail;
   }
 
   status = participant->get_default_publisher_qos(publisher_qos);
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default publisher qos");
     goto fail;
   }
@@ -154,7 +154,7 @@ rmw_create_publisher(
   listener_buf = nullptr;  // Only free the buffer pointer.
 
   dds_publisher = participant->create_publisher(
-    publisher_qos, publisher_listener, DDS_PUBLICATION_MATCHED_STATUS);
+    publisher_qos, publisher_listener, DDS::PUBLICATION_MATCHED_STATUS);
   if (!dds_publisher) {
     RMW_SET_ERROR_MSG("failed to create publisher");
     goto fail;
@@ -162,29 +162,29 @@ rmw_create_publisher(
 
   topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
-    DDS_TopicQos default_topic_qos;
+    DDS::TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to get default topic qos");
       goto fail;
     }
 
     topic = participant->create_topic(
       topic_str, type_name.c_str(),
-      default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
+      default_topic_qos, NULL, DDS::STATUS_MASK_NONE);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to create topic");
       goto fail;
     }
   } else {
-    DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
+    DDS::Duration_t timeout = DDS::Duration_t::from_seconds(0);
     topic = participant->find_topic(topic_str, timeout);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to find topic");
       goto fail;
     }
   }
-  DDS_String_free(topic_str);
+  DDS::String_free(topic_str);
   topic_str = nullptr;
 
   if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
@@ -193,7 +193,7 @@ rmw_create_publisher(
   }
 
   topic_writer = dds_publisher->create_datawriter(
-    topic, datawriter_qos, NULL, DDS_STATUS_MASK_NONE);
+    topic, datawriter_qos, NULL, DDS::STATUS_MASK_NONE);
   if (!topic_writer) {
     RMW_SET_ERROR_MSG("failed to create datawriter");
     goto fail;
@@ -261,7 +261,7 @@ rmw_create_publisher(
   return publisher;
 fail:
   if (topic_str) {
-    DDS_String_free(topic_str);
+    DDS::String_free(topic_str);
     topic_str = nullptr;
   }
   if (publisher) {
@@ -270,14 +270,14 @@ fail:
   // Assumption: participant is valid.
   if (dds_publisher) {
     if (topic_writer) {
-      if (dds_publisher->delete_datawriter(topic_writer) != DDS_RETCODE_OK) {
+      if (dds_publisher->delete_datawriter(topic_writer) != DDS::RETCODE_OK) {
         std::stringstream ss;
         ss << "leaking datawriter while handling failure at " <<
           __FILE__ << ":" << __LINE__ << '\n';
         (std::cerr << ss.str()).flush();
       }
     }
-    if (participant->delete_publisher(dds_publisher) != DDS_RETCODE_OK) {
+    if (participant->delete_publisher(dds_publisher) != DDS::RETCODE_OK) {
       std::stringstream ss;
       ss << "leaking publisher while handling failure at " <<
         __FILE__ << ":" << __LINE__ << '\n';
@@ -365,7 +365,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return RMW_RET_ERROR;
@@ -377,17 +377,17 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     node_info->publisher_listener->remove_information(
       publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
     node_info->publisher_listener->trigger_graph_guard_condition();
-    DDSPublisher * dds_publisher = publisher_info->dds_publisher_;
+    DDS::Publisher * dds_publisher = publisher_info->dds_publisher_;
 
     if (dds_publisher) {
       if (publisher_info->topic_writer_) {
-        if (dds_publisher->delete_datawriter(publisher_info->topic_writer_) != DDS_RETCODE_OK) {
+        if (dds_publisher->delete_datawriter(publisher_info->topic_writer_) != DDS::RETCODE_OK) {
           RMW_SET_ERROR_MSG("failed to delete datawriter");
           return RMW_RET_ERROR;
         }
         publisher_info->topic_writer_ = nullptr;
       }
-      if (participant->delete_publisher(dds_publisher) != DDS_RETCODE_OK) {
+      if (participant->delete_publisher(dds_publisher) != DDS::RETCODE_OK) {
         RMW_SET_ERROR_MSG("failed to delete publisher");
         return RMW_RET_ERROR;
       }
