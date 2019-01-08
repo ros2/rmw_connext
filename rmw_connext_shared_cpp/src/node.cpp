@@ -37,16 +37,16 @@ create_node(
     RMW_SET_ERROR_MSG("security_options is null");
     return nullptr;
   }
-  DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
+  DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
   if (!dpf_) {
     RMW_SET_ERROR_MSG("failed to get participant factory");
     return NULL;
   }
 
   // use loopback interface to enable cross vendor communication
-  DDS_DomainParticipantQos participant_qos;
-  DDS_ReturnCode_t status = dpf_->get_default_participant_qos(participant_qos);
-  if (status != DDS_RETCODE_OK) {
+  DDS::DomainParticipantQos participant_qos;
+  DDS::ReturnCode_t status = dpf_->get_default_participant_qos(participant_qos);
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
   }
@@ -57,7 +57,7 @@ create_node(
   // the node name is also set in the user_data
   size_t length = strlen(name) + strlen("name=;") +
     strlen(namespace_) + strlen("namespace=;") + 1;
-  bool success = participant_qos.user_data.value.length(static_cast<DDS_Long>(length));
+  bool success = participant_qos.user_data.value.length(static_cast<DDS::Long>(length));
   if (!success) {
     RMW_SET_ERROR_MSG("failed to resize participant user_data");
     return NULL;
@@ -85,21 +85,21 @@ create_node(
   // forces local traffic to be sent over loopback,
   // even if a more efficient transport (such as shared memory) is installed
   // (in which case traffic will be sent over both transports)
-  status = DDSPropertyQosPolicyHelper::add_property(
+  status = DDS::PropertyQosPolicyHelper::add_property(
     participant_qos.property,
     "dds.transport.UDPv4.builtin.ignore_loopback_interface",
     "0",
-    DDS_BOOLEAN_FALSE);
-  if (status != DDS_RETCODE_OK) {
+    DDS::BOOLEAN_FALSE);
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to add qos property");
     return NULL;
   }
-  status = DDSPropertyQosPolicyHelper::add_property(
+  status = DDS::PropertyQosPolicyHelper::add_property(
     participant_qos.property,
     "dds.transport.use_510_compatible_locator_kinds",
     "1",
-    DDS_BOOLEAN_FALSE);
-  if (status != DDS_RETCODE_OK) {
+    DDS::BOOLEAN_FALSE);
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to add qos property");
     return NULL;
   }
@@ -115,11 +115,11 @@ create_node(
   CustomSubscriberListener * subscriber_listener = nullptr;
   void * buf = nullptr;
 
-  DDSDomainParticipant * participant = nullptr;
-  DDSDataReader * data_reader = nullptr;
-  DDSPublicationBuiltinTopicDataDataReader * builtin_publication_datareader = nullptr;
-  DDSSubscriptionBuiltinTopicDataDataReader * builtin_subscription_datareader = nullptr;
-  DDSSubscriber * builtin_subscriber = nullptr;
+  DDS::DomainParticipant * participant = nullptr;
+  DDS::DataReader * data_reader = nullptr;
+  DDS::PublicationBuiltinTopicDataDataReader * builtin_publication_datareader = nullptr;
+  DDS::SubscriptionBuiltinTopicDataDataReader * builtin_subscription_datareader = nullptr;
+  DDS::Subscriber * builtin_subscriber = nullptr;
 
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
@@ -133,30 +133,30 @@ create_node(
 
   if (security_options->security_root_path) {
     // enable some security stuff
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.load_plugin",
       "com.rti.serv.secure",
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.library",
       "nddssecurity",
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.create_function",
       "RTI_Security_PluginSuite_create",
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       return NULL;
     }
@@ -194,69 +194,69 @@ create_node(
     }
 
     // now try to pass these filenames to the Authentication plugin
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.authentication.ca_file",
       identity_ca_cert_fn,
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       goto fail;
     }
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.authentication.certificate_file",
       cert_fn,
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       goto fail;
     }
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.authentication.private_key_file",
       key_fn,
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       goto fail;
     }
 
     // pass filenames to the Access Control plugin
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.access_control.permissions_authority_file",
       permissions_ca_cert_fn,
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       goto fail;
     }
 
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.access_control.governance_file",
       gov_fn,
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       goto fail;
     }
 
-    status = DDSPropertyQosPolicyHelper::add_property(
+    status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "com.rti.serv.secure.access_control.permissions_file",
       perm_fn,
-      DDS_BOOLEAN_FALSE);
-    if (status != DDS_RETCODE_OK) {
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       goto fail;
     }
   }
 
   participant = dpf_->create_participant(
-    static_cast<DDS_DomainId_t>(domain_id), participant_qos, NULL,
-    DDS_STATUS_MASK_NONE);
+    static_cast<DDS::DomainId_t>(domain_id), participant_qos, NULL,
+    DDS::STATUS_MASK_NONE);
   if (!participant) {
     RMW_SET_ERROR_MSG("failed to create participant");
     goto fail;
@@ -269,9 +269,9 @@ create_node(
   }
 
   // setup publisher listener
-  data_reader = builtin_subscriber->lookup_datareader(DDS_PUBLICATION_TOPIC_NAME);
+  data_reader = builtin_subscriber->lookup_datareader(DDS::PUBLICATION_TOPIC_NAME);
   builtin_publication_datareader =
-    static_cast<DDSPublicationBuiltinTopicDataDataReader *>(data_reader);
+    static_cast<DDS::PublicationBuiltinTopicDataDataReader *>(data_reader);
   if (!builtin_publication_datareader) {
     RMW_SET_ERROR_MSG("builtin publication datareader handle is null");
     goto fail;
@@ -292,11 +292,11 @@ create_node(
     publisher_listener, buf, goto fail, CustomPublisherListener,
     implementation_identifier, graph_guard_condition)
   buf = nullptr;
-  builtin_publication_datareader->set_listener(publisher_listener, DDS_DATA_AVAILABLE_STATUS);
+  builtin_publication_datareader->set_listener(publisher_listener, DDS::DATA_AVAILABLE_STATUS);
 
-  data_reader = builtin_subscriber->lookup_datareader(DDS_SUBSCRIPTION_TOPIC_NAME);
+  data_reader = builtin_subscriber->lookup_datareader(DDS::SUBSCRIPTION_TOPIC_NAME);
   builtin_subscription_datareader =
-    static_cast<DDSSubscriptionBuiltinTopicDataDataReader *>(data_reader);
+    static_cast<DDS::SubscriptionBuiltinTopicDataDataReader *>(data_reader);
   if (!builtin_subscription_datareader) {
     RMW_SET_ERROR_MSG("builtin subscription datareader handle is null");
     goto fail;
@@ -312,7 +312,7 @@ create_node(
     subscriber_listener, buf, goto fail, CustomSubscriberListener,
     implementation_identifier, graph_guard_condition)
   buf = nullptr;
-  builtin_subscription_datareader->set_listener(subscriber_listener, DDS_DATA_AVAILABLE_STATUS);
+  builtin_subscription_datareader->set_listener(subscriber_listener, DDS::DATA_AVAILABLE_STATUS);
 
   node_handle = rmw_node_allocate();
   if (!node_handle) {
@@ -355,7 +355,7 @@ create_node(
   return node_handle;
 fail:
   status = dpf_->delete_participant(participant);
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS::RETCODE_OK) {
     std::stringstream ss;
     ss << "leaking participant while handling failure at " <<
       __FILE__ << ":" << __LINE__;
@@ -419,7 +419,7 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
     node->implementation_identifier, implementation_identifier,
     return RMW_RET_ERROR)
 
-  DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
+  DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
   if (!dpf_) {
     RMW_SET_ERROR_MSG("failed to get participant factory");
     return RMW_RET_ERROR;
@@ -430,7 +430,7 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
   }
@@ -441,8 +441,8 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
-  DDS_ReturnCode_t ret = dpf_->delete_participant(participant);
-  if (ret != DDS_RETCODE_OK) {
+  DDS::ReturnCode_t ret = dpf_->delete_participant(participant);
+  if (ret != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to delete participant");
     return RMW_RET_ERROR;
   }

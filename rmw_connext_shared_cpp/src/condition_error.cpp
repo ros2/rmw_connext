@@ -20,12 +20,12 @@
 rmw_ret_t
 check_attach_condition_error(DDS::ReturnCode_t retcode)
 {
-  if (retcode == DDS_RETCODE_OK) {
+  if (retcode == DDS::RETCODE_OK) {
     return RMW_RET_OK;
   }
-  if (retcode == DDS_RETCODE_OUT_OF_RESOURCES) {
+  if (retcode == DDS::RETCODE_OUT_OF_RESOURCES) {
     RMW_SET_ERROR_MSG("failed to attach condition to wait set: out of resources");
-  } else if (retcode == DDS_RETCODE_BAD_PARAMETER) {
+  } else if (retcode == DDS::RETCODE_BAD_PARAMETER) {
     RMW_SET_ERROR_MSG("failed to attach condition to wait set: condition pointer was invalid");
   } else {
     RMW_SET_ERROR_MSG("failed to attach condition to wait set");

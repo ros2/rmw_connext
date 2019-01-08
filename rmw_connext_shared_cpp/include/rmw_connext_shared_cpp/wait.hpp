@@ -58,29 +58,29 @@ wait(
         return;
       }
 
-      DDSWaitSet * dds_wait_set = static_cast<DDSWaitSet *>(wait_set_info->wait_set);
+      DDS::WaitSet * dds_wait_set = static_cast<DDS::WaitSet *>(wait_set_info->wait_set);
       if (!dds_wait_set) {
         RMW_SET_ERROR_MSG("DDS wait set handle is null");
         return;
       }
 
-      DDSConditionSeq * attached_conditions =
+      DDS::ConditionSeq * attached_conditions =
         static_cast<DDSConditionSeq *>(wait_set_info->attached_conditions);
       if (!attached_conditions) {
         RMW_SET_ERROR_MSG("DDS condition sequence handle is null");
         return;
       }
 
-      DDS_ReturnCode_t retcode;
+      DDS::ReturnCode_t retcode;
       retcode = dds_wait_set->get_conditions(*attached_conditions);
-      if (retcode != DDS_RETCODE_OK) {
+      if (retcode != DDS::RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get attached conditions for wait set");
         return;
       }
 
-      for (DDS_Long i = 0; i < attached_conditions->length(); ++i) {
+      for (DDS::Long i = 0; i < attached_conditions->length(); ++i) {
         retcode = dds_wait_set->detach_condition((*attached_conditions)[i]);
-        if (retcode != DDS_RETCODE_OK) {
+        if (retcode != DDS::RETCODE_OK) {
           RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         }
       }
@@ -107,14 +107,14 @@ wait(
     return RMW_RET_ERROR;
   }
 
-  DDSWaitSet * dds_wait_set = static_cast<DDSWaitSet *>(wait_set_info->wait_set);
+  DDS::WaitSet * dds_wait_set = static_cast<DDS::WaitSet *>(wait_set_info->wait_set);
   if (!dds_wait_set) {
     RMW_SET_ERROR_MSG("DDS wait set handle is null");
     return RMW_RET_ERROR;
   }
 
-  DDSConditionSeq * active_conditions =
-    static_cast<DDSConditionSeq *>(wait_set_info->active_conditions);
+  DDS::ConditionSeq * active_conditions =
+    static_cast<DDS::ConditionSeq *>(wait_set_info->active_conditions);
   if (!active_conditions) {
     RMW_SET_ERROR_MSG("DDS condition sequence handle is null");
     return RMW_RET_ERROR;
@@ -129,7 +129,7 @@ wait(
         RMW_SET_ERROR_MSG("subscriber info handle is null");
         return RMW_RET_ERROR;
       }
-      DDSReadCondition * read_condition = subscriber_info->read_condition_;
+      DDS::ReadCondition * read_condition = subscriber_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
@@ -145,8 +145,8 @@ wait(
   // add a condition for each guard condition
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
-      DDSGuardCondition * guard_condition =
-        static_cast<DDSGuardCondition *>(guard_conditions->guard_conditions[i]);
+      DDS::GuardCondition * guard_condition =
+        static_cast<DDS::GuardCondition *>(guard_conditions->guard_conditions[i]);
       if (!guard_condition) {
         RMW_SET_ERROR_MSG("guard condition handle is null");
         return RMW_RET_ERROR;
@@ -170,7 +170,7 @@ wait(
         return RMW_RET_ERROR;
       }
 
-      DDSReadCondition * read_condition = service_info->read_condition_;
+      DDS::ReadCondition * read_condition = service_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
@@ -193,14 +193,14 @@ wait(
         return RMW_RET_ERROR;
       }
 
-      DDSDataReader * response_datareader = client_info->response_datareader_;
+      DDS::DataReader * response_datareader = client_info->response_datareader_;
       if (!response_datareader) {
         RMW_SET_ERROR_MSG("response datareader handle is null");
         return RMW_RET_ERROR;
       }
 
       // MIGHT BE IMPORTANT !!!
-      DDSReadCondition * read_condition = client_info->read_condition_;
+      DDS::ReadCondition * read_condition = client_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
@@ -214,17 +214,17 @@ wait(
   }
 
   // invoke wait until one of the conditions triggers
-  DDS_Duration_t timeout;
+  DDS::Duration_t timeout;
   if (!wait_timeout) {
-    timeout = DDS_DURATION_INFINITE;
+    timeout = DDS::DURATION_INFINITE;
   } else {
-    timeout.sec = static_cast<DDS_Long>(wait_timeout->sec);
-    timeout.nanosec = static_cast<DDS_Long>(wait_timeout->nsec);
+    timeout.sec = static_cast<DDS::Long>(wait_timeout->sec);
+    timeout.nanosec = static_cast<DDS::Long>(wait_timeout->nsec);
   }
 
-  DDS_ReturnCode_t status = dds_wait_set->wait(*active_conditions, timeout);
+  DDS::ReturnCode_t status = dds_wait_set->wait(*active_conditions, timeout);
 
-  if (status != DDS_RETCODE_OK && status != DDS_RETCODE_TIMEOUT) {
+  if (status != DDS::RETCODE_OK && status != DDS::RETCODE_TIMEOUT) {
     RMW_SET_ERROR_MSG("failed to wait on wait set");
     return RMW_RET_ERROR;
   }
@@ -238,14 +238,14 @@ wait(
         RMW_SET_ERROR_MSG("subscriber info handle is null");
         return RMW_RET_ERROR;
       }
-      DDSReadCondition * read_condition = subscriber_info->read_condition_;
+      DDS::ReadCondition * read_condition = subscriber_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
       }
 
       // search for subscriber condition in active set
-      DDS_Long j = 0;
+      DDS::Long j = 0;
       for (; j < active_conditions->length(); ++j) {
         if ((*active_conditions)[j] == read_condition) {
           break;
@@ -256,8 +256,8 @@ wait(
       if (!(j < active_conditions->length())) {
         subscriptions->subscribers[i] = 0;
       }
-      DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
-      if (retcode != DDS_RETCODE_OK) {
+      DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
+      if (retcode != DDS::RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
@@ -267,7 +267,7 @@ wait(
   // set guard condition handles to zero for all not triggered conditions
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
-      DDSCondition * condition =
+      DDS::Condition * condition =
         static_cast<DDSCondition *>(guard_conditions->guard_conditions[i]);
       if (!condition) {
         RMW_SET_ERROR_MSG("condition handle is null");
@@ -275,12 +275,12 @@ wait(
       }
 
       // search for guard condition in active set
-      DDS_Long j = 0;
+      DDS::Long j = 0;
       for (; j < active_conditions->length(); ++j) {
         if ((*active_conditions)[j] == condition) {
-          DDSGuardCondition * guard = static_cast<DDSGuardCondition *>(condition);
-          DDS_ReturnCode_t status = guard->set_trigger_value(DDS_BOOLEAN_FALSE);
-          if (status != DDS_RETCODE_OK) {
+          DDS::GuardCondition * guard = static_cast<DDS::GuardCondition *>(condition);
+          DDS::ReturnCode_t status = guard->set_trigger_value(DDS::BOOLEAN_FALSE);
+          if (status != DDS::RETCODE_OK) {
             RMW_SET_ERROR_MSG("failed to set trigger value");
             return RMW_RET_ERROR;
           }
@@ -292,8 +292,8 @@ wait(
       if (!(j < active_conditions->length())) {
         guard_conditions->guard_conditions[i] = 0;
       }
-      DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
-      if (retcode != DDS_RETCODE_OK) {
+      DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
+      if (retcode != DDS::RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
@@ -309,14 +309,14 @@ wait(
         RMW_SET_ERROR_MSG("service info handle is null");
         return RMW_RET_ERROR;
       }
-      DDSReadCondition * read_condition = service_info->read_condition_;
+      DDS::ReadCondition * read_condition = service_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
       }
 
       // search for service condition in active set
-      DDS_Long j = 0;
+      DDS::Long j = 0;
       for (; j < active_conditions->length(); ++j) {
         if ((*active_conditions)[j] == read_condition) {
           break;
@@ -327,8 +327,8 @@ wait(
       if (!(j < active_conditions->length())) {
         services->services[i] = 0;
       }
-      DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
-      if (retcode != DDS_RETCODE_OK) {
+      DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
+      if (retcode != DDS::RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
@@ -344,14 +344,14 @@ wait(
         RMW_SET_ERROR_MSG("client info handle is null");
         return RMW_RET_ERROR;
       }
-      DDSReadCondition * read_condition = client_info->read_condition_;
+      DDS::ReadCondition * read_condition = client_info->read_condition_;
       if (!read_condition) {
         RMW_SET_ERROR_MSG("read condition handle is null");
         return RMW_RET_ERROR;
       }
 
       // search for service condition in active set
-      DDS_Long j = 0;
+      DDS::Long j = 0;
       for (; j < active_conditions->length(); ++j) {
         if ((*active_conditions)[j] == read_condition) {
           break;
@@ -362,15 +362,15 @@ wait(
       if (!(j < active_conditions->length())) {
         clients->clients[i] = 0;
       }
-      DDS_ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
-      if (retcode != DDS_RETCODE_OK) {
+      DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
+      if (retcode != DDS::RETCODE_OK) {
         RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
         return RMW_RET_ERROR;
       }
     }
   }
 
-  if (status == DDS_RETCODE_TIMEOUT) {
+  if (status == DDS::RETCODE_TIMEOUT) {
     return RMW_RET_TIMEOUT;
   }
   return RMW_RET_OK;
