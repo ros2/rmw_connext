@@ -31,10 +31,9 @@
 rmw_ret_t
 _publisher_count_matched_subscriptions(DDS::DataWriter * datawriter, size_t * count)
 {
-  DDS_ReturnCode_t ret;
-  DDS_PublicationMatchedStatus s;
-  ret = datawriter->get_publication_matched_status(s);
-  if (ret != DDS_RETCODE_OK) {
+  DDS::PublicationMatchedStatus s;
+  DDS::ReturnCode_t ret = datawriter->get_publication_matched_status(s);
+  if (ret != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get publication matched status");
     return RMW_RET_ERROR;
   }
@@ -44,7 +43,7 @@ _publisher_count_matched_subscriptions(DDS::DataWriter * datawriter, size_t * co
   using std::to_string;
   using std::stringstream;
   std::stringstream ss;
-  ss << "DDS_PublicationMatchedStatus:\n" <<
+  ss << "DDS::PublicationMatchedStatus:\n" <<
     "  topic name:               " << datawriter->get_topic()->get_name() << "\n" <<
     "  current_count:            " << to_string(s.current_count) << "\n" <<
     "  current_count_change:     " << to_string(s.current_count_change) << "\n" <<
@@ -62,10 +61,9 @@ _publisher_count_matched_subscriptions(DDS::DataWriter * datawriter, size_t * co
 rmw_ret_t
 _subscription_count_matched_publishers(DDS::DataReader * datareader, size_t * count)
 {
-  DDS_ReturnCode_t ret;
   DDS_SubscriptionMatchedStatus s;
-  ret = datareader->get_subscription_matched_status(s);
-  if (ret != DDS_RETCODE_OK) {
+  DDS::ReturnCode_t ret = datareader->get_subscription_matched_status(s);
+  if (ret != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get subscription matched status");
     return RMW_RET_ERROR;
   }
@@ -74,7 +72,7 @@ _subscription_count_matched_publishers(DDS::DataReader * datareader, size_t * co
   using std::to_string;
   using std::stringstream;
   std::stringstream ss;
-  ss << "DDS_SubscriptionMatchedStatus:\n" <<
+  ss << "DDS::SubscriptionMatchedStatus:\n" <<
     "  topic name:               " << datareader->get_topicdescription()->get_name() << "\n" <<
     "  current_count:            " << to_string(s.current_count) << "\n" <<
     "  current_count_change:     " << to_string(s.current_count_change) << "\n" <<
@@ -157,8 +155,8 @@ rmw_service_server_is_available(
   }
 // TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
-  DDSPublisher * request_publisher = request_datawriter->get_publisher();
-  DDS_PublisherQos pub_qos;
+  DDS::Publisher * request_publisher = request_datawriter->get_publisher();
+  DDS::PublisherQos pub_qos;
   request_publisher->get_qos(pub_qos);
   fprintf(stderr, "******** rmw_server_is_available *****\n");
   fprintf(stderr, "publisher address %p\n", static_cast<void *>(request_publisher));
@@ -166,8 +164,8 @@ rmw_service_server_is_available(
   DDS::DataReader * response_datareader =
     static_cast<DDS::DataReader *>(callbacks->get_reply_datareader(requester));
   const char * response_topic_name = response_datareader->get_topicdescription()->get_name();
-  DDSSubscriber * response_sub = response_datareader->get_subscriber();
-  DDS_SubscriberQos sub_qos;
+  DDS::Subscriber * response_sub = response_datareader->get_subscriber();
+  DDS::SubscriberQos sub_qos;
   response_sub->get_qos(sub_qos);
   fprintf(stderr, "subscriber address %p\n", static_cast<void *>(response_sub));
   fprintf(stderr, "response topic name: %s\n", response_topic_name);

@@ -20,7 +20,7 @@
 rmw_ret_t
 init()
 {
-  DDSDomainParticipantFactory * dpf_ = DDSDomainParticipantFactory::get_instance();
+  DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
   if (!dpf_) {
     RMW_SET_ERROR_MSG("failed to get participant factory");
     return RMW_RET_ERROR;

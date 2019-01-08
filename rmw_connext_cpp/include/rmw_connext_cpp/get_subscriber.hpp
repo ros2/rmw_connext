@@ -30,7 +30,7 @@ namespace rmw_connext_cpp
  * \return native Connext data reader handle if successful, otherwise `NULL`
  */
 RMW_CONNEXT_CPP_PUBLIC
-DDSDataReader *
+DDS::DataReader *
 get_data_reader(rmw_subscription_t * subscription);
 
 }  // namespace rmw_connext_cpp

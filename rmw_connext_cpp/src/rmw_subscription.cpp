@@ -67,7 +67,7 @@ rmw_create_subscription(
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -81,15 +81,15 @@ rmw_create_subscription(
   }
   std::string type_name = _create_type_name(callbacks);
   // Past this point, a failure results in unrolling code in the goto fail block.
-  DDS_TypeCode * type_code = nullptr;
-  DDS_DataReaderQos datareader_qos;
-  DDS_SubscriberQos subscriber_qos;
-  DDS_ReturnCode_t status;
-  DDSSubscriber * dds_subscriber = nullptr;
-  DDSTopic * topic = nullptr;
-  DDSTopicDescription * topic_description = nullptr;
-  DDSDataReader * topic_reader = nullptr;
-  DDSReadCondition * read_condition = nullptr;
+  DDS::TypeCode * type_code = nullptr;
+  DDS::DataReaderQos datareader_qos;
+  DDS::SubscriberQos subscriber_qos;
+  DDS::ReturnCode_t status;
+  DDS::Subscriber * dds_subscriber = nullptr;
+  DDS::Topic * topic = nullptr;
+  DDS::TopicDescription * topic_description = nullptr;
+  DDS::DataReader * topic_reader = nullptr;
+  DDS::ReadCondition * read_condition = nullptr;
   void * info_buf = nullptr;
   void * listener_buf = nullptr;
   ConnextSubscriberListener * subscriber_listener = nullptr;
@@ -119,13 +119,13 @@ rmw_create_subscription(
   // advertise the topic however with a type of the message, e.g. std_msgs::msg::dds_::String
   status = ConnextStaticSerializedDataSupport_register_external_type(
     participant, type_name.c_str(), type_code);
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to register external type");
     goto fail;
   }
 
   status = participant->get_default_subscriber_qos(subscriber_qos);
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default subscriber qos");
     goto fail;
   }
@@ -150,7 +150,7 @@ rmw_create_subscription(
   listener_buf = nullptr;  // Only free the buffer pointer.
 
   dds_subscriber = participant->create_subscriber(
-    subscriber_qos, subscriber_listener, DDS_SUBSCRIPTION_MATCHED_STATUS);
+    subscriber_qos, subscriber_listener, DDS::SUBSCRIPTION_MATCHED_STATUS);
   if (!dds_subscriber) {
     RMW_SET_ERROR_MSG("failed to create subscriber");
     goto fail;
@@ -158,29 +158,29 @@ rmw_create_subscription(
 
   topic_description = participant->lookup_topicdescription(topic_str);
   if (!topic_description) {
-    DDS_TopicQos default_topic_qos;
+    DDS::TopicQos default_topic_qos;
     status = participant->get_default_topic_qos(default_topic_qos);
-    if (status != DDS_RETCODE_OK) {
+    if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to get default topic qos");
       goto fail;
     }
 
     topic = participant->create_topic(
       topic_str, type_name.c_str(),
-      default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
+      default_topic_qos, NULL, DDS::STATUS_MASK_NONE);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to create topic");
       goto fail;
     }
   } else {
-    DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
+    DDS::Duration_t timeout = DDS::Duration_t::from_seconds(0);
     topic = participant->find_topic(topic_str, timeout);
     if (!topic) {
       RMW_SET_ERROR_MSG("failed to find topic");
       goto fail;
     }
   }
-  DDS_String_free(topic_str);
+  DDS::String_free(topic_str);
   topic_str = nullptr;
 
   if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
@@ -190,14 +190,14 @@ rmw_create_subscription(
 
   topic_reader = dds_subscriber->create_datareader(
     topic, datareader_qos,
-    NULL, DDS_STATUS_MASK_NONE);
+    NULL, DDS::STATUS_MASK_NONE);
   if (!topic_reader) {
     RMW_SET_ERROR_MSG("failed to create datareader");
     goto fail;
   }
 
   read_condition = topic_reader->create_readcondition(
-    DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
+    DDS::ANY_SAMPLE_STATE, DDS::ANY_VIEW_STATE, DDS::ANY_INSTANCE_STATE);
   if (!read_condition) {
     RMW_SET_ERROR_MSG("failed to create read condition");
     goto fail;
@@ -256,7 +256,7 @@ rmw_create_subscription(
   return subscription;
 fail:
   if (topic_str) {
-    DDS_String_free(topic_str);
+    DDS::String_free(topic_str);
     topic_str = nullptr;
   }
   if (subscription) {
@@ -266,21 +266,21 @@ fail:
   if (dds_subscriber) {
     if (topic_reader) {
       if (read_condition) {
-        if (topic_reader->delete_readcondition(read_condition) != DDS_RETCODE_OK) {
+        if (topic_reader->delete_readcondition(read_condition) != DDS::RETCODE_OK) {
           std::stringstream ss;
           ss << "leaking readcondition while handling failure at " <<
             __FILE__ << ":" << __LINE__ << '\n';
           (std::cerr << ss.str()).flush();
         }
       }
-      if (dds_subscriber->delete_datareader(topic_reader) != DDS_RETCODE_OK) {
+      if (dds_subscriber->delete_datareader(topic_reader) != DDS::RETCODE_OK) {
         std::stringstream ss;
         ss << "leaking datareader while handling failure at " <<
           __FILE__ << ":" << __LINE__ << '\n';
         (std::cerr << ss.str()).flush();
       }
     }
-    if (participant->delete_subscriber(dds_subscriber) != DDS_RETCODE_OK) {
+    if (participant->delete_subscriber(dds_subscriber) != DDS::RETCODE_OK) {
       std::stringstream ss;
       std::cerr << "leaking subscriber while handling failure at " <<
         __FILE__ << ":" << __LINE__ << '\n';
@@ -398,7 +398,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return RMW_RET_ERROR;
@@ -417,13 +417,13 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       if (topic_reader) {
         auto read_condition = subscriber_info->read_condition_;
         if (read_condition) {
-          if (topic_reader->delete_readcondition(read_condition) != DDS_RETCODE_OK) {
+          if (topic_reader->delete_readcondition(read_condition) != DDS::RETCODE_OK) {
             RMW_SET_ERROR_MSG("failed to delete readcondition");
             result = RMW_RET_ERROR;
           }
           subscriber_info->read_condition_ = nullptr;
         }
-        if (dds_subscriber->delete_datareader(topic_reader) != DDS_RETCODE_OK) {
+        if (dds_subscriber->delete_datareader(topic_reader) != DDS::RETCODE_OK) {
           RMW_SET_ERROR_MSG("failed to delete datareader");
           result = RMW_RET_ERROR;
         }
@@ -432,7 +432,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         RMW_SET_ERROR_MSG("cannot delete readcondition because the datareader is null");
         result = RMW_RET_ERROR;
       }
-      if (participant->delete_subscriber(dds_subscriber) != DDS_RETCODE_OK) {
+      if (participant->delete_subscriber(dds_subscriber) != DDS::RETCODE_OK) {
         RMW_SET_ERROR_MSG("failed to delete subscriber");
         result = RMW_RET_ERROR;
       }
