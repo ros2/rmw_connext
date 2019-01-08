@@ -55,7 +55,7 @@ private:
   std::atomic<std::size_t> current_count_;
 };
 
-class ConnextSubscriberListener : public DDSSubscriberListener
+class ConnextSubscriberListener : public DDS::SubscriberListener
 {
 public:
   virtual void on_subscription_matched(

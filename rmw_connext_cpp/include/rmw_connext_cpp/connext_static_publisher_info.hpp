@@ -54,7 +54,7 @@ private:
   std::atomic<std::size_t> current_count_;
 };
 
-class ConnextPublisherListener : public DDSPublisherListener
+class ConnextPublisherListener : public DDS::PublisherListener
 {
 public:
   virtual void on_publication_matched(
