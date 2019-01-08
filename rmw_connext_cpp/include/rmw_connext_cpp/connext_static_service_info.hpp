@@ -24,8 +24,8 @@ extern "C"
 struct ConnextStaticServiceInfo
 {
   void * replier_;
-  DDSDataReader * request_datareader_;
-  DDSReadCondition * read_condition_;
+  DDS::DataReader * request_datareader_;
+  DDS::ReadCondition * read_condition_;
   const service_type_support_callbacks_t * callbacks_;
 };
 }  // extern "C"

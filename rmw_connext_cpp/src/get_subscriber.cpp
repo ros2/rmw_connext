@@ -20,7 +20,7 @@
 namespace rmw_connext_cpp
 {
 
-DDSDataReader *
+DDS::DataReader *
 get_data_reader(rmw_subscription_t * subscription)
 {
   if (!subscription) {
