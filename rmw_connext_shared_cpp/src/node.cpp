@@ -82,18 +82,11 @@ create_node(
   // So we set the limit to 1024, to accomodate the complete topic name with namespaces.
   participant_qos.resource_limits.contentfilter_property_max_length = 1024;
 
-  // forces local traffic to be sent over loopback,
-  // even if a more efficient transport (such as shared memory) is installed
-  // (in which case traffic will be sent over both transports)
-  status = DDSPropertyQosPolicyHelper::add_property(
-    participant_qos.property,
-    "dds.transport.UDPv4.builtin.ignore_loopback_interface",
-    "0",
-    DDS_BOOLEAN_FALSE);
-  if (status != DDS_RETCODE_OK) {
-    RMW_SET_ERROR_MSG("failed to add qos property");
-    return NULL;
-  }
+  // forces local traffic to be sent over UDPv4,
+  // this prevents from using shared memory instead of loopback interface
+  // see: http://community.rti.com/rti-doc/510/ndds/doc/html/api_cpp/structDDS__TransportBuiltinQosPolicy.html
+  participant_qos.transport_builtin.mask = DDS_TRANSPORTBUILTIN_UDPv4;
+
   status = DDSPropertyQosPolicyHelper::add_property(
     participant_qos.property,
     "dds.transport.use_510_compatible_locator_kinds",
