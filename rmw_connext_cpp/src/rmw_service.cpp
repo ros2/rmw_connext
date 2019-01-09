@@ -248,11 +248,15 @@ fail:
         (std::cerr << ss.str()).flush();
       }
     }
-    if (participant->delete_datareader(request_datareader) != RMW_RET_OK) {
-      std::stringstream ss;
-      ss << "leaking datareader while handling failure at " <<
-        __FILE__ << ":" << __LINE__ << '\n';
-      (std::cerr << ss.str()).flush();
+    if (dds_subscriber) {
+      if (dds_subscriber->delete_datareader(request_datareader) != DDS::RETCODE_OK) {
+        std::stringstream ss;
+        ss << "leaking datareader while handling failure at " <<
+          __FILE__ << ":" << __LINE__ << '\n';
+        (std::cerr << ss.str()).flush();
+      }
+    } else {
+      RMW_SET_ERROR_MSG("cannot delete datareader because the subscriber is null");
     }
   }
   if (service_info) {
