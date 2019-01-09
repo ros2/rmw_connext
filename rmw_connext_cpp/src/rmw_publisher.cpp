@@ -267,7 +267,6 @@ fail:
   if (publisher) {
     rmw_publisher_free(publisher);
   }
-  // Assumption: participant is valid.
   if (dds_publisher) {
     if (topic_writer) {
       if (dds_publisher->delete_datawriter(topic_writer) != DDS::RETCODE_OK) {
