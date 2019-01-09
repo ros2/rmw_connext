@@ -39,10 +39,9 @@ class ConnextPublisherListener : public DDSPublisherListener
 {
 public:
   virtual void on_publication_matched(
-    DDSDataWriter * writer,
+    DDSDataWriter *,
     const DDS_PublicationMatchedStatus & status)
   {
-    (void) writer;
     current_count_ = status.current_count;
   }
 
