@@ -238,8 +238,8 @@ fail:
   if (client) {
     rmw_client_free(client);
   }
-  if (response_datareader) {
-    if (participant->delete_datareader(response_datareader) != DDS::RETCODE_OK) {
+  if (response_datareader && dds_subscriber) {
+    if (dds_subscriber->delete_datareader(response_datareader) != DDS::RETCODE_OK) {
       std::stringstream ss;
       ss << "leaking datareader while handling failure at " <<
         __FILE__ << ":" << __LINE__ << '\n';
