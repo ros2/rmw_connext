@@ -40,10 +40,9 @@ class ConnextSubscriberListener : public DDS::SubscriberListener
 {
 public:
   virtual void on_subscription_matched(
-    DDSDataReader * reader,
+    DDSDataReader *,
     const DDS_SubscriptionMatchedStatus & status)
   {
-    (void) reader;
     current_count_ = status.current_count;
   }
 
