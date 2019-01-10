@@ -25,6 +25,11 @@ void CustomPublisherListener::on_data_available(DDS::DataReader * reader)
   DDS::PublicationBuiltinTopicDataDataReader * builtin_reader =
     DDS::PublicationBuiltinTopicDataDataReader::narrow(reader);
 
+  if (!builtin_reader) {
+    fprintf(stderr, "failed to narrow to DDS::PublicationBuiltinTopicDataDataReader\n");
+    return;
+  }
+
   DDS::PublicationBuiltinTopicDataSeq data_seq;
   DDS::SampleInfoSeq info_seq;
   DDS::ReturnCode_t retcode = builtin_reader->take(

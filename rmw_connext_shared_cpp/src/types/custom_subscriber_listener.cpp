@@ -22,6 +22,11 @@ void CustomSubscriberListener::on_data_available(DDS::DataReader * reader)
   DDS::SubscriptionBuiltinTopicDataDataReader * builtin_reader =
     DDS::SubscriptionBuiltinTopicDataDataReader::narrow(reader);
 
+  if (!builtin_reader) {
+    fprintf(stderr, "failed to narrow to DDS::SubscriptionBuiltinTopicDataDataReader\n");
+    return;
+  }
+
   DDS::SubscriptionBuiltinTopicDataSeq data_seq;
   DDS::SampleInfoSeq info_seq;
   DDS::ReturnCode_t retcode = builtin_reader->take(
