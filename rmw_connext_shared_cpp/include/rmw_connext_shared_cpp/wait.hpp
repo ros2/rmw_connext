@@ -216,7 +216,8 @@ wait(
   // invoke wait until one of the conditions triggers
   DDS::Duration_t timeout;
   if (!wait_timeout) {
-    timeout = DDS::DURATION_INFINITE;
+    timeout.sec = DDS::DURATION_INFINITE_SEC;
+    timeout.nanosec = DDS::DURATION_INFINITE_NSEC;
   } else {
     timeout.sec = static_cast<DDS::Long>(wait_timeout->sec);
     timeout.nanosec = static_cast<DDS::Long>(wait_timeout->nsec);
