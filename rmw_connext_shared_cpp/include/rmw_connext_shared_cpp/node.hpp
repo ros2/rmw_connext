@@ -23,6 +23,7 @@ RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_node_t *
 create_node(
   const char * implementation_identifier,
+  rmw_context_t * context,
   const char * name,
   const char * namespace_,
   size_t domain_id,

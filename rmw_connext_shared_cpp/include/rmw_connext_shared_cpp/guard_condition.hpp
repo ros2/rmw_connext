@@ -23,7 +23,7 @@
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_guard_condition_t *
-create_guard_condition(const char * implementation_identifier);
+create_guard_condition(const char * implementation_identifier, rmw_context_t * context);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
