@@ -21,7 +21,10 @@
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_wait_set_t *
-create_wait_set(const char * implementation_identifier, size_t max_conditions);
+create_wait_set(
+  const char * implementation_identifier,
+  rmw_context_t * context,
+  size_t max_conditions);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t

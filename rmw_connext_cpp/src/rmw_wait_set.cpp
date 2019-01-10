@@ -21,9 +21,9 @@
 extern "C"
 {
 rmw_wait_set_t *
-rmw_create_wait_set(size_t max_conditions)
+rmw_create_wait_set(rmw_context_t * context, size_t max_conditions)
 {
-  return create_wait_set(rti_connext_identifier, max_conditions);
+  return create_wait_set(rti_connext_identifier, context, max_conditions);
 }
 
 rmw_ret_t
