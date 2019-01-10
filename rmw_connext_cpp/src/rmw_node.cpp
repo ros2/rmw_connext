@@ -30,13 +30,6 @@ rmw_create_node(
   size_t domain_id,
   const rmw_node_security_options_t * security_options)
 {
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    init context,
-    context->implementation_identifier,
-    rti_connext_identifier,
-    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
-    return NULL);
   return create_node(
     rti_connext_identifier, context, name, namespace_, domain_id, security_options);
 }
