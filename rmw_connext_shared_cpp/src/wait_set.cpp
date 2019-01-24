@@ -26,7 +26,7 @@ create_wait_set(
     context->implementation_identifier,
     implementation_identifier,
     // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
-    return NULL);
+    return nullptr);
 
   rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
 
