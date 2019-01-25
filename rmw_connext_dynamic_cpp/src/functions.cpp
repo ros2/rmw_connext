@@ -272,6 +272,20 @@ rmw_shutdown(rmw_context_t * context)
     context->implementation_identifier,
     rti_connext_dynamic_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  // Nothing to do here for now.
+  // This is just the middleware's notification that shutdown was called.
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_context_fini(rmw_context_t * context)
+{
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    context,
+    context->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   // context impl is explicitly supposed to be nullptr for now, see rmw_init's code
   // RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
   *context = rmw_get_zero_initialized_context();
@@ -1544,9 +1558,9 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
 }
 
 rmw_wait_set_t *
-rmw_create_wait_set(size_t max_conditions)
+rmw_create_wait_set(rmw_context_t * context, size_t max_conditions)
 {
-  return create_wait_set(rti_connext_dynamic_identifier, max_conditions);
+  return create_wait_set(rti_connext_dynamic_identifier, context, max_conditions);
 }
 
 rmw_ret_t
