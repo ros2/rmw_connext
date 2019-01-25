@@ -15,8 +15,19 @@
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 
 rmw_wait_set_t *
-create_wait_set(const char * implementation_identifier, size_t max_conditions)
+create_wait_set(
+  const char * implementation_identifier,
+  rmw_context_t * context,
+  size_t max_conditions)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    implementation_identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return nullptr);
+
   rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
 
   ConnextWaitSetInfo * wait_set_info = nullptr;
