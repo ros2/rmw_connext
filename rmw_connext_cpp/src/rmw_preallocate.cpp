@@ -77,20 +77,42 @@ rmw_init_publisher_allocation(
     return RMW_RET_ERROR;
   }
 
+  unsigned int expected_length = 0;
+  if(rmw_get_serialized_message_size(messge_bounds, type_support, &expected_length) != RTI_TRUE)
+  {
+    RMW_SET_ERROR_MSG("failed to call rmw_get_serialized_message_size()");
+    return RMW_RET_ERROR;
+  }
+
+  if (expected_length > (std::numeric_limits<unsigned int>::max)()) {
+    RMW_SET_ERROR_MSG("cdr_stream->buffer_length, unexpectedly larger than max unsigned int");
+    return RMW_RET_ERROR;
+  }
+
   rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   cdr_stream.allocator = rcutils_get_default_allocator();
+  cdr_stream->buffer_capacity = expected_length;
+  cdr_stream->allocator.deallocate(cdr_stream->buffer, cdr_stream->allocator.state);
+  cdr_stream->buffer = static_cast<uint8_t *>(cdr_stream->allocator.allocate(cdr_stream->buffer_capacity, cdr_stream->allocator.state));
 
-
-  cdr_stream->buffer_length = expected_length;
-  if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
-    fprintf(stderr, "cdr_stream->buffer_length, unexpectedly larger than max unsigned int\n");
-    return false;
-  }
-  if (cdr_stream->buffer_capacity < cdr_stream->buffer_length) {
-    cdr_stream->allocator.deallocate(cdr_stream->buffer, cdr_stream->allocator.state);
-    cdr_stream->buffer = static_cast<uint8_t *>(cdr_stream->allocator.allocate(cdr_stream->buffer_length, cdr_stream->allocator.state));
+  static connext_publisher_allocation_t __connext_alloc = {
+      cdr_stream
   }
 
+  allocation->data = __connext_alloc;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_fini_publisher_allocation(
+  rmw_publisher_allocation_t * allocation);
+{
+
+  connext_publisher_allocation_t * __connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
+  rcutils_uint8_array_t cdr_stream = __connext_alloc->cdr_stream;
+  cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
+
+  return RMW_RET_OK;
 }
 
 }  // extern "C"

@@ -73,7 +73,8 @@ cleanup:
 extern "C"
 {
 rmw_ret_t
-rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
+rmw_publish(const rmw_publisher_t * publisher, const void * ros_message,
+  rmw_publisher_allocation_t * allocation)
 {
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
@@ -106,8 +107,17 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   }
 
   auto ret = RMW_RET_OK;
-  rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
-  cdr_stream.allocator = rcutils_get_default_allocator();
+  rcutils_uint8_array_t cdr_stream;
+
+  if(allocation){
+    connext_publisher_allocation_t * __connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
+    cdr_stream = __connext_alloc->cdr_stream;
+  }
+  else
+  {
+   cdr_stream  = rcutils_get_zero_initialized_uint8_array();
+   cdr_stream.allocator = rcutils_get_default_allocator();
+  }
 
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
@@ -131,7 +141,10 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   }
 
 fail:
-  cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
+  if(!allocation)
+  {
+    cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
+  }
   return ret;
 }
 
