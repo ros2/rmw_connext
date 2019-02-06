@@ -1,4 +1,4 @@
-// Copyright 2014-2017 Open Source Robotics Foundation, Inc.
+// Copyright 2014-2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW__TYPES_H_
-#define RMW__TYPES_H_
+#ifndef RMW__CONNEXT_PUBLISHER_ALLOCATION_H_
+#define RMW__CONNEXT_PUBLISHER_ALLOCATION_H_
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-typedef struct RMW_PUBLIC_TYPE connext_publisher_allocation_t
-{
-  rcutils_uint8_array_t cdr_stream;
-} connext_publisher_allocation_t;
+ typedef struct connext_publisher_allocation_t
+ {
+   rcutils_uint8_array_t cdr_stream;
+ } connext_publisher_allocation_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // RMW__TYPES_H_
+#endif  // RMW__CONNEXT_PUBLISHER_ALLOCATION_H_

@@ -20,6 +20,7 @@
 
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
+#include "rmw_connext_cpp/connext_publisher_allocation.hpp"
 
 // include patched generated code from the build folder
 #include "connext_static_serialized_dataSupport.h"
