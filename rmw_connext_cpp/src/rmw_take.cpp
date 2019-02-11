@@ -22,6 +22,7 @@
 
 #include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
+#include "rmw_connext_cpp/connext_publisher_allocation.hpp"
 
 // include patched generated code from the build folder
 #include "./connext_static_serialized_dataSupport.h"
@@ -104,9 +105,14 @@ take(
 
   if (!ignore_sample) {
     cdr_stream->buffer_length = dds_messages[0].serialized_data.length();
-    // TODO(karsten1987): This malloc has to go!
-    cdr_stream->buffer =
-      reinterpret_cast<uint8_t *>(malloc(cdr_stream->buffer_length * sizeof(uint8_t)));
+
+     if (cdr_stream->buffer_capacity < cdr_stream->buffer_length) {
+         cdr_stream->allocator.deallocate(cdr_stream->buffer, cdr_stream->allocator.state);
+         cdr_stream->buffer = static_cast<uint8_t *>(cdr_stream->allocator.allocate(cdr_stream->buffer_length, cdr_stream->allocator.state));
+     }
+
+    //cdr_stream->buffer =
+    //  reinterpret_cast<uint8_t *>(malloc(cdr_stream->buffer_length * sizeof(uint8_t)));
 
     if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
       RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than max unsiged int value");
@@ -134,7 +140,8 @@ _take(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
-  DDS::InstanceHandle_t * sending_publication_handle)
+  DDS::InstanceHandle_t * sending_publication_handle,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!subscription) {
     RMW_SET_ERROR_MSG("subscription handle is null");
@@ -172,31 +179,49 @@ _take(
   }
 
   // fetch the incoming message as cdr stream
-  rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
+  auto ret = RMW_RET_OK;
+  rcutils_uint8_array_t cdr_stream;
+
+  if(allocation){
+    connext_subscription_allocation_t * __connext_alloc = static_cast<connext_subscription_allocation_t * >(allocation->data);
+    cdr_stream = __connext_alloc->cdr_stream;
+  }
+  else
+  {
+   cdr_stream  = rcutils_get_zero_initialized_uint8_array();
+   cdr_stream.allocator = rcutils_get_default_allocator();
+  }
+
   if (!take(
       topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
       sending_publication_handle))
   {
     RMW_SET_ERROR_MSG("error occured while taking message");
-    return RMW_RET_ERROR;
+    ret = RMW_RET_ERROR;
+    goto fail;
   }
   // convert the cdr stream to the message
   if (*taken && !callbacks->to_message(&cdr_stream, ros_message)) {
     RMW_SET_ERROR_MSG("can't convert cdr stream to ros message");
-    return RMW_RET_ERROR;
+    ret = RMW_RET_ERROR;
+    goto fail;
   }
 
-  // the call to take allocates memory for the serialized message
-  // we have to free this here again
-  free(cdr_stream.buffer);
+fail:
+  if(!allocation)
+  {
+    cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
+  }
+  return ret;
 
-  return RMW_RET_OK;
+
 }
 
 rmw_ret_t
-rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
+rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken,
+  rmw_subscription_allocation_t * allocation)
 {
-  return _take(subscription, ros_message, taken, nullptr);
+  return _take(subscription, ros_message, taken, nullptr, allocation);
 }
 
 rmw_ret_t
@@ -211,7 +236,7 @@ rmw_take_with_info(
     return RMW_RET_ERROR;
   }
   DDS::InstanceHandle_t sending_publication_handle;
-  auto ret = _take(subscription, ros_message, taken, &sending_publication_handle);
+  auto ret = _take(subscription, ros_message, taken, &sending_publication_handle, NULL);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
     return RMW_RET_ERROR;

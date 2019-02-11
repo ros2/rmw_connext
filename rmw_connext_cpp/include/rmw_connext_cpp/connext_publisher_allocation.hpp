@@ -25,6 +25,12 @@ extern "C"
    rcutils_uint8_array_t cdr_stream;
  } connext_publisher_allocation_t;
 
+ typedef struct connext_subscription_allocation_t
+ {
+   rcutils_uint8_array_t cdr_stream;
+ } connext_subscription_allocation_t;
+
+
 #ifdef __cplusplus
 }
 #endif
