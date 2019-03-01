@@ -181,10 +181,12 @@ _take(
   // fetch the incoming message as cdr stream
   auto ret = RMW_RET_OK;
   rcutils_uint8_array_t cdr_stream;
+  void * dds_message = nullptr;
 
   if(allocation){
     connext_subscription_allocation_t * __connext_alloc = static_cast<connext_subscription_allocation_t * >(allocation->data);
     cdr_stream = __connext_alloc->cdr_stream;
+    dds_message = __connext_alloc->dds_message;
   }
   else
   {
@@ -201,7 +203,7 @@ _take(
     goto fail;
   }
   // convert the cdr stream to the message
-  if (*taken && !callbacks->to_message(&cdr_stream, ros_message)) {
+  if (*taken && !callbacks->to_message(&cdr_stream, ros_message, dds_message)) {
     RMW_SET_ERROR_MSG("can't convert cdr stream to ros message");
     ret = RMW_RET_ERROR;
     goto fail;

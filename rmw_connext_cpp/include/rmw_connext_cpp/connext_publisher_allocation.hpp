@@ -15,6 +15,8 @@
 #ifndef RMW__CONNEXT_PUBLISHER_ALLOCATION_H_
 #define RMW__CONNEXT_PUBLISHER_ALLOCATION_H_
 
+#include "connext_static_serialized_dataSupport.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -23,11 +25,14 @@ extern "C"
  typedef struct connext_publisher_allocation_t
  {
    rcutils_uint8_array_t cdr_stream;
+   ConnextStaticSerializedData * instance;
  } connext_publisher_allocation_t;
 
  typedef struct connext_subscription_allocation_t
  {
    rcutils_uint8_array_t cdr_stream;
+   void * dds_message;
+   const rosidl_message_type_support_t * type_supports;
  } connext_subscription_allocation_t;
 
 

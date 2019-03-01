@@ -22,6 +22,7 @@
 #include "rmw_connext_cpp/connext_publisher_allocation.hpp"
 
 #include "type_support_common.hpp"
+#include "connext_static_serialized_dataSupport.h"
 
 extern "C"
 {
@@ -53,23 +54,35 @@ rmw_get_serialized_message_size(
     return RMW_RET_ERROR;
   }
 
+  void * msg;
+  if (RMW_RET_OK != callbacks->create_message(&msg, nullptr)) {
+    RMW_SET_ERROR_MSG("failed to create message");
+    return RMW_RET_ERROR;
+  }
+
   unsigned int expected_length = 0;
-  if (RMW_RET_OK != callbacks->get_serialized_length(&expected_length)) {
+  if (RMW_RET_OK != callbacks->get_serialized_length(&msg, &expected_length)) {
     RMW_SET_ERROR_MSG("failed to get serialized length");
     return RMW_RET_ERROR;
   }
 
   *size = static_cast<size_t>(expected_length);
 
+  if (RMW_RET_OK != callbacks->delete_message(msg)) {
+    RMW_SET_ERROR_MSG("failed to delete message");
+    return RMW_RET_ERROR;
+  }
+
   return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_init_publisher_allocation(
-  const rosidl_message_type_support_t * type_support,
+  const rosidl_message_type_support_t * type_supports,
   const rosidl_message_bounds_t * message_bounds,
   rmw_publisher_allocation_t * allocation)
 {
+
 
   //TODO uncomment when message bound gets implemented
   // if (!message_bounds) {
@@ -77,23 +90,33 @@ rmw_init_publisher_allocation(
   //   return RMW_RET_ERROR;
   // }
 
-  if (!type_support) {
+  if (!type_supports) {
     RMW_SET_ERROR_MSG("type_support is null");
     return RMW_RET_ERROR;
   }
 
-  size_t expected_length = 0;
-  if(rmw_get_serialized_message_size(message_bounds, type_support, &expected_length) != RMW_RET_OK)
-  {
-    RMW_SET_ERROR_MSG("failed to call rmw_get_serialized_message_size()");
+
+  ConnextStaticSerializedData * dds_message;
+  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, NULL)
+  const message_type_support_callbacks_t * callbacks =
+    static_cast<const message_type_support_callbacks_t *>(type_support->data);
+  if(callbacks->create_message( (void **)&dds_message, message_bounds->data) != RMW_RET_OK){
+    RMW_SET_ERROR_MSG("Unable to create dds_message");
     return RMW_RET_ERROR;
   }
 
-  if (expected_length > std::numeric_limits<unsigned int>::max() ) {
+  unsigned int size = 0;
+  if (RMW_RET_OK != callbacks->get_serialized_length(dds_message, &size)) {
+    RMW_SET_ERROR_MSG("failed to get serialized length");
+    return RMW_RET_ERROR;
+  }
+
+  if (size > std::numeric_limits<unsigned int>::max() ) {
     RMW_SET_ERROR_MSG("cdr_stream->buffer_length, unexpectedly larger than max unsigned int");
     return RMW_RET_ERROR;
   }
 
+  size_t expected_length = static_cast<size_t>(size);
   rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   cdr_stream.allocator = rcutils_get_default_allocator();
   cdr_stream.buffer_capacity = expected_length;
@@ -101,7 +124,7 @@ rmw_init_publisher_allocation(
   cdr_stream.buffer = static_cast<uint8_t *>(cdr_stream.allocator.allocate(
   cdr_stream.buffer_capacity, cdr_stream.allocator.state));
 
-  connext_publisher_allocation_t * __connext_alloc = nullptr;
+   connext_publisher_allocation_t * __connext_alloc = nullptr;
    __connext_alloc = static_cast<connext_publisher_allocation_t *>(
      rmw_allocate(sizeof(connext_publisher_allocation_t) ));
   if (!__connext_alloc) {
@@ -109,7 +132,9 @@ rmw_init_publisher_allocation(
     return RMW_RET_ERROR;
   }
 
-  __connext_alloc->cdr_stream =  cdr_stream;
+  __connext_alloc->cdr_stream = cdr_stream;
+  __connext_alloc->instance = dds_message;
+
   allocation->data = __connext_alloc;
 
   return RMW_RET_OK;
@@ -123,6 +148,7 @@ rmw_fini_publisher_allocation(
   connext_publisher_allocation_t * connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
   rcutils_uint8_array_t cdr_stream = connext_alloc->cdr_stream;
   cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
+  ConnextStaticSerializedDataTypeSupport::delete_data(connext_alloc->instance);
   rmw_free(connext_alloc);
 
   return RMW_RET_OK;
@@ -132,7 +158,7 @@ RMW_PUBLIC
 RMW_WARN_UNUSED
 rmw_ret_t
 rmw_init_subscription_allocation(
-  const rosidl_message_type_support_t * type_support,
+  const rosidl_message_type_support_t * type_supports,
   const rosidl_message_bounds_t * message_bounds,
   rmw_subscription_allocation_t * allocation)
 {
@@ -143,23 +169,32 @@ rmw_init_subscription_allocation(
     //   return RMW_RET_ERROR;
     // }
 
-    if (!type_support) {
+    if (!type_supports) {
       RMW_SET_ERROR_MSG("type_support is null");
       return RMW_RET_ERROR;
     }
 
-    size_t expected_length = 0;
-    if(rmw_get_serialized_message_size(message_bounds, type_support, &expected_length) != RMW_RET_OK)
-    {
-      RMW_SET_ERROR_MSG("failed to call rmw_get_serialized_message_size()");
+    void * dds_message;
+    RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, NULL)
+    const message_type_support_callbacks_t * callbacks =
+      static_cast<const message_type_support_callbacks_t *>(type_support->data);
+    if(callbacks->create_message(&dds_message, nullptr) != RMW_RET_OK){
+      RMW_SET_ERROR_MSG("Unable to create dds_message");
       return RMW_RET_ERROR;
     }
 
-    if (expected_length > std::numeric_limits<unsigned int>::max() ) {
+    unsigned int size = 0;
+    if (RMW_RET_OK != callbacks->get_serialized_length(dds_message, &size)) {
+      RMW_SET_ERROR_MSG("failed to get serialized length");
+      return RMW_RET_ERROR;
+    }
+
+    if (size > (std::numeric_limits<unsigned int>::max)() ) {
       RMW_SET_ERROR_MSG("cdr_stream->buffer_length, unexpectedly larger than max unsigned int");
       return RMW_RET_ERROR;
     }
 
+    size_t expected_length = static_cast<size_t>(size);
     rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
     cdr_stream.allocator = rcutils_get_default_allocator();
     cdr_stream.buffer_capacity = expected_length;
@@ -167,15 +202,17 @@ rmw_init_subscription_allocation(
     cdr_stream.buffer = static_cast<uint8_t *>(cdr_stream.allocator.allocate(
     cdr_stream.buffer_capacity, cdr_stream.allocator.state));
 
-    connext_publisher_allocation_t * __connext_alloc = nullptr;
-     __connext_alloc = static_cast<connext_publisher_allocation_t *>(
-       rmw_allocate(sizeof(connext_publisher_allocation_t) ));
+    connext_subscription_allocation_t * __connext_alloc = nullptr;
+    __connext_alloc = static_cast<connext_subscription_allocation_t *>(
+      rmw_allocate(sizeof(connext_subscription_allocation_t) ));
     if (!__connext_alloc) {
       RMW_SET_ERROR_MSG("failed to allocate memory for connext_alloc");
       return RMW_RET_ERROR;
     }
 
     __connext_alloc->cdr_stream =  cdr_stream;
+    __connext_alloc->dds_message = dds_message;
+    __connext_alloc->type_supports = type_supports;
     allocation->data = __connext_alloc;
 
     return RMW_RET_OK;
@@ -183,12 +220,25 @@ rmw_init_subscription_allocation(
 
 rmw_ret_t
 rmw_fini_subscription_allocation(
-  rmw_publisher_allocation_t * allocation)
+  rmw_subscription_allocation_t * allocation)
 {
 
-  connext_publisher_allocation_t * connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
+  connext_subscription_allocation_t * connext_alloc = static_cast<connext_subscription_allocation_t * >(allocation->data);
+
+  const rosidl_message_type_support_t * type_supports = connext_alloc->type_supports;
+
+  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, NULL)
+  const message_type_support_callbacks_t * callbacks =
+    static_cast<const message_type_support_callbacks_t *>(type_support->data);
+
+  if(callbacks->delete_message(connext_alloc->dds_message) != RMW_RET_OK){
+    RMW_SET_ERROR_MSG("Unable to destroy dds_message");
+    return RMW_RET_ERROR;
+  }
+
   rcutils_uint8_array_t cdr_stream = connext_alloc->cdr_stream;
   cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
+
   rmw_free(connext_alloc);
 
   return RMW_RET_OK;

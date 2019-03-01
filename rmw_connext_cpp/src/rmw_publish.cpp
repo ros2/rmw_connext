@@ -26,7 +26,8 @@
 #include "connext_static_serialized_dataSupport.h"
 
 bool
-publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_stream)
+publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_stream,
+  rmw_publisher_allocation_t * allocation)
 {
   ConnextStaticSerializedDataDataWriter * data_writer =
     ConnextStaticSerializedDataDataWriter::narrow(dds_data_writer);
@@ -35,7 +36,17 @@ publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_str
     return false;
   }
 
-  ConnextStaticSerializedData * instance = ConnextStaticSerializedDataTypeSupport::create_data();
+ ConnextStaticSerializedData * instance;
+  if(NULL != allocation)
+  {
+      connext_publisher_allocation_t * __connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
+      instance = __connext_alloc->instance;
+  }
+  else
+  {
+    instance = ConnextStaticSerializedDataTypeSupport::create_data();
+  }
+
   if (!instance) {
     RMW_SET_ERROR_MSG("failed to create dds message instance");
     return false;
@@ -65,7 +76,12 @@ cleanup:
       fprintf(stderr, "failed to return loaned memory\n");
       status = DDS::RETCODE_ERROR;
     }
-    ConnextStaticSerializedDataTypeSupport::delete_data(instance);
+
+    if(NULL == allocation)
+    {
+      ConnextStaticSerializedDataTypeSupport::delete_data(instance);
+    }
+
   }
 
   return status == DDS::RETCODE_OK;
@@ -135,14 +151,14 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message,
     ret = RMW_RET_ERROR;
     goto fail;
   }
-  if (!publish(topic_writer, &cdr_stream)) {
+  if (!publish(topic_writer, &cdr_stream, allocation)) {
     RMW_SET_ERROR_MSG("failed to publish message");
     ret = RMW_RET_ERROR;
     goto fail;
   }
 
 fail:
-  if(!allocation)
+  if(NULL == allocation)
   {
     cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
   }
@@ -183,7 +199,7 @@ rmw_publish_serialized_message(
     return RMW_RET_ERROR;
   }
 
-  bool published = publish(topic_writer, serialized_message);
+  bool published = publish(topic_writer, serialized_message, NULL);
   if (!published) {
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;

@@ -61,7 +61,7 @@ rmw_deserialize(
   }
 
   // convert the cdr stream to the message
-  if (!callbacks->to_message(serialized_message, ros_message)) {
+  if (!callbacks->to_message(serialized_message, ros_message, nullptr)) {
     RMW_SET_ERROR_MSG("can't convert cdr stream to ros message");
     return RMW_RET_ERROR;
   }
