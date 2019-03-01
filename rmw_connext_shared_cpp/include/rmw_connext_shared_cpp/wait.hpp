@@ -19,6 +19,7 @@
 
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/macros.hpp"
 #include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/condition_error.hpp"
