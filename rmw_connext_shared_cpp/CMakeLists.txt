@@ -70,6 +70,7 @@ endif()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rmw_INCLUDE_DIRS})
   ament_lint_auto_find_test_dependencies()
 endif()
 
