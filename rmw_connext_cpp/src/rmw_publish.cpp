@@ -36,6 +36,8 @@ publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_str
     return false;
   }
 
+  DDS::ReturnCode_t status = DDS::RETCODE_ERROR;
+
  ConnextStaticSerializedData * instance;
   if(NULL != allocation)
   {
@@ -45,44 +47,44 @@ publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_str
   else
   {
     instance = ConnextStaticSerializedDataTypeSupport::create_data();
+    if (!instance) {
+      RMW_SET_ERROR_MSG("failed to create dds message instance");
+      return false;
+    }
+
+    instance->serialized_data.maximum(0);
+    if (cdr_stream->buffer_length > (std::numeric_limits<DDS_Long>::max)()) {
+      RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than DDS_Long's max value");
+      return false;
+    }
+    if (!instance->serialized_data.loan_contiguous(
+        reinterpret_cast<DDS::Octet *>(cdr_stream->buffer),
+        static_cast<DDS::Long>(cdr_stream->buffer_length),
+        static_cast<DDS::Long>(cdr_stream->buffer_length)))
+    {
+      RMW_SET_ERROR_MSG("failed to loan memory for message");
+      goto cleanup;
+    }
+
   }
 
-  if (!instance) {
-    RMW_SET_ERROR_MSG("failed to create dds message instance");
-    return false;
-  }
 
-  DDS::ReturnCode_t status = DDS::RETCODE_ERROR;
-
-  instance->serialized_data.maximum(0);
-  if (cdr_stream->buffer_length > (std::numeric_limits<DDS_Long>::max)()) {
-    RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than DDS_Long's max value");
-    return false;
-  }
-  if (!instance->serialized_data.loan_contiguous(
-      reinterpret_cast<DDS::Octet *>(cdr_stream->buffer),
-      static_cast<DDS::Long>(cdr_stream->buffer_length),
-      static_cast<DDS::Long>(cdr_stream->buffer_length)))
-  {
-    RMW_SET_ERROR_MSG("failed to loan memory for message");
-    goto cleanup;
-  }
-
-  status = data_writer->write(*instance, DDS::HANDLE_NIL);
+  status = data_writer->write(*instance, DDS::HANDLE_NIL);   //SF
 
 cleanup:
+if(NULL == allocation)
+{
+
   if (instance) {
     if (!instance->serialized_data.unloan()) {
       fprintf(stderr, "failed to return loaned memory\n");
       status = DDS::RETCODE_ERROR;
     }
 
-    if(NULL == allocation)
-    {
       ConnextStaticSerializedDataTypeSupport::delete_data(instance);
     }
 
-  }
+ }
 
   return status == DDS::RETCODE_OK;
 }
@@ -128,7 +130,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message,
 
   if(allocation){
     connext_publisher_allocation_t * __connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
-    cdr_stream = __connext_alloc->cdr_stream;
+    cdr_stream = __connext_alloc->cdr_stream;     //SF
   }
   else
   {

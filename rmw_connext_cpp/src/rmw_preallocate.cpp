@@ -83,24 +83,21 @@ rmw_init_publisher_allocation(
   rmw_publisher_allocation_t * allocation)
 {
 
-
-  //TODO uncomment when message bound gets implemented
-  // if (!message_bounds) {
-  //   RMW_SET_ERROR_MSG("message_bounds is null");
-  //   return RMW_RET_ERROR;
-  // }
+  const void * mb = nullptr;
+  if (message_bounds) {
+    mb = message_bounds->data;
+  }
 
   if (!type_supports) {
     RMW_SET_ERROR_MSG("type_support is null");
     return RMW_RET_ERROR;
   }
 
-
   ConnextStaticSerializedData * dds_message;
   RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, NULL)
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(type_support->data);
-  if(callbacks->create_message( (void **)&dds_message, message_bounds->data) != RMW_RET_OK){
+  if(callbacks->create_message( (void **)&dds_message, mb) != RMW_RET_OK){
     RMW_SET_ERROR_MSG("Unable to create dds_message");
     return RMW_RET_ERROR;
   }
@@ -116,6 +113,8 @@ rmw_init_publisher_allocation(
     return RMW_RET_ERROR;
   }
 
+  printf("SIZE PREALLOCATE %d \n", size);
+
   size_t expected_length = static_cast<size_t>(size);
   rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   cdr_stream.allocator = rcutils_get_default_allocator();
@@ -123,6 +122,28 @@ rmw_init_publisher_allocation(
   cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
   cdr_stream.buffer = static_cast<uint8_t *>(cdr_stream.allocator.allocate(
   cdr_stream.buffer_capacity, cdr_stream.allocator.state));
+
+  ConnextStaticSerializedData * instance;
+  instance = ConnextStaticSerializedDataTypeSupport::create_data();
+  if (!instance) {
+    RMW_SET_ERROR_MSG("failed to create dds message instance");
+    return false;
+  }
+
+  instance->serialized_data.maximum(0);
+  if (cdr_stream.buffer_length > (std::numeric_limits<DDS_Long>::max)()) {
+    RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than DDS_Long's max value");
+    return false;
+  }
+  if (!instance->serialized_data.loan_contiguous(
+      reinterpret_cast<DDS::Octet *>(cdr_stream.buffer),
+      static_cast<DDS::Long>(cdr_stream.buffer_length),
+      static_cast<DDS::Long>(cdr_stream.buffer_length)))
+  {
+    RMW_SET_ERROR_MSG("failed to loan memory for message");
+    return RMW_RET_ERROR;
+    //goto cleanup;    //TODO implement
+  }
 
    connext_publisher_allocation_t * __connext_alloc = nullptr;
    __connext_alloc = static_cast<connext_publisher_allocation_t *>(
@@ -133,7 +154,7 @@ rmw_init_publisher_allocation(
   }
 
   __connext_alloc->cdr_stream = cdr_stream;
-  __connext_alloc->instance = dds_message;
+  __connext_alloc->instance = instance;
 
   allocation->data = __connext_alloc;
 
@@ -145,13 +166,19 @@ rmw_fini_publisher_allocation(
   rmw_publisher_allocation_t * allocation)
 {
 
+  DDS::ReturnCode_t status = DDS::RETCODE_ERROR;
+
   connext_publisher_allocation_t * connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
   rcutils_uint8_array_t cdr_stream = connext_alloc->cdr_stream;
   cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
+  if (!connext_alloc->instance->serialized_data.unloan()) {
+    fprintf(stderr, "failed to return loaned memory\n");
+    status = DDS::RETCODE_ERROR;
+  }
   ConnextStaticSerializedDataTypeSupport::delete_data(connext_alloc->instance);
   rmw_free(connext_alloc);
 
-  return RMW_RET_OK;
+  return (status == DDS::RETCODE_OK) ? RMW_RET_OK: RMW_RET_ERROR;
 }
 
 RMW_PUBLIC
@@ -163,11 +190,13 @@ rmw_init_subscription_allocation(
   rmw_subscription_allocation_t * allocation)
 {
 
-    //TODO uncomment when message bound gets implemented
-    // if (!message_bounds) {
-    //   RMW_SET_ERROR_MSG("message_bounds is null");
-    //   return RMW_RET_ERROR;
-    // }
+    const void * mb = nullptr;
+    if (!message_bounds) {
+      RMW_SET_ERROR_MSG("message_bounds is null");
+      return RMW_RET_ERROR;
+    }else{
+      mb = message_bounds->data;
+    }
 
     if (!type_supports) {
       RMW_SET_ERROR_MSG("type_support is null");
@@ -178,7 +207,7 @@ rmw_init_subscription_allocation(
     RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, NULL)
     const message_type_support_callbacks_t * callbacks =
       static_cast<const message_type_support_callbacks_t *>(type_support->data);
-    if(callbacks->create_message(&dds_message, nullptr) != RMW_RET_OK){
+    if(callbacks->create_message(&dds_message, mb) != RMW_RET_OK){
       RMW_SET_ERROR_MSG("Unable to create dds_message");
       return RMW_RET_ERROR;
     }
