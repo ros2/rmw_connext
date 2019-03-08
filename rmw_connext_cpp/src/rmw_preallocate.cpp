@@ -113,8 +113,6 @@ rmw_init_publisher_allocation(
     return RMW_RET_ERROR;
   }
 
-  printf("SIZE PREALLOCATE %d \n", size);
-
   size_t expected_length = static_cast<size_t>(size);
   rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   cdr_stream.allocator = rcutils_get_default_allocator();
@@ -189,7 +187,7 @@ rmw_init_subscription_allocation(
   const rosidl_message_bounds_t * message_bounds,
   rmw_subscription_allocation_t * allocation)
 {
-
+  
     const void * mb = nullptr;
     if (!message_bounds) {
       RMW_SET_ERROR_MSG("message_bounds is null");
