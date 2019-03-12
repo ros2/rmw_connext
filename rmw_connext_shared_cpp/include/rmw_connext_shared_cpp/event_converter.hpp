@@ -6,7 +6,7 @@
 #include "ndds/ndds_cpp.h"
 #include <unordered_map>
 
-DDS_StatusMask get_mask_from_rmw(const rmw_event_type_t &event_t) {
+inline DDS_StatusMask get_mask_from_rmw(const rmw_event_type_t &event_t) {
  	std::unordered_map<rmw_event_type_t, DDS_StatusMask> mask_map{
  		{RMW_EVENT_SAMPLE_REJECTED, DDS_SAMPLE_REJECTED_STATUS},
  		{RMW_EVENT_LIVELINESS_CHANGED, DDS_LIVELINESS_CHANGED_STATUS},
