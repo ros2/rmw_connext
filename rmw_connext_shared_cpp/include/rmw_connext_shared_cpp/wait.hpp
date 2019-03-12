@@ -22,8 +22,86 @@
 #include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/condition_error.hpp"
+#include "rmw_connext_shared_cpp/event_converter.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 #include "rmw_connext_shared_cpp/visibility_control.h"
+
+#include <unordered_set>
+
+
+rmw_ret_t __gather_event_conditions(rmw_events_t * events,
+  std::unordered_set<DDS::StatusCondition *> & status_conditions) {
+  if (events) {
+      // gather all status conditions and masks
+    for (size_t i = 0; i < events->event_count; ++i) {
+      rmw_event_t * current_event = events->events[i];
+      DDSEntity * dds_entity =
+        static_cast<DDSEntity *>(current_event->data);
+      if (!dds_entity) {
+        RMW_SET_ERROR_MSG("Event handle is null");
+        return RMW_RET_ERROR;
+      }
+      DDS::StatusCondition * status_condition = dds_entity->get_statuscondition();
+      if (!status_condition) {
+        RMW_SET_ERROR_MSG("status condition handle is null");
+        return RMW_RET_ERROR;
+      }
+
+      DDS_StatusMask new_mask = status_condition->get_enabled_statuses() 
+        | get_mask_from_rmw(current_event->event_type);
+      status_condition->set_enabled_statuses(new_mask);
+      status_conditions.insert(status_condition);
+    }
+  }
+  return RMW_RET_OK;
+}
+
+rmw_ret_t __handle_active_event_conditions(rmw_events_t * events,
+  DDS::ConditionSeq * active_conditions)
+{
+      // enable a status condition for each event
+  if (events) {
+    for (size_t i = 0; i < events->event_count; ++i) {
+      rmw_event_t * current_event = events->events[i];
+      DDSEntity * dds_entity =
+        static_cast<DDSEntity *>(current_event->data);
+      if (!dds_entity) {
+        RMW_SET_ERROR_MSG("Event handle is null");
+        return RMW_RET_ERROR;
+      }
+      DDS::StatusCondition * status_condition = dds_entity->get_statuscondition();
+      if (!status_condition) {
+        RMW_SET_ERROR_MSG("status condition handle is null");
+        return RMW_RET_ERROR;
+      }
+      // search for status condition in active set
+      DDS::Long j = 0;
+      for (; j < active_conditions->length(); ++j) {
+        if ((*active_conditions)[j] == status_condition) {
+          break;
+        }
+      }
+      // if status condition is not found in the active set
+      // reset the subscriber handle
+      if (!(j < active_conditions->length())) {
+        events->events[i] = 0;
+      }
+    }
+  }
+  return RMW_RET_OK;
+}
+
+rmw_ret_t __detach_condition(
+  DDS::WaitSet * dds_wait_set,
+  DDSCondition * condition)
+{
+    DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
+    if (retcode != DDS::RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
+      return RMW_RET_ERROR;
+    }
+    return RMW_RET_OK;
+}
 
 template<typename SubscriberInfo, typename ServiceInfo, typename ClientInfo>
 rmw_ret_t
@@ -33,6 +111,7 @@ wait(
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
+  rmw_events_t * events,
   rmw_wait_set_t * wait_set,
   const rmw_time_t * wait_timeout)
 {
@@ -79,10 +158,7 @@ wait(
       }
 
       for (DDS::Long i = 0; i < attached_conditions->length(); ++i) {
-        retcode = dds_wait_set->detach_condition((*attached_conditions)[i]);
-        if (retcode != DDS::RETCODE_OK) {
-          RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
-        }
+        __detach_condition(dds_wait_set, (*attached_conditions)[i]);
       }
     }
     rmw_wait_set_t * wait_set = NULL;
@@ -136,6 +212,23 @@ wait(
       }
       rmw_ret_t rmw_status = check_attach_condition_error(
         dds_wait_set->attach_condition(read_condition));
+      if (rmw_status != RMW_RET_OK) {
+        return rmw_status;
+      }
+    }
+  }
+
+  std::unordered_set<DDS::StatusCondition *> status_conditions;
+  // gather all status conditions with set masks
+  rmw_ret_t ret_code = __gather_event_conditions(events, status_conditions);
+  if (ret_code != RMW_RET_OK) {
+    return ret_code;
+  }
+  if (!status_conditions.empty()) {
+    // enable a status condition for each event
+    for (auto* status_condition : status_conditions) {
+      rmw_ret_t rmw_status = check_attach_condition_error(
+        dds_wait_set->attach_condition(status_condition));
       if (rmw_status != RMW_RET_OK) {
         return rmw_status;
       }
@@ -257,10 +350,9 @@ wait(
       if (!(j < active_conditions->length())) {
         subscriptions->subscribers[i] = 0;
       }
-      DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
-      if (retcode != DDS::RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
-        return RMW_RET_ERROR;
+      rmw_ret_t ret_code = __detach_condition(dds_wait_set, read_condition);
+      if (ret_code != RMW_RET_OK) {
+        return ret_code;
       }
     }
   }
@@ -293,10 +385,9 @@ wait(
       if (!(j < active_conditions->length())) {
         guard_conditions->guard_conditions[i] = 0;
       }
-      DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
-      if (retcode != DDS::RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
-        return RMW_RET_ERROR;
+      rmw_ret_t ret_code = __detach_condition(dds_wait_set, condition);
+      if (ret_code != RMW_RET_OK) {
+        return ret_code;
       }
     }
   }
@@ -328,10 +419,9 @@ wait(
       if (!(j < active_conditions->length())) {
         services->services[i] = 0;
       }
-      DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
-      if (retcode != DDS::RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
-        return RMW_RET_ERROR;
+      rmw_ret_t ret_code = __detach_condition(dds_wait_set, read_condition);
+      if (ret_code != RMW_RET_OK) {
+        return ret_code;
       }
     }
   }
@@ -347,8 +437,7 @@ wait(
       }
       DDS::ReadCondition * read_condition = client_info->read_condition_;
       if (!read_condition) {
-        RMW_SET_ERROR_MSG("read condition handle is null");
-        return RMW_RET_ERROR;
+               return RMW_RET_ERROR;
       }
 
       // search for service condition in active set
@@ -363,11 +452,19 @@ wait(
       if (!(j < active_conditions->length())) {
         clients->clients[i] = 0;
       }
-      DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(read_condition);
-      if (retcode != DDS::RETCODE_OK) {
-        RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
-        return RMW_RET_ERROR;
+      rmw_ret_t ret_code = __detach_condition(dds_wait_set, read_condition);
+      if (ret_code != RMW_RET_OK) {
+        return ret_code;
       }
+    }
+  }
+  {
+    rmw_ret_t ret_code = __handle_active_event_conditions(events, active_conditions);
+    if (ret_code != RMW_RET_OK) {
+      return ret_code;
+    }
+    for (auto status_condition: status_conditions) {
+      ret_code = __detach_condition(dds_wait_set, status_condition);
     }
   }
 
