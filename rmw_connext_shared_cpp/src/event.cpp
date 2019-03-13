@@ -37,16 +37,17 @@ __rmw_take_event(
 
     // lookup status mask from rmw_event_type
     DDS_StatusMask status_mask = get_mask_from_rmw(event_handle->event_type);
+
     // cast the event_handle to the appropriate type to get the appropriate 
     // status from the handle
-
     // CustomConnextPublisher and CustomConnextSubscriber should implement this interface 
-    //e.g. auto & status_event_listener = static_cast<IStatusEventListener> (event_handle->data);
+    ConnextCustomEventInfo * custom_event_info = 
+    	static_cast<ConnextCustomEventInfo *>(event_handle->data);
 
     // call get status with the appropriate mask
     // get_status should fill the event with the appropriate status information
-    // rmw_ret_code ret_code = status_event_listener.get_status(event_handle, event);
+    rmw_ret_code ret_code = custom_event_info.get_status(status_mask, event);
 
     //if ret_code is not okay, return error and set taken to false.
-    return RMW_RET_OK;
+    return ret_code;
 }
