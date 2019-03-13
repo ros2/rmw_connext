@@ -25,7 +25,7 @@ class ConnextSubscriberListener;
 
 extern "C"
 {
-struct ConnextStaticSubscriberInfo
+struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
 {
   DDS::Subscriber * dds_subscriber_;
   ConnextSubscriberListener * listener_;
@@ -33,6 +33,8 @@ struct ConnextStaticSubscriberInfo
   DDS::ReadCondition * read_condition_;
   bool ignore_local_publications;
   const message_type_support_callbacks_t * callbacks_;
+  rmw_ret_code get_status(const DDS_StatusMask mask, void * event) override;
+  DDSEntity* get_entity() override;
 };
 }  // extern "C"
 
@@ -54,5 +56,35 @@ public:
 private:
   std::atomic<std::size_t> current_count_;
 };
+
+inline void ConnextStaticSubscriberInfo::get_status(
+  const DDS_StatusMask mask,
+  void * event)
+{
+  switch(mask) {
+    case DDS_SAMPLE_REJECTED_STATUS:
+      break;
+    case DDS_LIVELINESS_CHANGED_STATUS:
+      auto status = topic_reader_->liveliness_changed_status();
+      event << status;
+      break;
+    case DDS_REQUESTED_DEADLINE_MISSED_STATUS:
+      break;
+    case DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS:
+      break;
+    case DDS_SAMPLE_LOST_STATUS:
+      break;
+    case DDS_SUBSCRIPTION_MATCHED_STATUS:
+      break;
+    default:
+      return RMW_RET_ERROR;
+  }
+}
+
+inline DDSEntity* ConnextStaticSubscriberInfo::get_entity()
+{
+  return dds_subscriber_;
+}
+
 
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
