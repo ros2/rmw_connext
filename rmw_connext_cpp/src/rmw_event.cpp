@@ -1,5 +1,3 @@
-
-
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/event.hpp"
@@ -20,12 +18,13 @@ rmw_ret_t
 rmw_take_event(
   const rmw_event_t * event_handle,
   void * event,
-  bool * taken) {
-	return rmw_fastrtps_shared_cpp::__rmw_take_event(
-		rti_connext_identifier,
-		event_handle,
-		event,
-		taken);
+  bool * taken)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_take_event(
+    rti_connext_identifier,
+    event_handle,
+    event,
+    taken);
 }
 
 }  // extern "C"
