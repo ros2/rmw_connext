@@ -33,7 +33,7 @@ struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
   DDS::ReadCondition * read_condition_;
   bool ignore_local_publications;
   const message_type_support_callbacks_t * callbacks_;
-  rmw_ret_code get_status(const DDS_StatusMask mask, void * event) override;
+  rmw_ret_t get_status(const DDS_StatusMask mask, void * event) override;
   DDSEntity* get_entity() override;
 };
 }  // extern "C"
