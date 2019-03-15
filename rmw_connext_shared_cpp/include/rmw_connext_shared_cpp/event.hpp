@@ -30,7 +30,7 @@
  */
 rmw_ret_t
 __rmw_take_event(
-	const char * implementation_identifier,
+  const char * implementation_identifier,
   const rmw_event_t * event_handle,
   void * event,
   bool * taken);
