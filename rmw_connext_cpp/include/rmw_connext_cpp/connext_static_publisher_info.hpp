@@ -25,13 +25,15 @@ class ConnextPublisherListener;
 
 extern "C"
 {
-struct ConnextStaticPublisherInfo
+struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
 {
   DDS::Publisher * dds_publisher_;
   ConnextPublisherListener * listener_;
   DDS::DataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
+  rmw_ret_t get_status(const DDS_StatusMask mask, void * event) override;
+  DDSEntity* get_entity() override;
 };
 }  // extern "C"
 
@@ -53,5 +55,71 @@ public:
 private:
   std::atomic<std::size_t> current_count_;
 };
+
+/**
+ * Remap the specific RTI Connext DDS DataWriter Status to a generic RMW status type.
+ *
+ * @param mask input status mask
+ * @param event
+ */
+inline rmw_ret_t ConnextStaticPublisherInfo::get_status(
+        const DDS_StatusMask mask,
+        void * event) {
+
+  //todo check if we can handle the event
+
+  switch(mask) {
+
+    case DDS_LIVELINESS_LOST:
+
+      LivelinessLostStatus * liveliness_lost = topic_writer_->liveliness_lost_status();
+
+      rmw_liveliness_lost_t * rmw_liveliness_lost = static_cast<rmw_liveliness_lost_t*>(event);
+      rmw_liveliness_lost.total_count = liveliness_lost.total_count();
+      rmw_liveliness_lost.total_count_change = liveliness_lost.total_count_change();
+
+      break;
+
+    case DDS_OFFERED_DEADLINE_MISSED:
+
+      OfferedDeadlineMissedStatus * offered_deadline_missed = topic_writer_->offered_deadline_missed_status();
+
+      rmw_offered_deadline_missed_t * rmw_offered_deadline_missed = static_cast<rmw_offered_deadline_missed_t*>(event);
+      rmw_offered_deadline_missed->total_count = offered_deadline_missed->total_count();
+      rmw_offered_deadline_missed->total_count_change = offered_deadline_missed->total_count_change();
+
+      break;
+
+    case DDS_OFFERED_INCOMPATIBLE_QOS:
+
+      OfferedIncompatibleQosStatus * offered_incompatible_status = topic_writer_->offered_incompatible_status();
+
+      rmw_offered_incompatible_qos_t * rmw_offered_incompatible_qos = static_cast<rmw_offered_incompatible_qos_t*>(event);
+      rmw_offered_incompatible_qos->total_count = topic_writer_->total_count();
+      rmw_offered_incompatible_qos->total_count_change = topic_writer_->total_count_change();
+
+      break;
+
+    case DDS_PUBLICATION_MATCHED:
+
+      PublicationMatchedStatus * publication_matched_status = topic_writer_->publication_matched_status();
+
+      rmw_publication_matched_t * rmw_publication_matched = static_cast<rmw_publication_matched_t*>(event);
+      rmw_publication_matched_t->total_count = topic_writer_->total_count();
+      rmw_publication_matched_t->total_count_change = topic_writer_->total_count_change();
+      rmw_publication_matched_t->current_count = topic_writer_->current_count();
+      rmw_publication_matched_t->current_count_change = topic_writer_->current_count_change();
+
+      break;
+
+    default:
+      return RMW_RET_QOS_UNSUPPORTED;
+  }
+  return RMW_RET_OK;
+}
+inline DDSEntity* ConnextStaticSubscriberInfo::get_entity()
+{
+  return dds_publisher_;
+}
 
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_
