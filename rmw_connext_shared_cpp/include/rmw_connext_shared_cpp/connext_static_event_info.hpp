@@ -17,7 +17,7 @@
 
 typedef struct ConnextCustomEventInfo
 {
-  virtual rmw_ret_code get_status(const DDS_StatusMask mask, void * event) = 0;
+  virtual rmw_ret_t get_status(const DDS_StatusMask mask, void * event) = 0;
   virtual DDSEntity* get_entity();
 } ConnextCustomEventInfo;
 
