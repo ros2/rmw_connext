@@ -29,10 +29,12 @@
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
 
-rmw_ret_t __gather_event_conditions(rmw_events_t * events,
-  std::unordered_set<DDS::StatusCondition *> & status_conditions) {
+rmw_ret_t __gather_event_conditions(
+  rmw_events_t * events,
+  std::unordered_set<DDS::StatusCondition *> & status_conditions)
+{
   if (events) {
-      // gather all status conditions and masks
+    // gather all status conditions and masks
     for (size_t i = 0; i < events->event_count; ++i) {
       rmw_event_t * current_event = events->events[i];
       DDSEntity * dds_entity =
@@ -47,8 +49,8 @@ rmw_ret_t __gather_event_conditions(rmw_events_t * events,
         return RMW_RET_ERROR;
       }
 
-      DDS_StatusMask new_mask = status_condition->get_enabled_statuses()
-        | get_mask_from_rmw(current_event->event_type);
+      DDS_StatusMask new_mask = status_condition->get_enabled_statuses() |
+        get_mask_from_rmw(current_event->event_type);
       status_condition->set_enabled_statuses(new_mask);
       status_conditions.insert(status_condition);
     }
@@ -58,7 +60,7 @@ rmw_ret_t __gather_event_conditions(rmw_events_t * events,
 
 rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
 {
-      // enable a status condition for each event
+  // enable a status condition for each event
   if (events) {
     for (size_t i = 0; i < events->event_count; ++i) {
       rmw_event_t * current_event = events->events[i];
@@ -79,8 +81,8 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
       // large performance increase when RPC types increase in size
       bool is_active = false;
       if (status_condition->get_trigger_value()) {
-        is_active = static_cast<bool>(dds_entity->get_status_changes()
-          & get_mask_from_rmw(current_event->event_type));
+        is_active = static_cast<bool>(dds_entity->get_status_changes() &
+          get_mask_from_rmw(current_event->event_type));
       }
       // if status condition is not found in the active set
       // reset the subscriber handle
@@ -96,12 +98,12 @@ rmw_ret_t __detach_condition(
   DDS::WaitSet * dds_wait_set,
   DDSCondition * condition)
 {
-    DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
-    if (retcode != DDS::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
-      return RMW_RET_ERROR;
-    }
-    return RMW_RET_OK;
+  DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
+  if (retcode != DDS::RETCODE_OK) {
+    RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
+    return RMW_RET_ERROR;
+  }
+  return RMW_RET_OK;
 }
 
 template<typename SubscriberInfo, typename ServiceInfo, typename ClientInfo>
@@ -227,7 +229,7 @@ wait(
   }
   if (!status_conditions.empty()) {
     // enable a status condition for each event
-    for (auto* status_condition : status_conditions) {
+    for (auto * status_condition : status_conditions) {
       rmw_ret_t rmw_status = check_attach_condition_error(
         dds_wait_set->attach_condition(status_condition));
       if (rmw_status != RMW_RET_OK) {
@@ -438,7 +440,7 @@ wait(
       }
       DDS::ReadCondition * read_condition = client_info->read_condition_;
       if (!read_condition) {
-               return RMW_RET_ERROR;
+        return RMW_RET_ERROR;
       }
 
       // search for service condition in active set
