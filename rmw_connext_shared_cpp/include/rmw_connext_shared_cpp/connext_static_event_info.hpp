@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
-#define RMW_CONNEXT_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
+#ifndef RMW_CONNEXT_SHARED_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
+#define RMW_CONNEXT_SHARED_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
 
 typedef struct ConnextCustomEventInfo
 {
@@ -21,4 +21,4 @@ typedef struct ConnextCustomEventInfo
   virtual DDSEntity* get_entity();
 } ConnextCustomEventInfo;
 
-#endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
+#endif  // RMW_CONNEXT_SHARED_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_

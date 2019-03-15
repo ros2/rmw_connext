@@ -15,6 +15,8 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__WAIT_HPP_
 #define RMW_CONNEXT_SHARED_CPP__WAIT_HPP_
 
+#include <unordered_set>
+
 #include "ndds_include.hpp"
 
 #include "rmw/error_handling.h"
@@ -25,8 +27,6 @@
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 #include "rmw_connext_shared_cpp/visibility_control.h"
-
-#include <unordered_set>
 
 
 rmw_ret_t __gather_event_conditions(rmw_events_t * events,
@@ -47,7 +47,7 @@ rmw_ret_t __gather_event_conditions(rmw_events_t * events,
         return RMW_RET_ERROR;
       }
 
-      DDS_StatusMask new_mask = status_condition->get_enabled_statuses() 
+      DDS_StatusMask new_mask = status_condition->get_enabled_statuses()
         | get_mask_from_rmw(current_event->event_type);
       status_condition->set_enabled_statuses(new_mask);
       status_conditions.insert(status_condition);
@@ -75,13 +75,12 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
       }
       // faster to just check if this entity's status condition is triggered
       // @todo: ross_desmond change all handlers not to search
-      // but to check if they have been triggered 
+      // but to check if they have been triggered
       // large performance increase when RPC types increase in size
       bool is_active = false;
       if (status_condition->get_trigger_value()) {
-        is_active = 
-          static_cast<bool>(dds_entity->get_status_changes()
-            & get_mask_from_rmw(current_event->event_type));
+        is_active = static_cast<bool>(dds_entity->get_status_changes()
+          & get_mask_from_rmw(current_event->event_type));
       }
       // if status condition is not found in the active set
       // reset the subscriber handle
@@ -228,7 +227,7 @@ wait(
   }
   if (!status_conditions.empty()) {
     // enable a status condition for each event
-    for (auto* status_condition: status_conditions) {
+    for (auto* status_condition : status_conditions) {
       rmw_ret_t rmw_status = check_attach_condition_error(
         dds_wait_set->attach_condition(status_condition));
       if (rmw_status != RMW_RET_OK) {
@@ -466,7 +465,7 @@ wait(
       return ret_code;
     }
     // reset the status conditions to none.
-    for (auto status_condition: status_conditions) {
+    for (auto status_condition : status_conditions) {
       status_condition->set_enabled_statuses(DDS_STATUS_MASK_NONE);
       ret_code = __detach_condition(dds_wait_set, status_condition);
     }
