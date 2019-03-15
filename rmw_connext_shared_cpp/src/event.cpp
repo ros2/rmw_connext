@@ -49,5 +49,8 @@ __rmw_take_event(
     rmw_ret_code ret_code = custom_event_info.get_status(status_mask, event);
 
     //if ret_code is not okay, return error and set taken to false.
+    if(ret_code != RMW_RET_OK) {
+      *taken = false;
+    }
     return ret_code;
 }
