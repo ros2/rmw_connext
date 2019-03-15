@@ -32,6 +32,8 @@ struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
   DDS::DataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
+  rmw_ret_t get_status(const DDS_StatusMask mask, void * event) override;
+  DDSEntity* get_entity() override;
 };
 }  // extern "C"
 
@@ -60,9 +62,11 @@ private:
  * @param mask input status mask
  * @param event
  */
-inline rmw_ret_code ConnextStaticSubscriberInfo::get_status(
+inline rmw_ret_t ConnextStaticPublisherInfo::get_status(
         const DDS_StatusMask mask,
         void * event) {
+
+  //todo check if we can handle the event
 
   switch(mask) {
 
@@ -70,64 +74,48 @@ inline rmw_ret_code ConnextStaticSubscriberInfo::get_status(
 
       LivelinessLostStatus * liveliness_lost = topic_writer_->liveliness_lost_status();
 
-      rmw_liveliness_lost_t rmw_liveliness_lost = new liveliness_lost_t();
+      rmw_liveliness_lost_t * rmw_liveliness_lost = static_cast<rmw_liveliness_lost_t*>(event);
       rmw_liveliness_lost.total_count = liveliness_lost.total_count();
       rmw_liveliness_lost.total_count_change = liveliness_lost.total_count_change();
 
-      //todo return value?
-      //todo assign to void *?
       break;
 
     case DDS_OFFERED_DEADLINE_MISSED:
 
       OfferedDeadlineMissedStatus * offered_deadline_missed = topic_writer_->offered_deadline_missed_status();
 
-      rmw_offered_deadline_missed_t rmw_offered_deadline_missed = new rmw_offered_deadline_missed_t();
-      rmw_offered_deadline_missed.total_count = offered_deadline_missed->total_count();
-      rmw_offered_deadline_missed.total_count_change = offered_deadline_missed->total_count_change();
-      //TODO
-      //rmw_offered_deadline_missed.last_instance_handle = offered_deadline_missed->last_instance_handle();
+      rmw_offered_deadline_missed_t * rmw_offered_deadline_missed = static_cast<rmw_offered_deadline_missed_t*>(event);
+      rmw_offered_deadline_missed->total_count = offered_deadline_missed->total_count();
+      rmw_offered_deadline_missed->total_count_change = offered_deadline_missed->total_count_change();
 
-      //todo return value?
-      //todo assign to void *?
       break;
 
     case DDS_OFFERED_INCOMPATIBLE_QOS:
 
       OfferedIncompatibleQosStatus * offered_incompatible_status = topic_writer_->offered_incompatible_status();
 
-      rmw_offered_incompatible_qos_t rmw_offered_incompatible_qos = new rmw_offered_incompatible_qos_t();
+      rmw_offered_incompatible_qos_t * rmw_offered_incompatible_qos = static_cast<rmw_offered_incompatible_qos_t*>(event);
+      rmw_offered_incompatible_qos->total_count = topic_writer_->total_count();
+      rmw_offered_incompatible_qos->total_count_change = topic_writer_->total_count_change();
 
-      rmw_offered_incompatible_qos.total_count = topic_writer_->total_count();
-      rmw_offered_incompatible_qos.total_count_change = topic_writer_->total_count_change();
-      //TODO
-      //rmw_offered_incompatible_qos.last_policy_id = topic_writer_->last_policy_id();
-      //rmw_offered_incompatible_qos.policies = topic_writer_->policies();
-
-      //todo return value?
-      //todo assign to void *?
-      return RMW_RET_ERROR;
+      break;
 
     case DDS_PUBLICATION_MATCHED:
 
       PublicationMatchedStatus * publication_matched_status = topic_writer_->publication_matched_status();
 
-      rmw_publication_matched_t rmw_publication_matched = new rmw_publication_matched_t();
-      rmw_publication_matched_t.total_count = topic_writer_->total_count();
-      rmw_publication_matched_t.total_count_change = topic_writer_->total_count_change();
-      rmw_publication_matched_t.current_count = topic_writer_->current_count();
-      rmw_publication_matched_t.current_count_change = topic_writer_->current_count_change();
-      //TODO
-      //rmw_publication_matched_t.last_subscription_handle = topic_writer_->last_subscription_handle();
+      rmw_publication_matched_t * rmw_publication_matched = static_cast<rmw_publication_matched_t*>(event);
+      rmw_publication_matched_t->total_count = topic_writer_->total_count();
+      rmw_publication_matched_t->total_count_change = topic_writer_->total_count_change();
+      rmw_publication_matched_t->current_count = topic_writer_->current_count();
+      rmw_publication_matched_t->current_count_change = topic_writer_->current_count_change();
 
-      //todo return value?
-      //todo assign to void *?
       break;
 
     default:
-      //todo is this really ok?
-      return RMW_RET_OK;
+      return RMW_RET_QOS_UNSUPPORTED;
   }
+  return RMW_RET_OK;
 }
 inline DDSEntity* ConnextStaticSubscriberInfo::get_entity()
 {

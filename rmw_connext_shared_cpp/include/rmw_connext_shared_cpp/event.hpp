@@ -16,8 +16,8 @@
 #define RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
 
 #include "ndds_include.hpp"
-
 #include "rmw/types.h"
+
 #include "rmw_connext_shared_cpp/visibility_control.h"
 /**
  * Take an event from the event handle.
