@@ -18,6 +18,7 @@
 #include <atomic>
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
 
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
@@ -25,6 +26,7 @@ class ConnextSubscriberListener;
 
 extern "C"
 {
+
 struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
 {
   DDS::Subscriber * dds_subscriber_;
@@ -36,6 +38,7 @@ struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
   rmw_ret_t get_status(const DDS_StatusMask mask, void * event) override;
   DDSEntity* get_entity() override;
 };
+
 }  // extern "C"
 
 class ConnextSubscriberListener : public DDS::SubscriberListener
@@ -57,17 +60,19 @@ private:
   std::atomic<std::size_t> current_count_;
 };
 
-inline void ConnextStaticSubscriberInfo::get_status(
+inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
   const DDS_StatusMask mask,
   void * event)
 {
   switch(mask) {
     case DDS_SAMPLE_REJECTED_STATUS:
       break;
-    case DDS_LIVELINESS_CHANGED_STATUS:
-      auto status = topic_reader_->liveliness_changed_status();
-      event << status;
+    case DDS_LIVELINESS_CHANGED_STATUS: {
+      DDS_LivelinessChangedStatus status;
+      topic_reader_->get_liveliness_changed_status(status);
+      // event << status; TODO(eknapp) we clearly do not stream to a void*
       break;
+    }
     case DDS_REQUESTED_DEADLINE_MISSED_STATUS:
       break;
     case DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS:

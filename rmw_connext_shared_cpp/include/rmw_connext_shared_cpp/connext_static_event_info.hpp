@@ -18,7 +18,7 @@
 typedef struct ConnextCustomEventInfo
 {
   virtual rmw_ret_t get_status(const DDS_StatusMask mask, void * event) = 0;
-  virtual DDSEntity * get_entity();
+  virtual DDSEntity * get_entity() = 0;
 } ConnextCustomEventInfo;
 
 #endif  // RMW_CONNEXT_SHARED_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
