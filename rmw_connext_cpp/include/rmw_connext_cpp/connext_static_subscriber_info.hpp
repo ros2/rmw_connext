@@ -18,6 +18,7 @@
 #include <atomic>
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
 
 #include "rmw_connext_shared_cpp/types.hpp"
 
