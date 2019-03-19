@@ -187,12 +187,9 @@ rmw_init_subscription_allocation(
   const rosidl_message_bounds_t * message_bounds,
   rmw_subscription_allocation_t * allocation)
 {
-  
+
     const void * mb = nullptr;
-    if (!message_bounds) {
-      RMW_SET_ERROR_MSG("message_bounds is null");
-      return RMW_RET_ERROR;
-    }else{
+    if (NULL != message_bounds) {
       mb = message_bounds->data;
     }
 
