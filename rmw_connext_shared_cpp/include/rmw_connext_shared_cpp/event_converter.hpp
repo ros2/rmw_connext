@@ -16,13 +16,10 @@
 #define RMW_CONNEXT_SHARED_CPP__EVENT_CONVERTER_HPP_
 
 #include "ndds/ndds_cpp.h"
-#include "ndds/ndds_namespace_cpp.h"
-#include "rmw_connext_shared_cpp/ndds_include.hpp"
-#include <unordered_map>
 #include "rmw/types.h"
 
 DDS_StatusMask get_mask_from_rmw(const rmw_event_type_t & event_t);
 
-bool is_event_supported(const rmw_event_type_t &event_t);
+bool is_event_supported(const rmw_event_type_t & event_t);
 
 #endif  // RMW_CONNEXT_SHARED_CPP__EVENT_CONVERTER_HPP_
