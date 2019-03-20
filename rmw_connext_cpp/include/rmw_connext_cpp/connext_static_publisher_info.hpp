@@ -17,9 +17,18 @@
 
 #include <atomic>
 
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
+#include "ndds/ndds_cpp.h"
+#include "ndds/ndds_namespace_cpp.h"
+
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
+#include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
+
+#include "rmw/types.h"
+#include "rmw/ret_types.h"
+
 
 class ConnextPublisherListener;
 
@@ -29,15 +38,15 @@ struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
 {
   DDS::Publisher * dds_publisher_;
   ConnextPublisherListener * listener_;
-  DDS::DataWriter * topic_writer_;
+  DataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
   rmw_ret_t get_status(const DDS_StatusMask mask, void * event) override;
-  DDSEntity* get_entity() override;
+  DDSEntity * get_entity() override;
 };
 }  // extern "C"
 
-class ConnextPublisherListener : public DDS::PublisherListener
+class ConnextPublisherListener : public PublisherListener
 {
 public:
   virtual void on_publication_matched(
@@ -62,62 +71,87 @@ private:
  * @param mask input status mask
  * @param event
  */
-inline rmw_ret_t ConnextStaticPublisherInfo::get_status(
-        const DDS_StatusMask mask,
-        void * event) {
+inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mask, void * event)
+{
+  switch (mask) {
+    case DDS_StatusKind::DDS_LIVELINESS_LOST_STATUS: {
+        DDS_LivelinessLostStatus liveliness_lost;
+        DDS_ReturnCode_t dds_return_code =
+          topic_writer_->get_liveliness_lost_status(liveliness_lost);
 
-  //todo check if we can handle the event
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-  switch(mask) {
+        rmw_liveliness_lost_t * rmw_liveliness_lost = static_cast<rmw_liveliness_lost_t *>(event);
+        rmw_liveliness_lost->total_count = liveliness_lost.total_count;
+        rmw_liveliness_lost->total_count_change = liveliness_lost.total_count_change;
 
-    case DDS_LIVELINESS_LOST:
+        break;
+      }
+    case DDS_StatusKind::DDS_OFFERED_DEADLINE_MISSED_STATUS: {
+        DDS_OfferedDeadlineMissedStatus offered_deadline_missed;
+        DDS_ReturnCode_t dds_return_code = topic_writer_
+          ->get_offered_deadline_missed_status(offered_deadline_missed);
 
-      LivelinessLostStatus * liveliness_lost = topic_writer_->liveliness_lost_status();
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-      rmw_liveliness_lost_t * rmw_liveliness_lost = static_cast<rmw_liveliness_lost_t*>(event);
-      rmw_liveliness_lost.total_count = liveliness_lost.total_count();
-      rmw_liveliness_lost.total_count_change = liveliness_lost.total_count_change();
+        rmw_offered_deadline_missed_t * rmw_offered_deadline_missed =
+          static_cast<rmw_offered_deadline_missed_t *>(event);
+        rmw_offered_deadline_missed->total_count = offered_deadline_missed.total_count;
+        rmw_offered_deadline_missed->total_count_change =
+          offered_deadline_missed.total_count_change;
 
-      break;
+        break;
+      }
+    case DDS_StatusKind::DDS_OFFERED_INCOMPATIBLE_QOS_STATUS: {
+        DDS_OfferedIncompatibleQosStatus offered_incompatible_status;
+        DDS_ReturnCode_t dds_return_code = topic_writer_
+          ->get_offered_incompatible_qos_status(offered_incompatible_status);
 
-    case DDS_OFFERED_DEADLINE_MISSED:
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-      OfferedDeadlineMissedStatus * offered_deadline_missed = topic_writer_->offered_deadline_missed_status();
+        rmw_offered_incompatible_qos_t * rmw_offered_incompatible_qos =
+          static_cast<rmw_offered_incompatible_qos_t *>(event);
+        rmw_offered_incompatible_qos->total_count = offered_incompatible_status.total_count;
+        rmw_offered_incompatible_qos->total_count_change =
+          offered_incompatible_status.total_count_change;
 
-      rmw_offered_deadline_missed_t * rmw_offered_deadline_missed = static_cast<rmw_offered_deadline_missed_t*>(event);
-      rmw_offered_deadline_missed->total_count = offered_deadline_missed->total_count();
-      rmw_offered_deadline_missed->total_count_change = offered_deadline_missed->total_count_change();
+        break;
+      }
+    case DDS_StatusKind::DDS_PUBLICATION_MATCHED_STATUS: {
+        DDS_PublicationMatchedStatus publication_matched_status;
+        DDS_ReturnCode_t dds_return_code = topic_writer_
+          ->get_publication_matched_status(publication_matched_status);
 
-      break;
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-    case DDS_OFFERED_INCOMPATIBLE_QOS:
+        rmw_publication_matched_t * rmw_publication_matched =
+          static_cast<rmw_publication_matched_t *>(event);
+        rmw_publication_matched->total_count = publication_matched_status.total_count;
+        rmw_publication_matched->total_count_change = publication_matched_status.total_count_change;
+        rmw_publication_matched->current_count = publication_matched_status.current_count;
+        rmw_publication_matched->current_count_change =
+          publication_matched_status.current_count_change;
 
-      OfferedIncompatibleQosStatus * offered_incompatible_status = topic_writer_->offered_incompatible_status();
-
-      rmw_offered_incompatible_qos_t * rmw_offered_incompatible_qos = static_cast<rmw_offered_incompatible_qos_t*>(event);
-      rmw_offered_incompatible_qos->total_count = topic_writer_->total_count();
-      rmw_offered_incompatible_qos->total_count_change = topic_writer_->total_count_change();
-
-      break;
-
-    case DDS_PUBLICATION_MATCHED:
-
-      PublicationMatchedStatus * publication_matched_status = topic_writer_->publication_matched_status();
-
-      rmw_publication_matched_t * rmw_publication_matched = static_cast<rmw_publication_matched_t*>(event);
-      rmw_publication_matched_t->total_count = topic_writer_->total_count();
-      rmw_publication_matched_t->total_count_change = topic_writer_->total_count_change();
-      rmw_publication_matched_t->current_count = topic_writer_->current_count();
-      rmw_publication_matched_t->current_count_change = topic_writer_->current_count_change();
-
-      break;
-
+        break;
+      }
     default:
-      return RMW_RET_QOS_UNSUPPORTED;
+      return RMW_RET_EVENT_UNSUPPORTED;
   }
   return RMW_RET_OK;
 }
-inline DDSEntity* ConnextStaticSubscriberInfo::get_entity()
+inline DDSEntity * ConnextStaticPublisherInfo::get_entity()
 {
   return dds_publisher_;
 }

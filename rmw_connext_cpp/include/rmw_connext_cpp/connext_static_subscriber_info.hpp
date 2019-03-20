@@ -18,10 +18,16 @@
 #include <atomic>
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
-
 #include "rmw_connext_shared_cpp/types.hpp"
 
+#include "ndds/ndds_cpp.h"
+#include "ndds/ndds_namespace_cpp.h"
+
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
+#include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
+#include "rmw/types.h"
+#include "rmw/ret_types.h"
+
 
 class ConnextSubscriberListener;
 
@@ -36,7 +42,7 @@ struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
   bool ignore_local_publications;
   const message_type_support_callbacks_t * callbacks_;
   rmw_ret_t get_status(const DDS_StatusMask mask, void * event) override;
-  DDSEntity* get_entity() override;
+  DDSEntity * get_entity() override;
 };
 }  // extern "C"
 
@@ -69,79 +75,125 @@ inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
   const DDS_StatusMask mask,
   void * event)
 {
+  switch (mask) {
+    case DDS_StatusKind::DDS_SAMPLE_REJECTED_STATUS: {
+        DDS_SampleRejectedStatus sample_rejected;
+        DDS_ReturnCode_t dds_return_code =
+          topic_reader_->get_sample_rejected_status(sample_rejected);
 
-  switch(mask) {
-    case DDS_SAMPLE_REJECTED_STATUS:
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-      SampleRejectedStatus * sample_rejected = topic_reader_->sample_rejected_status();
+        rmw_sample_rejected_status_t * rmw_sample_rejected_status =
+          static_cast<rmw_sample_rejected_status_t *>(event);
+        rmw_sample_rejected_status->total_count = sample_rejected.total_count;
+        rmw_sample_rejected_status->total_count_change = sample_rejected.total_count_change;
 
-      rmw_sample_rejected_status_t * rmw_sample_rejected_status = static_cast<rmw_sample_rejected_status_t*>(event);
-      rmw_sample_rejected_status->total_count = sample_rejected->total_count();
-      rmw_sample_rejected_status->total_count_change = sample_rejected->total_count_change();
+        break;
+      }
+    case DDS_StatusKind::DDS_LIVELINESS_CHANGED_STATUS: {
+        DDS_LivelinessChangedStatus liveliness_changed;
+        DDS_ReturnCode_t dds_return_code = topic_reader_
+          ->get_liveliness_changed_status(liveliness_changed);
 
-      break;
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-    case DDS_LIVELINESS_CHANGED_STATUS:
+        rmw_liveliness_changed_status_t * rmw_liveliness_changed_status =
+          static_cast<rmw_liveliness_changed_status_t *>(event);
+        rmw_liveliness_changed_status->alive_count = liveliness_changed.alive_count;
+        rmw_liveliness_changed_status->not_alive_count = liveliness_changed.not_alive_count;
+        rmw_liveliness_changed_status->alive_count_change = liveliness_changed.alive_count_change;
+        rmw_liveliness_changed_status->not_alive_count_change =
+          liveliness_changed.not_alive_count_change;
 
-      LivelinessChangedStatus * liveliness_changed = topic_reader_->liveliness_changed_status();
+        break;
+      }
+    case DDS_StatusKind::DDS_REQUESTED_DEADLINE_MISSED_STATUS: {
+        DDS_RequestedDeadlineMissedStatus requested_deadline_missed;
+        DDS_ReturnCode_t dds_return_code = topic_reader_
+          ->get_requested_deadline_missed_status(requested_deadline_missed);
 
-      rmw_liveliness_changed_status_t * rmw_liveliness_changed_status = static_cast<rmw_liveliness_changed_status_t*>(event);
-      rmw_liveliness_changed_status->alive_count = liveliness_changed_status->alive_count();
-      rmw_liveliness_changed_status->not_alive_count = liveliness_changed_status->not_alive_count();
-      rmw_liveliness_changed_status->alive_count_change = liveliness_changed_status->alive_count_change();
-      rmw_liveliness_changed_status->not_alive_count_change = liveliness_changed_status->not_alive_count_change();
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-      break;
+        rmw_requested_deadline_missed_status_t * rmw_requested_deadline_missed_status =
+          static_cast<rmw_requested_deadline_missed_status_t *>(event);
+        rmw_requested_deadline_missed_status->total_count = requested_deadline_missed.total_count;
+        rmw_requested_deadline_missed_status->total_count_change =
+          requested_deadline_missed.total_count_change;
 
-    case DDS_REQUESTED_DEADLINE_MISSED_STATUS:
+        break;
+      }
+    case DDS_StatusKind::DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS: {
+        DDS_RequestedIncompatibleQosStatus requested_incompatible;
+        DDS_ReturnCode_t dds_return_code = topic_reader_
+          ->get_requested_incompatible_qos_status(requested_incompatible);
 
-      RequestedDeadlineMissedStatus * requested_deadline_missed = topic_reader_->requested_deadline_missed_status();
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-      rmw_requested_deadline_missed_status_t * rmw_requested_deadline_missed_status = static_cast<rmw_requested_deadline_missed_status_t*>(event);
-      rmw_requested_deadline_missed_status->total_count = requested_deadline_missed->total_count();
-      rmw_requested_deadline_missed_status->total_count_change = requested_deadline_missed->total_count_change()
+        rmw_requested_incompatible_qos_status_t * rmw_requested_incompatible_qos_status =
+          static_cast<rmw_requested_incompatible_qos_status_t *>(event);
+        rmw_requested_incompatible_qos_status->total_count = requested_incompatible.total_count;
+        rmw_requested_incompatible_qos_status->total_count_change =
+          requested_incompatible.total_count_change;
 
-      break;
+        break;
+      }
+    case DDS_StatusKind::DDS_SAMPLE_LOST_STATUS: {
+        DDS_SampleLostStatus sample_lost_status;
+        DDS_ReturnCode_t dds_return_code =
+          topic_reader_->get_sample_lost_status(sample_lost_status);
 
-    case DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS:
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-      RequestedIncompatibleQosStatus * requested_incompatible = topic_reader_->requested_incompatible_qos_status();
+        rmw_sample_lost_status_t * rmw_sample_lost_status =
+          static_cast<rmw_sample_lost_status_t *>(event);
+        rmw_sample_lost_status->total_count = sample_lost_status.total_count;
+        rmw_sample_lost_status->total_count_change = sample_lost_status.total_count_change;
 
-      rmw_requested_incompatible_qos_status_t * rmw_requested_incompatible_qos_status = static_cast<rmw_requested_incompatible_qos_status_t*>(event);
-      rmw_requested_incompatible_qos_status->total_count = topic_reader_->total_count();
-      rmw_requested_incompatible_qos_status->total_count_change = topic_reader_->total_count_change();
+        break;
+      }
+    case DDS_StatusKind::DDS_SUBSCRIPTION_MATCHED_STATUS: {
+        DDS_SubscriptionMatchedStatus subscription_matched;
+        DDS_ReturnCode_t dds_return_code = topic_reader_
+          ->get_subscription_matched_status(subscription_matched);
 
-      break;
+        rmw_ret_t from_dds;
+        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+          return from_dds;
+        }
 
-    case DDS_SAMPLE_LOST_STATUS:
+        rmw_subscription_matched_status_t * rmw_subscription_matched_status =
+          static_cast<rmw_subscription_matched_status_t *>(event);
+        rmw_subscription_matched_status->total_count = subscription_matched.total_count;
+        rmw_subscription_matched_status->total_count_change =
+          subscription_matched.total_count_change;
+        rmw_subscription_matched_status->current_count = subscription_matched.total_count;
+        rmw_subscription_matched_status->current_count_change =
+          subscription_matched.total_count_change;
 
-      SampleLostStatus * sample_lost_status = topic_reader_->sample_lost_status();
-
-      rmw_sample_lost_status_t * rmw_sample_lost_status = static_cast<sample_lost_status_t *>(event;
-      rmw_sample_lost_status->total_count-> sample_lost_status->total_count();
-      rmw_sample_lost_status->total_count_change->sample_lost_status->total_count_change();
-
-      break;
-
-    case DDS_SUBSCRIPTION_MATCHED_STATUS:
-
-      SubscriptionMatchedStatus * subscription_matched = topic_reader_->subscription_matched_status();
-
-      rmw_subscription_matched_status_t * rmw_subscription_matched_status = static_cast<rmw_subscription_matched_status_t*>(event);
-      rmw_subscription_matched_status->total_count = subscription_matched->total_count();
-      rmw_subscription_matched_status->total_count_change = subscription_matched->total_count_changed();
-      rmw_subscription_matched_status->current_count = subscription_matched->total_count();
-      rmw_subscription_matched_status->current_count_change = subscription_matched->total_count_changed();
-
-      break;
-
+        break;
+      }
     default:
-      return RMW_RET_QOS_UNSUPPORTED;
+      return RMW_RET_EVENT_UNSUPPORTED;
   }
   return RMW_RET_OK;
 }
 
-inline DDSEntity* ConnextStaticSubscriberInfo::get_entity()
+inline DDSEntity * ConnextStaticSubscriberInfo::get_entity()
 {
   return dds_subscriber_;
 }

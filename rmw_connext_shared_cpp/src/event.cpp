@@ -16,6 +16,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
 
+#include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
 #include "rmw_connext_shared_cpp/event.hpp"
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
@@ -51,7 +52,7 @@ __rmw_take_event(
 
       // call get status with the appropriate mask
       // get_status should fill the event with the appropriate status information
-      ret_code = custom_event_info.get_status(status_mask, event);
+      ret_code = custom_event_info->get_status(status_mask, event);
     }
 
     //if ret_code is not okay, return error and set taken to false.
