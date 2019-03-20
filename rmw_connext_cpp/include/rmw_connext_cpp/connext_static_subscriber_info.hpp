@@ -81,8 +81,8 @@ inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
         DDS_ReturnCode_t dds_return_code =
           topic_reader_->get_sample_rejected_status(sample_rejected);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
@@ -98,8 +98,8 @@ inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
         DDS_ReturnCode_t dds_return_code = topic_reader_
           ->get_liveliness_changed_status(liveliness_changed);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
@@ -118,8 +118,8 @@ inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
         DDS_ReturnCode_t dds_return_code = topic_reader_
           ->get_requested_deadline_missed_status(requested_deadline_missed);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
@@ -136,8 +136,8 @@ inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
         DDS_ReturnCode_t dds_return_code = topic_reader_
           ->get_requested_incompatible_qos_status(requested_incompatible);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
@@ -154,8 +154,8 @@ inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
         DDS_ReturnCode_t dds_return_code =
           topic_reader_->get_sample_lost_status(sample_lost_status);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
@@ -171,8 +171,8 @@ inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
         DDS_ReturnCode_t dds_return_code = topic_reader_
           ->get_subscription_matched_status(subscription_matched);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
