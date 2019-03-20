@@ -79,8 +79,8 @@ inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mas
         DDS_ReturnCode_t dds_return_code =
           topic_writer_->get_liveliness_lost_status(liveliness_lost);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
@@ -95,8 +95,8 @@ inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mas
         DDS_ReturnCode_t dds_return_code = topic_writer_
           ->get_offered_deadline_missed_status(offered_deadline_missed);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
@@ -113,8 +113,8 @@ inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mas
         DDS_ReturnCode_t dds_return_code = topic_writer_
           ->get_offered_incompatible_qos_status(offered_incompatible_status);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
@@ -131,8 +131,8 @@ inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mas
         DDS_ReturnCode_t dds_return_code = topic_writer_
           ->get_publication_matched_status(publication_matched_status);
 
-        rmw_ret_t from_dds;
-        if (!check_dds_ret_code(dds_return_code, from_dds)) {
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (from_dds != RMW_RET_OK) {
           return from_dds;
         }
 
