@@ -38,7 +38,7 @@ struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
 {
   DDS::Publisher * dds_publisher_;
   ConnextPublisherListener * listener_;
-  DataWriter * topic_writer_;
+  DDS::DataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
   rmw_ret_t get_status(const DDS_StatusMask mask, void * event) override;
