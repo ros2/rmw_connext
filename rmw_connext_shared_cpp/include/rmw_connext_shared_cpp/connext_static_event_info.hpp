@@ -20,8 +20,6 @@
 #include "ndds/ndds_namespace_cpp.h"
 #include "rmw/ret_types.h"
 
-using namespace DDS;
-
 typedef struct ConnextCustomEventInfo
 {
   virtual rmw_ret_t get_status(const DDS_StatusMask mask, void * event) = 0;
@@ -33,10 +31,9 @@ typedef struct ConnextCustomEventInfo
     * @return to_return the corresponding rmw_ret_t that maps to the input DDS_ReturnCode_t. By
     * default RMW_RET_ERROR is returned if no corresponding rmw_ret_t is not defined.
     */
-  rmw_ret_t check_dds_ret_code(DDS_ReturnCode_t & dds_return_code) {
-
-    switch(dds_return_code) {
-
+  rmw_ret_t check_dds_ret_code(DDS_ReturnCode_t & dds_return_code)
+  {
+    switch (dds_return_code) {
       case DDS_RETCODE_OK:
         return RMW_RET_OK;
       case DDS_RETCODE_ERROR:

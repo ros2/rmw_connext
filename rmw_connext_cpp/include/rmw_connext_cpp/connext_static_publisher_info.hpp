@@ -46,7 +46,7 @@ struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
 };
 }  // extern "C"
 
-class ConnextPublisherListener : public PublisherListener
+class ConnextPublisherListener : public DDS::PublisherListener
 {
 public:
   virtual void on_publication_matched(
