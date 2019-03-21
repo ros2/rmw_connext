@@ -27,6 +27,7 @@
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 #include "rmw_connext_shared_cpp/visibility_control.h"
+#include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
 
 
 rmw_ret_t __gather_event_conditions(
@@ -38,7 +39,7 @@ rmw_ret_t __gather_event_conditions(
     for (size_t i = 0; i < events->event_count; ++i) {
       rmw_event_t * current_event = events->events[i];
       DDSEntity * dds_entity =
-        static_cast<DDSEntity *>(current_event->data);
+        static_cast<ConnextCustomEventInfo *>(current_event->data)->get_entity();
       if (!dds_entity) {
         RMW_SET_ERROR_MSG("Event handle is null");
         return RMW_RET_ERROR;
@@ -65,7 +66,7 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
     for (size_t i = 0; i < events->event_count; ++i) {
       rmw_event_t * current_event = events->events[i];
       DDSEntity * dds_entity =
-        static_cast<DDSEntity *>(current_event->data);
+        static_cast<ConnextCustomEventInfo *>(current_event->data)->get_entity();
       if (!dds_entity) {
         RMW_SET_ERROR_MSG("Event handle is null");
         return RMW_RET_ERROR;

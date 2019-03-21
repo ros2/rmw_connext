@@ -16,9 +16,26 @@
 #define RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
 
 #include "ndds_include.hpp"
+
 #include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
+
+
+rmw_event_t *
+__rmw_create_publisher_event(
+  const char * implementation_identifier,
+  const rmw_publisher_t * publisher,
+  const rmw_event_type_t /*event_type*/);
+
+
+rmw_event_t *
+__rmw_create_subscription_event(
+  const char * implementation_identifier,
+  const rmw_subscription_t * subscription,
+  const rmw_event_type_t /*event_type*/);
+
+
 /**
  * Take an event from the event handle.
  *
@@ -34,5 +51,12 @@ __rmw_take_event(
   const rmw_event_t * event_handle,
   void * event,
   bool * taken);
+
+
+rmw_ret_t
+__rmw_destroy_event(
+  const char * implementation_identifier,
+  rmw_event_t * event);
+
 
 #endif  // RMW_CONNEXT_SHARED_CPP__EVENT_HPP_

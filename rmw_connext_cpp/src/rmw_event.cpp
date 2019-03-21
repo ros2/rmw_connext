@@ -13,12 +13,32 @@
 // limitations under the License.
 
 #include "rmw/rmw.h"
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
-#include "rmw_fastrtps_shared_cpp/event.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
+
+#include "rmw_connext_shared_cpp/event.hpp"
+
+#include "rmw_connext_cpp/identifier.hpp"
+
 
 extern "C"
 {
+rmw_event_t *
+rmw_create_publisher_event(
+  const rmw_publisher_t * publisher,
+  const rmw_event_type_t event_type)
+{
+  return __rmw_create_publisher_event(rti_connext_identifier, publisher, event_type);
+}
+
+
+rmw_event_t *
+rmw_create_subscription_event(
+  const rmw_subscription_t * subscription,
+  const rmw_event_type_t event_type)
+{
+  return __rmw_create_subscription_event(rti_connext_identifier, subscription, event_type);
+}
+
+
 /*
  * Take an event from the event handle.
  *
@@ -34,10 +54,17 @@ rmw_take_event(
   void * event,
   bool * taken)
 {
-  return rmw_fastrtps_shared_cpp::__rmw_take_event(
+  return __rmw_take_event(
     rti_connext_identifier,
     event_handle,
     event,
     taken);
+}
+
+
+rmw_ret_t
+rmw_destroy_event(rmw_event_t * event)
+{
+  return __rmw_destroy_event(rti_connext_identifier, event);
 }
 }  // extern "C"
