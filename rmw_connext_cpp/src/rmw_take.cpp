@@ -22,7 +22,7 @@
 
 #include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
-#include "rmw_connext_cpp/connext_publisher_allocation.hpp"
+#include "rmw_connext_cpp/connext_subscription_allocation.hpp"
 
 // include patched generated code from the build folder
 #include "./connext_static_serialized_dataSupport.h"
@@ -106,13 +106,12 @@ take(
   if (!ignore_sample) {
     cdr_stream->buffer_length = dds_messages[0].serialized_data.length();
 
-     if (cdr_stream->buffer_capacity < cdr_stream->buffer_length) {
-         cdr_stream->allocator.deallocate(cdr_stream->buffer, cdr_stream->allocator.state);
-         cdr_stream->buffer = static_cast<uint8_t *>(cdr_stream->allocator.allocate(cdr_stream->buffer_length, cdr_stream->allocator.state));
-     }
-
-    //cdr_stream->buffer =
-    //  reinterpret_cast<uint8_t *>(malloc(cdr_stream->buffer_length * sizeof(uint8_t)));
+    if (cdr_stream->buffer_capacity < cdr_stream->buffer_length) {
+      cdr_stream->allocator.deallocate(cdr_stream->buffer, cdr_stream->allocator.state);
+      cdr_stream->buffer =
+        static_cast<uint8_t *>(cdr_stream->allocator.allocate(cdr_stream->buffer_length,
+        cdr_stream->allocator.state));
+    }
 
     if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
       RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than max unsiged int value");
@@ -127,7 +126,6 @@ take(
   } else {
     *taken = false;
   }
-
   data_reader->return_loan(dds_messages, sample_infos);
 
   return status == DDS::RETCODE_OK;
@@ -183,15 +181,14 @@ _take(
   rcutils_uint8_array_t cdr_stream;
   void * dds_message = nullptr;
 
-  if(allocation){
-    connext_subscription_allocation_t * __connext_alloc = static_cast<connext_subscription_allocation_t * >(allocation->data);
+  if (allocation) {
+    connext_subscription_allocation_t * __connext_alloc =
+      static_cast<connext_subscription_allocation_t *>(allocation->data);
     cdr_stream = __connext_alloc->cdr_stream;
     dds_message = __connext_alloc->dds_message;
-  }
-  else
-  {
-   cdr_stream  = rcutils_get_zero_initialized_uint8_array();
-   cdr_stream.allocator = rcutils_get_default_allocator();
+  } else {
+    cdr_stream = rcutils_get_zero_initialized_uint8_array();
+    cdr_stream.allocator = rcutils_get_default_allocator();
   }
 
   if (!take(
@@ -210,17 +207,16 @@ _take(
   }
 
 fail:
-  if(!allocation)
-  {
+  if (!allocation) {
     cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
   }
   return ret;
-
-
 }
 
 rmw_ret_t
-rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken,
+rmw_take(
+  const rmw_subscription_t * subscription,
+  void * ros_message, bool * taken,
   rmw_subscription_allocation_t * allocation)
 {
   return _take(subscription, ros_message, taken, nullptr, allocation);

@@ -26,7 +26,9 @@
 #include "connext_static_serialized_dataSupport.h"
 
 bool
-publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_stream,
+publish(
+  DDS::DataWriter * dds_data_writer,
+  const rcutils_uint8_array_t * cdr_stream,
   rmw_publisher_allocation_t * allocation)
 {
   ConnextStaticSerializedDataDataWriter * data_writer =
@@ -37,15 +39,12 @@ publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_str
   }
 
   DDS::ReturnCode_t status = DDS::RETCODE_ERROR;
-
- ConnextStaticSerializedData * instance;
-  if(NULL != allocation)
-  {
-      connext_publisher_allocation_t * __connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
-      instance = __connext_alloc->instance;
-  }
-  else
-  {
+  ConnextStaticSerializedData * instance;
+  if (NULL != allocation) {
+    connext_publisher_allocation_t * __connext_alloc =
+      static_cast<connext_publisher_allocation_t *>(allocation->data);
+    instance = __connext_alloc->instance;
+  } else {
     instance = ConnextStaticSerializedDataTypeSupport::create_data();
     if (!instance) {
       RMW_SET_ERROR_MSG("failed to create dds message instance");
@@ -65,34 +64,28 @@ publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_str
       RMW_SET_ERROR_MSG("failed to loan memory for message");
       goto cleanup;
     }
-
   }
-
-
   status = data_writer->write(*instance, DDS::HANDLE_NIL);   //SF
 
 cleanup:
-if(NULL == allocation)
-{
-
-  if (instance) {
-    if (!instance->serialized_data.unloan()) {
-      fprintf(stderr, "failed to return loaned memory\n");
-      status = DDS::RETCODE_ERROR;
-    }
-
+  if (NULL == allocation) {
+    if (instance) {
+      if (!instance->serialized_data.unloan()) {
+        fprintf(stderr, "failed to return loaned memory\n");
+        status = DDS::RETCODE_ERROR;
+      }
       ConnextStaticSerializedDataTypeSupport::delete_data(instance);
     }
-
- }
-
+  }
   return status == DDS::RETCODE_OK;
 }
 
 extern "C"
 {
 rmw_ret_t
-rmw_publish(const rmw_publisher_t * publisher, const void * ros_message,
+rmw_publish(
+  const rmw_publisher_t * publisher,
+  const void * ros_message,
   rmw_publisher_allocation_t * allocation)
 {
   if (!publisher) {
@@ -128,14 +121,13 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message,
   auto ret = RMW_RET_OK;
   rcutils_uint8_array_t cdr_stream;
 
-  if(allocation){
-    connext_publisher_allocation_t * __connext_alloc = static_cast<connext_publisher_allocation_t * >(allocation->data);
+  if (allocation) {
+    connext_publisher_allocation_t * __connext_alloc =
+      static_cast<connext_publisher_allocation_t *>(allocation->data);
     cdr_stream = __connext_alloc->cdr_stream;     //SF
-  }
-  else
-  {
-   cdr_stream  = rcutils_get_zero_initialized_uint8_array();
-   cdr_stream.allocator = rcutils_get_default_allocator();
+  } else {
+    cdr_stream = rcutils_get_zero_initialized_uint8_array();
+    cdr_stream.allocator = rcutils_get_default_allocator();
   }
 
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
@@ -160,8 +152,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message,
   }
 
 fail:
-  if(NULL == allocation)
-  {
+  if (NULL == allocation) {
     cdr_stream.allocator.deallocate(cdr_stream.buffer, cdr_stream.allocator.state);
   }
   return ret;

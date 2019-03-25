@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_CPP__CONNEXT_PUBLISHER_ALLOCATION_HPP_
-#define RMW_CONNEXT_CPP__CONNEXT_PUBLISHER_ALLOCATION_HPP_
+#ifndef RMW_CONNEXT_CPP__CONNEXT_SUBSCRIPTION_ALLOCATION_HPP_
+#define RMW_CONNEXT_CPP__CONNEXT_SUBSCRIPTION_ALLOCATION_HPP_
 
 #include "connext_static_serialized_dataSupport.h"
 
@@ -22,14 +22,15 @@ extern "C"
 {
 #endif
 
-typedef struct connext_publisher_allocation_t
+typedef struct connext_subscription_allocation_t
 {
   rcutils_uint8_array_t cdr_stream;
-  ConnextStaticSerializedData * instance;
-} connext_publisher_allocation_t;
+  void * dds_message;
+  const rosidl_message_type_support_t * type_supports;
+} connext_subscription_allocation_t;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  // RMW_CONNEXT_CPP__CONNEXT_PUBLISHER_ALLOCATION_HPP_
+#endif  // RMW_CONNEXT_CPP__CONNEXT_SUBSCRIPTION_ALLOCATION_HPP_
