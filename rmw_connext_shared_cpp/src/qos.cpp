@@ -79,13 +79,12 @@ set_entity_qos_from_profile_generic(
     case RMW_QOS_POLICY_LIVELINESS_AUTOMATIC:
       entity_qos.liveliness.kind = DDS::AUTOMATIC_LIVELINESS_QOS;
       break;
-    // TODO(eknapp) re-enable once this feature is supported
-    // case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_PARTICIPANT:
-    //   entity_qos.liveliness.kind = DDS::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS;
-    //   break;
-    // case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC:
-    //   entity_qos.liveliness.kind = DDS::MANUAL_BY_TOPIC_LIVELINESS_QOS;
-    //   break;
+    case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE:
+      entity_qos.liveliness.kind = DDS::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS;
+      break;
+    case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC:
+      entity_qos.liveliness.kind = DDS::MANUAL_BY_TOPIC_LIVELINESS_QOS;
+      break;
     case RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT:
       break;
     default:
