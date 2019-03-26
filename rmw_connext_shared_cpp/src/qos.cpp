@@ -69,6 +69,7 @@ set_entity_qos_from_profile_generic(
     entity_qos.history.depth = static_cast<DDS::Long>(qos_profile.depth);
   }
 
+  // DDS_DeadlineQosPolicy has default value of DDS_DURATION_INFINITE, don't touch it for 0
   if (qos_profile.deadline.sec != 0 || qos_profile.deadline.nsec != 0) {
     entity_qos.deadline.period.sec = qos_profile.deadline.sec;
     entity_qos.deadline.period.nanosec = qos_profile.deadline.nsec;
@@ -78,12 +79,13 @@ set_entity_qos_from_profile_generic(
     case RMW_QOS_POLICY_LIVELINESS_AUTOMATIC:
       entity_qos.liveliness.kind = DDS::AUTOMATIC_LIVELINESS_QOS;
       break;
-    case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_PARTICIPANT:
-      entity_qos.liveliness.kind = DDS::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS;
-      break;
-    case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC:
-      entity_qos.liveliness.kind = DDS::MANUAL_BY_TOPIC_LIVELINESS_QOS;
-      break;
+    // TODO(eknapp) re-enable once this feature is supported
+    // case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_PARTICIPANT:
+    //   entity_qos.liveliness.kind = DDS::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS;
+    //   break;
+    // case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC:
+    //   entity_qos.liveliness.kind = DDS::MANUAL_BY_TOPIC_LIVELINESS_QOS;
+    //   break;
     case RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT:
       break;
     default:
