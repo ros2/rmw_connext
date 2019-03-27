@@ -50,10 +50,15 @@ rmw_ret_t __gather_event_conditions(
         return RMW_RET_ERROR;
       }
 
-      DDS_StatusMask new_mask = status_condition->get_enabled_statuses() |
-        get_mask_from_rmw(current_event->event_type);
-      status_condition->set_enabled_statuses(new_mask);
-      status_conditions.insert(status_condition);
+      if(is_event_supported(current_event->event_type)) {
+        DDS_StatusMask new_mask = status_condition->get_enabled_statuses() |
+                                  get_mask_from_rmw(current_event->event_type);
+        status_condition->set_enabled_statuses(new_mask);
+        status_conditions.insert(status_condition);
+      } else {
+        // todo how to log that this event is unsupported?
+        // don't return here as there could be other status conditions
+      }
     }
   }
   return RMW_RET_OK;
@@ -83,6 +88,7 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
       bool is_active = false;
       if (status_condition->get_trigger_value()) {
         is_active = static_cast<bool>(dds_entity->get_status_changes() &
+          is_event_supported(current_event->event_type) & //TODO should we return unsupported? how to indicate unless simply logging?
           get_mask_from_rmw(current_event->event_type));
       }
       // if status condition is not found in the active set

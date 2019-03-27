@@ -86,10 +86,10 @@ __rmw_take_event(
     implementation_identifier,
     return RMW_RET_ERROR);
 
-  rmw_ret_t ret_code = RMW_RET_EVENT_UNSUPPORTED;
+  rmw_ret_t ret_code = RMW_RET_UNSUPPORTED;
 
   // check if we support the input event type
-  if (is_event_supported(event_handle->event_type)) {
+  if (is_event_supported(event_handle->event_type)) { //todo is this necessary?
     // lookup status mask from rmw_event_type
     DDS_StatusMask status_mask = get_mask_from_rmw(event_handle->event_type);
 

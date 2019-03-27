@@ -20,8 +20,17 @@
 #include "ndds/ndds_namespace_cpp.h"
 #include "rmw/ret_types.h"
 
+/**
+ *
+ */
 typedef struct ConnextCustomEventInfo
 {
+  /**
+   * Return the corresponding RMW status given the input DDS_StatusMask and its corresponding event.
+   * @param mask input DDS_StatusMask
+   * @param event
+   * @return
+   */
   virtual rmw_ret_t get_status(const DDS_StatusMask mask, void * event) = 0;
   virtual DDSEntity* get_entity() = 0;
   /**
@@ -37,27 +46,8 @@ typedef struct ConnextCustomEventInfo
         return RMW_RET_OK;
       case DDS_RETCODE_ERROR:
         return RMW_RET_ERROR;
-      case DDS_RETCODE_UNSUPPORTED:
-        return RMW_RET_EVENT_UNSUPPORTED;
-      case DDS_RETCODE_BAD_PARAMETER:
-        return RMW_RET_INVALID_ARGUMENT;
-      case DDS_RETCODE_PRECONDITION_NOT_MET:
-        return RMW_RETCODE_PRECONDITION_NOT_MET;
-      case DDS_RETCODE_OUT_OF_RESOURCES:
-        return RMW_RET_OUT_OF_RESOURCES;
-      case DDS_RETCODE_NOT_ENABLED:
-        return RMW_RET_NOT_ENABLED;
-      case DDS_RETCODE_IMMUTABLE_POLICY:
-        return RMW_RET_IMMUTABLE_POLICY;
-      case DDS_RETCODE_INCONSISTENT_POLICY:
-        return RMW_RET_INCONSISTENT_POLICY;
       case DDS_RETCODE_TIMEOUT:
         return RMW_RET_TIMEOUT;
-      case DDS_RETCODE_NO_DATA:
-        return RMW_RET_NO_DATA;
-      // The following codes are currently not handled:
-      // case DDS_RETCODE_ALREADY_DELETED:
-      // case DDS_RETCODE_ILLEGAL_OPERATION:
       default:
         return RMW_RET_ERROR;
     }

@@ -84,7 +84,8 @@ inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mas
           return from_dds;
         }
 
-        rmw_liveliness_lost_t * rmw_liveliness_lost = static_cast<rmw_liveliness_lost_t *>(event);
+        rmw_liveliness_lost_status_t * rmw_liveliness_lost =
+          static_cast<rmw_liveliness_lost_status_t *>(event);
         rmw_liveliness_lost->total_count = liveliness_lost.total_count;
         rmw_liveliness_lost->total_count_change = liveliness_lost.total_count_change;
 
@@ -100,54 +101,16 @@ inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mas
           return from_dds;
         }
 
-        rmw_offered_deadline_missed_t * rmw_offered_deadline_missed =
-          static_cast<rmw_offered_deadline_missed_t *>(event);
+        rmw_offered_deadline_missed_status_t * rmw_offered_deadline_missed =
+          static_cast<rmw_offered_deadline_missed_status_t *>(event);
         rmw_offered_deadline_missed->total_count = offered_deadline_missed.total_count;
         rmw_offered_deadline_missed->total_count_change =
           offered_deadline_missed.total_count_change;
 
         break;
       }
-    case DDS_StatusKind::DDS_OFFERED_INCOMPATIBLE_QOS_STATUS: {
-        DDS_OfferedIncompatibleQosStatus offered_incompatible_status;
-        DDS_ReturnCode_t dds_return_code = topic_writer_
-          ->get_offered_incompatible_qos_status(offered_incompatible_status);
-
-        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
-        if (from_dds != RMW_RET_OK) {
-          return from_dds;
-        }
-
-        rmw_offered_incompatible_qos_t * rmw_offered_incompatible_qos =
-          static_cast<rmw_offered_incompatible_qos_t *>(event);
-        rmw_offered_incompatible_qos->total_count = offered_incompatible_status.total_count;
-        rmw_offered_incompatible_qos->total_count_change =
-          offered_incompatible_status.total_count_change;
-
-        break;
-      }
-    case DDS_StatusKind::DDS_PUBLICATION_MATCHED_STATUS: {
-        DDS_PublicationMatchedStatus publication_matched_status;
-        DDS_ReturnCode_t dds_return_code = topic_writer_
-          ->get_publication_matched_status(publication_matched_status);
-
-        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
-        if (from_dds != RMW_RET_OK) {
-          return from_dds;
-        }
-
-        rmw_publication_matched_t * rmw_publication_matched =
-          static_cast<rmw_publication_matched_t *>(event);
-        rmw_publication_matched->total_count = publication_matched_status.total_count;
-        rmw_publication_matched->total_count_change = publication_matched_status.total_count_change;
-        rmw_publication_matched->current_count = publication_matched_status.current_count;
-        rmw_publication_matched->current_count_change =
-          publication_matched_status.current_count_change;
-
-        break;
-      }
     default:
-      return RMW_RET_EVENT_UNSUPPORTED;
+      return RMW_RET_UNSUPPORTED;
   }
   return RMW_RET_OK;
 }
