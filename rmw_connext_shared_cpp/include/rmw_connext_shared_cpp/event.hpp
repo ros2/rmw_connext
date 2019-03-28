@@ -18,28 +18,30 @@
 #include "ndds_include.hpp"
 
 #include "rmw/types.h"
+#include "rmw/event.h"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
 
-rmw_event_t *
-__rmw_create_publisher_event(
+rmw_ret_t
+__rmw_publisher_event_init(
   const char * implementation_identifier,
+  rmw_event_t * event,
   const rmw_publisher_t * publisher,
-  const rmw_event_type_t /*event_type*/);
+  const rmw_event_type_t event_type);
 
-
-rmw_event_t *
-__rmw_create_subscription_event(
+rmw_ret_t
+__rmw_subscription_event_init(
   const char * implementation_identifier,
+  rmw_event_t * event,
   const rmw_subscription_t * subscription,
-  const rmw_event_type_t /*event_type*/);
+  const rmw_event_type_t event_type);
 
-
-/**
+/*
  * Take an event from the event handle.
  *
- * \param event subscription object to take from
+ * \param event_handle event object to take from
+ * \param event_info event info object to write taken data into
  * \param taken boolean flag indicating if an event was taken or not
  * \return `RMW_RET_OK` if successful, or
  * \return `RMW_RET_BAD_ALLOC` if memory allocation failed, or
@@ -49,12 +51,11 @@ rmw_ret_t
 __rmw_take_event(
   const char * implementation_identifier,
   const rmw_event_t * event_handle,
-  void * event,
+  void * event_info,
   bool * taken);
 
-
 rmw_ret_t
-__rmw_destroy_event(
+__rmw_event_fini(
   const char * implementation_identifier,
   rmw_event_t * event);
 

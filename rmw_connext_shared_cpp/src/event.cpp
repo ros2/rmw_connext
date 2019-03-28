@@ -22,64 +22,67 @@
 #include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
 
 
-rmw_event_t *
-__rmw_create_publisher_event(
+rmw_ret_t
+__rmw_publisher_event_init(
   const char * implementation_identifier,
+  rmw_event_t * rmw_event,
   const rmw_publisher_t * publisher,
   const rmw_event_type_t event_type)
 {
-  if (publisher->implementation_identifier != implementation_identifier) {
-    RMW_SET_ERROR_MSG("client handle not from this implementation");
-    return nullptr;
-  }
-
-  rmw_event_t * rmw_event = rmw_event_allocate();
-  if (nullptr == rmw_event) {
-    RMW_SET_ERROR_MSG("failed to allocate subscription");
-    return nullptr;
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher,
+    publisher->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(rmw_event, RMW_RET_INVALID_ARGUMENT);
+  if (nullptr != rmw_event->implementation_identifier) {
+    RMW_SET_ERROR_MSG("expected zero-initialized event");
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   rmw_event->implementation_identifier = publisher->implementation_identifier;
   rmw_event->data = static_cast<ConnextCustomEventInfo *>(publisher->data);
   rmw_event->event_type = event_type;
 
-  return rmw_event;
+  return RMW_RET_OK;
 }
 
-
-rmw_event_t *
-__rmw_create_subscription_event(
+rmw_ret_t
+__rmw_subscription_event_init(
   const char * implementation_identifier,
+  rmw_event_t * rmw_event,
   const rmw_subscription_t * subscription,
   const rmw_event_type_t event_type)
 {
-  if (subscription->implementation_identifier != implementation_identifier) {
-    RMW_SET_ERROR_MSG("client handle not from this implementation");
-    return nullptr;
-  }
-
-  rmw_event_t * rmw_event = rmw_event_allocate();
-  if (nullptr == rmw_event) {
-    RMW_SET_ERROR_MSG("failed to allocate subscription");
-    return nullptr;
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription,
+    subscription->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(rmw_event, RMW_RET_INVALID_ARGUMENT);
+  if (nullptr != rmw_event->implementation_identifier) {
+    RMW_SET_ERROR_MSG("expected zero-initialized event");
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   rmw_event->implementation_identifier = subscription->implementation_identifier;
   rmw_event->data = static_cast<ConnextCustomEventInfo *>(subscription->data);
   rmw_event->event_type = event_type;
 
-  return rmw_event;
+  return RMW_RET_OK;
 }
-
 
 rmw_ret_t
 __rmw_take_event(
   const char * implementation_identifier,
   const rmw_event_t * event_handle,
-  void * event,
+  void * event_info,
   bool * taken)
 {
   // pointer error checking here
+  RMW_CHECK_ARGUMENT_FOR_NULL(event_handle, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     event handle,
     event_handle->implementation_identifier,
@@ -101,7 +104,7 @@ __rmw_take_event(
 
     // call get status with the appropriate mask
     // get_status should fill the event with the appropriate status information
-    ret_code = custom_event_info->get_status(status_mask, event);
+    ret_code = custom_event_info->get_status(status_mask, event_info);
   }
 
   // if ret_code is not okay, return error and set taken to false.
@@ -110,16 +113,18 @@ __rmw_take_event(
 }
 
 rmw_ret_t
-__rmw_destroy_event(
+__rmw_event_fini(
   const char * implementation_identifier,
   rmw_event_t * event)
 {
-  if (event->implementation_identifier != implementation_identifier) {
-    RMW_SET_ERROR_MSG("event handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(event, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    event,
+    event->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  rmw_event_free(event);
+  *event = rmw_get_zero_initialized_event();
 
   return RMW_RET_OK;
 }

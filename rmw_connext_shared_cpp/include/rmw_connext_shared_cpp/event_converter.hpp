@@ -16,7 +16,7 @@
 #define RMW_CONNEXT_SHARED_CPP__EVENT_CONVERTER_HPP_
 
 #include "ndds/ndds_cpp.h"
-#include "rmw/types.h"
+#include "rmw/event.h"
 
 DDS_StatusMask get_mask_from_rmw(const rmw_event_type_t & event_t);
 

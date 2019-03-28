@@ -21,28 +21,29 @@
 
 extern "C"
 {
-rmw_event_t *
-rmw_create_publisher_event(
+rmw_ret_t
+rmw_publisher_event_init(
+  rmw_event_t * event,
   const rmw_publisher_t * publisher,
   const rmw_event_type_t event_type)
 {
-  return __rmw_create_publisher_event(rti_connext_identifier, publisher, event_type);
+  return __rmw_publisher_event_init(rti_connext_identifier, event, publisher, event_type);
 }
 
-
-rmw_event_t *
-rmw_create_subscription_event(
+rmw_ret_t
+rmw_subscription_event_init(
+  rmw_event_t * event,
   const rmw_subscription_t * subscription,
   const rmw_event_type_t event_type)
 {
-  return __rmw_create_subscription_event(rti_connext_identifier, subscription, event_type);
+  return __rmw_subscription_event_init(rti_connext_identifier, event, subscription, event_type);
 }
-
 
 /*
  * Take an event from the event handle.
  *
- * \param event subscription object to take from
+ * \param event_handle event object to take from
+ * \param event_info event info object to write taken data into
  * \param taken boolean flag indicating if an event was taken or not
  * \return `RMW_RET_OK` if successful, or
  * \return `RMW_RET_BAD_ALLOC` if memory allocation failed, or
@@ -51,20 +52,19 @@ rmw_create_subscription_event(
 rmw_ret_t
 rmw_take_event(
   const rmw_event_t * event_handle,
-  void * event,
+  void * event_info,
   bool * taken)
 {
   return __rmw_take_event(
     rti_connext_identifier,
     event_handle,
-    event,
+    event_info,
     taken);
 }
 
-
 rmw_ret_t
-rmw_destroy_event(rmw_event_t * event)
+rmw_event_fini(rmw_event_t * event)
 {
-  return __rmw_destroy_event(rti_connext_identifier, event);
+  return __rmw_event_fini(rti_connext_identifier, event);
 }
 }  // extern "C"

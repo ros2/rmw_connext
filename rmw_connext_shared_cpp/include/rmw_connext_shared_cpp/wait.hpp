@@ -37,9 +37,9 @@ rmw_ret_t __gather_event_conditions(
   if (events) {
     // gather all status conditions and masks
     for (size_t i = 0; i < events->event_count; ++i) {
-      rmw_event_t * current_event = events->events[i];
-      DDSEntity * dds_entity =
-        static_cast<ConnextCustomEventInfo *>(current_event->data)->get_entity();
+      rmw_event_t * current_event = static_cast<rmw_event_t *>(events->events[i]);
+      DDSEntity * dds_entity = static_cast<ConnextCustomEventInfo *>(
+        current_event->data)->get_entity();
       if (!dds_entity) {
         RMW_SET_ERROR_MSG("Event handle is null");
         return RMW_RET_ERROR;
@@ -69,9 +69,9 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
   // enable a status condition for each event
   if (events) {
     for (size_t i = 0; i < events->event_count; ++i) {
-      rmw_event_t * current_event = events->events[i];
-      DDSEntity * dds_entity =
-        static_cast<ConnextCustomEventInfo *>(current_event->data)->get_entity();
+      rmw_event_t * current_event = static_cast<rmw_event_t *>(events->events[i]);
+      DDSEntity * dds_entity = static_cast<ConnextCustomEventInfo *>(
+        current_event->data)->get_entity();
       if (!dds_entity) {
         RMW_SET_ERROR_MSG("Event handle is null");
         return RMW_RET_ERROR;
