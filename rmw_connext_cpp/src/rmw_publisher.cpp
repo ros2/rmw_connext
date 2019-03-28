@@ -358,8 +358,8 @@ rmw_publisher_get_actual_qos(
   }
   DDS::DataWriterQos dds_qos;
   DDS::ReturnCode_t status = data_writer->get_qos(dds_qos);
-  if (status != DDS::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("publisher internal can't get data writer qos policies");
+  if (DDS::RETCODE_OK != status) {
+    RMW_SET_ERROR_MSG("publisher can't get data writer qos policies");
     return RMW_RET_ERROR;
   }
 
