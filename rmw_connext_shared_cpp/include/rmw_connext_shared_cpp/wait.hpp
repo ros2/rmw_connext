@@ -51,9 +51,10 @@ rmw_ret_t __gather_event_conditions(
       }
 
       if(is_event_supported(current_event->event_type)) {
-        DDS_StatusMask new_mask = status_condition->get_enabled_statuses() |
-                                  get_mask_from_rmw(current_event->event_type);
-        status_condition->set_enabled_statuses(new_mask);
+        // set the status condition's mask with the supported type
+        DDS_StatusMask new_status_mask = status_condition->get_enabled_statuses() |
+                                  get_status_kind_from_rmw(current_event->event_type);
+        status_condition->set_enabled_statuses(new_status_mask);
         status_conditions.insert(status_condition);
       } else {
         // todo how to log that this event is unsupported?
@@ -76,21 +77,13 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
         RMW_SET_ERROR_MSG("Event handle is null");
         return RMW_RET_ERROR;
       }
-      DDS::StatusCondition * status_condition = dds_entity->get_statuscondition();
-      if (!status_condition) {
-        RMW_SET_ERROR_MSG("status condition handle is null");
-        return RMW_RET_ERROR;
-      }
-      // faster to just check if this entity's status condition is triggered
-      // @todo: ross_desmond change all handlers not to search
-      // but to check if they have been triggered
-      // large performance increase when RPC types increase in size
-      bool is_active = false;
-      if (status_condition->get_trigger_value()) {
-        is_active = static_cast<bool>(dds_entity->get_status_changes() &
-          is_event_supported(current_event->event_type) & //TODO should we return unsupported? how to indicate unless simply logging?
-          get_mask_from_rmw(current_event->event_type));
-      }
+
+      DDS_StatusMask status_mask = dds_entity->get_status_changes();
+
+      bool is_active = static_cast<bool>(status_mask &
+        is_event_supported(current_event->event_type) & //TODO should we return unsupported? how to indicate unless simply logging?
+        get_status_kind_from_rmw(current_event->event_type));
+
       // if status condition is not found in the active set
       // reset the subscriber handle
       if (!is_active) {

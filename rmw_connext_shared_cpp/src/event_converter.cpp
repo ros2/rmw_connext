@@ -16,20 +16,30 @@
 
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 
-/// mapping of RMW_EVENT to the corresponding DDS Event
-static const std::unordered_map<rmw_event_type_t, DDS_StatusMask> mask_map{
+/// mapping of RMW_EVENT to the corresponding DDS_StatusKind
+static const std::unordered_map<rmw_event_type_t, DDS_StatusKind> mask_map{
   {RMW_EVENT_LIVELINESS_CHANGED, DDS_LIVELINESS_CHANGED_STATUS},
   {RMW_EVENT_REQUESTED_DEADLINE_MISSED, DDS_REQUESTED_DEADLINE_MISSED_STATUS},
   {RMW_EVENT_LIVELINESS_LOST, DDS_LIVELINESS_LOST_STATUS},
   {RMW_EVENT_OFFERED_DEADLINE_MISSED, DDS_OFFERED_DEADLINE_MISSED_STATUS},
 };
 
-DDS_StatusMask get_mask_from_rmw(const rmw_event_type_t & event_t)
+/**
+ * Return the corresponding DDS_StatusKind to the input RMW_EVENT
+ * @param event_t
+ * @return
+ */
+DDS_StatusKind get_status_kind_from_rmw(const rmw_event_type_t & event_t)
 {
-
   return mask_map.at(event_t);
 }
 
+/**
+ * Return true if the input RMW event has a corresponding DDS_StatusKind.
+ *
+ * @param event_t input rmw event to check
+ * @return true if there is an RMW to DDS_StatusKind mapping, false otherwise
+ */
 bool is_event_supported(const rmw_event_type_t & event_t)
 {
   return mask_map.count(event_t) > 0;

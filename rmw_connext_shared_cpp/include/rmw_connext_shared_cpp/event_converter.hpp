@@ -18,7 +18,7 @@
 #include "ndds/ndds_cpp.h"
 #include "rmw/event.h"
 
-DDS_StatusMask get_mask_from_rmw(const rmw_event_type_t & event_t);
+DDS_StatusKind get_status_kind_from_rmw(const rmw_event_type_t & event_t);
 
 bool is_event_supported(const rmw_event_type_t & event_t);
 

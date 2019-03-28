@@ -92,9 +92,9 @@ __rmw_take_event(
   rmw_ret_t ret_code = RMW_RET_UNSUPPORTED;
 
   // check if we support the input event type
-  if (is_event_supported(event_handle->event_type)) { //todo is this necessary?
+  if (is_event_supported(event_handle->event_type)) {
     // lookup status mask from rmw_event_type
-    DDS_StatusMask status_mask = get_mask_from_rmw(event_handle->event_type);
+    DDS_StatusKind new_status_kind = get_status_kind_from_rmw(event_handle->event_type);
 
     // cast the event_handle to the appropriate type to get the appropriate
     // status from the handle
@@ -104,7 +104,7 @@ __rmw_take_event(
 
     // call get status with the appropriate mask
     // get_status should fill the event with the appropriate status information
-    ret_code = custom_event_info->get_status(status_mask, event_info);
+    ret_code = custom_event_info->get_status(new_status_kind, event_info);
   }
 
   // if ret_code is not okay, return error and set taken to false.
