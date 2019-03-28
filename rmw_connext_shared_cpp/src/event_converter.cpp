@@ -29,7 +29,7 @@ static const std::unordered_map<rmw_event_type_t, DDS_StatusKind> mask_map{
  * @param event_t
  * @return
  */
-DDS_StatusKind get_status_kind_from_rmw(const rmw_event_type_t & event_t)
+DDS_StatusMask get_status_kind_from_rmw(const rmw_event_type_t & event_t)
 {
   return mask_map.at(event_t);
 }

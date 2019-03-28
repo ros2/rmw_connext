@@ -53,7 +53,7 @@ rmw_ret_t __gather_event_conditions(
       if(is_event_supported(current_event->event_type)) {
         // set the status condition's mask with the supported type
         DDS_StatusMask new_status_mask = status_condition->get_enabled_statuses() |
-                                  get_status_kind_from_rmw(current_event->event_type);
+                                  get_status_mask_from_rmw(current_event->event_type);
         status_condition->set_enabled_statuses(new_status_mask);
         status_conditions.insert(status_condition);
       } else {
@@ -79,11 +79,12 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
       }
 
       DDS_StatusMask status_mask = dds_entity->get_status_changes();
+      bool is_active = false;
 
-      bool is_active = static_cast<bool>(status_mask &
-        is_event_supported(current_event->event_type) & //TODO should we return unsupported? how to indicate unless simply logging?
-        get_status_kind_from_rmw(current_event->event_type));
-
+      if(is_event_supported(current_event->event_type)) {
+        is_active = static_cast<bool>(status_mask &
+          get_status_mask_from_rmw(current_event->event_type));
+      }
       // if status condition is not found in the active set
       // reset the subscriber handle
       if (!is_active) {
