@@ -21,24 +21,6 @@
 
 extern "C"
 {
-rmw_ret_t
-rmw_publisher_event_init(
-  rmw_event_t * event,
-  const rmw_publisher_t * publisher,
-  const rmw_event_type_t event_type)
-{
-  return __rmw_publisher_event_init(rti_connext_identifier, event, publisher, event_type);
-}
-
-rmw_ret_t
-rmw_subscription_event_init(
-  rmw_event_t * event,
-  const rmw_subscription_t * subscription,
-  const rmw_event_type_t event_type)
-{
-  return __rmw_subscription_event_init(rti_connext_identifier, event, subscription, event_type);
-}
-
 /*
  * Take an event from the event handle.
  *
@@ -60,11 +42,5 @@ rmw_take_event(
     event_handle,
     event_info,
     taken);
-}
-
-rmw_ret_t
-rmw_event_fini(rmw_event_t * event)
-{
-  return __rmw_event_fini(rti_connext_identifier, event);
 }
 }  // extern "C"

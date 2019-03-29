@@ -23,20 +23,6 @@
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
 
-rmw_ret_t
-__rmw_publisher_event_init(
-  const char * implementation_identifier,
-  rmw_event_t * event,
-  const rmw_publisher_t * publisher,
-  const rmw_event_type_t event_type);
-
-rmw_ret_t
-__rmw_subscription_event_init(
-  const char * implementation_identifier,
-  rmw_event_t * event,
-  const rmw_subscription_t * subscription,
-  const rmw_event_type_t event_type);
-
 /*
  * Take an event from the event handle.
  *
@@ -53,11 +39,5 @@ __rmw_take_event(
   const rmw_event_t * event_handle,
   void * event_info,
   bool * taken);
-
-rmw_ret_t
-__rmw_event_fini(
-  const char * implementation_identifier,
-  rmw_event_t * event);
-
 
 #endif  // RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
