@@ -114,9 +114,10 @@ inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mas
   }
   return RMW_RET_OK;
 }
+
 inline DDSEntity * ConnextStaticPublisherInfo::get_entity()
 {
-  return dds_publisher_;
+  return topic_writer_;
 }
 
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_

@@ -125,7 +125,7 @@ inline rmw_ret_t ConnextStaticSubscriberInfo::get_status(
 
 inline DDSEntity * ConnextStaticSubscriberInfo::get_entity()
 {
-  return dds_subscriber_;
+  return topic_reader_;
 }
 
 
