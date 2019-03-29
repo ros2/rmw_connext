@@ -20,6 +20,7 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 #include "rmw_connext_cpp/connext_publisher_allocation.hpp"
+#include "rmw_connext_cpp/connext_subscription_allocation.hpp"
 
 #include "type_support_common.hpp"
 #include "connext_static_serialized_dataSupport.h"
