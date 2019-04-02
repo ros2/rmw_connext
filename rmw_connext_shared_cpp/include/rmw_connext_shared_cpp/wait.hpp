@@ -34,34 +34,36 @@ rmw_ret_t __gather_event_conditions(
   rmw_events_t * events,
   std::unordered_set<DDS::StatusCondition *> & status_conditions)
 {
-  if (events) {
-    // gather all status conditions and masks
-    for (size_t i = 0; i < events->event_count; ++i) {
-      rmw_event_t * current_event = static_cast<rmw_event_t *>(events->events[i]);
-      DDSEntity * dds_entity = static_cast<ConnextCustomEventInfo *>(
-        current_event->data)->get_entity();
-      if (!dds_entity) {
-        RMW_SET_ERROR_MSG("Event handle is null");
-        return RMW_RET_ERROR;
-      }
-      DDS::StatusCondition * status_condition = dds_entity->get_statuscondition();
-      if (!status_condition) {
-        RMW_SET_ERROR_MSG("status condition handle is null");
-        return RMW_RET_ERROR;
-      }
 
-      if(is_event_supported(current_event->event_type)) {
-        // set the status condition's mask with the supported type
-        DDS_StatusMask new_status_mask = status_condition->get_enabled_statuses() |
-                                  get_status_mask_from_rmw(current_event->event_type);
-        status_condition->set_enabled_statuses(new_status_mask);
-        status_conditions.insert(status_condition);
-      } else {
-        // todo how to log that this event is unsupported?
-        // don't return here as there could be other status conditions
-      }
+  if (!events) {
+    RMW_SET_ERROR_MSG("events is null");
+    return RMW_RET_ERROR;
+  }
+
+  // gather all status conditions and masks
+  for (size_t i = 0; i < events->event_count; ++i) {
+    rmw_event_t * current_event = static_cast<rmw_event_t *>(events->events[i]);
+    DDSEntity * dds_entity = static_cast<ConnextCustomEventInfo *>(
+      current_event->data)->get_entity();
+    if (!dds_entity) {
+      RMW_SET_ERROR_MSG("Event handle is null");
+      return RMW_RET_ERROR;
+    }
+    DDS::StatusCondition * status_condition = dds_entity->get_statuscondition();
+    if (!status_condition) {
+      RMW_SET_ERROR_MSG("status condition handle is null");
+      return RMW_RET_ERROR;
+    }
+
+    if(is_event_supported(current_event->event_type)) {
+      // set the status condition's mask with the supported type
+      DDS_StatusMask new_status_mask = status_condition->get_enabled_statuses() |
+                                get_status_mask_from_rmw(current_event->event_type);
+      status_condition->set_enabled_statuses(new_status_mask);
+      status_conditions.insert(status_condition);
     }
   }
+
   return RMW_RET_OK;
 }
 
@@ -88,7 +90,7 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
       // if status condition is not found in the active set
       // reset the subscriber handle
       if (!is_active) {
-        events->events[i] = 0;
+        events->events[i] = nullptr;
       }
     }
   }
@@ -99,11 +101,14 @@ rmw_ret_t __detach_condition(
   DDS::WaitSet * dds_wait_set,
   DDSCondition * condition)
 {
-  DDS::ReturnCode_t retcode = dds_wait_set->detach_condition(condition);
-  if (retcode != DDS::RETCODE_OK) {
+  DDS::ReturnCode_t dds_return_code = dds_wait_set->detach_condition(condition);
+
+  rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+  if (from_dds != RMW_RET_OK) {
     RMW_SET_ERROR_MSG("Failed to get detach condition from wait set");
-    return RMW_RET_ERROR;
+    return from_dds;
   }
+
   return RMW_RET_OK;
 }
 

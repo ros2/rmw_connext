@@ -125,6 +125,8 @@ add_library(
   rmw_connext_cpp
   SHARED
   ${patched_files}
+  src/connext_static_publisher_info.cpp
+  src/connext_static_subscriber_info.cpp
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp

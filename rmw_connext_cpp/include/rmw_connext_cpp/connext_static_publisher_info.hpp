@@ -41,7 +41,18 @@ struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
   DDS::DataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
-  rmw_ret_t get_status(const DDS_StatusMask mask, void * event) override;
+  /**
+   * Remap the specific RTI Connext DDS DataWriter Status to a generic RMW status type.
+   *
+   * @param mask input status mask
+   * @param event
+   */
+  rmw_ret_t get_status(DDS_StatusMask mask, void * event) override;
+  /// Return the topic writer entity for this publisher
+  /**
+   *
+   * @return the topic writer associated with this publisher
+   */
   DDSEntity * get_entity() override;
 };
 }  // extern "C"
@@ -64,60 +75,5 @@ public:
 private:
   std::atomic<std::size_t> current_count_;
 };
-
-/**
- * Remap the specific RTI Connext DDS DataWriter Status to a generic RMW status type.
- *
- * @param mask input status mask
- * @param event
- */
-inline rmw_ret_t ConnextStaticPublisherInfo::get_status(const DDS_StatusMask mask, void * event)
-{
-  switch (mask) {
-    case DDS_StatusKind::DDS_LIVELINESS_LOST_STATUS: {
-        DDS_LivelinessLostStatus liveliness_lost;
-        DDS_ReturnCode_t dds_return_code =
-          topic_writer_->get_liveliness_lost_status(liveliness_lost);
-
-        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
-        if (from_dds != RMW_RET_OK) {
-          return from_dds;
-        }
-
-        rmw_liveliness_lost_status_t * rmw_liveliness_lost =
-          static_cast<rmw_liveliness_lost_status_t *>(event);
-        rmw_liveliness_lost->total_count = liveliness_lost.total_count;
-        rmw_liveliness_lost->total_count_change = liveliness_lost.total_count_change;
-
-        break;
-      }
-    case DDS_StatusKind::DDS_OFFERED_DEADLINE_MISSED_STATUS: {
-        DDS_OfferedDeadlineMissedStatus offered_deadline_missed;
-        DDS_ReturnCode_t dds_return_code = topic_writer_
-          ->get_offered_deadline_missed_status(offered_deadline_missed);
-
-        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
-        if (from_dds != RMW_RET_OK) {
-          return from_dds;
-        }
-
-        rmw_offered_deadline_missed_status_t * rmw_offered_deadline_missed =
-          static_cast<rmw_offered_deadline_missed_status_t *>(event);
-        rmw_offered_deadline_missed->total_count = offered_deadline_missed.total_count;
-        rmw_offered_deadline_missed->total_count_change =
-          offered_deadline_missed.total_count_change;
-
-        break;
-      }
-    default:
-      return RMW_RET_UNSUPPORTED;
-  }
-  return RMW_RET_OK;
-}
-
-inline DDSEntity * ConnextStaticPublisherInfo::get_entity()
-{
-  return topic_writer_;
-}
 
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_

@@ -22,9 +22,8 @@
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
-
-/*
- * Take an event from the event handle.
+/// Take an event from the event handle.
+/**
  *
  * \param event_handle event object to take from
  * \param event_info event info object to write taken data into

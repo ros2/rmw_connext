@@ -24,23 +24,26 @@ static const std::unordered_map<rmw_event_type_t, DDS_StatusKind> mask_map{
   {RMW_EVENT_OFFERED_DEADLINE_MISSED, DDS_OFFERED_DEADLINE_MISSED_STATUS},
 };
 
-/**
- * Return the corresponding DDS_StatusKind to the input RMW_EVENT
- * @param event_t
- * @return
- */
 DDS_StatusMask get_status_mask_from_rmw(const rmw_event_type_t & event_t)
 {
   return mask_map.at(event_t);
 }
 
-/**
- * Return true if the input RMW event has a corresponding DDS_StatusKind.
- *
- * @param event_t input rmw event to check
- * @return true if there is an RMW to DDS_StatusKind mapping, false otherwise
- */
 bool is_event_supported(const rmw_event_type_t & event_t)
 {
   return mask_map.count(event_t) > 0;
+}
+
+rmw_ret_t check_dds_ret_code(DDS_ReturnCode_t & dds_return_code)
+{
+  switch (dds_return_code) {
+    case DDS_RETCODE_OK:
+      return RMW_RET_OK;
+    case DDS_RETCODE_ERROR:
+      return RMW_RET_ERROR;
+    case DDS_RETCODE_TIMEOUT:
+      return RMW_RET_TIMEOUT;
+    default:
+      return RMW_RET_ERROR;
+  }
 }
