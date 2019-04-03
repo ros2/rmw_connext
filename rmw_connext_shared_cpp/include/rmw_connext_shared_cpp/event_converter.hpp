@@ -30,7 +30,7 @@
  * @param event_t
  * @return
  */
-DDS_StatusMask get_status_mask_from_rmw(const rmw_event_type_t & event_t);
+DDS_StatusKind get_status_kind_from_rmw(const rmw_event_type_t & event_t);
 
 /// Return true if the input RMW event has a corresponding DDS_StatusKind.
 /**

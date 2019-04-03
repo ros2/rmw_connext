@@ -24,7 +24,7 @@ static const std::unordered_map<rmw_event_type_t, DDS_StatusKind> mask_map{
   {RMW_EVENT_OFFERED_DEADLINE_MISSED, DDS_OFFERED_DEADLINE_MISSED_STATUS},
 };
 
-DDS_StatusMask get_status_mask_from_rmw(const rmw_event_type_t & event_t)
+DDS_StatusKind get_status_kind_from_rmw(const rmw_event_type_t & event_t)
 {
   return mask_map.at(event_t);
 }

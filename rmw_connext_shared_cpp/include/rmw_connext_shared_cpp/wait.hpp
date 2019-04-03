@@ -58,7 +58,7 @@ rmw_ret_t __gather_event_conditions(
     if(is_event_supported(current_event->event_type)) {
       // set the status condition's mask with the supported type
       DDS_StatusMask new_status_mask = status_condition->get_enabled_statuses() |
-                                get_status_mask_from_rmw(current_event->event_type);
+                                get_status_kind_from_rmw(current_event->event_type);
       status_condition->set_enabled_statuses(new_status_mask);
       status_conditions.insert(status_condition);
     }
@@ -85,7 +85,7 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
 
       if(is_event_supported(current_event->event_type)) {
         is_active = static_cast<bool>(status_mask &
-          get_status_mask_from_rmw(current_event->event_type));
+          get_status_kind_from_rmw(current_event->event_type));
       }
       // if status condition is not found in the active set
       // reset the subscriber handle
@@ -471,11 +471,6 @@ wait(
     rmw_ret_t ret_code = __handle_active_event_conditions(events);
     if (ret_code != RMW_RET_OK) {
       return ret_code;
-    }
-    // reset the status conditions to none.
-    for (auto status_condition : status_conditions) {
-      status_condition->set_enabled_statuses(DDS_STATUS_MASK_NONE);
-      ret_code = __detach_condition(dds_wait_set, status_condition);
     }
   }
 
