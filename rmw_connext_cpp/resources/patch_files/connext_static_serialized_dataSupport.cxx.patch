@@ -1,6 +1,6 @@
 --- a/rmw_connext_cpp/resources/patch_generated/connext_static_serialized_dataSupport.cxx
 +++ b/rmw_connext_cpp/resources/patch_generated/connext_static_serialized_dataSupport.cxx
-@@ -115,3 +115,62 @@ Defines:   TTypeSupport, TData, TDataReader, TDataWriter
+@@ -123,3 +123,62 @@ Defines:   TTypeSupport, TData, TDataReader, TDataWriter
  #undef TPlugin_new
  #undef TPlugin_delete
 

@@ -7,5 +7,5 @@
 -#include "ndds/ndds_cpp.h"
 +#include "rmw_connext_shared_cpp/ndds_include.hpp"
  #endif
+ #include "rti/xcdr/Interpreter.hpp"
  #else
- #include "ndds_standalone_type.h"
