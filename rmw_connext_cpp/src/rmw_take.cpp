@@ -189,6 +189,11 @@ _take(
   } else {
     cdr_stream = rcutils_get_zero_initialized_uint8_array();
     cdr_stream.allocator = rcutils_get_default_allocator();
+    if( RMW_RET_OK != callbacks->create_message(&dds_message, NULL)) {
+      RMW_SET_ERROR_MSG("error occured while creating DDS message");
+      ret = RMW_RET_ERROR;
+      goto fail;
+    }
   }
 
   if (!take(
