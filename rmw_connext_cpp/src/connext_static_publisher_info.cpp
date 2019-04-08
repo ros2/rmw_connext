@@ -17,14 +17,14 @@
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 
 rmw_ret_t ConnextStaticPublisherInfo::get_status(
-  DDS_StatusMask mask,
+  DDS::StatusMask mask,
   void * event)
 {
   switch (mask) {
-    case DDS_StatusKind::DDS_LIVELINESS_LOST_STATUS:
+    case DDS::StatusKind::DDS_LIVELINESS_LOST_STATUS:
       {
-        DDS_LivelinessLostStatus liveliness_lost;
-        DDS_ReturnCode_t dds_return_code =
+        DDS::LivelinessLostStatus liveliness_lost;
+        DDS::ReturnCode_t dds_return_code =
           topic_writer_->get_liveliness_lost_status(liveliness_lost);
 
         rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
@@ -39,10 +39,10 @@ rmw_ret_t ConnextStaticPublisherInfo::get_status(
 
         break;
       }
-    case DDS_StatusKind::DDS_OFFERED_DEADLINE_MISSED_STATUS:
+    case DDS::StatusKind::DDS_OFFERED_DEADLINE_MISSED_STATUS:
       {
-        DDS_OfferedDeadlineMissedStatus offered_deadline_missed;
-        DDS_ReturnCode_t dds_return_code = topic_writer_
+        DDS::OfferedDeadlineMissedStatus offered_deadline_missed;
+        DDS::ReturnCode_t dds_return_code = topic_writer_
           ->get_offered_deadline_missed_status(offered_deadline_missed);
 
         rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);

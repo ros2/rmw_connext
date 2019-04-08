@@ -16,14 +16,14 @@
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 
 rmw_ret_t ConnextStaticSubscriberInfo::get_status(
-  DDS_StatusMask mask,
+  DDS::StatusMask mask,
   void * event)
 {
   switch (mask) {
-    case DDS_StatusKind::DDS_LIVELINESS_CHANGED_STATUS:
+    case DDS::StatusKind::DDS_LIVELINESS_CHANGED_STATUS:
       {
-        DDS_LivelinessChangedStatus liveliness_changed;
-        DDS_ReturnCode_t dds_return_code = topic_reader_
+        DDS::LivelinessChangedStatus liveliness_changed;
+        DDS::ReturnCode_t dds_return_code = topic_reader_
           ->get_liveliness_changed_status(liveliness_changed);
 
         rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
@@ -41,10 +41,10 @@ rmw_ret_t ConnextStaticSubscriberInfo::get_status(
 
         break;
       }
-    case DDS_StatusKind::DDS_REQUESTED_DEADLINE_MISSED_STATUS:
+    case DDS::StatusKind::DDS_REQUESTED_DEADLINE_MISSED_STATUS:
       {
-        DDS_RequestedDeadlineMissedStatus requested_deadline_missed;
-        DDS_ReturnCode_t dds_return_code = topic_reader_
+        DDS::RequestedDeadlineMissedStatus requested_deadline_missed;
+        DDS::ReturnCode_t dds_return_code = topic_reader_
           ->get_requested_deadline_missed_status(requested_deadline_missed);
 
         rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
