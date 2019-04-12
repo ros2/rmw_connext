@@ -64,7 +64,7 @@ rmw_ret_t ConnextStaticPublisherInfo::get_status(
   return RMW_RET_OK;
 }
 
-DDSEntity * ConnextStaticPublisherInfo::get_entity()
+DDS::Entity * ConnextStaticPublisherInfo::get_entity()
 {
   return topic_writer_;
 }

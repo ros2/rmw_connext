@@ -66,7 +66,7 @@ rmw_ret_t ConnextStaticSubscriberInfo::get_status(
   return RMW_RET_OK;
 }
 
-DDSEntity * ConnextStaticSubscriberInfo::get_entity()
+DDS::Entity * ConnextStaticSubscriberInfo::get_entity()
 {
   return topic_reader_;
 }

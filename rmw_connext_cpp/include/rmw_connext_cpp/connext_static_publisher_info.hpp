@@ -53,7 +53,7 @@ struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
    *
    * @return the topic writer associated with this publisher
    */
-  DDSEntity * get_entity() override;
+  DDS::Entity * get_entity() override;
 };
 }  // extern "C"
 

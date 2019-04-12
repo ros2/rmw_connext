@@ -51,7 +51,7 @@ struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
   /**
    * @return the topic reader associated with this subscriber
    */
-  DDSEntity * get_entity() override;
+  DDS::Entity * get_entity() override;
 };
 }  // extern "C"
 
