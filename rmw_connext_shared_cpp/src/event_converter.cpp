@@ -24,17 +24,17 @@ static const std::unordered_map<rmw_event_type_t, DDS::StatusKind> mask_map{
   {RMW_EVENT_OFFERED_DEADLINE_MISSED, DDS_OFFERED_DEADLINE_MISSED_STATUS},
 };
 
-DDS::StatusKind get_status_kind_from_rmw(const rmw_event_type_t & event_t)
+DDS::StatusKind get_status_kind_from_rmw(const rmw_event_type_t event_t)
 {
   return mask_map.at(event_t);
 }
 
-bool is_event_supported(const rmw_event_type_t & event_t)
+bool is_event_supported(const rmw_event_type_t event_t)
 {
   return mask_map.count(event_t) > 0;
 }
 
-rmw_ret_t check_dds_ret_code(const DDS_ReturnCode_t & dds_return_code)
+rmw_ret_t check_dds_ret_code(const DDS::ReturnCode_t dds_return_code)
 {
   switch (dds_return_code) {
     case DDS_RETCODE_OK:

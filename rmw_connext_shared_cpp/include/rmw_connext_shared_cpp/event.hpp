@@ -32,6 +32,7 @@
  * \return `RMW_RET_BAD_ALLOC` if memory allocation failed, or
  * \return `RMW_RET_ERROR` if an unexpected error occurs.
  */
+RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
 __rmw_take_event(
   const char * implementation_identifier,
