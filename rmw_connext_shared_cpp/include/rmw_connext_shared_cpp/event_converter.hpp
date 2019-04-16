@@ -45,6 +45,6 @@ bool is_event_supported(const rmw_event_type_t & event_t);
   * @return to_return the corresponding rmw_ret_t that maps to the input DDS_ReturnCode_t. By
   * default RMW_RET_ERROR is returned if no corresponding rmw_ret_t is not defined.
   */
-rmw_ret_t check_dds_ret_code(DDS_ReturnCode_t & dds_return_code);
+rmw_ret_t check_dds_ret_code(const DDS_ReturnCode_t & dds_return_code);
 
 #endif  // RMW_CONNEXT_SHARED_CPP__EVENT_CONVERTER_HPP_
