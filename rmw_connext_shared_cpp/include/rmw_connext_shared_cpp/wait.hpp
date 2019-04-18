@@ -15,6 +15,7 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__WAIT_HPP_
 #define RMW_CONNEXT_SHARED_CPP__WAIT_HPP_
 
+#include <unordered_map>
 #include <unordered_set>
 
 #include "ndds_include.hpp"
@@ -34,12 +35,9 @@ rmw_ret_t __gather_event_conditions(
   rmw_events_t * events,
   std::unordered_set<DDS::StatusCondition *> & status_conditions)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(events, RMW_RET_INVALID_ARGUMENT);
 
-  if (!events) {
-    RMW_SET_ERROR_MSG("events is null");
-    return RMW_RET_ERROR;
-  }
-
+  std::unordered_map<DDS::StatusCondition *, DDS::StatusMask> status_mask_map;
   // gather all status conditions and masks
   for (size_t i = 0; i < events->event_count; ++i) {
     rmw_event_t * current_event = static_cast<rmw_event_t *>(events->events[i]);
@@ -54,16 +52,19 @@ rmw_ret_t __gather_event_conditions(
       RMW_SET_ERROR_MSG("status condition handle is null");
       return RMW_RET_ERROR;
     }
-
-    if(is_event_supported(current_event->event_type)) {
-      // set the status condition's mask with the supported type
-      DDS::StatusMask new_status_mask = status_condition->get_enabled_statuses() |
-                                get_status_kind_from_rmw(current_event->event_type);
-      status_condition->set_enabled_statuses(new_status_mask);
-      status_conditions.insert(status_condition);
+    if (is_event_supported(current_event->event_type)) {
+      if (status_mask_map.find(status_condition) == status_mask_map.end()) {
+        status_mask_map[status_condition] = DDS::STATUS_MASK_NONE;
+      }
+      status_mask_map[status_condition] = status_mask_map[status_condition] |
+        get_status_kind_from_rmw(current_event->event_type);
     }
   }
-
+  for (auto & pair : status_mask_map) {
+    // set the status condition's mask with the supported type
+    pair.first->set_enabled_statuses(pair.second);
+    status_conditions.insert(pair.first);
+  }
   return RMW_RET_OK;
 }
 
