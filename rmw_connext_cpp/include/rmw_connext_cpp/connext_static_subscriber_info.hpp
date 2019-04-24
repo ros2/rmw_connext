@@ -28,7 +28,6 @@
 #include "rmw/types.h"
 #include "rmw/ret_types.h"
 
-
 class ConnextSubscriberListener;
 
 extern "C"
@@ -43,13 +42,13 @@ struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
   const message_type_support_callbacks_t * callbacks_;
   /// Remap the specific RTI Connext DDS DataReader Status to a generic RMW status type.
   /**
-   * @param mask input status mask
-   * @param event
+   * \param mask input status mask
+   * \param event
    */
   rmw_ret_t get_status(DDS::StatusMask mask, void * event) override;
   /// Return the topic reader entity for this subsciber
   /**
-   * @return the topic reader associated with this subscriber
+   * \return the topic reader associated with this subscriber
    */
   DDS::Entity * get_entity() override;
 };

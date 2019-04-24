@@ -41,17 +41,18 @@ struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
   DDS::DataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
+
   /**
    * Remap the specific RTI Connext DDS DataWriter Status to a generic RMW status type.
    *
-   * @param mask input status mask
-   * @param event
+   * \param mask input status mask
+   * \param event
    */
   rmw_ret_t get_status(DDS::StatusMask mask, void * event) override;
-  /// Return the topic writer entity for this publisher
+
+  /// Return the topic writer entity for this publisher.
   /**
-   *
-   * @return the topic writer associated with this publisher
+   * \return the topic writer associated with this publisher
    */
   DDS::Entity * get_entity() override;
 };
