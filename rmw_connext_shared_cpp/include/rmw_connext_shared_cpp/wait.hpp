@@ -30,12 +30,12 @@
 #include "rmw_connext_shared_cpp/visibility_control.h"
 #include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
 
-rmw_ret_t __gather_event_conditions(
+rmw_ret_t
+__gather_event_conditions(
   rmw_events_t * events,
   std::unordered_set<DDS::StatusCondition *> & status_conditions)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(events, RMW_RET_INVALID_ARGUMENT);
-
   std::unordered_map<DDS::StatusCondition *, DDS::StatusMask> status_mask_map;
   // gather all status conditions and masks
   for (size_t i = 0; i < events->event_count; ++i) {
@@ -53,11 +53,14 @@ rmw_ret_t __gather_event_conditions(
       return RMW_RET_ERROR;
     }
     if (is_event_supported(current_event->event_type)) {
-      if (status_mask_map.find(status_condition) == status_mask_map.end()) {
-        status_mask_map[status_condition] = DDS::STATUS_MASK_NONE;
-      }
-      status_mask_map[status_condition] = status_mask_map[status_condition] |
-        get_status_kind_from_rmw(current_event->event_type);
+      auto map_pair = status_mask_map.insert(std::pair<DDS::StatusCondition *, DDS::StatusMask>
+        (status_condition, DDS::STATUS_MASK_NONE));
+      auto iterator = map_pair.first;
+      status_mask_map[status_condition] = get_status_kind_from_rmw(current_event->event_type)
+        | (*iterator).second;
+
+    } else {
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("event %d not supported", current_event->event_type);
     }
   }
   for (auto & pair : status_mask_map) {
@@ -74,6 +77,7 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
   if (events) {
     for (size_t i = 0; i < events->event_count; ++i) {
       auto current_event = static_cast<rmw_event_t *>(events->events[i]);
+      RMW_CHECK_ARGUMENT_FOR_NULL(current_event->data, RMW_RET_INVALID_ARGUMENT);
       DDS::Entity * dds_entity = static_cast<ConnextCustomEventInfo *>(
         current_event->data)->get_entity();
       if (!dds_entity) {
@@ -234,14 +238,12 @@ wait(
   if (ret_code != RMW_RET_OK) {
     return ret_code;
   }
-  if (!status_conditions.empty()) {
-    // enable a status condition for each event
-    for (auto status_condition : status_conditions) {
-      rmw_ret_t rmw_status = check_attach_condition_error(
-        dds_wait_set->attach_condition(status_condition));
-      if (rmw_status != RMW_RET_OK) {
-        return rmw_status;
-      }
+  // enable a status condition for each event
+  for (auto status_condition : status_conditions) {
+    rmw_ret_t rmw_status = check_attach_condition_error(
+      dds_wait_set->attach_condition(status_condition));
+    if (rmw_status != RMW_RET_OK) {
+      return rmw_status;
     }
   }
 

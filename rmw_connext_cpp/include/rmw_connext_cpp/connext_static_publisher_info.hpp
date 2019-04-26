@@ -29,7 +29,6 @@
 #include "rmw/types.h"
 #include "rmw/ret_types.h"
 
-
 class ConnextPublisherListener;
 
 extern "C"

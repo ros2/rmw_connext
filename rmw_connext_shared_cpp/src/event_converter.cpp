@@ -1,4 +1,4 @@
-// Copyright 2015-2019 Open Source Robotics Foundation, Inc.
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 
-/// mapping of RMW_EVENT to the corresponding DDS_StatusKind
+/// Mapping of RMW_EVENT to the corresponding DDS_StatusKind.
 static const std::unordered_map<rmw_event_type_t, DDS::StatusKind> mask_map{
   {RMW_EVENT_LIVELINESS_CHANGED, DDS_LIVELINESS_CHANGED_STATUS},
   {RMW_EVENT_REQUESTED_DEADLINE_MISSED, DDS_REQUESTED_DEADLINE_MISSED_STATUS},

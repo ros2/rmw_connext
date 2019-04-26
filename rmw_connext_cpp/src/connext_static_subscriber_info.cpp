@@ -23,8 +23,8 @@ rmw_ret_t ConnextStaticSubscriberInfo::get_status(
     case DDS::StatusKind::DDS_LIVELINESS_CHANGED_STATUS:
       {
         DDS::LivelinessChangedStatus liveliness_changed;
-        DDS::ReturnCode_t dds_return_code = topic_reader_
-          ->get_liveliness_changed_status(liveliness_changed);
+        DDS::ReturnCode_t dds_return_code =
+          topic_reader_->get_liveliness_changed_status(liveliness_changed);
 
         rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
         if (from_dds != RMW_RET_OK) {
@@ -44,8 +44,8 @@ rmw_ret_t ConnextStaticSubscriberInfo::get_status(
     case DDS::StatusKind::DDS_REQUESTED_DEADLINE_MISSED_STATUS:
       {
         DDS::RequestedDeadlineMissedStatus requested_deadline_missed;
-        DDS::ReturnCode_t dds_return_code = topic_reader_
-          ->get_requested_deadline_missed_status(requested_deadline_missed);
+        DDS::ReturnCode_t dds_return_code =
+          topic_reader_->get_requested_deadline_missed_status(requested_deadline_missed);
 
         rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
         if (from_dds != RMW_RET_OK) {

@@ -46,7 +46,7 @@ struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
    * \param event
    */
   rmw_ret_t get_status(DDS::StatusMask mask, void * event) override;
-  /// Return the topic reader entity for this subsciber
+  /// Return the topic reader entity for this subscriber.
   /**
    * \return the topic reader associated with this subscriber
    */

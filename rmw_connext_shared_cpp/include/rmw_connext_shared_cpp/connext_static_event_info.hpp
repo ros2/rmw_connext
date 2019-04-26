@@ -17,7 +17,9 @@
 
 #include "ndds/ndds_cpp.h"
 #include "ndds/ndds_namespace_cpp.h"
+
 #include "rmw/ret_types.h"
+
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 
 typedef struct ConnextCustomEventInfo

@@ -25,7 +25,7 @@
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
-/// Return the corresponding DDS_StatusKind to the input RMW_EVENT
+/// Return the corresponding DDS_StatusKind to the input RMW_EVENT.
 /**
  * \param event_t to translate to status kind
  * \return the StatusKind corresponding to the rmw_event_type_t

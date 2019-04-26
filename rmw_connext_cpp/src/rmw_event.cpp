@@ -18,12 +18,10 @@
 
 #include "rmw_connext_cpp/identifier.hpp"
 
-
 extern "C"
 {
-/*
- * Take an event from the event handle.
- *
+/// Take an event from the event handle.
+/**
  * \param event_handle event object to take from
  * \param event_info event info object to write taken data into
  * \param taken boolean flag indicating if an event was taken or not

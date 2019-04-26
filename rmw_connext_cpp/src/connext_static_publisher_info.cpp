@@ -42,8 +42,8 @@ rmw_ret_t ConnextStaticPublisherInfo::get_status(
     case DDS::StatusKind::DDS_OFFERED_DEADLINE_MISSED_STATUS:
       {
         DDS::OfferedDeadlineMissedStatus offered_deadline_missed;
-        DDS::ReturnCode_t dds_return_code = topic_writer_
-          ->get_offered_deadline_missed_status(offered_deadline_missed);
+        DDS::ReturnCode_t dds_return_code =
+          topic_writer_->get_offered_deadline_missed_status(offered_deadline_missed);
 
         rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
         if (from_dds != RMW_RET_OK) {
