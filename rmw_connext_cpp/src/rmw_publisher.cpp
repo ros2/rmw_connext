@@ -32,6 +32,8 @@
 // include patched generated code from the build folder
 #include "connext_static_serialized_dataSupport.h"
 
+#include "rosidl_typesupport_connext_cpp/message_type_support.h"
+
 // Uncomment this to get extra console output about discovery.
 // This affects code in this file, but there is a similar variable in:
 //   rmw_connext_shared_cpp/shared_functions.cpp
