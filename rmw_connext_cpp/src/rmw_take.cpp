@@ -33,8 +33,10 @@ take(
   bool ignore_local_publications,
   rcutils_uint8_array_t * cdr_stream,
   bool * taken,
-  void * sending_publication_handle)
+  void * sending_publication_handle,
+  rmw_subscription_allocation_t * allocation)
 {
+  (void) allocation;
   if (!dds_data_reader) {
     RMW_SET_ERROR_MSG("dds_data_reader is null");
     return false;
@@ -134,7 +136,8 @@ _take(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
-  DDS::InstanceHandle_t * sending_publication_handle)
+  DDS::InstanceHandle_t * sending_publication_handle,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!subscription) {
     RMW_SET_ERROR_MSG("subscription handle is null");
@@ -175,7 +178,7 @@ _take(
   rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   if (!take(
       topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
-      sending_publication_handle))
+      sending_publication_handle, allocation))
   {
     RMW_SET_ERROR_MSG("error occured while taking message");
     return RMW_RET_ERROR;
@@ -194,9 +197,13 @@ _take(
 }
 
 rmw_ret_t
-rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
+rmw_take(
+  const rmw_subscription_t * subscription,
+  void * ros_message,
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
 {
-  return _take(subscription, ros_message, taken, nullptr);
+  return _take(subscription, ros_message, taken, nullptr, allocation);
 }
 
 rmw_ret_t
@@ -204,14 +211,15 @@ rmw_take_with_info(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
-  rmw_message_info_t * message_info)
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!message_info) {
     RMW_SET_ERROR_MSG("message info is null");
     return RMW_RET_ERROR;
   }
   DDS::InstanceHandle_t sending_publication_handle;
-  auto ret = _take(subscription, ros_message, taken, &sending_publication_handle);
+  auto ret = _take(subscription, ros_message, taken, &sending_publication_handle, allocation);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
     return RMW_RET_ERROR;
@@ -231,7 +239,8 @@ _take_serialized_message(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken,
-  DDS::InstanceHandle_t * sending_publication_handle)
+  DDS::InstanceHandle_t * sending_publication_handle,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!subscription) {
     RMW_SET_ERROR_MSG("subscription handle is null");
@@ -271,7 +280,7 @@ _take_serialized_message(
   // fetch the incoming message as cdr stream
   if (!take(
       topic_reader, subscriber_info->ignore_local_publications, serialized_message, taken,
-      sending_publication_handle))
+      sending_publication_handle, allocation))
   {
     RMW_SET_ERROR_MSG("error occured while taking message");
     return RMW_RET_ERROR;
@@ -284,9 +293,10 @@ rmw_ret_t
 rmw_take_serialized_message(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
-  bool * taken)
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
 {
-  return _take_serialized_message(subscription, serialized_message, taken, nullptr);
+  return _take_serialized_message(subscription, serialized_message, taken, nullptr, allocation);
 }
 
 rmw_ret_t
@@ -294,7 +304,8 @@ rmw_take_serialized_message_with_info(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken,
-  rmw_message_info_t * message_info)
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!message_info) {
     RMW_SET_ERROR_MSG("message info is null");
@@ -302,7 +313,7 @@ rmw_take_serialized_message_with_info(
   }
   DDS::InstanceHandle_t sending_publication_handle;
   auto ret =
-    _take_serialized_message(subscription, serialized_message, taken, &sending_publication_handle);
+    _take_serialized_message(subscription, serialized_message, taken, &sending_publication_handle, allocation);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
     return RMW_RET_ERROR;
