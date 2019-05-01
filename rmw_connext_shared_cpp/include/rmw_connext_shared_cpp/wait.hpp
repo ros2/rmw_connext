@@ -17,6 +17,7 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 #include "ndds_include.hpp"
 
@@ -53,11 +54,12 @@ __gather_event_conditions(
       return RMW_RET_ERROR;
     }
     if (is_event_supported(current_event->event_type)) {
-      auto map_pair = status_mask_map.insert(std::pair<DDS::StatusCondition *, DDS::StatusMask>
-        (status_condition, DDS::STATUS_MASK_NONE));
+      auto map_pair =
+        status_mask_map.insert(std::pair<DDS::StatusCondition *, DDS::StatusMask>(status_condition,
+          DDS::STATUS_MASK_NONE));
       auto iterator = map_pair.first;
-      status_mask_map[status_condition] = get_status_kind_from_rmw(current_event->event_type)
-        | (*iterator).second;
+      status_mask_map[status_condition] = get_status_kind_from_rmw(current_event->event_type) |
+        (*iterator).second;
 
     } else {
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("event %d not supported", current_event->event_type);
