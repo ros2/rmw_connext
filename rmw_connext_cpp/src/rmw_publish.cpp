@@ -73,8 +73,12 @@ cleanup:
 extern "C"
 {
 rmw_ret_t
-rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
+rmw_publish(
+  const rmw_publisher_t * publisher,
+  const void * ros_message,
+  rmw_publisher_allocation_t * allocation)
 {
+  (void) allocation;
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
     return RMW_RET_ERROR;
@@ -137,8 +141,11 @@ fail:
 
 rmw_ret_t
 rmw_publish_serialized_message(
-  const rmw_publisher_t * publisher, const rmw_serialized_message_t * serialized_message)
+  const rmw_publisher_t * publisher,
+  const rmw_serialized_message_t * serialized_message,
+  rmw_publisher_allocation_t * allocation)
 {
+  (void) allocation;
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
     return RMW_RET_ERROR;
