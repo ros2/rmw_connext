@@ -125,6 +125,8 @@ add_library(
   rmw_connext_cpp
   SHARED
   ${patched_files}
+  src/connext_static_publisher_info.cpp
+  src/connext_static_subscriber_info.cpp
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp
@@ -135,6 +137,7 @@ add_library(
   src/rmw_client.cpp
   src/rmw_compare_gid_equals.cpp
   src/rmw_count.cpp
+  src/rmw_event.cpp
   src/rmw_get_gid_for_publisher.cpp
   src/rmw_get_implementation_identifier.cpp
   src/rmw_get_serialization_format.cpp
