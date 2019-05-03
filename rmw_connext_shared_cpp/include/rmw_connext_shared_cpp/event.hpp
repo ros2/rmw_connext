@@ -12,31 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__QOS_HPP_
-#define RMW_CONNEXT_SHARED_CPP__QOS_HPP_
-
-#include <cassert>
-#include <limits>
+#ifndef RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
+#define RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
 
 #include "ndds_include.hpp"
 
-#include "rmw/error_handling.h"
 #include "rmw/types.h"
+#include "rmw/event.h"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
+/// Take an event from the event handle.
+/**
+ *
+ * \param event_handle event object to take from
+ * \param event_info event info object to write taken data into
+ * \param taken boolean flag indicating if an event was taken or not
+ * \return `RMW_RET_OK` if successful, or
+ * \return `RMW_RET_BAD_ALLOC` if memory allocation failed, or
+ * \return `RMW_RET_ERROR` if an unexpected error occurs.
+ */
 RMW_CONNEXT_SHARED_CPP_PUBLIC
-bool
-get_datareader_qos(
-  DDS::DomainParticipant * participant,
-  const rmw_qos_profile_t & qos_profile,
-  DDS::DataReaderQos & datareader_qos);
+rmw_ret_t
+__rmw_take_event(
+  const char * implementation_identifier,
+  const rmw_event_t * event_handle,
+  void * event_info,
+  bool * taken);
 
-RMW_CONNEXT_SHARED_CPP_PUBLIC
-bool
-get_datawriter_qos(
-  DDS::DomainParticipant * participant,
-  const rmw_qos_profile_t & qos_profile,
-  DDS::DataWriterQos & datawriter_qos);
-
-#endif  // RMW_CONNEXT_SHARED_CPP__QOS_HPP_
+#endif  // RMW_CONNEXT_SHARED_CPP__EVENT_HPP_

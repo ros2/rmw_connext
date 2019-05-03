@@ -488,6 +488,34 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
   return RMW_RET_OK;
 }
 
+rmw_ret_t
+assert_liveliness(const char * implementation_identifier, const rmw_node_t * node)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node handle,
+    node->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
+
+  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  if (nullptr == node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (nullptr == node_info->participant) {
+    RMW_SET_ERROR_MSG("node internal participant is invalid");
+    return RMW_RET_ERROR;
+  }
+
+  if (node_info->participant->assert_liveliness() != DDS::RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to assert liveliness of participant");
+    return RMW_RET_ERROR;
+  }
+
+  return RMW_RET_OK;
+}
+
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 const rmw_guard_condition_t *
 node_get_graph_guard_condition(const rmw_node_t * node)
