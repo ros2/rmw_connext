@@ -107,7 +107,7 @@ rmw_create_publisher(
     RMW_SET_ERROR_MSG("callbacks handle is null");
     return NULL;
   }
-  std::string type_name = _create_type_name(callbacks, "msg");
+  std::string type_name = _create_type_name(callbacks);
   // Past this point, a failure results in unrolling code in the goto fail block.
   DDS::TypeCode * type_code = nullptr;
   DDS::DataWriterQos datawriter_qos;

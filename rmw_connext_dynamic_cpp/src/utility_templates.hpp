@@ -51,17 +51,20 @@
 template<typename MembersType>
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
 inline std::string
-_create_type_name(
-  const void * untyped_members,
-  const std::string & sep)
+_create_type_name(const void * untyped_members)
 {
   auto members = static_cast<const MembersType *>(untyped_members);
   if (!members) {
     RMW_SET_ERROR_MSG("members handle is null");
     return "";
   }
-  return
-    std::string(members->package_name_) + "::" + sep + "::dds_::" + members->message_name_ + "_";
+  std::ostringstream ss;
+  std::string message_namespace(members->message_namespace_);
+  if (!message_namespace.empty()) {
+    ss << message_namespace << "::";
+  }
+  ss << "dds_::" << members->message_name_ << "_";
+  return ss.str();
 }
 
 template<typename ServiceType>
