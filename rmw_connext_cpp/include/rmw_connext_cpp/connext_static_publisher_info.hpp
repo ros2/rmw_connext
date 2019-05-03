@@ -31,8 +31,6 @@
 
 class ConnextPublisherListener;
 
-extern "C"
-{
 struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
 {
   DDS::Publisher * dds_publisher_;
@@ -55,7 +53,6 @@ struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
    */
   DDS::Entity * get_entity() override;
 };
-}  // extern "C"
 
 class ConnextPublisherListener : public DDS::PublisherListener
 {

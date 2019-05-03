@@ -18,6 +18,21 @@
 namespace
 {
 
+bool
+is_time_default(const rmw_time_t & time)
+{
+  return time.sec == 0 && time.nsec == 0;
+}
+
+DDS_Duration_t
+rmw_time_to_dds(const rmw_time_t & time)
+{
+  DDS_Duration_t duration;
+  duration.sec = static_cast<DDS_Long>(time.sec);
+  duration.nanosec = static_cast<DDS_UnsignedLong>(time.nsec);
+  return duration;
+}
+
 template<typename DDSEntityQos>
 bool
 set_entity_qos_from_profile_generic(
@@ -71,10 +86,9 @@ set_entity_qos_from_profile_generic(
     entity_qos.history.depth = static_cast<DDS::Long>(qos_profile.depth);
   }
 
-  // DDS_DeadlineQosPolicy has default value of DDS_DURATION_INFINITE, don't touch it for 0
-  if (qos_profile.deadline.sec != 0 || qos_profile.deadline.nsec != 0) {
-    entity_qos.deadline.period.sec = qos_profile.deadline.sec;
-    entity_qos.deadline.period.nanosec = qos_profile.deadline.nsec;
+  // DDS_DeadlineQosPolicy has default value of DDS_DURATION_INFINITE, don't overwrite if default passed
+  if (!is_time_default(qos_profile.deadline)) {
+    entity_qos.deadline.period = rmw_time_to_dds(qos_profile.deadline);
   }
 
   switch (qos_profile.liveliness) {
@@ -93,11 +107,8 @@ set_entity_qos_from_profile_generic(
       RMW_SET_ERROR_MSG("Unknown QoS liveliness policy");
       return false;
   }
-  if (qos_profile.liveliness_lease_duration.sec != 0 ||
-    qos_profile.liveliness_lease_duration.nsec != 0)
-  {
-    entity_qos.liveliness.lease_duration.sec = qos_profile.liveliness_lease_duration.sec;
-    entity_qos.liveliness.lease_duration.nanosec = qos_profile.liveliness_lease_duration.nsec;
+  if (!is_time_default(qos_profile.liveliness_lease_duration)) {
+    entity_qos.liveliness.lease_duration = rmw_time_to_dds(qos_profile.liveliness_lease_duration);
   }
 
   // ensure the history depth is at least the requested queue size
@@ -131,9 +142,8 @@ set_entity_qos_from_profile(
   DDS::DataWriterQos & entity_qos)
 {
   // Set any QoS settings that are specific to DataWriter, then call the shared version
-  if (qos_profile.lifespan.sec != 0 || qos_profile.lifespan.nsec != 0) {
-    entity_qos.lifespan.duration.sec = qos_profile.lifespan.sec;
-    entity_qos.lifespan.duration.nanosec = qos_profile.lifespan.nsec;
+  if (!is_time_default(qos_profile.lifespan)) {
+    entity_qos.lifespan.duration = rmw_time_to_dds(qos_profile.lifespan);
   }
   return set_entity_qos_from_profile_generic(qos_profile, entity_qos);
 }

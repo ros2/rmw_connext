@@ -15,15 +15,14 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
 #define RMW_CONNEXT_SHARED_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
 
-#include "ndds/ndds_cpp.h"
-#include "ndds/ndds_namespace_cpp.h"
-
 #include "rmw/ret_types.h"
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 
 typedef struct ConnextCustomEventInfo
 {
+  virtual ~ConnextCustomEventInfo() = default;
+
   /// Get the corresponding rmw status given the status mask.
   /**
    * Return the corresponding RMW status given the input DDS_StatusMask and its corresponding event.

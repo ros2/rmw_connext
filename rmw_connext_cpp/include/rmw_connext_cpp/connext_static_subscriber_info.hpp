@@ -30,8 +30,6 @@
 
 class ConnextSubscriberListener;
 
-extern "C"
-{
 struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
 {
   DDS::Subscriber * dds_subscriber_;
@@ -52,7 +50,6 @@ struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
    */
   DDS::Entity * get_entity() override;
 };
-}  // extern "C"
 
 class ConnextSubscriberListener : public DDS::SubscriberListener
 {
