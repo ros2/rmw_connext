@@ -17,23 +17,42 @@
 
 #include <atomic>
 
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
+#include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
+
+#include "ndds/ndds_cpp.h"
+#include "ndds/ndds_namespace_cpp.h"
 
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
 
+#include "rmw/types.h"
+#include "rmw/ret_types.h"
+
 class ConnextPublisherListener;
 
-extern "C"
-{
-struct ConnextStaticPublisherInfo
+struct ConnextStaticPublisherInfo : ConnextCustomEventInfo
 {
   DDS::Publisher * dds_publisher_;
   ConnextPublisherListener * listener_;
   DDS::DataWriter * topic_writer_;
   const message_type_support_callbacks_t * callbacks_;
   rmw_gid_t publisher_gid;
+
+  /**
+   * Remap the specific RTI Connext DDS DataWriter Status to a generic RMW status type.
+   *
+   * \param mask input status mask
+   * \param event
+   */
+  rmw_ret_t get_status(DDS::StatusMask mask, void * event) override;
+
+  /// Return the topic writer entity for this publisher.
+  /**
+   * \return the topic writer associated with this publisher
+   */
+  DDS::Entity * get_entity() override;
 };
-}  // extern "C"
 
 class ConnextPublisherListener : public DDS::PublisherListener
 {

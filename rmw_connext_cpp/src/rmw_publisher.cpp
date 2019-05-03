@@ -429,6 +429,29 @@ rmw_publisher_get_actual_qos(
 }
 
 rmw_ret_t
+rmw_publisher_assert_liveliness(const rmw_publisher_t * publisher)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<ConnextStaticPublisherInfo *>(publisher->data);
+  if (nullptr == info) {
+    RMW_SET_ERROR_MSG("publisher internal data is invalid");
+    return RMW_RET_ERROR;
+  }
+  if (nullptr == info->topic_writer_) {
+    RMW_SET_ERROR_MSG("publisher internal datawriter is invalid");
+    return RMW_RET_ERROR;
+  }
+
+  if (info->topic_writer_->assert_liveliness() != DDS::RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to assert liveliness of datawriter");
+    return RMW_RET_ERROR;
+  }
+
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
 rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 {
   if (!node) {

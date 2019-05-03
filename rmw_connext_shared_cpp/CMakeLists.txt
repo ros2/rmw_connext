@@ -39,6 +39,8 @@ add_library(
   src/condition_error.cpp
   src/count.cpp
   src/demangle.cpp
+  src/event.cpp
+  src/event_converter.cpp
   src/guard_condition.cpp
   src/init.cpp
   src/namespace_prefix.cpp
