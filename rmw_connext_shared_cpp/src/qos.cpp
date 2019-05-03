@@ -86,7 +86,8 @@ set_entity_qos_from_profile_generic(
     entity_qos.history.depth = static_cast<DDS::Long>(qos_profile.depth);
   }
 
-  // DDS_DeadlineQosPolicy has default value of DDS_DURATION_INFINITE, don't overwrite if default passed
+  // DDS_DeadlineQosPolicy has default value of DDS_DURATION_INFINITE
+  // don't overwrite if default passed
   if (!is_time_default(qos_profile.deadline)) {
     entity_qos.deadline.period = rmw_time_to_dds(qos_profile.deadline);
   }
