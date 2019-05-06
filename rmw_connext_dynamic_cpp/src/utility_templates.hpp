@@ -191,7 +191,7 @@ DDS_TypeCode * create_type_code(
             RMW_SET_ERROR_MSG("sub members handle is null");
             return NULL;
           }
-          std::string field_type_name = _create_type_name<MembersType>(sub_members, "msg");
+          std::string field_type_name = _create_type_name<MembersType>(sub_members);
           member_type_code = create_type_code<MembersType>(field_type_name, sub_members,
               introspection_identifier);
           if (!member_type_code) {
