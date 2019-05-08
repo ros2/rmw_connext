@@ -85,15 +85,12 @@ ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
 inline std::string
 _create_type_name(
   const void * untyped_members,
-  const std::string & sep,
   const char * typesupport)
 {
   if (using_introspection_c_typesupport(typesupport)) {
-    return _create_type_name<rosidl_typesupport_introspection_c__MessageMembers>(untyped_members,
-             sep);
+    return _create_type_name<rosidl_typesupport_introspection_c__MessageMembers>(untyped_members);
   } else if (using_introspection_cpp_typesupport(typesupport)) {
-    return _create_type_name<rosidl_typesupport_introspection_cpp::MessageMembers>(untyped_members,
-             sep);
+    return _create_type_name<rosidl_typesupport_introspection_cpp::MessageMembers>(untyped_members);
   }
   RMW_SET_ERROR_MSG("Unknown typesupport identifier");
   return "";
@@ -405,7 +402,7 @@ rmw_create_publisher(
   DDSDynamicDataWriter * dynamic_writer = nullptr;
   DDS_DynamicData * dynamic_data = nullptr;
   CustomPublisherInfo * custom_publisher_info = nullptr;
-  std::string type_name = _create_type_name(type_support->data, "msg",
+  std::string type_name = _create_type_name(type_support->data,
       type_support->typesupport_identifier);
 
   // memory allocations for namespacing
@@ -797,7 +794,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         custom_publisher_info->dynamic_data = nullptr;
       }
       std::string type_name = _create_type_name(
-        custom_publisher_info->untyped_members_, "msg",
+        custom_publisher_info->untyped_members_,
         custom_publisher_info->typesupport_identifier);
       // TODO(wjwwood) Cannot unregister and free type here, in case another topic is using the
       // same type.
@@ -970,7 +967,7 @@ rmw_create_subscription(
   }
 
   std::string type_name = _create_type_name(
-    type_support->data, "msg", type_support->typesupport_identifier);
+    type_support->data, type_support->typesupport_identifier);
 
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -1281,7 +1278,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         custom_subscription_info->dynamic_data = nullptr;
       }
       std::string type_name = _create_type_name(
-        custom_subscription_info->untyped_members_, "msg",
+        custom_subscription_info->untyped_members_,
         custom_subscription_info->typesupport_identifier);
       // TODO(wjwwood) Cannot unregister and free type here, in case another topic is using the
       // same type.
@@ -1639,9 +1636,9 @@ rmw_create_client(
     return NULL;
   }
 
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+  std::string request_type_name = _create_type_name(untyped_request_members,
       type_support->typesupport_identifier);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+  std::string response_type_name = _create_type_name(untyped_response_members,
       type_support->typesupport_identifier);
 
   DDS_DomainParticipantQos participant_qos;
@@ -2044,9 +2041,9 @@ rmw_create_service(
       type_support->typesupport_identifier);
   const void * untyped_response_members = get_response_ptr(type_support->data,
       type_support->typesupport_identifier);
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+  std::string request_type_name = _create_type_name(untyped_request_members,
       type_support->typesupport_identifier);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+  std::string response_type_name = _create_type_name(untyped_response_members,
       type_support->typesupport_identifier);
 
   DDS_DomainParticipantQos participant_qos;
