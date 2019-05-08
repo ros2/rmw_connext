@@ -51,17 +51,20 @@
 template<typename MembersType>
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
 inline std::string
-_create_type_name(
-  const void * untyped_members,
-  const std::string & sep)
+_create_type_name(const void * untyped_members)
 {
   auto members = static_cast<const MembersType *>(untyped_members);
   if (!members) {
     RMW_SET_ERROR_MSG("members handle is null");
     return "";
   }
-  return
-    std::string(members->package_name_) + "::" + sep + "::dds_::" + members->message_name_ + "_";
+  std::ostringstream ss;
+  std::string message_namespace(members->message_namespace_);
+  if (!message_namespace.empty()) {
+    ss << message_namespace << "::";
+  }
+  ss << "dds_::" << members->message_name_ << "_";
+  return ss.str();
 }
 
 template<typename ServiceType>
@@ -188,7 +191,7 @@ DDS_TypeCode * create_type_code(
             RMW_SET_ERROR_MSG("sub members handle is null");
             return NULL;
           }
-          std::string field_type_name = _create_type_name<MembersType>(sub_members, "msg");
+          std::string field_type_name = _create_type_name<MembersType>(sub_members);
           member_type_code = create_type_code<MembersType>(field_type_name, sub_members,
               introspection_identifier);
           if (!member_type_code) {
