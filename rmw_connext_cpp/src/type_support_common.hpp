@@ -16,6 +16,7 @@
 #define TYPE_SUPPORT_COMMON_HPP_
 
 #include <string>
+#include <sstream>
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -85,13 +86,15 @@
 
 
 inline std::string
-_create_type_name(
-  const message_type_support_callbacks_t * callbacks,
-  const std::string & sep)
+_create_type_name(const message_type_support_callbacks_t * callbacks)
 {
-  return
-    std::string(callbacks->package_name) +
-    "::" + sep + "::dds_::" + callbacks->message_name + "_";
+  std::ostringstream ss;
+  std::string message_namespace(callbacks->message_namespace);
+  if (!message_namespace.empty()) {
+    ss << message_namespace << "::";
+  }
+  ss << "dds_::" << callbacks->message_name << "_";
+  return ss.str();
 }
 
 #endif  // TYPE_SUPPORT_COMMON_HPP_
