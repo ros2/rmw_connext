@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstring>
 #include <map>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -36,16 +37,17 @@ _demangle_if_ros_topic(const std::string & topic_name)
 std::string
 _demangle_if_ros_type(const std::string & dds_type_string)
 {
-  std::string substring = "::msg::dds_::";
+  std::string substring = "dds_::";
   size_t substring_position = dds_type_string.find(substring);
   if (
     dds_type_string[dds_type_string.size() - 1] == '_' &&
     substring_position != std::string::npos)
   {
-    std::string pkg = dds_type_string.substr(0, substring_position);
+    std::string type_namespace = dds_type_string.substr(0, substring_position);
+    type_namespace = std::regex_replace(type_namespace, std::regex("::"), "/");
     size_t start = substring_position + substring.size();
     std::string type_name = dds_type_string.substr(start, dds_type_string.length() - 1 - start);
-    return pkg + "/" + type_name;
+    return type_namespace + type_name;
   }
   // not a ROS type
   return dds_type_string;
