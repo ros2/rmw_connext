@@ -97,7 +97,7 @@ _demangle_service_from_topic(const std::string & topic_name)
 std::string
 _demangle_service_type_only(const std::string & dds_type_name)
 {
-  std::string ns_substring = "::srv::dds_::";
+  std::string ns_substring = "dds_::";
   size_t ns_substring_position = dds_type_name.find(ns_substring);
   if (ns_substring_position == std::string::npos) {
     // not a ROS service type
@@ -114,7 +114,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
     if (suffix_position != std::string::npos) {
       if (dds_type_name.length() - suffix_position - suffix.length() != 0) {
         RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
-          "service type contains '::srv::dds_::' and a suffix, but not at the end"
+          "service type contains 'dds_::' and a suffix, but not at the end"
           ", report this: '%s'", dds_type_name.c_str());
         continue;
       }
@@ -124,13 +124,15 @@ _demangle_service_type_only(const std::string & dds_type_name)
   }
   if (suffix_position == std::string::npos) {
     RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
-      "service type contains '::srv::dds_::' but does not have a suffix"
+      "service type contains 'dds_::' but does not have a suffix"
       ", report this: '%s'", dds_type_name.c_str());
     return "";
   }
-  // everything checks out, reformat it from '<pkg>::srv::dds_::<type><suffix>' to '<pkg>/<type>'
-  std::string pkg = dds_type_name.substr(0, ns_substring_position);
+  // everything checks out, reformat it from '<namespace>::dds_::<type><suffix>'
+  // to '<namespace>/<type>'
+  std::string type_namespace = dds_type_name.substr(0, ns_substring_position);
+  type_namespace = std::regex_replace(type_namespace, std::regex("::"), "/");
   size_t start = ns_substring_position + ns_substring.length();
   std::string type_name = dds_type_name.substr(start, suffix_position - start);
-  return pkg + "/" + type_name;
+  return type_namespace + type_name;
 }
