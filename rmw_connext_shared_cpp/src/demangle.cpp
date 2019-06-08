@@ -15,10 +15,10 @@
 #include <algorithm>
 #include <cstring>
 #include <map>
-#include <regex>
 #include <string>
 #include <vector>
 
+#include "rcpputils/find_and_replace.hpp"
 #include "rcutils/logging_macros.h"
 
 #include "rmw_connext_shared_cpp/namespace_prefix.hpp"
@@ -44,7 +44,7 @@ _demangle_if_ros_type(const std::string & dds_type_string)
     substring_position != std::string::npos)
   {
     std::string type_namespace = dds_type_string.substr(0, substring_position);
-    type_namespace = std::regex_replace(type_namespace, std::regex("::"), "/");
+    type_namespace = rcpputils::find_and_replace(type_namespace, "::", "/");
     size_t start = substring_position + substring.size();
     std::string type_name = dds_type_string.substr(start, dds_type_string.length() - 1 - start);
     return type_namespace + type_name;
@@ -131,7 +131,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
   // everything checks out, reformat it from '<namespace>::dds_::<type><suffix>'
   // to '<namespace>/<type>'
   std::string type_namespace = dds_type_name.substr(0, ns_substring_position);
-  type_namespace = std::regex_replace(type_namespace, std::regex("::"), "/");
+  type_namespace = rcpputils::find_and_replace(type_namespace, "::", "/");
   size_t start = ns_substring_position + ns_substring.length();
   std::string type_name = dds_type_name.substr(start, suffix_position - start);
   return type_namespace + type_name;

@@ -13,6 +13,7 @@
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
 
   <build_depend>connext_cmake_module</build_depend>
+  <build_depend>rcpputils</build_depend>
   <build_depend>rcutils</build_depend>
   <build_depend>rmw</build_depend>
   <build_depend>rti-connext-dds-5.3.1</build_depend>
