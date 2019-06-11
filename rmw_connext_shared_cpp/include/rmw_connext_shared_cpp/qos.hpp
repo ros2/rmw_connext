@@ -45,4 +45,16 @@ dds_qos_to_rmw_qos(
   const AttributeT & dds_qos,
   rmw_qos_profile_t * qos);
 
+extern template RMW_CONNEXT_SHARED_CPP_PUBLIC
+void
+dds_qos_to_rmw_qos<DDS::DataWriterQos>(
+  const DDS::DataWriterQos & dds_qos,
+  rmw_qos_profile_t * qos);
+
+extern template RMW_CONNEXT_SHARED_CPP_PUBLIC
+void
+dds_qos_to_rmw_qos<DDS::DataReaderQos>(
+  const DDS::DataReaderQos & dds_qos,
+  rmw_qos_profile_t * qos);
+
 #endif  // RMW_CONNEXT_SHARED_CPP__QOS_HPP_

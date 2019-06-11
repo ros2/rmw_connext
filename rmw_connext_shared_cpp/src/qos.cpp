@@ -306,10 +306,12 @@ dds_qos_to_rmw_qos(
   qos->liveliness_lease_duration.nsec = dds_qos.liveliness.lease_duration.nanosec;
 }
 
-template void dds_qos_to_rmw_qos<DDS::DataWriterQos>(
+template
+void dds_qos_to_rmw_qos<DDS::DataWriterQos>(
   const DDS::DataWriterQos & dds_qos,
   rmw_qos_profile_t * qos);
 
-template void dds_qos_to_rmw_qos<DDS::DataReaderQos>(
+template
+void dds_qos_to_rmw_qos<DDS::DataReaderQos>(
   const DDS::DataReaderQos & dds_qos,
   rmw_qos_profile_t * qos);
