@@ -222,3 +222,96 @@ get_datawriter_qos(
 
   return true;
 }
+
+void
+dds_qos_lifespan_to_rmw_qos_lifespan(
+  const DDS::DataWriterQos & dds_qos,
+  rmw_qos_profile_t * qos)
+{
+  qos->lifespan.sec = dds_qos.lifespan.duration.sec;
+  qos->lifespan.nsec = dds_qos.lifespan.duration.nanosec;
+}
+
+void
+dds_qos_lifespan_to_rmw_qos_lifespan(
+  const DDS::DataReaderQos & /*dds_qos*/,
+  rmw_qos_profile_t * /*qos*/)
+{
+  // lifespan does does not exist in DataReader, so no-op here
+}
+
+template<typename AttributeT>
+void
+dds_qos_to_rmw_qos(
+  const AttributeT & dds_qos,
+  rmw_qos_profile_t * qos)
+{
+  switch (dds_qos.history.kind) {
+    case DDS_KEEP_LAST_HISTORY_QOS:
+      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
+      break;
+    case DDS_KEEP_ALL_HISTORY_QOS:
+      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
+      break;
+    default:
+      qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
+      break;
+  }
+  qos->depth = static_cast<size_t>(dds_qos.history.depth);
+
+  switch (dds_qos.reliability.kind) {
+    case DDS_BEST_EFFORT_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+      break;
+    case DDS_RELIABLE_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+      break;
+    default:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_UNKNOWN;
+      break;
+  }
+
+  switch (dds_qos.durability.kind) {
+    case DDS_TRANSIENT_LOCAL_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+      break;
+    case DDS_VOLATILE_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_VOLATILE;
+      break;
+    default:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
+      break;
+  }
+
+  qos->deadline.sec = dds_qos.deadline.period.sec;
+  qos->deadline.nsec = dds_qos.deadline.period.nanosec;
+
+  dds_qos_lifespan_to_rmw_qos_lifespan(dds_qos, qos);
+
+  switch (dds_qos.liveliness.kind) {
+    case DDS_AUTOMATIC_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+      break;
+    case DDS_MANUAL_BY_PARTICIPANT_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE;
+      break;
+    case DDS_MANUAL_BY_TOPIC_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
+      break;
+    default:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
+      break;
+  }
+  qos->liveliness_lease_duration.sec = dds_qos.liveliness.lease_duration.sec;
+  qos->liveliness_lease_duration.nsec = dds_qos.liveliness.lease_duration.nanosec;
+}
+
+template
+void dds_qos_to_rmw_qos<DDS::DataWriterQos>(
+  const DDS::DataWriterQos & dds_qos,
+  rmw_qos_profile_t * qos);
+
+template
+void dds_qos_to_rmw_qos<DDS::DataReaderQos>(
+  const DDS::DataReaderQos & dds_qos,
+  rmw_qos_profile_t * qos);
