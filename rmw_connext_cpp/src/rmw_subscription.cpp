@@ -366,6 +366,36 @@ rmw_subscription_count_matched_publishers(
 }
 
 rmw_ret_t
+rmw_subscription_get_actual_qos(
+  const rmw_subscription_t * subscription,
+  rmw_qos_profile_t * qos)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
+  if (!info) {
+    RMW_SET_ERROR_MSG("subscription internal data is invalid");
+    return RMW_RET_ERROR;
+  }
+  DDS::DataReader * data_reader = info->topic_reader_;
+  if (!data_reader) {
+    RMW_SET_ERROR_MSG("subscription internal data reader is invalid");
+    return RMW_RET_ERROR;
+  }
+  DDS::DataReaderQos dds_qos;
+  DDS::ReturnCode_t status = data_reader->get_qos(dds_qos);
+  if (DDS::RETCODE_OK != status) {
+    RMW_SET_ERROR_MSG("subscription can't get data reader qos policies");
+    return RMW_RET_ERROR;
+  }
+
+  dds_qos_to_rmw_qos(dds_qos, qos);
+
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
 rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 {
   if (!node) {
