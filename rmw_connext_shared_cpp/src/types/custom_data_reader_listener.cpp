@@ -194,8 +194,7 @@ void CustomDataReaderListener::fill_service_names_and_types_by_guid(
     // Check if the topic suffix matches and is at the end of the name
     const std::string & topic_name = it.first;
     auto suffix_position = topic_name.rfind(suffix);
-    if (suffix_position == std::string::npos)
-    {
+    if (suffix_position == std::string::npos) {
       continue;
     }
 
