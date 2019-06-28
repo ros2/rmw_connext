@@ -22,6 +22,7 @@ if(NOT Connext_FOUND)
   message(WARNING "Could not find RTI Connext - skipping '${PROJECT_NAME}'")
   return()
 endif()
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 
@@ -57,6 +58,7 @@ add_library(
   src/types/custom_publisher_listener.cpp
   src/types/custom_subscriber_listener.cpp)
 ament_target_dependencies(rmw_connext_shared_cpp
+  "rcpputils"
   "rcutils"
   "rmw"
   "Connext")
