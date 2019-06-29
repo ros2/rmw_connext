@@ -108,15 +108,15 @@ get_node_names(
     return RMW_RET_BAD_ALLOC;
   }
 
-  node_namespaces->data[0] = rcutils_strdup(node->namespace_, allocator);
-  if (!node_namespaces->data[0]) {
-    RMW_SET_ERROR_MSG("could not allocate memory for node namespace");
-    return RMW_RET_BAD_ALLOC;
-  }
-
   node_names->data[0] = rcutils_strdup(participant_qos.participant_name.name, allocator);
   if (!node_names->data[0]) {
     RMW_SET_ERROR_MSG("could not allocate memory for node name");
+    return RMW_RET_BAD_ALLOC;
+  }
+
+  node_namespaces->data[0] = rcutils_strdup(node->namespace_, allocator);
+  if (!node_namespaces->data[0]) {
+    RMW_SET_ERROR_MSG("could not allocate memory for node namespace");
     return RMW_RET_BAD_ALLOC;
   }
 
@@ -171,6 +171,11 @@ get_node_names(
     node_names->data[i] = rcutils_strdup(name.c_str(), allocator);
     if (!node_names->data[i]) {
       RMW_SET_ERROR_MSG("could not allocate memory for node name");
+      goto fail;
+    }
+
+    if (!tmp_names_list.data[named_nodes_num]) {
+      RMW_SET_ERROR_MSG("could not allocate memory for temporal node name");
       goto fail;
     }
 
