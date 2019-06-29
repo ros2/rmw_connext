@@ -48,11 +48,14 @@ get_node_names(
 
   DDS::DomainParticipant * participant = static_cast<ConnextNodeInfo *>(node->data)->participant;
   DDS::InstanceHandleSeq handles;
+
   if (participant->get_discovered_participants(handles) != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("unable to fetch discovered participants.");
     return RMW_RET_ERROR;
   }
+
   auto length = handles.length() + 1;  // add yourself
+
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
   rcutils_ret_t rcutils_ret = rcutils_string_array_init(node_names, length, &allocator);
@@ -62,6 +65,8 @@ get_node_names(
   }
 
   rcutils_ret = rcutils_string_array_init(node_namespaces, length, &allocator);
+  rcutils_ret_t rcutils_ret = rcutils_string_array_init(node_namespaces, length, &allocator);
+
   if (rcutils_ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
@@ -69,19 +74,20 @@ get_node_names(
 
   DDS::DomainParticipantQos participant_qos;
   DDS::ReturnCode_t status = participant->get_qos(participant_qos);
+
   if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return RMW_RET_ERROR;
   }
-
 
   // Pre-allocate temporary buffer for all node names
   // Nodes that are not created by ROS2 could provide empty names
   // Such names should not be returned
   rcutils_string_array_t tmp_names_list = rcutils_get_zero_initialized_string_array();
   rcutils_ret = rcutils_string_array_init(&tmp_names_list, length, &allocator);
+
   if (rcutils_ret != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
   }
 
@@ -89,13 +95,14 @@ get_node_names(
   tmp_names_list.data[0] = rcutils_strdup(participant_qos.participant_name.name, allocator);
 
   if (!tmp_names_list.data[0]) {
-    RMW_SET_ERROR_MSG("could not allocate memory for node name")
+    RMW_SET_ERROR_MSG("could not allocate memory for node name");
 
     rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_connext_shared_cpp",
-        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+        "failed to cleanup during error handling: %s", rcutils_get_error_string().str
+      );
       rcutils_reset_error();
     }
 
@@ -104,7 +111,7 @@ get_node_names(
 
   node_namespaces->data[0] = rcutils_strdup(node->namespace_, allocator);
   if (!node_namespaces->data[0]) {
-    RMW_SET_ERROR_MSG("could not allocate memory for node namespace")
+    RMW_SET_ERROR_MSG("could not allocate memory for node namespace");
     return RMW_RET_BAD_ALLOC;
   }
 
@@ -145,7 +152,7 @@ get_node_names(
     // ignore discovered participants without a name
     if (name.empty()) {
       // ignore discovered participants without a name
-      tmp_names_list->data[i] = nullptr;
+      tmp_names_list.data[i] = nullptr;
       node_namespaces->data[i] = nullptr;
       continue;
     }
@@ -190,7 +197,7 @@ get_node_names(
   // so using additional buffer would be unnessecary 
   rcutils_ret = rcutils_string_array_init(node_names, named_nodes_num, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
   }
 
@@ -214,7 +221,8 @@ fail:
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_connext_cpp",
-        "failed to cleanup during error handling: %s", rcutils_get_error_string().str);
+        "failed to cleanup during error handling: %s", rcutils_get_error_string().str
+      );
       rcutils_reset_error();
     }
   }
@@ -223,7 +231,8 @@ fail:
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_connext_cpp",
-        "failed to cleanup during error handling: %s", rcutils_get_error_string().str);
+        "failed to cleanup during error handling: %s", rcutils_get_error_string().str
+      );
       rcutils_reset_error();
     }
   }
