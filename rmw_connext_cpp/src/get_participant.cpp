@@ -19,7 +19,7 @@
 namespace rmw_connext_cpp
 {
 
-DDSDomainParticipant *
+DDS::DomainParticipant *
 get_participant(rmw_node_t * node)
 {
   if (!node) {
@@ -28,7 +28,7 @@ get_participant(rmw_node_t * node)
   if (node->implementation_identifier != rti_connext_identifier) {
     return NULL;
   }
-  return static_cast<DDSDomainParticipant *>(node->data);
+  return static_cast<DDS::DomainParticipant *>(node->data);
 }
 
 }  // namespace rmw_connext_cpp

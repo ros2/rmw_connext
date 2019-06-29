@@ -20,22 +20,29 @@
 #include "rmw/impl/cpp/macros.hpp"
 
 rmw_guard_condition_t *
-create_guard_condition(const char * implementation_identifier)
+create_guard_condition(const char * implementation_identifier, rmw_context_t * context)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    implementation_identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return NULL);
   rmw_guard_condition_t * guard_condition = rmw_guard_condition_allocate();
   if (!guard_condition) {
     RMW_SET_ERROR_MSG("failed to allocate guard condition");
     return NULL;
   }
   // Allocate memory for the DDSGuardCondition object.
-  DDSGuardCondition * dds_guard_condition = nullptr;
-  void * buf = rmw_allocate(sizeof(DDSGuardCondition));
+  DDS::GuardCondition * dds_guard_condition = nullptr;
+  void * buf = rmw_allocate(sizeof(DDS::GuardCondition));
   if (!buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
-  // Use a placement new to construct the DDSGuardCondition in the preallocated buffer.
-  RMW_TRY_PLACEMENT_NEW(dds_guard_condition, buf, goto fail, DDSGuardCondition, )
+  // Use a placement new to construct the DDS::GuardCondition in the preallocated buffer.
+  RMW_TRY_PLACEMENT_NEW(dds_guard_condition, buf, goto fail, DDS::GuardCondition, )
   buf = nullptr;  // Only free the dds_guard_condition pointer; don't need the buf pointer anymore.
   guard_condition->implementation_identifier = implementation_identifier;
   guard_condition->data = dds_guard_condition;
@@ -65,9 +72,13 @@ destroy_guard_condition(
     return RMW_RET_ERROR)
 
   auto result = RMW_RET_OK;
+#if defined __clang__
+  using DDS::GuardCondition;
+#endif
   RMW_TRY_DESTRUCTOR(
-    static_cast<DDSGuardCondition *>(guard_condition->data)->~DDSGuardCondition(),
-    DDSGuardCondition, result = RMW_RET_ERROR)
+    static_cast<DDS::GuardCondition *>(guard_condition->data)
+    ->DDS::GuardCondition::~GuardCondition(),
+    DDS::GuardCondition, result = RMW_RET_ERROR)
   rmw_free(guard_condition->data);
   rmw_guard_condition_free(guard_condition);
   return result;

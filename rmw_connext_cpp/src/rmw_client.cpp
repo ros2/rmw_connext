@@ -62,7 +62,7 @@ rmw_create_client(
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -75,11 +75,11 @@ rmw_create_client(
     return NULL;
   }
   // Past this point, a failure results in unrolling code in the goto fail block.
-  DDS_SubscriberQos subscriber_qos;
-  DDS_ReturnCode_t status;
-  DDS_PublisherQos publisher_qos;
-  DDS_DataReaderQos datareader_qos;
-  DDS_DataWriterQos datawriter_qos;
+  DDS::SubscriberQos subscriber_qos;
+  DDS::ReturnCode_t status;
+  DDS::PublisherQos publisher_qos;
+  DDS::DataReaderQos datareader_qos;
+  DDS::DataWriterQos datawriter_qos;
   DDS::Publisher * dds_publisher = nullptr;
   DDS::Subscriber * dds_subscriber = nullptr;
   DDS::DataReader * response_datareader = nullptr;
@@ -128,9 +128,9 @@ rmw_create_client(
     reinterpret_cast<void **>(&response_datareader),
     reinterpret_cast<void **>(&request_datawriter),
     &rmw_allocate);
-  DDS_String_free(request_topic_str);
+  DDS::String_free(request_topic_str);
   request_topic_str = nullptr;
-  DDS_String_free(response_topic_str);
+  DDS::String_free(response_topic_str);
   response_topic_str = nullptr;
 
   if (!requester) {
@@ -148,14 +148,14 @@ rmw_create_client(
 
   dds_subscriber = response_datareader->get_subscriber();
   status = participant->get_default_subscriber_qos(subscriber_qos);
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default subscriber qos");
     goto fail;
   }
 
   dds_publisher = request_datawriter->get_publisher();
   status = participant->get_default_publisher_qos(publisher_qos);
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default subscriber qos");
     goto fail;
   }
@@ -167,7 +167,7 @@ rmw_create_client(
   dds_publisher->set_qos(publisher_qos);
 
   read_condition = response_datareader->create_readcondition(
-    DDS_ANY_SAMPLE_STATE, DDS_ANY_VIEW_STATE, DDS_ANY_INSTANCE_STATE);
+    DDS::ANY_SAMPLE_STATE, DDS::ANY_VIEW_STATE, DDS::ANY_INSTANCE_STATE);
   if (!read_condition) {
     RMW_SET_ERROR_MSG("failed to create read condition");
     goto fail;
@@ -198,8 +198,9 @@ rmw_create_client(
   mangled_name =
     response_datareader->get_topicdescription()->get_name();
   node_info->subscriber_listener->add_information(
+    node_info->participant->get_instance_handle(),
     response_datareader->get_instance_handle(),
-    mangled_name.c_str(),
+    mangled_name,
     response_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
@@ -207,8 +208,9 @@ rmw_create_client(
   mangled_name =
     request_datawriter->get_topic()->get_name();
   node_info->publisher_listener->add_information(
+    node_info->participant->get_instance_handle(),
     request_datawriter->get_instance_handle(),
-    mangled_name.c_str(),
+    mangled_name,
     request_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
@@ -226,18 +228,18 @@ rmw_create_client(
   return client;
 fail:
   if (request_topic_str) {
-    DDS_String_free(request_topic_str);
+    DDS::String_free(request_topic_str);
     request_topic_str = nullptr;
   }
   if (response_topic_str) {
-    DDS_String_free(response_topic_str);
+    DDS::String_free(response_topic_str);
     response_topic_str = nullptr;
   }
   if (client) {
     rmw_client_free(client);
   }
-  if (response_datareader) {
-    if (participant->delete_datareader(response_datareader) != DDS_RETCODE_OK) {
+  if (response_datareader && dds_subscriber) {
+    if (dds_subscriber->delete_datareader(response_datareader) != DDS::RETCODE_OK) {
       std::stringstream ss;
       ss << "leaking datareader while handling failure at " <<
         __FILE__ << ":" << __LINE__ << '\n';
@@ -295,7 +297,7 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
     if (response_datareader) {
       auto read_condition = client_info->read_condition_;
       if (read_condition) {
-        if (response_datareader->delete_readcondition(read_condition) != DDS_RETCODE_OK) {
+        if (response_datareader->delete_readcondition(read_condition) != DDS::RETCODE_OK) {
           RMW_SET_ERROR_MSG("failed to delete readcondition");
           result = RMW_RET_ERROR;
         }

@@ -17,7 +17,10 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 find_package(connext_cmake_module REQUIRED)
-find_package(Connext MODULE)
+find_package(Connext QUIET MODULE)
+if(Connext_FOUND)
+  find_package(Connext MODULE)
+endif()
 if(NOT Connext_FOUND OR CONNEXT_STATIC_DISABLE)
   ament_package()
   if(NOT Connext_FOUND)
@@ -122,6 +125,8 @@ add_library(
   rmw_connext_cpp
   SHARED
   ${patched_files}
+  src/connext_static_publisher_info.cpp
+  src/connext_static_subscriber_info.cpp
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp
@@ -132,6 +137,7 @@ add_library(
   src/rmw_client.cpp
   src/rmw_compare_gid_equals.cpp
   src/rmw_count.cpp
+  src/rmw_event.cpp
   src/rmw_get_gid_for_publisher.cpp
   src/rmw_get_implementation_identifier.cpp
   src/rmw_get_serialization_format.cpp
@@ -139,6 +145,7 @@ add_library(
   src/rmw_init.cpp
   src/rmw_logging.cpp
   src/rmw_node.cpp
+  src/rmw_node_info_and_types.cpp
   src/rmw_node_names.cpp
   src/rmw_publish.cpp
   src/rmw_publisher.cpp

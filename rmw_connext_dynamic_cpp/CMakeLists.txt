@@ -17,7 +17,10 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 find_package(connext_cmake_module REQUIRED)
-find_package(Connext MODULE)
+find_package(Connext QUIET MODULE)
+if(Connext_FOUND)
+  find_package(Connext MODULE)
+endif()
 if(NOT Connext_FOUND OR CONNEXT_DYNAMIC_DISABLE)
   ament_package()
   if(NOT Connext_FOUND)
@@ -57,7 +60,7 @@ register_rmw_implementation(
   "cpp:rosidl_typesupport_cpp:rosidl_typesupport_introspection_cpp"
 )
 
-add_library(rmw_connext_dynamic_cpp SHARED src/functions.cpp src/publish_take.cpp)
+add_library(rmw_connext_dynamic_cpp SHARED src/functions.cpp src/publish_take.cpp src/rmw_node_info_and_types.cpp)
 ament_target_dependencies(rmw_connext_dynamic_cpp
   "rcutils"
   "rosidl_typesupport_introspection_c"

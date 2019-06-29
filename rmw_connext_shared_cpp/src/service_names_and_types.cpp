@@ -25,6 +25,7 @@
 #include "rmw/error_handling.h"
 
 #include "rmw_connext_shared_cpp/demangle.hpp"
+#include "rmw_connext_shared_cpp/names_and_types_helpers.hpp"
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/service_names_and_types.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
@@ -37,11 +38,11 @@ get_service_names_and_types(
   rmw_names_and_types_t * service_names_and_types)
 {
   if (!allocator) {
-    RMW_SET_ERROR_MSG("allocator is null")
+    RMW_SET_ERROR_MSG("allocator is null");
     return RMW_RET_INVALID_ARGUMENT;
   }
   if (!node) {
-    RMW_SET_ERROR_MSG_ALLOC("null node handle", *allocator)
+    RMW_SET_ERROR_MSG("null node handle");
     return RMW_RET_INVALID_ARGUMENT;
   }
   if (node->implementation_identifier != implementation_identifier) {
@@ -69,89 +70,17 @@ get_service_names_and_types(
 
   // combine publisher and subscriber information
   std::map<std::string, std::set<std::string>> services;
-  {
-    for (auto it : node_info->publisher_listener->topic_names_and_types) {
-      std::string service_name = _demangle_service_from_topic(it.first);
-      if (!service_name.length()) {
-        // not a service
-        continue;
-      }
-      for (auto & itt : it.second) {
-        std::string service_type = _demangle_service_type_only(itt);
-        if (service_type.length()) {
-          services[service_name].insert(service_type);
-        }
-      }
-    }
-  }
-  {
-    for (auto it : node_info->subscriber_listener->topic_names_and_types) {
-      std::string service_name = _demangle_service_from_topic(it.first);
-      if (!service_name.length()) {
-        // not a service
-        continue;
-      }
-      for (auto & itt : it.second) {
-        std::string service_type = _demangle_service_type_only(itt);
-        if (service_type.length()) {
-          services[service_name].insert(service_type);
-        }
-      }
-    }
-  }
+  node_info->publisher_listener->fill_service_names_and_types(services);
+  node_info->subscriber_listener->fill_service_names_and_types(services);
 
   // Fill out service_names_and_types
-  if (services.size()) {
-    // Setup string array to store names
+  if (!services.empty()) {
     rmw_ret_t rmw_ret =
-      rmw_names_and_types_init(service_names_and_types, services.size(), allocator);
+      copy_services_to_names_and_types(services, allocator, service_names_and_types);
     if (rmw_ret != RMW_RET_OK) {
       return rmw_ret;
     }
-    // Setup cleanup function, in case of failure below
-    auto fail_cleanup = [&service_names_and_types]() {
-        rmw_ret_t rmw_ret = rmw_names_and_types_fini(service_names_and_types);
-        if (rmw_ret != RMW_RET_OK) {
-          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
-        }
-      };
-    // For each service, store the name, initialize the string array for types, and store all types
-    size_t index = 0;
-    for (const auto & service_n_types : services) {
-      // Duplicate and store the service_name
-      char * service_name = rcutils_strdup(service_n_types.first.c_str(), *allocator);
-      if (!service_name) {
-        RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for service name", *allocator);
-        fail_cleanup();
-        return RMW_RET_BAD_ALLOC;
-      }
-      service_names_and_types->names.data[index] = service_name;
-      // Setup storage for types
-      {
-        rcutils_ret_t rcutils_ret = rcutils_string_array_init(
-          &service_names_and_types->types[index],
-          service_n_types.second.size(),
-          allocator);
-        if (rcutils_ret != RCUTILS_RET_OK) {
-          RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
-          fail_cleanup();
-          return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
-        }
-      }
-      // Duplicate and store each type for the service
-      size_t type_index = 0;
-      for (const auto & type : service_n_types.second) {
-        char * type_name = rcutils_strdup(type.c_str(), *allocator);
-        if (!type_name) {
-          RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for type name", *allocator)
-          fail_cleanup();
-          return RMW_RET_BAD_ALLOC;
-        }
-        service_names_and_types->types[index].data[type_index] = type_name;
-        ++type_index;
-      }  // for each type
-      ++index;
-    }  // for each service
   }
+
   return RMW_RET_OK;
 }

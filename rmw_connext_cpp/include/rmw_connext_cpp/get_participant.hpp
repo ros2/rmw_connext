@@ -30,7 +30,7 @@ namespace rmw_connext_cpp
  * \return native Connext participant handle if successful, otherwise `NULL`
  */
 RMW_CONNEXT_CPP_PUBLIC
-DDSDomainParticipant *
+DDS::DomainParticipant *
 get_participant(rmw_node_t * node);
 
 }  // namespace rmw_connext_cpp

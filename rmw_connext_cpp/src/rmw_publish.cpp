@@ -21,13 +21,11 @@
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
-#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
-
 // include patched generated code from the build folder
 #include "connext_static_serialized_dataSupport.h"
 
 bool
-publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
+publish(DDS::DataWriter * dds_data_writer, const rcutils_uint8_array_t * cdr_stream)
 {
   ConnextStaticSerializedDataDataWriter * data_writer =
     ConnextStaticSerializedDataDataWriter::narrow(dds_data_writer);
@@ -42,7 +40,7 @@ publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
     return false;
   }
 
-  DDS_ReturnCode_t status = DDS_RETCODE_ERROR;
+  DDS::ReturnCode_t status = DDS::RETCODE_ERROR;
 
   instance->serialized_data.maximum(0);
   if (cdr_stream->buffer_length > (std::numeric_limits<DDS_Long>::max)()) {
@@ -50,33 +48,37 @@ publish(DDSDataWriter * dds_data_writer, ConnextStaticCDRStream * cdr_stream)
     return false;
   }
   if (!instance->serialized_data.loan_contiguous(
-      reinterpret_cast<DDS_Octet *>(cdr_stream->buffer),
-      static_cast<DDS_Long>(cdr_stream->buffer_length),
-      static_cast<DDS_Long>(cdr_stream->buffer_length)))
+      reinterpret_cast<DDS::Octet *>(cdr_stream->buffer),
+      static_cast<DDS::Long>(cdr_stream->buffer_length),
+      static_cast<DDS::Long>(cdr_stream->buffer_length)))
   {
     RMW_SET_ERROR_MSG("failed to loan memory for message");
     goto cleanup;
   }
 
-  status = data_writer->write(*instance, DDS_HANDLE_NIL);
+  status = data_writer->write(*instance, DDS::HANDLE_NIL);
 
 cleanup:
   if (instance) {
     if (!instance->serialized_data.unloan()) {
       fprintf(stderr, "failed to return loaned memory\n");
-      status = DDS_RETCODE_ERROR;
+      status = DDS::RETCODE_ERROR;
     }
     ConnextStaticSerializedDataTypeSupport::delete_data(instance);
   }
 
-  return status == DDS_RETCODE_OK;
+  return status == DDS::RETCODE_OK;
 }
 
 extern "C"
 {
 rmw_ret_t
-rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
+rmw_publish(
+  const rmw_publisher_t * publisher,
+  const void * ros_message,
+  rmw_publisher_allocation_t * allocation)
 {
+  (void) allocation;
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
     return RMW_RET_ERROR;
@@ -101,15 +103,16 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
-  DDSDataWriter * topic_writer = publisher_info->topic_writer_;
+  DDS::DataWriter * topic_writer = publisher_info->topic_writer_;
   if (!topic_writer) {
     RMW_SET_ERROR_MSG("topic writer handle is null");
     return RMW_RET_ERROR;
   }
 
   auto ret = RMW_RET_OK;
-  ConnextStaticCDRStream cdr_stream;
+  rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   cdr_stream.allocator = rcutils_get_default_allocator();
+
   if (!callbacks->to_cdr_stream(ros_message, &cdr_stream)) {
     RMW_SET_ERROR_MSG("failed to convert ros_message to cdr stream");
     ret = RMW_RET_ERROR;
@@ -138,8 +141,11 @@ fail:
 
 rmw_ret_t
 rmw_publish_serialized_message(
-  const rmw_publisher_t * publisher, const rmw_serialized_message_t * serialized_message)
+  const rmw_publisher_t * publisher,
+  const rmw_serialized_message_t * serialized_message,
+  rmw_publisher_allocation_t * allocation)
 {
+  (void) allocation;
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
     return RMW_RET_ERROR;
@@ -164,17 +170,13 @@ rmw_publish_serialized_message(
     RMW_SET_ERROR_MSG("callbacks handle is null");
     return RMW_RET_ERROR;
   }
-  DDSDataWriter * topic_writer = publisher_info->topic_writer_;
+  DDS::DataWriter * topic_writer = publisher_info->topic_writer_;
   if (!topic_writer) {
     RMW_SET_ERROR_MSG("topic writer handle is null");
     return RMW_RET_ERROR;
   }
 
-  ConnextStaticCDRStream cdr_stream;
-  cdr_stream.buffer = serialized_message->buffer;
-  cdr_stream.buffer_length = serialized_message->buffer_length;
-  cdr_stream.buffer_capacity = serialized_message->buffer_capacity;
-  bool published = publish(topic_writer, &cdr_stream);
+  bool published = publish(topic_writer, serialized_message);
   if (!published) {
     RMW_SET_ERROR_MSG("failed to publish message");
     return RMW_RET_ERROR;

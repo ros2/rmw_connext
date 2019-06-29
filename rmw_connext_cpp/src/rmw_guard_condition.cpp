@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
 #include "rmw_connext_shared_cpp/guard_condition.hpp"
@@ -21,9 +22,9 @@
 extern "C"
 {
 rmw_guard_condition_t *
-rmw_create_guard_condition()
+rmw_create_guard_condition(rmw_context_t * context)
 {
-  return create_guard_condition(rti_connext_identifier);
+  return create_guard_condition(rti_connext_identifier, context);
 }
 
 rmw_ret_t

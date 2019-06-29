@@ -28,13 +28,15 @@
 #include <string>
 
 #include "rmw/rmw.h"
+#include "topic_cache.hpp"
+#include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/visibility_control.h"
 
-#include "ndds_include.hpp"
 
 enum EntityType {Publisher, Subscriber};
 
 class CustomDataReaderListener
-  : public DDSDataReaderListener
+  : public DDS::DataReaderListener
 {
 public:
   explicit
@@ -44,29 +46,57 @@ public:
     implementation_identifier_(implementation_identifier)
   {}
 
-  std::map<std::string, std::multiset<std::string>> topic_names_and_types;
-
+  RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void add_information(
-    const DDS_InstanceHandle_t & instance_handle,
+    const DDS::GUID_t & participant_guid,
+    const DDS::GUID_t & guid,
     const std::string & topic_name,
     const std::string & type_name,
     EntityType entity_type);
 
+  RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void remove_information(
-    const DDS_InstanceHandle_t & instance_handle,
+    const DDS::GUID_t & guid,
     EntityType entity_type);
 
+  virtual void add_information(
+    const DDS::InstanceHandle_t & participant_instance_handle,
+    const DDS::InstanceHandle_t & instance_handle,
+    const std::string & topic_name,
+    const std::string & type_name,
+    EntityType entity_type);
+
+  RMW_CONNEXT_SHARED_CPP_PUBLIC
+  virtual void remove_information(
+    const DDS::InstanceHandle_t & instance_handle,
+    EntityType entity_type);
+
+  RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void trigger_graph_guard_condition();
 
+  size_t count_topic(const char * topic_name);
+
+  void fill_topic_names_and_types(
+    bool no_demangle,
+    std::map<std::string, std::set<std::string>> & topic_names_to_types);
+
+  void fill_service_names_and_types(
+    std::map<std::string, std::set<std::string>> & services);
+
+  void fill_topic_names_and_types_by_guid(
+    bool no_demangle,
+    std::map<std::string, std::set<std::string>> & topic_names_to_types_by_guid,
+    DDS_GUID_t & participant_guid);
+
+  void fill_service_names_and_types_by_guid(
+    std::map<std::string, std::set<std::string>> & services,
+    DDS_GUID_t & participant_guid);
+
+protected:
+  std::mutex mutex_;
+  TopicCache<DDS::GUID_t> topic_cache;
+
 private:
-  mutable std::mutex topic_descriptor_mutex_;
-  struct TopicDescriptor
-  {
-    DDS_InstanceHandle_t instance_handle;
-    std::string name;
-    std::string type;
-  };
-  std::list<TopicDescriptor> topic_descriptors;
   rmw_guard_condition_t * graph_guard_condition_;
   const char * implementation_identifier_;
 };
@@ -80,7 +110,7 @@ public:
   : CustomDataReaderListener(implementation_identifier, graph_guard_condition)
   {}
 
-  virtual void on_data_available(DDSDataReader * reader);
+  virtual void on_data_available(DDS::DataReader * reader);
 };
 
 class CustomSubscriberListener
@@ -92,12 +122,12 @@ public:
   : CustomDataReaderListener(implementation_identifier, graph_guard_condition)
   {}
 
-  virtual void on_data_available(DDSDataReader * reader);
+  virtual void on_data_available(DDS::DataReader * reader);
 };
 
 struct ConnextNodeInfo
 {
-  DDSDomainParticipant * participant;
+  DDS::DomainParticipant * participant;
   CustomPublisherListener * publisher_listener;
   CustomSubscriberListener * subscriber_listener;
   rmw_guard_condition_t * graph_guard_condition;
@@ -105,14 +135,14 @@ struct ConnextNodeInfo
 
 struct ConnextPublisherGID
 {
-  DDS_InstanceHandle_t publication_handle;
+  DDS::InstanceHandle_t publication_handle;
 };
 
 struct ConnextWaitSetInfo
 {
-  DDSWaitSet * wait_set;
-  DDSConditionSeq * active_conditions;
-  DDSConditionSeq * attached_conditions;
+  DDS::WaitSet * wait_set;
+  DDS::ConditionSeq * active_conditions;
+  DDS::ConditionSeq * attached_conditions;
 };
 
 #endif  // RMW_CONNEXT_SHARED_CPP__TYPES_HPP_

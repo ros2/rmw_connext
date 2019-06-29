@@ -23,20 +23,20 @@
 #include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
-#include "rosidl_typesupport_connext_cpp/connext_static_cdr_stream.hpp"
-
 // include patched generated code from the build folder
 #include "./connext_static_serialized_dataSupport.h"
 #include "./connext_static_serialized_data.h"
 
 static bool
 take(
-  DDSDataReader * dds_data_reader,
+  DDS::DataReader * dds_data_reader,
   bool ignore_local_publications,
-  ConnextStaticCDRStream * cdr_stream,
+  rcutils_uint8_array_t * cdr_stream,
   bool * taken,
-  void * sending_publication_handle)
+  void * sending_publication_handle,
+  rmw_subscription_allocation_t * allocation)
 {
+  (void) allocation;
   if (!dds_data_reader) {
     RMW_SET_ERROR_MSG("dds_data_reader is null");
     return false;
@@ -58,40 +58,41 @@ take(
   }
 
   ConnextStaticSerializedDataSeq dds_messages;
-  DDS_SampleInfoSeq sample_infos;
+  DDS::SampleInfoSeq sample_infos;
   bool ignore_sample = false;
 
-  DDS_ReturnCode_t status = data_reader->take(
+  DDS::ReturnCode_t status = data_reader->take(
     dds_messages,
     sample_infos,
     1,
-    DDS_ANY_SAMPLE_STATE,
-    DDS_ANY_VIEW_STATE,
-    DDS_ANY_INSTANCE_STATE);
-  if (status == DDS_RETCODE_NO_DATA) {
+    DDS::ANY_SAMPLE_STATE,
+    DDS::ANY_VIEW_STATE,
+    DDS::ANY_INSTANCE_STATE);
+  if (status == DDS::RETCODE_NO_DATA) {
     data_reader->return_loan(dds_messages, sample_infos);
     *taken = false;
     return true;
   }
-  if (status != DDS_RETCODE_OK) {
+  if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("take failed");
     data_reader->return_loan(dds_messages, sample_infos);
     return false;
   }
 
-  DDS_SampleInfo & sample_info = sample_infos[0];
+  DDS::SampleInfo & sample_info = sample_infos[0];
   if (!sample_info.valid_data) {
     // skip sample without data
     ignore_sample = true;
   } else if (ignore_local_publications) {
     // compare the lower 12 octets of the guids from the sender and this receiver
     // if they are equal the sample has been sent from this process and should be ignored
-    DDS_GUID_t sender_guid = sample_info.original_publication_virtual_guid;
-    DDS_InstanceHandle_t receiver_instance_handle = dds_data_reader->get_instance_handle();
+    DDS::GUID_t sender_guid = sample_info.original_publication_virtual_guid;
+    DDS::InstanceHandle_t receiver_instance_handle = dds_data_reader->get_instance_handle();
     ignore_sample = true;
     for (size_t i = 0; i < 12; ++i) {
-      DDS_Octet * sender_element = &(sender_guid.value[i]);
-      DDS_Octet * receiver_element = &(reinterpret_cast<DDS_Octet *>(&receiver_instance_handle)[i]);
+      DDS::Octet * sender_element = &(sender_guid.value[i]);
+      DDS::Octet * receiver_element =
+        &(reinterpret_cast<DDS::Octet *>(&receiver_instance_handle)[i]);
       if (*sender_element != *receiver_element) {
         ignore_sample = false;
         break;
@@ -99,7 +100,7 @@ take(
     }
   }
   if (sample_info.valid_data && sending_publication_handle) {
-    *static_cast<DDS_InstanceHandle_t *>(sending_publication_handle) =
+    *static_cast<DDS::InstanceHandle_t *>(sending_publication_handle) =
       sample_info.publication_handle;
   }
 
@@ -107,7 +108,7 @@ take(
     cdr_stream->buffer_length = dds_messages[0].serialized_data.length();
     // TODO(karsten1987): This malloc has to go!
     cdr_stream->buffer =
-      reinterpret_cast<char *>(malloc(cdr_stream->buffer_length * sizeof(char)));
+      reinterpret_cast<uint8_t *>(malloc(cdr_stream->buffer_length * sizeof(uint8_t)));
 
     if (cdr_stream->buffer_length > (std::numeric_limits<unsigned int>::max)()) {
       RMW_SET_ERROR_MSG("cdr_stream->buffer_length unexpectedly larger than max unsiged int value");
@@ -125,7 +126,7 @@ take(
 
   data_reader->return_loan(dds_messages, sample_infos);
 
-  return status == DDS_RETCODE_OK;
+  return status == DDS::RETCODE_OK;
 }
 
 extern "C"
@@ -135,7 +136,8 @@ _take(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
-  DDS_InstanceHandle_t * sending_publication_handle)
+  DDS::InstanceHandle_t * sending_publication_handle,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!subscription) {
     RMW_SET_ERROR_MSG("subscription handle is null");
@@ -161,7 +163,7 @@ _take(
     RMW_SET_ERROR_MSG("subscriber info handle is null");
     return RMW_RET_ERROR;
   }
-  DDSDataReader * topic_reader = subscriber_info->topic_reader_;
+  DDS::DataReader * topic_reader = subscriber_info->topic_reader_;
   if (!topic_reader) {
     RMW_SET_ERROR_MSG("topic reader handle is null");
     return RMW_RET_ERROR;
@@ -173,10 +175,10 @@ _take(
   }
 
   // fetch the incoming message as cdr stream
-  ConnextStaticCDRStream cdr_stream;
+  rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   if (!take(
       topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
-      sending_publication_handle))
+      sending_publication_handle, allocation))
   {
     RMW_SET_ERROR_MSG("error occured while taking message");
     return RMW_RET_ERROR;
@@ -195,9 +197,13 @@ _take(
 }
 
 rmw_ret_t
-rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
+rmw_take(
+  const rmw_subscription_t * subscription,
+  void * ros_message,
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
 {
-  return _take(subscription, ros_message, taken, nullptr);
+  return _take(subscription, ros_message, taken, nullptr, allocation);
 }
 
 rmw_ret_t
@@ -205,14 +211,15 @@ rmw_take_with_info(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
-  rmw_message_info_t * message_info)
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!message_info) {
     RMW_SET_ERROR_MSG("message info is null");
     return RMW_RET_ERROR;
   }
-  DDS_InstanceHandle_t sending_publication_handle;
-  auto ret = _take(subscription, ros_message, taken, &sending_publication_handle);
+  DDS::InstanceHandle_t sending_publication_handle;
+  auto ret = _take(subscription, ros_message, taken, &sending_publication_handle, allocation);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
     return RMW_RET_ERROR;
@@ -232,7 +239,8 @@ _take_serialized_message(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken,
-  DDS_InstanceHandle_t * sending_publication_handle)
+  DDS::InstanceHandle_t * sending_publication_handle,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!subscription) {
     RMW_SET_ERROR_MSG("subscription handle is null");
@@ -258,7 +266,7 @@ _take_serialized_message(
     RMW_SET_ERROR_MSG("subscriber info handle is null");
     return RMW_RET_ERROR;
   }
-  DDSDataReader * topic_reader = subscriber_info->topic_reader_;
+  DDS::DataReader * topic_reader = subscriber_info->topic_reader_;
   if (!topic_reader) {
     RMW_SET_ERROR_MSG("topic reader handle is null");
     return RMW_RET_ERROR;
@@ -270,19 +278,13 @@ _take_serialized_message(
   }
 
   // fetch the incoming message as cdr stream
-  ConnextStaticCDRStream cdr_stream;
   if (!take(
-      topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
-      sending_publication_handle))
+      topic_reader, subscriber_info->ignore_local_publications, serialized_message, taken,
+      sending_publication_handle, allocation))
   {
     RMW_SET_ERROR_MSG("error occured while taking message");
     return RMW_RET_ERROR;
   }
-
-  serialized_message->buffer_length = cdr_stream.buffer_length;
-  // we don't free the allocated memory
-  // and thus can directly set the pointer
-  serialized_message->buffer = cdr_stream.buffer;
 
   return RMW_RET_OK;
 }
@@ -291,9 +293,10 @@ rmw_ret_t
 rmw_take_serialized_message(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
-  bool * taken)
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
 {
-  return _take_serialized_message(subscription, serialized_message, taken, nullptr);
+  return _take_serialized_message(subscription, serialized_message, taken, nullptr, allocation);
 }
 
 rmw_ret_t
@@ -301,15 +304,17 @@ rmw_take_serialized_message_with_info(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken,
-  rmw_message_info_t * message_info)
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
 {
   if (!message_info) {
     RMW_SET_ERROR_MSG("message info is null");
     return RMW_RET_ERROR;
   }
-  DDS_InstanceHandle_t sending_publication_handle;
+  DDS::InstanceHandle_t sending_publication_handle;
   auto ret =
-    _take_serialized_message(subscription, serialized_message, taken, &sending_publication_handle);
+    _take_serialized_message(subscription, serialized_message, taken,
+      &sending_publication_handle, allocation);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
     return RMW_RET_ERROR;

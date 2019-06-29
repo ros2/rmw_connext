@@ -13,12 +13,16 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(connext_cmake_module REQUIRED)
-find_package(Connext MODULE)
+find_package(Connext QUIET MODULE)
+if(Connext_FOUND)
+  find_package(Connext MODULE)
+endif()
 if(NOT Connext_FOUND)
   ament_package()
   message(WARNING "Could not find RTI Connext - skipping '${PROJECT_NAME}'")
   return()
 endif()
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
 
@@ -36,12 +40,16 @@ add_library(
   src/condition_error.cpp
   src/count.cpp
   src/demangle.cpp
+  src/event.cpp
+  src/event_converter.cpp
   src/guard_condition.cpp
   src/init.cpp
   src/namespace_prefix.cpp
   src/node.cpp
   src/node_names.cpp
   src/qos.cpp
+  src/names_and_types_helpers.cpp
+  src/node_info_and_types.cpp
   src/service_names_and_types.cpp
   src/topic_names_and_types.cpp
   src/trigger_guard_condition.cpp
@@ -50,6 +58,7 @@ add_library(
   src/types/custom_publisher_listener.cpp
   src/types/custom_subscriber_listener.cpp)
 ament_target_dependencies(rmw_connext_shared_cpp
+  "rcpputils"
   "rcutils"
   "rmw"
   "Connext")
@@ -65,6 +74,7 @@ endif()
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  set(ament_cmake_cppcheck_ADDITIONAL_INCLUDE_DIRS ${rmw_INCLUDE_DIRS})
   ament_lint_auto_find_test_dependencies()
 endif()
 

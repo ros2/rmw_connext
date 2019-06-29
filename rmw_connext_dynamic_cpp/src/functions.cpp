@@ -52,10 +52,11 @@
 #include "rmw/error_handling.h"
 #include "rmw/get_service_names_and_types.h"
 #include "rmw/get_topic_names_and_types.h"
+#include "rmw/init.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rosidl_generator_c/primitives_array_functions.h"
+#include "rosidl_generator_c/primitives_sequence_functions.h"
 #include "rosidl_generator_c/string.h"
 #include "rosidl_generator_c/string_functions.h"
 
@@ -84,15 +85,12 @@ ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
 inline std::string
 _create_type_name(
   const void * untyped_members,
-  const std::string & sep,
   const char * typesupport)
 {
   if (using_introspection_c_typesupport(typesupport)) {
-    return _create_type_name<rosidl_typesupport_introspection_c__MessageMembers>(untyped_members,
-             sep);
+    return _create_type_name<rosidl_typesupport_introspection_c__MessageMembers>(untyped_members);
   } else if (using_introspection_cpp_typesupport(typesupport)) {
-    return _create_type_name<rosidl_typesupport_introspection_cpp::MessageMembers>(untyped_members,
-             sep);
+    return _create_type_name<rosidl_typesupport_introspection_cpp::MessageMembers>(untyped_members);
   }
   RMW_SET_ERROR_MSG("Unknown typesupport identifier");
   return "";
@@ -202,20 +200,108 @@ rmw_get_serialization_format()
 }
 
 rmw_ret_t
-rmw_init()
+rmw_init_options_init(rmw_init_options_t * init_options, rcutils_allocator_t allocator)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(init_options, RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_ALLOCATOR(&allocator, return RMW_RET_INVALID_ARGUMENT);
+  if (NULL != init_options->implementation_identifier) {
+    RMW_SET_ERROR_MSG("expected zero-initialized init_options");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  init_options->instance_id = 0;
+  init_options->implementation_identifier = rti_connext_dynamic_identifier;
+  init_options->allocator = allocator;
+  init_options->impl = nullptr;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_init_options_copy(const rmw_init_options_t * src, rmw_init_options_t * dst)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(src, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(dst, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    src,
+    src->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (NULL != dst->implementation_identifier) {
+    RMW_SET_ERROR_MSG("expected zero-initialized dst");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  *dst = *src;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_init_options_fini(rmw_init_options_t * init_options)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(init_options, RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_ALLOCATOR(&(init_options->allocator), return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init_options,
+    init_options->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  *init_options = rmw_get_zero_initialized_init_options();
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
+{
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(options, RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    options,
+    options->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  context->instance_id = options->instance_id;
+  context->implementation_identifier = rti_connext_dynamic_identifier;
+  context->impl = nullptr;
   return init();
+}
+
+rmw_ret_t
+rmw_shutdown(rmw_context_t * context)
+{
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    context,
+    context->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  // Nothing to do here for now.
+  // This is just the middleware's notification that shutdown was called.
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_context_fini(rmw_context_t * context)
+{
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    context,
+    context->implementation_identifier,
+    rti_connext_dynamic_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  // context impl is explicitly supposed to be nullptr for now, see rmw_init's code
+  // RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
+  *context = rmw_get_zero_initialized_context();
+  return RMW_RET_OK;
 }
 
 rmw_node_t *
 rmw_create_node(
+  rmw_context_t * context,
   const char * name,
   const char * namespace_,
   size_t domain_id,
   const rmw_node_security_options_t * security_options)
 {
   return create_node(
-    rti_connext_dynamic_identifier, name, namespace_, domain_id, security_options);
+    rti_connext_dynamic_identifier, context, name, namespace_, domain_id, security_options);
 }
 
 rmw_ret_t
@@ -254,7 +340,7 @@ DDS_TypeCode * _create_type_code(
       type_name, untyped_members, typesupport);
   }
 
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier")
+  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
   return NULL;
 }
 
@@ -316,7 +402,7 @@ rmw_create_publisher(
   DDSDynamicDataWriter * dynamic_writer = nullptr;
   DDS_DynamicData * dynamic_data = nullptr;
   CustomPublisherInfo * custom_publisher_info = nullptr;
-  std::string type_name = _create_type_name(type_support->data, "msg",
+  std::string type_name = _create_type_name(type_support->data,
       type_support->typesupport_identifier);
 
   // memory allocations for namespacing
@@ -372,7 +458,7 @@ rmw_create_publisher(
   // partition operater takes ownership of it.
   printf("Original publisher topic name: %s\n", topic_name);
   if (rcutils_split_last(topic_name, '/', allocator, &name_tokens) != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     goto fail;
   }
   partition_str = NULL;
@@ -491,7 +577,11 @@ rmw_create_publisher(
   memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
   node_info->publisher_listener->add_information(
-    dds_publisher->get_instance_handle(), topic_name, type_name, EntityType::Publisher);
+    node_info->participant->get_instance_handle(),
+    dds_publisher->get_instance_handle(),
+    topic_name,
+    type_name,
+    EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 
   return publisher;
@@ -571,7 +661,7 @@ fail:
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
       ss.clear();
-      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      ss << "  error: " << rmw_get_error_string().str << '\n';
       (std::cerr << ss.str()).flush();
     }
   }
@@ -588,6 +678,73 @@ fail:
   }
 
   return NULL;
+}
+
+rmw_ret_t
+rmw_publisher_get_actual_qos(
+  const rmw_publisher_t * publisher,
+  rmw_qos_profile_t * qos)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  if (!info) {
+    RMW_SET_ERROR_MSG("publisher internal data is invalid");
+    return RMW_RET_ERROR;
+  }
+  DDS::DataWriter * data_writer = info->data_writer_;
+  if (!data_writer) {
+    RMW_SET_ERROR_MSG("publisher internal data writer is invalid");
+    return RMW_RET_ERROR;
+  }
+  DDS::DataWriterQos dds_qos;
+  DDS::ReturnCode_t status = data_writer->get_qos(dds_qos);
+  if (DDS::RETCODE_OK != status) {
+    RMW_SET_ERROR_MSG("publisher can't get data writer qos policies");
+    return RMW_RET_ERROR;
+  }
+
+  if (!data_writer) {
+    RMW_SET_ERROR_MSG("publisher internal dds publisher is invalid");
+    return RMW_RET_ERROR;
+  }
+  switch (dds_qos.history.kind) {
+    case DDS_KEEP_LAST_HISTORY_QOS:
+      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
+      break;
+    case DDS_KEEP_ALL_HISTORY_QOS:
+      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
+      break;
+    default:
+      qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
+      break;
+  }
+  switch (dds_qos.durability.kind) {
+    case DDS_TRANSIENT_LOCAL_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+      break;
+    case DDS_VOLATILE_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_VOLATILE;
+      break;
+    default:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
+      break;
+  }
+  switch (dds_qos.reliability.kind) {
+    case DDS_BEST_EFFORT_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+      break;
+    case DDS_RELIABLE_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+      break;
+    default:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_UNKNOWN;
+      break;
+  }
+  qos->depth = static_cast<size_t>(dds_qos.history.depth);
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
@@ -637,7 +794,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         custom_publisher_info->dynamic_data = nullptr;
       }
       std::string type_name = _create_type_name(
-        custom_publisher_info->untyped_members_, "msg",
+        custom_publisher_info->untyped_members_,
         custom_publisher_info->typesupport_identifier);
       // TODO(wjwwood) Cannot unregister and free type here, in case another topic is using the
       // same type.
@@ -810,7 +967,7 @@ rmw_create_subscription(
   }
 
   std::string type_name = _create_type_name(
-    type_support->data, "msg", type_support->typesupport_identifier);
+    type_support->data, type_support->typesupport_identifier);
 
   DDS_DomainParticipantQos participant_qos;
   DDS_ReturnCode_t status = participant->get_qos(participant_qos);
@@ -969,7 +1126,11 @@ rmw_create_subscription(
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
 
   node_info->subscriber_listener->add_information(
-    dds_subscriber->get_instance_handle(), topic_name, type_name, EntityType::Subscriber);
+    node_info->participant->get_instance_handle(),
+    dds_subscriber->get_instance_handle(),
+    topic_name,
+    type_name,
+    EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
   return subscription;
@@ -1057,7 +1218,7 @@ fail:
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
       ss.clear();
-      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      ss << "  error: " << rmw_get_error_string().str << '\n';
       (std::cerr << ss.str()).flush();
     }
   }
@@ -1117,7 +1278,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         custom_subscription_info->dynamic_data = nullptr;
       }
       std::string type_name = _create_type_name(
-        custom_subscription_info->untyped_members_, "msg",
+        custom_subscription_info->untyped_members_,
         custom_subscription_info->typesupport_identifier);
       // TODO(wjwwood) Cannot unregister and free type here, in case another topic is using the
       // same type.
@@ -1338,6 +1499,7 @@ rmw_take_serialized_message_with_info(
   (void) subscription;
   (void) serialized_message;
   (void) taken;
+  (void) message_info;
 
   RMW_SET_ERROR_MSG(
     "rmw_take_serialized_message_with_info is not implemented for rmw_connext_dynamic_cpp");
@@ -1378,9 +1540,9 @@ rmw_deserialize(
 }
 
 rmw_guard_condition_t *
-rmw_create_guard_condition()
+rmw_create_guard_condition(rmw_context_t * context)
 {
-  return create_guard_condition(rti_connext_dynamic_identifier);
+  return create_guard_condition(rti_connext_dynamic_identifier, context);
 }
 
 rmw_ret_t
@@ -1396,9 +1558,9 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
 }
 
 rmw_wait_set_t *
-rmw_create_wait_set(size_t max_conditions)
+rmw_create_wait_set(rmw_context_t * context, size_t max_conditions)
 {
-  return create_wait_set(rti_connext_dynamic_identifier, max_conditions);
+  return create_wait_set(rti_connext_dynamic_identifier, context, max_conditions);
 }
 
 rmw_ret_t
@@ -1474,9 +1636,9 @@ rmw_create_client(
     return NULL;
   }
 
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+  std::string request_type_name = _create_type_name(untyped_request_members,
       type_support->typesupport_identifier);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+  std::string response_type_name = _create_type_name(untyped_response_members,
       type_support->typesupport_identifier);
 
   DDS_DomainParticipantQos participant_qos;
@@ -1651,7 +1813,7 @@ fail:
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
       ss.clear();
-      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      ss << "  error: " << rmw_get_error_string().str << '\n';
       (std::cerr << ss.str()).flush();
     }
   }
@@ -1667,7 +1829,7 @@ fail:
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
       ss.clear();
-      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      ss << "  error: " << rmw_get_error_string().str << '\n';
       (std::cerr << ss.str()).flush();
     }
   }
@@ -1879,9 +2041,9 @@ rmw_create_service(
       type_support->typesupport_identifier);
   const void * untyped_response_members = get_response_ptr(type_support->data,
       type_support->typesupport_identifier);
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+  std::string request_type_name = _create_type_name(untyped_request_members,
       type_support->typesupport_identifier);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+  std::string response_type_name = _create_type_name(untyped_response_members,
       type_support->typesupport_identifier);
 
   DDS_DomainParticipantQos participant_qos;
@@ -2037,7 +2199,7 @@ fail:
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
       ss.clear();
-      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      ss << "  error: " << rmw_get_error_string().str << '\n';
       (std::cerr << ss.str()).flush();
     }
   }
@@ -2053,7 +2215,7 @@ fail:
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
       ss.clear();
-      ss << "  error: " << rmw_get_error_string_safe() << '\n';
+      ss << "  error: " << rmw_get_error_string().str << '\n';
       (std::cerr << ss.str()).flush();
     }
   }

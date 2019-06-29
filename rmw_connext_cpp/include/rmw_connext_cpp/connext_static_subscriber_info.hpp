@@ -15,20 +15,59 @@
 #ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
 #define RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_
 
+#include <atomic>
+
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/connext_static_event_info.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
+
+#include "ndds/ndds_cpp.h"
+#include "ndds/ndds_namespace_cpp.h"
 
 #include "rosidl_typesupport_connext_cpp/message_type_support.h"
+#include "rmw/types.h"
+#include "rmw/ret_types.h"
 
-extern "C"
+class ConnextSubscriberListener;
+
+struct ConnextStaticSubscriberInfo : ConnextCustomEventInfo
 {
-struct ConnextStaticSubscriberInfo
-{
-  DDSSubscriber * dds_subscriber_;
-  DDSDataReader * topic_reader_;
-  DDSReadCondition * read_condition_;
+  DDS::Subscriber * dds_subscriber_;
+  ConnextSubscriberListener * listener_;
+  DDS::DataReader * topic_reader_;
+  DDS::ReadCondition * read_condition_;
   bool ignore_local_publications;
   const message_type_support_callbacks_t * callbacks_;
+  /// Remap the specific RTI Connext DDS DataReader Status to a generic RMW status type.
+  /**
+   * \param mask input status mask
+   * \param event
+   */
+  rmw_ret_t get_status(DDS::StatusMask mask, void * event) override;
+  /// Return the topic reader entity for this subscriber.
+  /**
+   * \return the topic reader associated with this subscriber
+   */
+  DDS::Entity * get_entity() override;
 };
-}  // extern "C"
+
+class ConnextSubscriberListener : public DDS::SubscriberListener
+{
+public:
+  virtual void on_subscription_matched(
+    DDSDataReader *,
+    const DDS_SubscriptionMatchedStatus & status)
+  {
+    current_count_ = status.current_count;
+  }
+
+  std::size_t current_count() const
+  {
+    return current_count_;
+  }
+
+private:
+  std::atomic<std::size_t> current_count_;
+};
 
 #endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_SUBSCRIBER_INFO_HPP_

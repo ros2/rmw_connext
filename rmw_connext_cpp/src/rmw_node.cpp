@@ -24,19 +24,26 @@ extern "C"
 {
 rmw_node_t *
 rmw_create_node(
+  rmw_context_t * context,
   const char * name,
   const char * namespace_,
   size_t domain_id,
   const rmw_node_security_options_t * security_options)
 {
   return create_node(
-    rti_connext_identifier, name, namespace_, domain_id, security_options);
+    rti_connext_identifier, context, name, namespace_, domain_id, security_options);
 }
 
 rmw_ret_t
 rmw_destroy_node(rmw_node_t * node)
 {
   return destroy_node(rti_connext_identifier, node);
+}
+
+rmw_ret_t
+rmw_node_assert_liveliness(const rmw_node_t * node)
+{
+  return assert_liveliness(rti_connext_identifier, node);
 }
 
 const rmw_guard_condition_t *
