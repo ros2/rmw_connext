@@ -92,6 +92,14 @@ get_node_names(
     goto fail;
   }
 
+  node_namespaces->data[0] = rcutils_strdup(node->namespace_, allocator);
+  if (!node_namespaces->data[0]) {
+    RMW_SET_ERROR_MSG("could not allocate memory for node namespace");
+    return RMW_RET_BAD_ALLOC;
+  }
+
+  int named_nodes_num = 1;
+
   for (auto i = 1; i < length; ++i) {
     DDS::ParticipantBuiltinTopicData pbtd;
     auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i - 1]);
