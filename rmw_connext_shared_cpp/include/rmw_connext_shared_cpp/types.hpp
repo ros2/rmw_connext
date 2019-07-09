@@ -90,7 +90,8 @@ public:
 
   void fill_service_names_and_types_by_guid(
     std::map<std::string, std::set<std::string>> & services,
-    DDS_GUID_t & participant_guid);
+    DDS_GUID_t & participant_guid,
+    const std::string & suffix);
 
 protected:
   std::mutex mutex_;

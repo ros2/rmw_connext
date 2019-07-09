@@ -64,4 +64,16 @@ rmw_get_service_names_and_types_by_node(
   return get_service_names_and_types_by_node(
     rti_connext_identifier, node, allocator, node_name, node_namespace, service_names_and_types);
 }
+
+rmw_ret_t
+rmw_get_client_names_and_types_by_node(
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * node_name,
+  const char * node_namespace,
+  rmw_names_and_types_t * service_names_and_types)
+{
+  return get_client_names_and_types_by_node(
+    rti_connext_identifier, node, allocator, node_name, node_namespace, service_names_and_types);
+}
 }  // extern "C"

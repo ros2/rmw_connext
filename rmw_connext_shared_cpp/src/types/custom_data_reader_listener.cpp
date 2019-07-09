@@ -174,7 +174,8 @@ void CustomDataReaderListener::fill_topic_names_and_types_by_guid(
 
 void CustomDataReaderListener::fill_service_names_and_types_by_guid(
   std::map<std::string, std::set<std::string>> & services,
-  DDS::GUID_t & participant_guid)
+  DDS::GUID_t & participant_guid,
+  const std::string & suffix)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   const auto & map = topic_cache.get_topic_types_by_guid(participant_guid);
@@ -190,6 +191,13 @@ void CustomDataReaderListener::fill_service_names_and_types_by_guid(
       // not a service
       continue;
     }
+    // Check if the topic suffix matches and is at the end of the name
+    const std::string & topic_name = it.first;
+    auto suffix_position = topic_name.rfind(suffix);
+    if (suffix_position == std::string::npos) {
+      continue;
+    }
+
     for (auto & itt : it.second) {
       std::string service_type = _demangle_service_type_only(itt);
       if (!service_type.empty()) {

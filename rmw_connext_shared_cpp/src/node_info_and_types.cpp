@@ -245,14 +245,16 @@ get_publisher_names_and_types_by_node(
   return copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
 }
 
+static
 rmw_ret_t
-get_service_names_and_types_by_node(
+__get_service_names_and_types_by_node(
   const char * implementation_identifier,
   const rmw_node_t * node,
   rcutils_allocator_t * allocator,
   const char * node_name,
   const char * node_namespace,
-  rmw_names_and_types_t * service_names_and_types)
+  rmw_names_and_types_t * service_names_and_types,
+  const char * suffix)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("null node handle");
@@ -282,7 +284,7 @@ get_service_names_and_types_by_node(
 
   // combine publisher and subscriber information
   std::map<std::string, std::set<std::string>> services;
-  node_info->subscriber_listener->fill_service_names_and_types_by_guid(services, key);
+  node_info->subscriber_listener->fill_service_names_and_types_by_guid(services, key, suffix);
 
   rmw_ret_t rmw_ret =
     copy_services_to_names_and_types(services, allocator, service_names_and_types);
@@ -291,4 +293,42 @@ get_service_names_and_types_by_node(
   }
 
   return RMW_RET_OK;
-}  // extern "C"
+}
+
+rmw_ret_t
+get_service_names_and_types_by_node(
+  const char * implementation_identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * node_name,
+  const char * node_namespace,
+  rmw_names_and_types_t * service_names_and_types)
+{
+  return __get_service_names_and_types_by_node(
+    implementation_identifier,
+    node,
+    allocator,
+    node_name,
+    node_namespace,
+    service_names_and_types,
+    "Request");
+}
+
+rmw_ret_t
+get_client_names_and_types_by_node(
+  const char * implementation_identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * node_name,
+  const char * node_namespace,
+  rmw_names_and_types_t * service_names_and_types)
+{
+  return __get_service_names_and_types_by_node(
+    implementation_identifier,
+    node,
+    allocator,
+    node_name,
+    node_namespace,
+    service_names_and_types,
+    "Reply");
+}
