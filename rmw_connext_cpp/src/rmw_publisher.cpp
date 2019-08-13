@@ -138,6 +138,7 @@ rmw_create_publisher(
     RMW_SET_ERROR_MSG("failed to allocate publisher");
     goto fail;
   }
+  publisher->can_loan_messages = false;
 
   type_code = callbacks->get_type_code();
   if (!type_code) {
@@ -418,6 +419,30 @@ rmw_publisher_assert_liveliness(const rmw_publisher_t * publisher)
     RMW_SET_ERROR_MSG("failed to assert liveliness of datawriter");
     return RMW_RET_ERROR;
   }
+
+  return RMW_RET_OK;
+}
+
+void *
+rmw_allocate_loaned_message(
+  const rmw_publisher_t * publisher,
+  const rosidl_message_type_support_t * type_support,
+  size_t message_size)
+{
+  (void) publisher;
+  (void) type_support;
+  (void) message_size;
+
+  return nullptr;
+}
+
+rmw_ret_t
+rmw_deallocate_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * loaned_message)
+{
+  (void) publisher;
+  (void) loaned_message;
 
   return RMW_RET_OK;
 }

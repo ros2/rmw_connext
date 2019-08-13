@@ -417,6 +417,7 @@ rmw_create_publisher(
     RMW_SET_ERROR_MSG("failed to allocate memory for publisher");
     goto fail;
   }
+  publisher->can_loan_messages = false;
 
   type_code = _create_type_code(
     type_name, type_support->data, type_support->typesupport_identifier);
@@ -747,6 +748,30 @@ rmw_publisher_get_actual_qos(
   return RMW_RET_OK;
 }
 
+void *
+rmw_allocate_loaned_message(
+  const rmw_publisher_t * publisher,
+  const rosidl_message_type_support_t * type_support,
+  size_t message_size)
+{
+  (void) publisher;
+  (void) type_support;
+  (void) message_size;
+
+  return nullptr;
+}
+
+rmw_ret_t
+rmw_deallocate_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * loaned_message)
+{
+  (void) publisher;
+  (void) loaned_message;
+
+  return RMW_RET_OK;
+}
+
 rmw_ret_t
 rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 {
@@ -849,7 +874,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 }
 
 rmw_ret_t
-rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
+rmw_publish(const rmw_publisher_t * publisher, const void * ros_message, bool is_loaned)
 {
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
@@ -862,6 +887,10 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 
   if (!ros_message) {
     RMW_SET_ERROR_MSG("ros message handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (is_loaned) {
+    RMW_SET_ERROR_MSG("connext dynamic does not support loaned ros messages");
     return RMW_RET_ERROR;
   }
 
