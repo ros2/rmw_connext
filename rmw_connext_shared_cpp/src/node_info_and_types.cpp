@@ -131,8 +131,12 @@ __get_key(
       return RMW_RET_ERROR;
     }
   }
-  RMW_SET_ERROR_MSG("unable to match node_name/namespace with discovered nodes.");
-  return RMW_RET_ERROR;
+  RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+    "Node name not found: ns='%s', name='%s",
+    node_namespace,
+    node_name
+  );
+  return RMW_RET_NODE_NAME_NON_EXISTENT;
 }
 
 rmw_ret_t
