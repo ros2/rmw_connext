@@ -116,9 +116,8 @@ take(
       *taken = false;
       return false;
     }
-    for (unsigned int i = 0; i < static_cast<unsigned int>(cdr_stream->buffer_length); ++i) {
-      cdr_stream->buffer[i] = dds_messages[0].serialized_data[i];
-    }
+    memcpy(cdr_stream->buffer, &dds_messages[0].serialized_data[0], cdr_stream->buffer_length);
+
     *taken = true;
   } else {
     *taken = false;
