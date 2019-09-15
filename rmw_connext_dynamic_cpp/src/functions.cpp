@@ -1162,6 +1162,7 @@ rmw_create_subscription(
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
+  subscription->can_loan_messages = false;
   return subscription;
 fail:
   // Something has gone wrong, unroll what has been done.

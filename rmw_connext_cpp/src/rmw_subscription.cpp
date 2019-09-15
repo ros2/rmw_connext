@@ -283,6 +283,7 @@ rmw_create_subscription(
   fprintf(stderr, "******\n");
 #endif
 
+  subscription->can_loan_messages = false;
   return subscription;
 fail:
   if (topic_str) {
