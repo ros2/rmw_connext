@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>rmw_connext_shared_cpp</name>
-  <version>0.7.2</version>
+  <version>0.8.0</version>
   <description>C++ types and functions shared by the ROS middleware interface to RTI Connext Static and RTI Connext Dynamic.</description>
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
   <license>Apache License 2.0</license>
