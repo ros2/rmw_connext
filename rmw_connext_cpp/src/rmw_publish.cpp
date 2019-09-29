@@ -80,6 +80,8 @@ rmw_publish(
   bool is_loaned)
 {
   (void) allocation;
+  // connext can't loan messages and thus we ignore it
+  (void) is_loaned;
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
     return RMW_RET_ERROR;
@@ -90,10 +92,6 @@ rmw_publish(
   }
   if (!ros_message) {
     RMW_SET_ERROR_MSG("ros message handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (is_loaned) {
-    RMW_SET_ERROR_MSG("connext does not support loaned ros messages");
     return RMW_RET_ERROR;
   }
 
