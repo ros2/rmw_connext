@@ -67,7 +67,7 @@ rmw_create_subscription(
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_profile,
-  bool ignore_local_publications)
+  const rmw_subscription_options_t * subscription_options)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -82,6 +82,11 @@ rmw_create_subscription(
 
   if (!qos_profile) {
     RMW_SET_ERROR_MSG("qos_profile is null");
+    return nullptr;
+  }
+
+  if (!subscription_options) {
+    RMW_SET_ERROR_MSG("subscription_options is null");
     return nullptr;
   }
 
@@ -239,7 +244,6 @@ rmw_create_subscription(
   subscriber_info->topic_reader_ = topic_reader;
   subscriber_info->read_condition_ = read_condition;
   subscriber_info->callbacks_ = callbacks;
-  subscriber_info->ignore_local_publications = ignore_local_publications;
   subscriber_info->listener_ = subscriber_listener;
   subscriber_listener = nullptr;
 
@@ -253,6 +257,8 @@ rmw_create_subscription(
     goto fail;
   }
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
+
+  subscription->options = *subscription_options;
 
   if (!qos_profile->avoid_ros_namespace_conventions) {
     mangled_name =
