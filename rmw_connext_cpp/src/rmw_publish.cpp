@@ -76,12 +76,9 @@ rmw_ret_t
 rmw_publish(
   const rmw_publisher_t * publisher,
   const void * ros_message,
-  rmw_publisher_allocation_t * allocation,
-  bool is_loaned)
+  rmw_publisher_allocation_t * allocation)
 {
   (void) allocation;
-  // connext can't loan messages and thus we ignore it
-  (void) is_loaned;
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
     return RMW_RET_ERROR;
@@ -185,5 +182,19 @@ rmw_publish_serialized_message(
     return RMW_RET_ERROR;
   }
   return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_publish_loaned_message(
+  const rmw_publisher_t * publisher,
+  const void * ros_message,
+  rmw_publisher_allocation_t * allocation)
+{
+  (void) publisher;
+  (void) ros_message;
+  (void) allocation;
+
+  RMW_SET_ERROR_MSG("connext currently doesn't support loaned messages");
+  return RMW_RET_ERROR;
 }
 }  // extern "C"
