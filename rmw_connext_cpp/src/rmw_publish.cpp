@@ -187,7 +187,7 @@ rmw_publish_serialized_message(
 rmw_ret_t
 rmw_publish_loaned_message(
   const rmw_publisher_t * publisher,
-  const void * ros_message,
+  void * ros_message,
   rmw_publisher_allocation_t * allocation)
 {
   (void) publisher;
