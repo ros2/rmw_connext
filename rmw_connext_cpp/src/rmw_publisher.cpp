@@ -433,6 +433,7 @@ rmw_borrow_loaned_message(
   (void) type_support;
   (void) ros_message;
 
+  RMW_SET_ERROR_MSG("rmw_borrow_loaned_message not implemented for rmw_connext_cpp");
   return RMW_RET_ERROR;
 }
 
@@ -444,6 +445,7 @@ rmw_return_loaned_message(
   (void) publisher;
   (void) loaned_message;
 
+  RMW_SET_ERROR_MSG("rmw_return_loaned_message not implemented for rmw_connext_cpp");
   return RMW_RET_OK;
 }
 

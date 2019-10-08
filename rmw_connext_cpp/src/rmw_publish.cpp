@@ -194,7 +194,7 @@ rmw_publish_loaned_message(
   (void) ros_message;
   (void) allocation;
 
-  RMW_SET_ERROR_MSG("connext currently doesn't support loaned messages");
+  RMW_SET_ERROR_MSG("rmw_publish_loaned_message not implemented for rmw_connext_cpp");
   return RMW_RET_ERROR;
 }
 }  // extern "C"
