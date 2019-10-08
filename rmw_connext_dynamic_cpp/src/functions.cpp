@@ -874,7 +874,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 }
 
 rmw_ret_t
-rmw_publish(const rmw_publisher_t * publisher, const void * ros_message, bool is_loaned)
+rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
@@ -887,10 +887,6 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message, bool is
 
   if (!ros_message) {
     RMW_SET_ERROR_MSG("ros message handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (is_loaned) {
-    RMW_SET_ERROR_MSG("connext dynamic does not support loaned ros messages");
     return RMW_RET_ERROR;
   }
 
@@ -952,6 +948,20 @@ rmw_publish_serialized_message(
   RMW_SET_ERROR_MSG(
     "rmw_publish_serialized_message is not implemented for rmw_connext_dynamic_cpp");
 
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_publish_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * ros_message,
+  rmw_publisher_allocation_t * allocation)
+{
+  (void) publisher;
+  (void) ros_message;
+  (void) allocation;
+
+  RMW_SET_ERROR_MSG("rmw_publish_loaned_message is not implemented for rmw_connext_dynamic_cpp");
   return RMW_RET_ERROR;
 }
 
