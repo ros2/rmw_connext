@@ -367,5 +367,4 @@ rmw_release_loaned_message(
   (void) loaned_message;
   return RMW_RET_ERROR;
 }
-
 }  // extern "C"
