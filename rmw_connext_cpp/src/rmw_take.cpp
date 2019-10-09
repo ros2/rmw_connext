@@ -176,7 +176,7 @@ _take(
   // fetch the incoming message as cdr stream
   rcutils_uint8_array_t cdr_stream = rcutils_get_zero_initialized_uint8_array();
   if (!take(
-      topic_reader, subscriber_info->ignore_local_publications, &cdr_stream, taken,
+      topic_reader, subscription->options.ignore_local_publications, &cdr_stream, taken,
       sending_publication_handle, allocation))
   {
     RMW_SET_ERROR_MSG("error occured while taking message");
@@ -278,7 +278,7 @@ _take_serialized_message(
 
   // fetch the incoming message as cdr stream
   if (!take(
-      topic_reader, subscriber_info->ignore_local_publications, serialized_message, taken,
+      topic_reader, subscription->options.ignore_local_publications, serialized_message, taken,
       sending_publication_handle, allocation))
   {
     RMW_SET_ERROR_MSG("error occured while taking message");
