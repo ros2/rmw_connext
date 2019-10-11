@@ -180,6 +180,7 @@ rmw_create_service(
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticServiceInfo in the preallocated buffer.
+  // cppcheck-suppress syntaxError
   RMW_TRY_PLACEMENT_NEW(service_info, buf, goto fail, ConnextStaticServiceInfo, )
   buf = nullptr;  // Only free the service_info pointer; don't need the buf pointer anymore.
   service_info->replier_ = replier;

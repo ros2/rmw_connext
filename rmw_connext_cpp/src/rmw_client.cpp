@@ -179,6 +179,7 @@ rmw_create_client(
     goto fail;
   }
   // Use a placement new to construct the ConnextStaticClientInfo in the preallocated buffer.
+  // cppcheck-suppress syntaxError
   RMW_TRY_PLACEMENT_NEW(client_info, buf, goto fail, ConnextStaticClientInfo, )
   buf = nullptr;  // Only free the client_info pointer; don't need the buf pointer anymore.
   client_info->requester_ = requester;

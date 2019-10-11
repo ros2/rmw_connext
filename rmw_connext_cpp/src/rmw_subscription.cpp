@@ -174,6 +174,7 @@ rmw_create_subscription(
     goto fail;
   }
   // Use a placement new to construct the ConnextSubscriberListener in the preallocated buffer.
+  // cppcheck-suppress syntaxError
   RMW_TRY_PLACEMENT_NEW(subscriber_listener, listener_buf, goto fail, ConnextSubscriberListener, )
   listener_buf = nullptr;  // Only free the buffer pointer.
 
