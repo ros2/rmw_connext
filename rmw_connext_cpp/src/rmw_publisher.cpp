@@ -434,7 +434,7 @@ rmw_borrow_loaned_message(
   (void) ros_message;
 
   RMW_SET_ERROR_MSG("rmw_borrow_loaned_message not implemented for rmw_connext_cpp");
-  return RMW_RET_ERROR;
+  return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t
@@ -446,7 +446,7 @@ rmw_return_loaned_message(
   (void) loaned_message;
 
   RMW_SET_ERROR_MSG("rmw_return_loaned_message not implemented for rmw_connext_cpp");
-  return RMW_RET_OK;
+  return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t

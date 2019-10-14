@@ -341,7 +341,7 @@ rmw_take_loaned_message(
   (void) allocation;
 
   RMW_SET_ERROR_MSG("rmw_take_loaned_message not implemented for rmw_connext_cpp");
-  return RMW_RET_ERROR;
+  return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t
@@ -359,7 +359,7 @@ rmw_take_loaned_message_with_info(
   (void) allocation;
 
   RMW_SET_ERROR_MSG("rmw_take_loaned_message_with_info not implemented for rmw_connext_cpp");
-  return RMW_RET_ERROR;
+  return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t
@@ -371,6 +371,6 @@ rmw_release_loaned_message(
   (void) loaned_message;
 
   RMW_SET_ERROR_MSG("rmw_release_loaned_message not implemented for rmw_connext_cpp");
-  return RMW_RET_ERROR;
+  return RMW_RET_UNSUPPORTED;
 }
 }  // extern "C"
