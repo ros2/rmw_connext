@@ -10,7 +10,7 @@
 
  #ifndef osapi_type_h
 @@ -379,74 +379,81 @@ ConnextStaticSerializedDataPlugin_serialize(
-     RTIBool serialize_sample,
+     RTIBool serialize_sample, 
      void *endpoint_plugin_qos)
  {
 -    char * position = NULL;
@@ -150,9 +150,9 @@
 +  RTICdrStream_setBufferLength(stream, adjustedBufferLength);
  }
 
- RTIBool
+ RTIBool 
 @@ -458,114 +465,65 @@ ConnextStaticSerializedDataPlugin_deserialize_sample(
-     RTIBool deserialize_sample,
+     RTIBool deserialize_sample, 
      void *endpoint_plugin_qos)
  {
 +  char * position = NULL;
@@ -321,7 +321,7 @@
 
  RTIBool
 @@ -971,7 +929,9 @@ Key Management functions:
- PRESTypePluginKeyKind
+ PRESTypePluginKeyKind 
  ConnextStaticSerializedDataPlugin_get_key_kind(void)
  {
 -    return PRES_TYPEPLUGIN_USER_KEY;
@@ -330,20 +330,20 @@
 +    return PRES_TYPEPLUGIN_NO_KEY;
  }
 
- RTIBool
+ RTIBool 
 @@ -1408,6 +1368,11 @@ ConnextStaticSerializedDataPlugin_serialized_sample_to_keyhash(
  * ------------------------------------------------------------------------ */
- struct PRESTypePlugin *ConnextStaticSerializedDataPlugin_new(void)
- {
+ struct PRESTypePlugin *ConnextStaticSerializedDataPlugin_new(void) 
+ { 
 +  return NULL;
 +}
 +
 +struct PRESTypePlugin *ConnextStaticSerializedDataPlugin_new_external(struct DDS_TypeCode * external_type_code)
 +{
      struct PRESTypePlugin *plugin = NULL;
-     const struct PRESTypePluginVersion PLUGIN_VERSION =
+     const struct PRESTypePluginVersion PLUGIN_VERSION = 
      PRES_TYPE_PLUGIN_VERSION_2_0;
-@@ -1503,7 +1468,7 @@ struct PRESTypePlugin *ConnextStaticSerializedDataPlugin_new(void)
+@@ -1506,7 +1468,7 @@ struct PRESTypePlugin *ConnextStaticSerializedDataPlugin_new(void)
      (PRESTypePluginKeyToInstanceFunction)
      ConnextStaticSerializedDataPlugin_key_to_instance;
      plugin->serializedKeyToKeyHashFnc = NULL; /* Not supported yet */
