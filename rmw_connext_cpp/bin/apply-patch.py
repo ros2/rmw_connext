@@ -54,6 +54,11 @@ def apply_patch(s, patch):
                 line = p[i]
                 i += 1
             if len(line) > 0:
+                if line[0] == ' ':
+                    # ensure that any unmodified line is the same
+                    # in the input file and in the patch file
+                    assert s[sl] == line[1:], \
+                        "s[%d] '%s' != line[1:] '%s'" % (sl, s[sl], line[1:])
                 if line[0] == sign or line[0] == ' ':
                     t += line[1:]
                 sl += (line[0] != sign)
