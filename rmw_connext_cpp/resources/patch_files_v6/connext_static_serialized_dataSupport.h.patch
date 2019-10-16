@@ -8,7 +8,7 @@
 +#include "rmw_connext_shared_cpp/ndds_include.hpp"
  #endif
  
- #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
+ #if (defined(RTI_WIN32) || defined (RTI_WINCE) || defined(RTI_INTIME)) && defined(NDDS_USER_DLL_EXPORT)
 @@ -44,13 +44,106 @@ implementing generics in C and C++.
  
  #endif
@@ -89,6 +89,12 @@
 +    unsigned int & length,
 +    const ConnextStaticSerializedData * a_data);
 +
++  static DDS_ReturnCode_t serialize_data_to_cdr_buffer_ex(
++    char * buffer,
++    unsigned int & length,
++    const ConnextStaticSerializedData * a_data,
++    DDS_DataRepresentationId_t representation);
++
 +  static DDS_ReturnCode_t deserialize_data_from_cdr_buffer(
 +    ConnextStaticSerializedData * a_data,
 +    const char * buffer,
@@ -106,8 +112,12 @@
 +  ConnextStaticSerializedDataTypeSupport();
 +};
  
- DDS_DATAWRITER_CPP(ConnextStaticSerializedDataDataWriter, ConnextStaticSerializedData);
- DDS_DATAREADER_CPP(ConnextStaticSerializedDataDataReader, ConnextStaticSerializedDataSeq, ConnextStaticSerializedData);
+ #define ENABLE_TDATAWRITER_DATA_CONSTRUCTOR_METHODS
+ DDS_DATAWRITER_WITH_DATA_CONSTRUCTOR_METHODS_CPP(ConnextStaticSerializedDataDataWriter, ConnextStaticSerializedData);
+ #undef ENABLE_TDATAWRITER_DATA_CONSTRUCTOR_METHODS
+ #define ENABLE_TDATAREADER_DATA_CONSISTENCY_CHECK_METHOD
+ DDS_DATAREADER_W_DATA_CONSISTENCY_CHECK(ConnextStaticSerializedDataDataReader, ConnextStaticSerializedDataSeq, ConnextStaticSerializedData);
+ #undef ENABLE_TDATAREADER_DATA_CONSISTENCY_CHECK_METHOD
  
 +NDDSUSERDllExport
 +DDS_ReturnCode_t
@@ -116,6 +126,6 @@
 +  const char * type_name,
 +  struct DDS_TypeCode * type_code);
 +
- #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
+ #if (defined(RTI_WIN32) || defined (RTI_WINCE) || defined(RTI_INTIME)) && defined(NDDS_USER_DLL_EXPORT)
  /* If the code is building on Windows, stop exporting symbols.
  */
