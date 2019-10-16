@@ -94,14 +94,33 @@ add_custom_command(
   VERBATIM
 )
 
+# determine major version of Connext
+find_file(connext_version_header "ndds_version.h"
+  PATHS ${Connext_INCLUDE_DIRS}
+  PATH_SUFFIXES "ndds"
+  NO_DEFAULT_PATH)
+if(NOT connext_version_header)
+  message(FATAL_ERROR "Failed to find 'ndds/ndds_version.h' in '${Connext_INCLUDE_DIRS}'")
+endif()
+file(STRINGS "${connext_version_header}" connext_define_major_version LIMIT_COUNT 1 REGEX "#define RTI_DDS_VERSION_MAJOR  [0-9]+")
+if("${connext_define_major_version}" STREQUAL "")
+  message(FATAL_ERROR "Failed to find '#define RTI_DDS_VERSION_MAJOR' in '${connext_version_header}'")
+endif()
+string(REGEX REPLACE ".* ([0-9]+)" "\\1" connext_major_version "${connext_define_major_version}")
+
 # patch the generate code for raw data
+if("${connext_major_version}" LESS 6)
+  set(patch_files_subdirectory "patch_files")
+else()
+  set(patch_files_subdirectory "patch_files_v6")
+endif()
 set(patch_files
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_data.cxx.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_data.h.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataPlugin.cxx.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataPlugin.h.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataSupport.cxx.patch
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/patch_files/connext_static_serialized_dataSupport.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/${patch_files_subdirectory}/connext_static_serialized_data.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/${patch_files_subdirectory}/connext_static_serialized_data.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/${patch_files_subdirectory}/connext_static_serialized_dataPlugin.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/${patch_files_subdirectory}/connext_static_serialized_dataPlugin.h.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/${patch_files_subdirectory}/connext_static_serialized_dataSupport.cxx.patch
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/${patch_files_subdirectory}/connext_static_serialized_dataSupport.h.patch
 )
 set(patched_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/patched")
 file(MAKE_DIRECTORY ${patched_directory})
