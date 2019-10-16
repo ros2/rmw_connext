@@ -179,6 +179,7 @@ rmw_create_publisher(
     goto fail;
   }
   // Use a placement new to construct the PublisherListener in the preallocated buffer.
+  // cppcheck-suppress syntaxError
   RMW_TRY_PLACEMENT_NEW(publisher_listener, listener_buf, goto fail, ConnextPublisherListener, )
   listener_buf = nullptr;  // Only free the buffer pointer.
 
