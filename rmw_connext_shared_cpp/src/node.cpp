@@ -62,12 +62,13 @@ create_node(
 
   if (localhost_only) {
     status = DDS::PropertyQosPolicyHelper::add_property(
-    participant_qos.property,
-    "dds.transport.UDPv4.builtin.parent.allow_interfaces",
-    "127.0.0.1",
-    DDS::BOOLEAN_FALSE);
+      participant_qos.property,
+      "dds.transport.UDPv4.builtin.parent.allow_interfaces",
+      "127.0.0.1",
+      DDS::BOOLEAN_FALSE);
     if (status != DDS::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to add qos property");
+      RMW_SET_ERROR_MSG(
+        "failed to add qos property to set localhost as the only network interface");
       return NULL;
     }
   }
