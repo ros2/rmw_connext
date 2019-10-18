@@ -32,7 +32,8 @@ create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * security_options)
+  const rmw_node_security_options_t * security_options,
+  bool localhost_only)
 {
   RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -57,6 +58,19 @@ create_node(
   if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default participant qos");
     return NULL;
+  }
+
+  if (localhost_only) {
+    status = DDS::PropertyQosPolicyHelper::add_property(
+      participant_qos.property,
+      "dds.transport.UDPv4.builtin.parent.allow_interfaces",
+      "127.0.0.1",
+      DDS::BOOLEAN_FALSE);
+    if (status != DDS::RETCODE_OK) {
+      RMW_SET_ERROR_MSG(
+        "failed to add qos property to set localhost as the only network interface");
+      return NULL;
+    }
   }
   // This String_dup is not matched with a String_free because DDS appears to
   // free this automatically.
