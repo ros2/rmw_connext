@@ -138,6 +138,7 @@ rmw_create_publisher(
     RMW_SET_ERROR_MSG("failed to allocate publisher");
     goto fail;
   }
+  publisher->can_loan_messages = false;
 
   type_code = callbacks->get_type_code();
   if (!type_code) {
@@ -420,6 +421,32 @@ rmw_publisher_assert_liveliness(const rmw_publisher_t * publisher)
   }
 
   return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_borrow_loaned_message(
+  const rmw_publisher_t * publisher,
+  const rosidl_message_type_support_t * type_support,
+  void ** ros_message)
+{
+  (void) publisher;
+  (void) type_support;
+  (void) ros_message;
+
+  RMW_SET_ERROR_MSG("rmw_borrow_loaned_message not implemented for rmw_connext_cpp");
+  return RMW_RET_UNSUPPORTED;
+}
+
+rmw_ret_t
+rmw_return_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * loaned_message)
+{
+  (void) publisher;
+  (void) loaned_message;
+
+  RMW_SET_ERROR_MSG("rmw_return_loaned_message not implemented for rmw_connext_cpp");
+  return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t

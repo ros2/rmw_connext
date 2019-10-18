@@ -183,4 +183,18 @@ rmw_publish_serialized_message(
   }
   return RMW_RET_OK;
 }
+
+rmw_ret_t
+rmw_publish_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * ros_message,
+  rmw_publisher_allocation_t * allocation)
+{
+  (void) publisher;
+  (void) ros_message;
+  (void) allocation;
+
+  RMW_SET_ERROR_MSG("rmw_publish_loaned_message not implemented for rmw_connext_cpp");
+  return RMW_RET_UNSUPPORTED;
+}
 }  // extern "C"

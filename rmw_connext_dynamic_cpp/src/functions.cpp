@@ -417,6 +417,7 @@ rmw_create_publisher(
     RMW_SET_ERROR_MSG("failed to allocate memory for publisher");
     goto fail;
   }
+  publisher->can_loan_messages = false;
 
   type_code = _create_type_code(
     type_name, type_support->data, type_support->typesupport_identifier);
@@ -681,6 +682,46 @@ fail:
 }
 
 rmw_ret_t
+rmw_publish_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * ros_message,
+  rmw_publisher_allocation_t * allocation)
+{
+  (void) publisher;
+  (void) ros_message;
+  (void) allocation;
+
+  RMW_SET_ERROR_MSG("rmw_publish_loaned_message not implemented for rmw_connext_dynamic_cpp");
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_borrow_loaned_message(
+  const rmw_publisher_t * publisher,
+  const rosidl_message_type_support_t * type_support,
+  void ** ros_message)
+{
+  (void) publisher;
+  (void) type_support;
+  (void) ros_message;
+
+  RMW_SET_ERROR_MSG("rmw_borrow_loaned_message not implemented for rmw_connext_dynamic_cpp");
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_return_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * loaned_message)
+{
+  (void) publisher;
+  (void) loaned_message;
+
+  RMW_SET_ERROR_MSG("rmw_return_loaned_message not implemented for rmw_connext_dynamic_cpp");
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
 rmw_publisher_get_actual_qos(
   const rmw_publisher_t * publisher,
   rmw_qos_profile_t * qos)
@@ -743,6 +784,30 @@ rmw_publisher_get_actual_qos(
       break;
   }
   qos->depth = static_cast<size_t>(dds_qos.history.depth);
+
+  return RMW_RET_OK;
+}
+
+void *
+rmw_allocate_loaned_message(
+  const rmw_publisher_t * publisher,
+  const rosidl_message_type_support_t * type_support,
+  size_t message_size)
+{
+  (void) publisher;
+  (void) type_support;
+  (void) message_size;
+
+  return nullptr;
+}
+
+rmw_ret_t
+rmw_deallocate_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * loaned_message)
+{
+  (void) publisher;
+  (void) loaned_message;
 
   return RMW_RET_OK;
 }
@@ -923,6 +988,20 @@ rmw_publish_serialized_message(
   RMW_SET_ERROR_MSG(
     "rmw_publish_serialized_message is not implemented for rmw_connext_dynamic_cpp");
 
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_publish_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * ros_message,
+  rmw_publisher_allocation_t * allocation)
+{
+  (void) publisher;
+  (void) ros_message;
+  (void) allocation;
+
+  RMW_SET_ERROR_MSG("rmw_publish_loaned_message is not implemented for rmw_connext_dynamic_cpp");
   return RMW_RET_ERROR;
 }
 
@@ -1133,6 +1212,7 @@ rmw_create_subscription(
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
+  subscription->can_loan_messages = false;
   return subscription;
 fail:
   // Something has gone wrong, unroll what has been done.
@@ -1504,6 +1584,53 @@ rmw_take_serialized_message_with_info(
   RMW_SET_ERROR_MSG(
     "rmw_take_serialized_message_with_info is not implemented for rmw_connext_dynamic_cpp");
 
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_take_loaned_message(
+  const rmw_subscription_t * subscription,
+  void ** loaned_message,
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
+{
+  (void) subscription;
+  (void) loaned_message;
+  (void) taken;
+  (void) allocation;
+
+  RMW_SET_ERROR_MSG("rmw_take_loaned_message not implemented for rmw_connext_dynamic_cpp");
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_take_loaned_message_with_info(
+  const rmw_subscription_t * subscription,
+  void ** loaned_message,
+  bool * taken,
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
+{
+  (void) subscription;
+  (void) loaned_message;
+  (void) taken;
+  (void) message_info;
+  (void) allocation;
+
+  RMW_SET_ERROR_MSG(
+    "rmw_take_loaned_message_with_info not implemented for rmw_connext_dynamic_cpp");
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_release_loaned_message(
+  const rmw_subscription_t * subscription,
+  void * loaned_message)
+{
+  (void) subscription;
+  (void) loaned_message;
+
+  RMW_SET_ERROR_MSG("rmw_release_loaned_message not implemented for rmw_connext_dynamic_cpp");
   return RMW_RET_ERROR;
 }
 
