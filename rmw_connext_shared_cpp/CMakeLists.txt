@@ -56,7 +56,8 @@ add_library(
   src/wait_set.cpp
   src/types/custom_data_reader_listener.cpp
   src/types/custom_publisher_listener.cpp
-  src/types/custom_subscriber_listener.cpp)
+  src/types/custom_subscriber_listener.cpp
+  src/topic_info.cpp)
 ament_target_dependencies(rmw_connext_shared_cpp
   "rcpputils"
   "rcutils"

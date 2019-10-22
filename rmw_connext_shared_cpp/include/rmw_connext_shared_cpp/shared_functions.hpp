@@ -32,5 +32,6 @@
 #include "types.hpp"
 #include "wait.hpp"
 #include "wait_set.hpp"
+#include "topic_info.hpp"
 
 #endif  // RMW_CONNEXT_SHARED_CPP__SHARED_FUNCTIONS_HPP_
