@@ -363,14 +363,15 @@ rmw_take_loaned_message_with_info(
 }
 
 rmw_ret_t
-rmw_release_loaned_message(
+rmw_return_loaned_message_from_subscription(
   const rmw_subscription_t * subscription,
   void * loaned_message)
 {
   (void) subscription;
   (void) loaned_message;
 
-  RMW_SET_ERROR_MSG("rmw_release_loaned_message not implemented for rmw_connext_cpp");
+  RMW_SET_ERROR_MSG(
+    "rmw_release_loaned_message not implemented for rmw_connext_cpp");
   return RMW_RET_UNSUPPORTED;
 }
 }  // extern "C"
