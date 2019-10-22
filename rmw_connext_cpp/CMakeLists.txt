@@ -134,7 +134,7 @@ set(patched_files
 )
 add_custom_command(
   OUTPUT ${patched_files}
-  COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_SOURCE_DIR}/bin/apply-patch.py" --input ${generated_files} --patch ${patch_files} --out ${patched_files}
+  COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/bin/apply-patch.py" --input ${generated_files} --patch ${patch_files} --out ${patched_files}
   DEPENDS ${generated_files}
   COMMENT "Patching serialized type support for RTI Connext"
   VERBATIM
