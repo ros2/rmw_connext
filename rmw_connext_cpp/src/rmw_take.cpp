@@ -331,7 +331,7 @@ rmw_take_serialized_message_with_info(
 rmw_ret_t
 rmw_take_loaned_message(
   const rmw_subscription_t * subscription,
-  void ** loaned_message,
+  const void ** loaned_message,
   bool * taken,
   rmw_subscription_allocation_t * allocation)
 {
@@ -347,7 +347,7 @@ rmw_take_loaned_message(
 rmw_ret_t
 rmw_take_loaned_message_with_info(
   const rmw_subscription_t * subscription,
-  void ** loaned_message,
+  const void ** loaned_message,
   bool * taken,
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation)
@@ -365,7 +365,7 @@ rmw_take_loaned_message_with_info(
 rmw_ret_t
 rmw_return_loaned_message_from_subscription(
   const rmw_subscription_t * subscription,
-  void * loaned_message)
+  const void * loaned_message)
 {
   (void) subscription;
   (void) loaned_message;
