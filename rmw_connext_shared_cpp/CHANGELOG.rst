@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2019-10-23)
+------------------
+* Support localhost only communication (`#373 <https://github.com/ros2/rmw_connext/issues/373>`_)
+* update logic / patches to optionally support Connext 6 (`#374 <https://github.com/ros2/rmw_connext/issues/374>`_)
+* Contributors: Brian Marchi, Dirk Thomas
+
 0.8.0 (2019-09-25)
 ------------------
 * Return specific error when not finding a node name (`#365 <https://github.com/ros2/rmw_connext/issues/365>`_)

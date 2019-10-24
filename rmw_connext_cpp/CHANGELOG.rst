@@ -2,6 +2,19 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2019-10-23)
+------------------
+* CMAKE_SOURCE_DIR -> CMAKE_CURRENT_SOURCE_DIR (`#378 <https://github.com/ros2/rmw_connext/issues/378>`_)
+* use return_loaned_message_from (`#376 <https://github.com/ros2/rmw_connext/issues/376>`_)
+* Support localhost only communication (`#373 <https://github.com/ros2/rmw_connext/issues/373>`_)
+* Zero copy api (`#367 <https://github.com/ros2/rmw_connext/issues/367>`_)
+* update logic / patches to optionally support Connext 6 (`#374 <https://github.com/ros2/rmw_connext/issues/374>`_)
+* assert that unmodified lines in the patch match the input (`#371 <https://github.com/ros2/rmw_connext/issues/371>`_)
+* supress invalid syntax warning for macro call (`#370 <https://github.com/ros2/rmw_connext/issues/370>`_)
+* Fix build error (`#369 <https://github.com/ros2/rmw_connext/issues/369>`_)
+* update signature for added pub/sub options (`#368 <https://github.com/ros2/rmw_connext/issues/368>`_)
+* Contributors: Brian Marchi, Dan Rose, Dirk Thomas, Karsten Knese, William Woodall, ivanpauno
+
 0.8.0 (2019-09-25)
 ------------------
 * speed up copy with memcpy (`#366 <https://github.com/ros2/rmw_connext/issues/366>`_)
