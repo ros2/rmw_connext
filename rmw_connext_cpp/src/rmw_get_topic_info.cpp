@@ -40,7 +40,6 @@ rmw_get_subscriptions_info_by_topic(
   bool no_mangle,
   rmw_topic_info_array_t * subscriptions_info)
 {
-
   return get_subscriptions_info_by_topic(rti_connext_identifier, node, allocator, topic_name,
            no_mangle, subscriptions_info);
 }

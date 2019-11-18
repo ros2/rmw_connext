@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP
-#define RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP
+#ifndef RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP_
+#define RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP_
 
 #include "rmw/types.h"
 
@@ -39,4 +39,4 @@ get_subscriptions_info_by_topic(
   bool no_mangle,
   rmw_topic_info_array_t * subscriptions_info);
 
-#endif  // RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP
+#endif  // RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP_

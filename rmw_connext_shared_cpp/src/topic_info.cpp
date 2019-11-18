@@ -36,7 +36,7 @@ rmw_ret_t
 get_subscriptions_info_by_topic(
   const char *,
   const rmw_node_t *,
-  rcutils_allocator_t * ,
+  rcutils_allocator_t *,
   const char *,
   bool,
   rmw_topic_info_array_t *)
