@@ -14,32 +14,30 @@
 
 #include <map>
 
-#include "rmw_connext_shared_cpp/count.hpp"
-#include "rmw_connext_shared_cpp/demangle.hpp"
-#include "rmw_connext_shared_cpp/types.hpp"
+#include "rmw_connext_shared_cpp/topic_info.hpp"
 
 #include "rmw/error_handling.h"
 
 rmw_ret_t
 get_publishers_info_by_topic(
-  const char *,
-  const rmw_node_t *,
-  rcutils_allocator_t *,
-  const char *,
-  bool,
-  rmw_topic_info_array_t *)
+  const char * /* unused_param */,
+  const rmw_node_t * /* unused_param */,
+  rcutils_allocator_t * /* unused_param */,
+  const char * /* unused_param */,
+  bool /* unused_param */,
+  rmw_topic_info_array_t * /* unused_param */)
 {
   return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t
 get_subscriptions_info_by_topic(
-  const char *,
-  const rmw_node_t *,
-  rcutils_allocator_t *,
-  const char *,
-  bool,
-  rmw_topic_info_array_t *)
+  const char * /* unused_param */,
+  const rmw_node_t * /* unused_param */,
+  rcutils_allocator_t * /* unused_param */,
+  const char * /* unused_param */,
+  bool /* unused_param */,
+  rmw_topic_info_array_t * /* unused_param */)
 {
   return RMW_RET_UNSUPPORTED;
 }
