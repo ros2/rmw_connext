@@ -67,7 +67,7 @@ get_node_names(
   auto length = handles.length() + 1;  // add yourself
 
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  
+
   // Pre-allocate temporary buffer for all node names & namespaces
   // Nodes that are not created by ROS 2 could provide empty names
   // Such names should not be returned
@@ -91,7 +91,7 @@ get_node_names(
     final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
     goto cleanup;
   }
- 
+
   // add yourself
   tmp_names_list.data[0] = rcutils_strdup(participant_qos.participant_name.name, allocator);
   if (!tmp_names_list.data[0]) {
@@ -121,7 +121,7 @@ get_node_names(
       if (ns_found != map.end()) {
         namespace_ = std::string(ns_found->second.begin(), ns_found->second.end());
       }
-      
+
       if (name.empty()) {
         // use participant name if no name was found in the user data
         if (pbtd.participant_name.name) {
@@ -143,57 +143,55 @@ get_node_names(
       final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
       goto cleanup;
     }
-    
+
     tmp_namespaces_list.data[named_nodes_num] = rcutils_strdup(namespace_.c_str(), allocator);
     if (!tmp_namespaces_list.data[named_nodes_num]) {
       RMW_SET_ERROR_MSG("could not allocate memory for a node's namespace");
       final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
       goto cleanup;
     }
-    
+
     ++named_nodes_num;
   }
 
   // prepare actual output without empty names
-  // TODO: implement functionality that allocates just enough memory for the output buffer,
-  // so using additional buffer would be unnessecary 
   rcutils_ret = rcutils_string_array_init(node_names, named_nodes_num, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
-      RMW_SET_ERROR_MSG("could not allocate memory for node_names output");
-      final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
-      goto cleanup;
+    RMW_SET_ERROR_MSG("could not allocate memory for node_names output");
+    final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+    goto cleanup;
   }
 
   rcutils_ret = rcutils_string_array_init(node_namespaces, named_nodes_num, &allocator);
 
   if (rcutils_ret != RCUTILS_RET_OK) {
-      RMW_SET_ERROR_MSG("could not allocate memory for node_namespaces output");
-      final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
-      goto cleanup;
+    RMW_SET_ERROR_MSG("could not allocate memory for node_namespaces output");
+    final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+    goto cleanup;
   }
-  
+
   for (auto i = 0; i < named_nodes_num; ++i) {
     node_names->data[i] = rcutils_strdup(tmp_names_list.data[i], allocator);
     tmp_names_list.data[i] = nullptr;
-    
+
     node_namespaces->data[i] = rcutils_strdup(tmp_namespaces_list.data[i], allocator);
     tmp_namespaces_list.data[i] = nullptr;
   }
 
   rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
   if (rcutils_ret != RCUTILS_RET_OK) {
-      RMW_SET_ERROR_MSG("failed to free tmp_names_list");
-      final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
-      goto cleanup;
+    RMW_SET_ERROR_MSG("failed to free tmp_names_list");
+    final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+    goto cleanup;
   }
-  
+
   rcutils_ret = rcutils_string_array_fini(&tmp_namespaces_list);
   if (rcutils_ret != RCUTILS_RET_OK) {
-      RMW_SET_ERROR_MSG("failed to free tmp_namespaces_list");
-      final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
-      goto cleanup;
+    RMW_SET_ERROR_MSG("failed to free tmp_namespaces_list");
+    final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+    goto cleanup;
   }
-  
+
   return RMW_RET_OK;
 
 cleanup:
@@ -217,7 +215,7 @@ cleanup:
       rcutils_reset_error();
     }
   }
-  
+
   rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
   if (rcutils_ret != RCUTILS_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
@@ -226,7 +224,7 @@ cleanup:
     );
     rcutils_reset_error();
   }
- 
+
   rcutils_ret = rcutils_string_array_fini(&tmp_namespaces_list);
   if (rcutils_ret != RCUTILS_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
@@ -235,6 +233,6 @@ cleanup:
     );
     rcutils_reset_error();
   }
-  
+
   return final_ret;
 }
