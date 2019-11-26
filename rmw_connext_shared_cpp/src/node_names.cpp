@@ -62,6 +62,8 @@ get_node_names(
     return RMW_RET_ERROR;
   }
 
+  rmw_ret_t final_ret = RMW_RET_OK;
+
   auto length = handles.length() + 1;  // add yourself
 
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
@@ -70,17 +72,18 @@ get_node_names(
   // Nodes that are not created by ROS 2 could provide empty names
   // Such names should not be returned
   rcutils_string_array_t tmp_names_list = rcutils_get_zero_initialized_string_array();
+  rcutils_string_array_t tmp_namespaces_list = rcutils_get_zero_initialized_string_array();
+
+  int named_nodes_num = 1;
+
   rcutils_ret_t rcutils_ret = rcutils_string_array_init(&tmp_names_list, length, &allocator);
 
-  rmw_ret_t final_ret = RMW_RET_OK;
-  
   if (rcutils_ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
     goto cleanup;
   }
 
-  rcutils_string_array_t tmp_namespaces_list = rcutils_get_zero_initialized_string_array();
   rcutils_ret = rcutils_string_array_init(&tmp_namespaces_list, length, &allocator);
 
   if (rcutils_ret != RCUTILS_RET_OK) {
@@ -97,8 +100,6 @@ get_node_names(
     goto cleanup;
   }
 
-  int named_nodes_num = 1;
-  
   for (auto i = 1; i < length; ++i) {
     DDS::ParticipantBuiltinTopicData pbtd;
     auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i - 1]);
