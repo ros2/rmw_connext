@@ -15,8 +15,7 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP_
 #define RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP_
 
-#include "rmw/types.h"
-
+#include "rmw/topic_info_array.h"
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC

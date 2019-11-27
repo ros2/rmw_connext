@@ -51,9 +51,11 @@
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/get_service_names_and_types.h"
+#include "rmw/get_topic_info.h"
 #include "rmw/get_topic_names_and_types.h"
 #include "rmw/init.h"
 #include "rmw/rmw.h"
+#include "rmw/topic_info_array.h"
 #include "rmw/types.h"
 
 #include "rosidl_generator_c/primitives_sequence_functions.h"

@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/rmw.h"
-
+#include "rmw/get_topic_info.h"
+#include "rmw/topic_info_array.h"
 #include "rmw_connext_shared_cpp/topic_info.hpp"
-
 #include "rmw_connext_cpp/identifier.hpp"
 
 extern "C"
