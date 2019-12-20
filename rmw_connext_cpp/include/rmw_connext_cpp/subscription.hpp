@@ -15,6 +15,10 @@
 #ifndef RMW_CONNEXT_CPP__SUBSCRIPTION_HPP_
 #define RMW_CONNEXT_CPP__SUBSCRIPTION_HPP_
 
+#include "rmw/types.h"
+
+#include "rmw_connext_shared_cpp/types.hpp"
+
 namespace rmw_connext_cpp
 {
 
@@ -24,12 +28,12 @@ create_subscription(
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_profile,
-  const rmw_subscription_options_t * subscription_options)
+  const rmw_subscription_options_t * subscription_options);
 
 rmw_ret_t
 destroy_subscription(
   const ConnextParticipantInfo * participant_info,
-  rmw_subscription_t * subscription)
+  rmw_subscription_t * subscription);
 
 }  // namespace rmw_connext_cpp
 

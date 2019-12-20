@@ -20,6 +20,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
+#include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/qos.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
@@ -37,9 +38,6 @@
 // This affects code in this file, but there is a similar variable in:
 //   rmw_connext_shared_cpp/shared_functions.cpp
 // #define DISCOVERY_DEBUG_LOGGING 1
-
-namespace rmw_connext_cpp
-{
 
 rmw_subscription_t *
 rmw_connext_cpp::create_subscription(
@@ -238,13 +236,13 @@ rmw_connext_cpp::create_subscription(
   } else {
     mangled_name = topic_name;
   }
-  node_info->subscriber_listener->add_information(
-    node_info->participant->get_instance_handle(),
+  participant_info->subscriber_listener->add_information(
+    participant_info->participant->get_instance_handle(),
     dds_subscriber->get_instance_handle(),
     mangled_name,
     type_name,
     EntityType::Subscriber);
-  node_info->subscriber_listener->trigger_graph_guard_condition();
+  participant_info->subscriber_listener->trigger_graph_guard_condition();
 
 // TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
@@ -342,9 +340,9 @@ rmw_connext_cpp::destroy_subscription(
   ConnextStaticSubscriberInfo * subscriber_info =
     static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
   if (subscriber_info) {
-    node_info->subscriber_listener->remove_information(
+    participant_info->subscriber_listener->remove_information(
       subscriber_info->dds_subscriber_->get_instance_handle(), EntityType::Subscriber);
-    node_info->subscriber_listener->trigger_graph_guard_condition();
+    participant_info->subscriber_listener->trigger_graph_guard_condition();
     auto dds_subscriber = subscriber_info->dds_subscriber_;
     if (dds_subscriber) {
       auto topic_reader = subscriber_info->topic_reader_;
@@ -388,5 +386,3 @@ rmw_connext_cpp::destroy_subscription(
 
   return result;
 }
-
-}  // namespace rmw_connext_cpp
