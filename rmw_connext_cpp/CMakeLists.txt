@@ -153,6 +153,7 @@ add_library(
   src/get_subscriber.cpp
   src/identifier.cpp
   src/process_topic_and_service_names.cpp
+  src/publisher.cpp
   src/rmw_client.cpp
   src/rmw_compare_gid_equals.cpp
   src/rmw_count.cpp
@@ -180,7 +181,9 @@ add_library(
   src/rmw_trigger_guard_condition.cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
-  src/serialization_format.cpp)
+  src/serialization_format.cpp
+  src/subscription.cpp
+)
 ament_target_dependencies(rmw_connext_cpp
   "rcutils"
   "rmw"
