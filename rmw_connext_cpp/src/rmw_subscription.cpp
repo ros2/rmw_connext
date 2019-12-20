@@ -90,7 +90,7 @@ rmw_create_subscription(
     return nullptr;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
@@ -424,7 +424,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     subscription->implementation_identifier, rti_connext_identifier,
     return RMW_RET_ERROR)
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;

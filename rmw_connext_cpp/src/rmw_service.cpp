@@ -56,7 +56,7 @@ rmw_create_service(
     return nullptr;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
@@ -291,7 +291,7 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
   auto result = RMW_RET_OK;
   ConnextStaticServiceInfo * service_info = static_cast<ConnextStaticServiceInfo *>(service->data);
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
 
   if (service_info) {
     auto request_datareader = service_info->request_datareader_;

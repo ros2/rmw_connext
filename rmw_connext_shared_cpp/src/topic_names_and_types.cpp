@@ -50,7 +50,7 @@ get_topic_names_and_types(
     return rmw_ret;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;

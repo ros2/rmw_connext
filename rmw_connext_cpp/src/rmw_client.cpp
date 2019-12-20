@@ -57,7 +57,7 @@ rmw_create_client(
     return nullptr;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
@@ -279,7 +279,7 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
   auto result = RMW_RET_OK;
   ConnextStaticClientInfo * client_info = static_cast<ConnextStaticClientInfo *>(client->data);
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
 
   if (client_info) {
     auto response_datareader = client_info->response_datareader_;

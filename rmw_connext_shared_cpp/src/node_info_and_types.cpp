@@ -85,7 +85,7 @@ __is_node_match(
  */
 rmw_ret_t
 __get_key(
-  ConnextNodeInfo * node_info,
+  ConnextParticipantInfo * node_info,
   const char * node_name,
   const char * node_namespace,
   DDS::GUID_t & key)
@@ -183,7 +183,7 @@ get_subscriber_names_and_types_by_node(
     return ret;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
@@ -230,7 +230,7 @@ get_publisher_names_and_types_by_node(
     return ret;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
@@ -274,7 +274,7 @@ __get_service_names_and_types_by_node(
     return ret;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;

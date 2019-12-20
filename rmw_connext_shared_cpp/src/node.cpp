@@ -131,7 +131,7 @@ create_node(
   participant_qos.resource_limits.type_code_max_serialized_length = 0;
 
   rmw_node_t * node_handle = nullptr;
-  ConnextNodeInfo * node_info = nullptr;
+  ConnextParticipantInfo * node_info = nullptr;
   rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomPublisherListener * publisher_listener = nullptr;
   CustomSubscriberListener * subscriber_listener = nullptr;
@@ -360,12 +360,12 @@ create_node(
   }
   memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
 
-  buf = rmw_allocate(sizeof(ConnextNodeInfo));
+  buf = rmw_allocate(sizeof(ConnextParticipantInfo));
   if (!buf) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
-  RMW_TRY_PLACEMENT_NEW(node_info, buf, goto fail, ConnextNodeInfo, )
+  RMW_TRY_PLACEMENT_NEW(node_info, buf, goto fail, ConnextParticipantInfo, )
   buf = nullptr;
   node_info->participant = participant;
   node_info->publisher_listener = publisher_listener;
@@ -413,7 +413,7 @@ fail:
   }
   if (node_info) {
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-      node_info->~ConnextNodeInfo(), ConnextNodeInfo)
+      node_info->~ConnextParticipantInfo(), ConnextParticipantInfo)
     rmw_free(node_info);
   }
   if (buf) {
@@ -447,7 +447,7 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
@@ -512,7 +512,7 @@ assert_liveliness(const char * implementation_identifier, const rmw_node_t * nod
     implementation_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (nullptr == node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
@@ -536,7 +536,7 @@ node_get_graph_guard_condition(const rmw_node_t * node)
 {
   // node argument is checked in calling function.
 
-  ConnextNodeInfo * node_info = static_cast<ConnextNodeInfo *>(node->data);
+  ConnextParticipantInfo * node_info = static_cast<ConnextParticipantInfo *>(node->data);
   if (!node_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return nullptr;

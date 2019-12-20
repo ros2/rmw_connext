@@ -126,7 +126,7 @@ public:
   virtual void on_data_available(DDS::DataReader * reader);
 };
 
-struct ConnextNodeInfo
+struct ConnextParticipantInfo
 {
   DDS::DomainParticipant * participant;
   CustomPublisherListener * publisher_listener;
