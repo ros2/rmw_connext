@@ -76,7 +76,7 @@ __is_node_match(
  * Get a DDS GUID key for the discovered participant which matches the
  * node_name and node_namepace supplied.
  *
- * @param node_info to discover nodes
+ * @param participant_info to discover nodes
  * @param node_name to match
  * @param node_namespace to match
  * @param key [out] guid key that matches the node name and namespace
@@ -85,12 +85,12 @@ __is_node_match(
  */
 rmw_ret_t
 __get_key(
-  ConnextParticipantInfo * node_info,
+  ConnextParticipantInfo * participant_info,
   const char * node_name,
   const char * node_namespace,
   DDS::GUID_t & key)
 {
-  auto participant = node_info->participant;
+  auto participant = participant_info->participant;
   RMW_CHECK_FOR_NULL_WITH_MSG(participant, "participant handle is null", return RMW_RET_ERROR);
 
   DDS::DomainParticipantQos dpqos;
@@ -183,21 +183,23 @@ get_subscriber_names_and_types_by_node(
     return ret;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
 
   DDS::GUID_t key;
-  auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
+  auto get_guid_err = __get_key(
+    participant_info, node_name, node_namespace, key);
   if (get_guid_err != RMW_RET_OK) {
     return get_guid_err;
   }
 
   // combine publisher and subscriber information
   std::map<std::string, std::set<std::string>> topics;
-  node_info->subscriber_listener->fill_topic_names_and_types_by_guid(no_demangle, topics, key);
+  participant_info->subscriber_listener->fill_topic_names_and_types_by_guid(
+    no_demangle, topics, key);
 
   return copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
 }
@@ -230,21 +232,22 @@ get_publisher_names_and_types_by_node(
     return ret;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
 
   DDS::GUID_t key;
-  auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
+  auto get_guid_err = __get_key(participant_info, node_name, node_namespace, key);
   if (get_guid_err != RMW_RET_OK) {
     return get_guid_err;
   }
 
   // combine publisher and subscriber information
   std::map<std::string, std::set<std::string>> topics;
-  node_info->publisher_listener->fill_topic_names_and_types_by_guid(no_demangle, topics, key);
+  participant_info->publisher_listener->fill_topic_names_and_types_by_guid(
+    no_demangle, topics, key);
 
   return copy_topics_names_and_types(topics, allocator, no_demangle, topic_names_and_types);
 }
@@ -274,21 +277,22 @@ __get_service_names_and_types_by_node(
     return ret;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
 
   DDS::GUID_t key;
-  auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
+  auto get_guid_err = __get_key(participant_info, node_name, node_namespace, key);
   if (get_guid_err != RMW_RET_OK) {
     return get_guid_err;
   }
 
   // combine publisher and subscriber information
   std::map<std::string, std::set<std::string>> services;
-  node_info->subscriber_listener->fill_service_names_and_types_by_guid(services, key, suffix);
+  participant_info->subscriber_listener->fill_service_names_and_types_by_guid(
+    services, key, suffix);
 
   rmw_ret_t rmw_ret =
     copy_services_to_names_and_types(services, allocator, service_names_and_types);

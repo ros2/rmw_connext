@@ -54,24 +54,24 @@ get_service_names_and_types(
     return ret;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  if (!node_info->publisher_listener) {
+  if (!participant_info->publisher_listener) {
     RMW_SET_ERROR_MSG("publisher listener handle is null");
     return RMW_RET_ERROR;
   }
-  if (!node_info->subscriber_listener) {
+  if (!participant_info->subscriber_listener) {
     RMW_SET_ERROR_MSG("subscriber listener handle is null");
     return RMW_RET_ERROR;
   }
 
   // combine publisher and subscriber information
   std::map<std::string, std::set<std::string>> services;
-  node_info->publisher_listener->fill_service_names_and_types(services);
-  node_info->subscriber_listener->fill_service_names_and_types(services);
+  participant_info->publisher_listener->fill_service_names_and_types(services);
+  participant_info->subscriber_listener->fill_service_names_and_types(services);
 
   // Fill out service_names_and_types
   if (!services.empty()) {

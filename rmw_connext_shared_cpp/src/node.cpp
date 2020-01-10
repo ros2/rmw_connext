@@ -131,7 +131,7 @@ create_node(
   participant_qos.resource_limits.type_code_max_serialized_length = 0;
 
   rmw_node_t * node_handle = nullptr;
-  ConnextParticipantInfo * node_info = nullptr;
+  ConnextParticipantInfo * participant_info = nullptr;
   rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomPublisherListener * publisher_listener = nullptr;
   CustomSubscriberListener * subscriber_listener = nullptr;
@@ -365,15 +365,15 @@ create_node(
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
   }
-  RMW_TRY_PLACEMENT_NEW(node_info, buf, goto fail, ConnextParticipantInfo, )
+  RMW_TRY_PLACEMENT_NEW(participant_info, buf, goto fail, ConnextParticipantInfo, )
   buf = nullptr;
-  node_info->participant = participant;
-  node_info->publisher_listener = publisher_listener;
-  node_info->subscriber_listener = subscriber_listener;
-  node_info->graph_guard_condition = graph_guard_condition;
+  participant_info->participant = participant;
+  participant_info->publisher_listener = publisher_listener;
+  participant_info->subscriber_listener = subscriber_listener;
+  participant_info->graph_guard_condition = graph_guard_condition;
 
   node_handle->implementation_identifier = implementation_identifier;
-  node_handle->data = node_info;
+  node_handle->data = participant_info;
   return node_handle;
 fail:
   status = dpf_->delete_participant(participant);
@@ -411,10 +411,10 @@ fail:
     }
     rmw_free(node_handle);
   }
-  if (node_info) {
+  if (participant_info) {
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-      node_info->~ConnextParticipantInfo(), ConnextParticipantInfo)
-    rmw_free(node_info);
+      participant_info->~ConnextParticipantInfo(), ConnextParticipantInfo)
+    rmw_free(participant_info);
   }
   if (buf) {
     rmw_free(buf);
@@ -447,12 +447,12 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDS::DomainParticipant *>(participant_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
   }
@@ -469,29 +469,29 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
-  if (node_info->publisher_listener) {
+  if (participant_info->publisher_listener) {
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-      node_info->publisher_listener->~CustomPublisherListener(), CustomPublisherListener)
-    rmw_free(node_info->publisher_listener);
-    node_info->publisher_listener = nullptr;
+      participant_info->publisher_listener->~CustomPublisherListener(), CustomPublisherListener)
+    rmw_free(participant_info->publisher_listener);
+    participant_info->publisher_listener = nullptr;
   }
-  if (node_info->subscriber_listener) {
+  if (participant_info->subscriber_listener) {
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-      node_info->subscriber_listener->~CustomSubscriberListener(), CustomSubscriberListener)
-    rmw_free(node_info->subscriber_listener);
-    node_info->subscriber_listener = nullptr;
+      participant_info->subscriber_listener->~CustomSubscriberListener(), CustomSubscriberListener)
+    rmw_free(participant_info->subscriber_listener);
+    participant_info->subscriber_listener = nullptr;
   }
-  if (node_info->graph_guard_condition) {
+  if (participant_info->graph_guard_condition) {
     rmw_ret_t rmw_ret =
-      destroy_guard_condition(implementation_identifier, node_info->graph_guard_condition);
+      destroy_guard_condition(implementation_identifier, participant_info->graph_guard_condition);
     if (rmw_ret != RMW_RET_OK) {
       RMW_SET_ERROR_MSG("failed to delete graph guard condition");
       return RMW_RET_ERROR;
     }
-    node_info->graph_guard_condition = nullptr;
+    participant_info->graph_guard_condition = nullptr;
   }
 
-  rmw_free(node_info);
+  rmw_free(participant_info);
   node->data = nullptr;
   rmw_free(const_cast<char *>(node->name));
   node->name = nullptr;
@@ -512,17 +512,17 @@ assert_liveliness(const char * implementation_identifier, const rmw_node_t * nod
     implementation_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (nullptr == node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (nullptr == participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  if (nullptr == node_info->participant) {
+  if (nullptr == participant_info->participant) {
     RMW_SET_ERROR_MSG("node internal participant is invalid");
     return RMW_RET_ERROR;
   }
 
-  if (node_info->participant->assert_liveliness() != DDS::RETCODE_OK) {
+  if (participant_info->participant->assert_liveliness() != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to assert liveliness of participant");
     return RMW_RET_ERROR;
   }
@@ -536,11 +536,11 @@ node_get_graph_guard_condition(const rmw_node_t * node)
 {
   // node argument is checked in calling function.
 
-  ConnextParticipantInfo * node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  ConnextParticipantInfo * participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return nullptr;
   }
 
-  return node_info->graph_guard_condition;
+  return participant_info->graph_guard_condition;
 }

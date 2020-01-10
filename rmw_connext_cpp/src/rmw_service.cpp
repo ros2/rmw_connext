@@ -56,12 +56,12 @@ rmw_create_service(
     return nullptr;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
   }
-  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDS::DomainParticipant *>(participant_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -199,23 +199,23 @@ rmw_create_service(
 
   mangled_name =
     request_datareader->get_topicdescription()->get_name();
-  node_info->subscriber_listener->add_information(
-    node_info->participant->get_instance_handle(),
+  participant_info->subscriber_listener->add_information(
+    participant_info->participant->get_instance_handle(),
     request_datareader->get_instance_handle(),
     mangled_name,
     request_datareader->get_topicdescription()->get_type_name(),
     EntityType::Subscriber);
-  node_info->subscriber_listener->trigger_graph_guard_condition();
+  participant_info->subscriber_listener->trigger_graph_guard_condition();
 
   mangled_name =
     response_datawriter->get_topic()->get_name();
-  node_info->publisher_listener->add_information(
-    node_info->participant->get_instance_handle(),
+  participant_info->publisher_listener->add_information(
+    participant_info->participant->get_instance_handle(),
     response_datawriter->get_instance_handle(),
     mangled_name,
     response_datawriter->get_topic()->get_type_name(),
     EntityType::Publisher);
-  node_info->publisher_listener->trigger_graph_guard_condition();
+  participant_info->publisher_listener->trigger_graph_guard_condition();
 
 // TODO(karsten1987): replace this block with logging macros
 #ifdef DISCOVERY_DEBUG_LOGGING
@@ -291,22 +291,22 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
   auto result = RMW_RET_OK;
   ConnextStaticServiceInfo * service_info = static_cast<ConnextStaticServiceInfo *>(service->data);
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
 
   if (service_info) {
     auto request_datareader = service_info->request_datareader_;
 
-    node_info->subscriber_listener->remove_information(
+    participant_info->subscriber_listener->remove_information(
       service_info->request_datareader_->get_instance_handle(),
       EntityType::Subscriber);
-    node_info->subscriber_listener->trigger_graph_guard_condition();
+    participant_info->subscriber_listener->trigger_graph_guard_condition();
 
     DDS::DataWriter * reply_datawriter = static_cast<DDS::DataWriter *>(
       service_info->callbacks_->get_reply_datawriter(service_info->replier_));
-    node_info->publisher_listener->remove_information(
+    participant_info->publisher_listener->remove_information(
       reply_datawriter->get_instance_handle(),
       EntityType::Publisher);
-    node_info->publisher_listener->trigger_graph_guard_condition();
+    participant_info->publisher_listener->trigger_graph_guard_condition();
 
     if (request_datareader) {
       auto read_condition = service_info->read_condition_;

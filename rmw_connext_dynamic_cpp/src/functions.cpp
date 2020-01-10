@@ -373,12 +373,12 @@ rmw_create_publisher(
     return NULL;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDSDomainParticipant *>(participant_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -579,13 +579,13 @@ rmw_create_publisher(
   }
   memcpy(const_cast<char *>(publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
-  node_info->publisher_listener->add_information(
-    node_info->participant->get_instance_handle(),
+  participant_info->publisher_listener->add_information(
+    participant_info->participant->get_instance_handle(),
     dds_publisher->get_instance_handle(),
     topic_name,
     type_name,
     EntityType::Publisher);
-  node_info->publisher_listener->trigger_graph_guard_condition();
+  participant_info->publisher_listener->trigger_graph_guard_condition();
 
   return publisher;
 fail:
@@ -836,12 +836,12 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     publisher->implementation_identifier, rti_connext_dynamic_identifier,
     return RMW_RET_ERROR)
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDSDomainParticipant *>(participant_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return RMW_RET_ERROR;
@@ -849,9 +849,9 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 
   auto custom_publisher_info = static_cast<CustomPublisherInfo *>(publisher->data);
   if (custom_publisher_info) {
-    node_info->publisher_listener->remove_information(
+    participant_info->publisher_listener->remove_information(
       custom_publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
-    node_info->publisher_listener->trigger_graph_guard_condition();
+    participant_info->publisher_listener->trigger_graph_guard_condition();
     DDSDynamicDataTypeSupport * ddts = custom_publisher_info->dynamic_data_type_support_;
     if (ddts) {
       if (custom_publisher_info->dynamic_data) {
@@ -1037,12 +1037,12 @@ rmw_create_subscription(
     return NULL;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDSDomainParticipant *>(participant_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -1207,13 +1207,13 @@ rmw_create_subscription(
   }
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
 
-  node_info->subscriber_listener->add_information(
-    node_info->participant->get_instance_handle(),
+  participant_info->subscriber_listener->add_information(
+    participant_info->participant->get_instance_handle(),
     dds_subscriber->get_instance_handle(),
     topic_name,
     type_name,
     EntityType::Subscriber);
-  node_info->subscriber_listener->trigger_graph_guard_condition();
+  participant_info->subscriber_listener->trigger_graph_guard_condition();
 
   subscription->can_loan_messages = false;
   return subscription;
@@ -1335,12 +1335,12 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     subscription->implementation_identifier, rti_connext_dynamic_identifier,
     return RMW_RET_ERROR)
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDSDomainParticipant *>(participant_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return RMW_RET_ERROR;
@@ -1348,9 +1348,9 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 
   auto custom_subscription_info = static_cast<CustomSubscriberInfo *>(subscription->data);
   if (custom_subscription_info) {
-    node_info->subscriber_listener->remove_information(
+    participant_info->subscriber_listener->remove_information(
       custom_subscription_info->dds_subscriber_->get_instance_handle(), EntityType::Subscriber);
-    node_info->subscriber_listener->trigger_graph_guard_condition();
+    participant_info->subscriber_listener->trigger_graph_guard_condition();
     DDSDynamicDataTypeSupport * ddts = custom_subscription_info->dynamic_data_type_support_;
     if (ddts) {
       if (custom_subscription_info->dynamic_data) {
@@ -1743,12 +1743,12 @@ rmw_create_client(
     return NULL;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDSDomainParticipant *>(participant_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;
@@ -2157,12 +2157,12 @@ rmw_create_service(
     return NULL;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return NULL;
   }
-  auto participant = static_cast<DDSDomainParticipant *>(node_info->participant);
+  auto participant = static_cast<DDSDomainParticipant *>(participant_info->participant);
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return NULL;

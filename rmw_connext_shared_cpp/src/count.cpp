@@ -44,17 +44,17 @@ count_publishers(
     return RMW_RET_ERROR;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  if (!node_info->publisher_listener) {
+  if (!participant_info->publisher_listener) {
     RMW_SET_ERROR_MSG("publisher listener handle is null");
     return RMW_RET_ERROR;
   }
 
-  *count = node_info->publisher_listener->count_topic(topic_name);
+  *count = participant_info->publisher_listener->count_topic(topic_name);
 
   return RMW_RET_OK;
 }
@@ -83,17 +83,17 @@ count_subscribers(
     return RMW_RET_ERROR;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  if (!node_info->subscriber_listener) {
+  if (!participant_info->subscriber_listener) {
     RMW_SET_ERROR_MSG("subscriber listener handle is null");
     return RMW_RET_ERROR;
   }
 
-  *count = node_info->subscriber_listener->count_topic(topic_name);
+  *count = participant_info->subscriber_listener->count_topic(topic_name);
 
   return RMW_RET_OK;
 }

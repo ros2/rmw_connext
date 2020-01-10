@@ -46,7 +46,8 @@ get_node_names(
     return RMW_RET_ERROR;
   }
 
-  DDS::DomainParticipant * participant = static_cast<ConnextParticipantInfo *>(node->data)->participant;
+  DDS::DomainParticipant * participant =
+    static_cast<ConnextParticipantInfo *>(node->data)->participant;
   DDS::InstanceHandleSeq handles;
 
   if (participant->get_discovered_participants(handles) != DDS::RETCODE_OK) {

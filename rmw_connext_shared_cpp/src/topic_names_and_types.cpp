@@ -50,24 +50,24 @@ get_topic_names_and_types(
     return rmw_ret;
   }
 
-  auto node_info = static_cast<ConnextParticipantInfo *>(node->data);
-  if (!node_info) {
+  auto participant_info = static_cast<ConnextParticipantInfo *>(node->data);
+  if (!participant_info) {
     RMW_SET_ERROR_MSG("node info handle is null");
     return RMW_RET_ERROR;
   }
-  if (!node_info->publisher_listener) {
+  if (!participant_info->publisher_listener) {
     RMW_SET_ERROR_MSG("publisher listener handle is null");
     return RMW_RET_ERROR;
   }
-  if (!node_info->subscriber_listener) {
+  if (!participant_info->subscriber_listener) {
     RMW_SET_ERROR_MSG("subscriber listener handle is null");
     return RMW_RET_ERROR;
   }
 
   // combine publisher and subscriber information
   std::map<std::string, std::set<std::string>> topics;
-  node_info->publisher_listener->fill_topic_names_and_types(no_demangle, topics);
-  node_info->subscriber_listener->fill_topic_names_and_types(no_demangle, topics);
+  participant_info->publisher_listener->fill_topic_names_and_types(no_demangle, topics);
+  participant_info->subscriber_listener->fill_topic_names_and_types(no_demangle, topics);
 
   // Copy data to results handle
   if (!topics.empty()) {
