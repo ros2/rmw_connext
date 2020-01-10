@@ -73,8 +73,8 @@ private:
   /**
    * Helper function to initialize the set inside a participant map.
    *
-   * @param map
-   * @param participant_guid
+   * \param map
+   * \param participant_guid
    */
   void initialize_participant_map(
     ParticipantToTopicGuidMap & map,
@@ -87,7 +87,7 @@ private:
 
 public:
   /**
-   * @return a map of topic name to the vector of topic types used.
+   * \return a map of topic name to the vector of topic types used.
    */
   const TopicGuidToInfo & get_topic_guid_to_info() const
   {
@@ -95,7 +95,7 @@ public:
   }
 
   /**
-   * @return a map of participant guid to the vector of topic names used.
+   * \return a map of participant guid to the vector of topic names used.
    */
   const ParticipantToTopicGuidMap & get_participant_to_topic_guid_map() const
   {
@@ -105,10 +105,10 @@ public:
   /**
    * Add a topic based on discovery.
    *
-   * @param participant_guid
-   * @param topic_name
-   * @param type_name
-   * @return true if a change has been recorded
+   * \param participant_guid
+   * \param topic_name
+   * \param type_name
+   * \return true if a change has been recorded
    */
   bool add_topic(
     const GUID_t & participant_guid,
@@ -143,8 +143,8 @@ public:
   /**
    * Remove a topic based on discovery.
    *
-   * @param guid
-   * @return true if a change has been recorded
+   * \param guid
+   * \return true if a change has been recorded
    */
   bool remove_topic(const GUID_t & topic_guid)
   {
@@ -190,8 +190,8 @@ public:
   /**
    * Get topic types by guid.
    *
-   * @param participant_guid to find topic types
-   * @return topic types corresponding to that guid
+   * \param participant_guid to find topic types
+   * \return topic types corresponding to that guid
    */
   TopicsTypes get_topic_types_by_guid(const GUID_t & participant_guid)
   {

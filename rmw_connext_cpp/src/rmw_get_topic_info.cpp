@@ -27,8 +27,13 @@ rmw_get_publishers_info_by_topic(
   bool no_mangle,
   rmw_topic_info_array_t * publishers_info)
 {
-  return get_publishers_info_by_topic(rti_connext_identifier, node, allocator, topic_name,
-           no_mangle, publishers_info);
+  return get_publishers_info_by_topic(
+    rti_connext_identifier,
+    node,
+    allocator,
+    topic_name,
+    no_mangle,
+    publishers_info);
 }
 
 rmw_ret_t
@@ -39,7 +44,12 @@ rmw_get_subscriptions_info_by_topic(
   bool no_mangle,
   rmw_topic_info_array_t * subscriptions_info)
 {
-  return get_subscriptions_info_by_topic(rti_connext_identifier, node, allocator, topic_name,
-           no_mangle, subscriptions_info);
+  return get_subscriptions_info_by_topic(
+    rti_connext_identifier,
+    node,
+    allocator,
+    topic_name,
+    no_mangle,
+    subscriptions_info);
 }
 }  // extern "C"
