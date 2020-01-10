@@ -12,30 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP_
-#define RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP_
+#include <map>
 
-#include "rmw/topic_info_array.h"
-#include "rmw_connext_shared_cpp/visibility_control.h"
+#include "rmw_connext_shared_cpp/topic_endpoint_info.hpp"
 
-RMW_CONNEXT_SHARED_CPP_PUBLIC
+#include "rmw/error_handling.h"
+
 rmw_ret_t
 get_publishers_info_by_topic(
-  const char * identifier,
-  const rmw_node_t * node,
-  rcutils_allocator_t * allocator,
-  const char * topic_name,
-  bool no_mangle,
-  rmw_topic_info_array_t * publishers_info);
+  const char * /* unused_param */,
+  const rmw_node_t * /* unused_param */,
+  rcutils_allocator_t * /* unused_param */,
+  const char * /* unused_param */,
+  bool /* unused_param */,
+  rmw_topic_endpoint_info_array_t * /* unused_param */)
+{
+  return RMW_RET_UNSUPPORTED;
+}
 
-RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t
 get_subscriptions_info_by_topic(
-  const char * identifier,
-  const rmw_node_t * node,
-  rcutils_allocator_t * allocator,
-  const char * topic_name,
-  bool no_mangle,
-  rmw_topic_info_array_t * subscriptions_info);
-
-#endif  // RMW_CONNEXT_SHARED_CPP__TOPIC_INFO_HPP_
+  const char * /* unused_param */,
+  const rmw_node_t * /* unused_param */,
+  rcutils_allocator_t * /* unused_param */,
+  const char * /* unused_param */,
+  bool /* unused_param */,
+  rmw_topic_endpoint_info_array_t * /* unused_param */)
+{
+  return RMW_RET_UNSUPPORTED;
+}

@@ -51,11 +51,11 @@
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/get_service_names_and_types.h"
-#include "rmw/get_topic_info.h"
+#include "rmw/get_topic_endpoint_info.h"
 #include "rmw/get_topic_names_and_types.h"
 #include "rmw/init.h"
 #include "rmw/rmw.h"
-#include "rmw/topic_info_array.h"
+#include "rmw/topic_endpoint_info_array.h"
 #include "rmw/types.h"
 
 #include "rosidl_generator_c/primitives_sequence_functions.h"
@@ -77,7 +77,7 @@
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
-#include "rmw_connext_shared_cpp/topic_info.hpp"
+#include "rmw_connext_shared_cpp/topic_endpoint_info.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
 #include "./macros.hpp"
@@ -2713,7 +2713,7 @@ rmw_get_publishers_info_by_topic(
     rcutils_allocator_t * allocator,
     const char * topic_name,
     bool no_mangle,
-    rmw_topic_info_array_t * publishers_info)
+    rmw_topic_endpoint_info_array_t * publishers_info)
 {
   return get_publishers_info_by_topic(rti_connext_dynamic_identifier, node, allocator, topic_name, no_mangle, publishers_info);
 }
@@ -2724,7 +2724,7 @@ rmw_get_subscriptions_info_by_topic(
     rcutils_allocator_t * allocator,
     const char * topic_name,
     bool no_mangle,
-    rmw_topic_info_array_t * subscriptions_info)
+    rmw_topic_endpoint_info_array_t * subscriptions_info)
 {
   return get_subscriptions_info_by_topic(rti_connext_dynamic_identifier, node, allocator, topic_name, no_mangle, subscriptions_info);
 }

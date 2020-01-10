@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/get_topic_info.h"
-#include "rmw/topic_info_array.h"
-#include "rmw_connext_shared_cpp/topic_info.hpp"
+#include "rmw/get_topic_endpoint_info.h"
+#include "rmw/topic_endpoint_info_array.h"
+#include "rmw_connext_shared_cpp/topic_endpoint_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
 
 extern "C"
@@ -25,7 +25,7 @@ rmw_get_publishers_info_by_topic(
   rcutils_allocator_t * allocator,
   const char * topic_name,
   bool no_mangle,
-  rmw_topic_info_array_t * publishers_info)
+  rmw_topic_endpoint_info_array_t * publishers_info)
 {
   return get_publishers_info_by_topic(
     rti_connext_identifier,
@@ -42,7 +42,7 @@ rmw_get_subscriptions_info_by_topic(
   rcutils_allocator_t * allocator,
   const char * topic_name,
   bool no_mangle,
-  rmw_topic_info_array_t * subscriptions_info)
+  rmw_topic_endpoint_info_array_t * subscriptions_info)
 {
   return get_subscriptions_info_by_topic(
     rti_connext_identifier,
