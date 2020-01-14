@@ -73,8 +73,8 @@ private:
   /**
    * Helper function to initialize the set inside a participant map.
    *
-   * @param map
-   * @param participant_guid
+   * \param map
+   * \param participant_guid
    */
   void initialize_participant_map(
     ParticipantToTopicGuidMap & map,
@@ -87,7 +87,7 @@ private:
 
 public:
   /**
-   * @return a map of topic name to the vector of topic types used.
+   * \return a map of topic name to the vector of topic types used.
    */
   const TopicGuidToInfo & get_topic_guid_to_info() const
   {
@@ -95,7 +95,7 @@ public:
   }
 
   /**
-   * @return a map of participant guid to the vector of topic names used.
+   * \return a map of participant guid to the vector of topic names used.
    */
   const ParticipantToTopicGuidMap & get_participant_to_topic_guid_map() const
   {
@@ -105,10 +105,10 @@ public:
   /**
    * Add a topic based on discovery.
    *
-   * @param participant_guid
-   * @param topic_name
-   * @param type_name
-   * @return true if a change has been recorded
+   * \param participant_guid
+   * \param topic_name
+   * \param type_name
+   * \return true if a change has been recorded
    */
   bool add_topic(
     const GUID_t & participant_guid,
@@ -127,8 +127,8 @@ public:
         "Adding topic '%s' with type '%s' for node '%s'",
         topic_name.c_str(), type_name.c_str(), guid_stream.str().c_str());
     }
-    auto topic_info_it = topic_guid_to_info_.find(topic_guid);
-    if (topic_info_it != topic_guid_to_info_.end()) {
+    auto topic_endpoint_info_it = topic_guid_to_info_.find(topic_guid);
+    if (topic_endpoint_info_it != topic_guid_to_info_.end()) {
       RCUTILS_LOG_WARN_NAMED(
         "rmw_connext_shared_cpp",
         "unique topic attempted to be added twice, ignoring");
@@ -143,23 +143,23 @@ public:
   /**
    * Remove a topic based on discovery.
    *
-   * @param guid
-   * @return true if a change has been recorded
+   * \param guid
+   * \return true if a change has been recorded
    */
   bool remove_topic(const GUID_t & topic_guid)
   {
-    auto topic_info_it = topic_guid_to_info_.find(topic_guid);
-    if (topic_info_it == topic_guid_to_info_.end()) {
+    auto topic_endpoint_info_it = topic_guid_to_info_.find(topic_guid);
+    if (topic_endpoint_info_it == topic_guid_to_info_.end()) {
       RCUTILS_LOG_WARN_NAMED(
         "rmw_connext_shared_cpp",
         "unexpected topic removal.");
       return false;
     }
 
-    std::string topic_name = topic_info_it->second.name;
-    std::string type_name = topic_info_it->second.type;
+    std::string topic_name = topic_endpoint_info_it->second.name;
+    std::string type_name = topic_endpoint_info_it->second.type;
 
-    auto participant_guid = topic_info_it->second.participant_guid;
+    auto participant_guid = topic_endpoint_info_it->second.participant_guid;
     auto participant_to_topic_guid = participant_to_topic_guids_.find(participant_guid);
     if (participant_to_topic_guid == participant_to_topic_guids_.end()) {
       RCUTILS_LOG_WARN_NAMED(
@@ -179,7 +179,7 @@ public:
       return false;
     }
 
-    topic_guid_to_info_.erase(topic_info_it);
+    topic_guid_to_info_.erase(topic_endpoint_info_it);
     participant_to_topic_guid->second.erase(topic_guid_to_remove);
     if (participant_to_topic_guids_.empty()) {
       participant_to_topic_guids_.erase(participant_to_topic_guid);
@@ -190,8 +190,8 @@ public:
   /**
    * Get topic types by guid.
    *
-   * @param participant_guid to find topic types
-   * @return topic types corresponding to that guid
+   * \param participant_guid to find topic types
+   * \return topic types corresponding to that guid
    */
   TopicsTypes get_topic_types_by_guid(const GUID_t & participant_guid)
   {
@@ -203,16 +203,16 @@ public:
     }
 
     for (auto & topic_guid : participant_to_topic_guids->second) {
-      auto topic_info = topic_guid_to_info_.find(topic_guid);
-      if (topic_info == topic_guid_to_info_.end()) {
+      auto topic_endpoint_info = topic_guid_to_info_.find(topic_guid);
+      if (topic_endpoint_info == topic_guid_to_info_.end()) {
         continue;
       }
-      auto topic_name = topic_info->second.name;
+      auto topic_name = topic_endpoint_info->second.name;
       auto topic_entry = topics_types.find(topic_name);
       if (topic_entry == topics_types.end()) {
         topics_types[topic_name] = std::set<std::string>();
       }
-      topics_types[topic_name].insert(topic_info->second.type);
+      topics_types[topic_name].insert(topic_endpoint_info->second.type);
     }
     return topics_types;
   }

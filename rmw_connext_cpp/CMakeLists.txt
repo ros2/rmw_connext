@@ -180,7 +180,8 @@ add_library(
   src/rmw_trigger_guard_condition.cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
-  src/serialization_format.cpp)
+  src/serialization_format.cpp
+  src/rmw_get_topic_endpoint_info.cpp)
 ament_target_dependencies(rmw_connext_cpp
   "rcutils"
   "rmw"
