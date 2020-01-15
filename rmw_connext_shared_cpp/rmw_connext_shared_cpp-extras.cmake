@@ -16,3 +16,14 @@
 
 include(
   "${rmw_connext_shared_cpp_DIR}/get_rmw_connext_output_filter.cmake")
+
+find_package(connext_cmake_module QUIET)
+find_package(Connext MODULE QUIET)
+
+if(NOT Connext_FOUND)
+  message(STATUS
+    "Could not find RTI Connext - skipping rmw_connext_shared_cpp")
+  set(rmw_connext_shared_cpp_FOUND FALSE)
+else()
+  list(APPEND rmw_connext_shared_cpp_LIBRARIES ${Connext_LIBRARIES})
+endif()
