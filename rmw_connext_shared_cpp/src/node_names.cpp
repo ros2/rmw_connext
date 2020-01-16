@@ -99,6 +99,12 @@ get_node_names(
     final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
     goto cleanup;
   }
+  tmp_namespaces_list.data[0] = rcutils_strdup(node->namespace_, allocator);
+  if (!tmp_namespaces_list.data[0]) {
+    RMW_SET_ERROR_MSG("could not allocate memory for a node namespace");
+    final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+    goto cleanup;
+  }
 
   for (auto i = 1; i < length; ++i) {
     DDS::ParticipantBuiltinTopicData pbtd;
