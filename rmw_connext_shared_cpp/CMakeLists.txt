@@ -28,9 +28,6 @@ find_package(rmw REQUIRED)
 
 include_directories(include)
 
-ament_export_definitions(${Connext_DEFINITIONS})
-ament_export_include_directories(include ${Connext_INCLUDE_DIRS})
-
 ament_export_dependencies(rmw)
 
 link_directories(${Connext_LIBRARY_DIRS})
