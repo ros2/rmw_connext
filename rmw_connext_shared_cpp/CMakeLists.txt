@@ -28,6 +28,8 @@ find_package(rmw REQUIRED)
 
 include_directories(include)
 
+ament_export_include_directories(include)
+
 ament_export_dependencies(rmw)
 
 link_directories(${Connext_LIBRARY_DIRS})
@@ -61,7 +63,6 @@ ament_target_dependencies(rmw_connext_shared_cpp
   "rmw"
   "Connext")
 ament_export_libraries(rmw_connext_shared_cpp)
-ament_export_include_directories(include)
 
 if(WIN32)
   # Causes the visibility macros to use dllexport rather than dllimport
