@@ -74,7 +74,7 @@ if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
   target_compile_definitions(rmw_connext_dynamic_cpp
     PRIVATE Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
 endif()
-ament_export_libraries(rmw_connext_dynamic_cpp ${Connext_LIBRARIES})
+ament_export_libraries(rmw_connext_dynamic_cpp)
 
 # On Windows this adds the RMW_BUILDING_DLL definition.
 # On Unix (GCC or Clang) it hides the symbols by default with -fvisibility=hidden.
