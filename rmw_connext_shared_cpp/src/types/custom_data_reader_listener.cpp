@@ -45,7 +45,8 @@ void CustomDataReaderListener::add_information(
 #ifdef DISCOVERY_DEBUG_LOGGING
   std::stringstream ss;
   ss << participant_guid << ":" << guid;
-  printf("+%s %s %s <%s>\n",
+  printf(
+    "+%s %s %s <%s>\n",
     entity_type == EntityType::Publisher ? "P" : "S",
     ss.str().c_str(),
     topic_name.c_str(),
@@ -65,7 +66,8 @@ void CustomDataReaderListener::remove_information(
 #ifdef DISCOVERY_DEBUG_LOGGING
   std::stringstream ss;
   ss << guid;
-  printf("-%s %s\n",
+  printf(
+    "-%s %s\n",
     entity_type == EntityType::Publisher ? "P" : "S",
     ss.str().c_str());
 #endif

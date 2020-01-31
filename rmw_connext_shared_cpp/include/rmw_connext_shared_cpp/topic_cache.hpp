@@ -117,8 +117,9 @@ public:
     const std::string & type_name)
   {
     initialize_participant_map(participant_to_topic_guids_, participant_guid);
-    if (rcutils_logging_logger_is_enabled_for("rmw_connext_shared_cpp",
-      RCUTILS_LOG_SEVERITY_DEBUG))
+    if (
+      rcutils_logging_logger_is_enabled_for(
+        "rmw_connext_shared_cpp", RCUTILS_LOG_SEVERITY_DEBUG))
     {
       std::stringstream guid_stream;
       guid_stream << participant_guid;

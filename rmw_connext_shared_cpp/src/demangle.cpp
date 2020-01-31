@@ -82,7 +82,8 @@ _demangle_service_from_topic(const std::string & topic_name)
   auto suffix = suffixes[prefix];
   size_t suffix_position = topic_name.rfind(suffix);
   if (suffix_position == std::string::npos) {
-    RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
+    RCUTILS_LOG_WARN_NAMED(
+      "rmw_connext_shared_cpp",
       "service topic has prefix but no suffix"
       ", report this: '%s'", topic_name.c_str());
     return "";
@@ -113,7 +114,8 @@ _demangle_service_type_only(const std::string & dds_type_name)
     suffix_position = dds_type_name.rfind(suffix);
     if (suffix_position != std::string::npos) {
       if (dds_type_name.length() - suffix_position - suffix.length() != 0) {
-        RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
+        RCUTILS_LOG_WARN_NAMED(
+          "rmw_connext_shared_cpp",
           "service type contains 'dds_::' and a suffix, but not at the end"
           ", report this: '%s'", dds_type_name.c_str());
         continue;
@@ -123,7 +125,8 @@ _demangle_service_type_only(const std::string & dds_type_name)
     }
   }
   if (suffix_position == std::string::npos) {
-    RCUTILS_LOG_WARN_NAMED("rmw_connext_shared_cpp",
+    RCUTILS_LOG_WARN_NAMED(
+      "rmw_connext_shared_cpp",
       "service type contains 'dds_::' but does not have a suffix"
       ", report this: '%s'", dds_type_name.c_str());
     return "";
