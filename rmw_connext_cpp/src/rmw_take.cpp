@@ -311,9 +311,9 @@ rmw_take_serialized_message_with_info(
     return RMW_RET_ERROR;
   }
   DDS::InstanceHandle_t sending_publication_handle;
-  auto ret =
-    _take_serialized_message(subscription, serialized_message, taken,
-      &sending_publication_handle, allocation);
+  auto ret = _take_serialized_message(
+    subscription, serialized_message, taken,
+    &sending_publication_handle, allocation);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
     return RMW_RET_ERROR;

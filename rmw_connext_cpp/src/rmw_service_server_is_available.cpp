@@ -171,9 +171,7 @@ rmw_service_server_is_available(
   fprintf(stderr, "response topic name: %s\n", response_topic_name);
   fprintf(stderr, "********\n");
   printf("Checking for service server:\n");
-  printf(" - %s: %zu\n",
-    request_topic_name,
-    number_of_request_subscribers);
+  printf(" - %s: %zu\n", request_topic_name, number_of_request_subscribers);
 #endif
   if (number_of_request_subscribers == 0) {
     // not ready
@@ -188,7 +186,8 @@ rmw_service_server_is_available(
     return ret;
   }
 #ifdef DISCOVERY_DEBUG_LOGGING
-  printf(" - %s: %zu\n",
+  printf(
+    " - %s: %zu\n",
     client_info->response_datareader_->get_topicdescription()->get_name(),
     number_of_response_publishers);
 #endif
