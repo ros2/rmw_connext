@@ -1,4 +1,4 @@
-# Copyright 2016 Open Source Robotics Foundation, Inc.
+# Copyright 2017 Open Source Robotics Foundation, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,16 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# copied from rmw_connext_shared_cpp/rmw_connext_shared_cpp-extras.cmake
-
-include(
-  "${rmw_connext_shared_cpp_DIR}/get_rmw_connext_output_filter.cmake")
-
 find_package(connext_cmake_module QUIET)
 find_package(Connext MODULE QUIET)
 
-if(Connext_FOUND)
-  list(APPEND rmw_connext_shared_cpp_DEFINITIONS ${Connext_DEFINITIONS})
-  list(APPEND rmw_connext_shared_cpp_INCLUDE_DIRS ${Connext_INCLUDE_DIRS})
-  list(APPEND rmw_connext_shared_cpp_LIBRARIES ${Connext_LIBRARIES})
+if(NOT Connext_FOUND)
+  message(STATUS
+    "Could not find RTI Connext - skipping rmw_connext_cpp")
+  set(rmw_connext_cpp_FOUND FALSE)
 endif()
