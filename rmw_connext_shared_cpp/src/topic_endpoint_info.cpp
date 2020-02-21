@@ -19,6 +19,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/key_value.hpp"
 
+#include "rmw_connext_shared_cpp/demangle.hpp"
 #include "rmw_connext_shared_cpp/namespace_prefix.hpp"
 #include "rmw_connext_shared_cpp/topic_endpoint_info.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
@@ -95,6 +96,7 @@ _set_rmw_topic_endpoint_info(
   rmw_topic_endpoint_info_t * topic_endpoint_info,
   const DDSTopicEndpointInfo * dds_topic_endpoint_info,
   const std::map<DDS::GUID_t, ParticipantNameInfo> & participant_guid_to_name,
+  bool no_mangle,
   bool is_publisher,
   rcutils_allocator_t * allocator)
 {
@@ -130,10 +132,9 @@ _set_rmw_topic_endpoint_info(
     return ret;
   }
   // set topic type
-  ret = rmw_topic_endpoint_info_set_topic_type(
-    topic_endpoint_info,
-    dds_topic_endpoint_info->topic_type.c_str(),
-    allocator);
+  std::string type_name = no_mangle ? dds_topic_endpoint_info->topic_type : _demangle_if_ros_type(
+    dds_topic_endpoint_info->topic_type);
+  ret = rmw_topic_endpoint_info_set_topic_type(topic_endpoint_info, type_name.c_str(), allocator);
   if (ret != RMW_RET_OK) {
     return ret;
   }
@@ -269,6 +270,7 @@ _get_info_by_topic(
       &participants_info->info_array[i],
       dds_topic_endpoint_infos[i],
       participant_guid_to_name,
+      no_mangle,
       is_publisher,
       allocator);
     if (RMW_RET_OK != rmw_ret) {
