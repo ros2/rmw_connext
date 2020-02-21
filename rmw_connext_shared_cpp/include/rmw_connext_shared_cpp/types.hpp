@@ -84,7 +84,7 @@ public:
   void fill_topic_endpoint_infos(
     const std::string & topic_name,
     bool no_mangle,
-    std::vector<const DDSTopicEndpointInfo *> & fill_topic_endpoint_infos);
+    std::vector<const DDSTopicEndpointInfo *> & topic_endpoint_infos);
 
   void fill_topic_names_and_types(
     bool no_demangle,
