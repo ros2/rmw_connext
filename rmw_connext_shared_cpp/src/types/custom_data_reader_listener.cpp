@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iostream>
 #include <map>
 #include <mutex>
 #include <set>
 #include <string>
-#include <iostream>
+#include <vector>
 
 #include "rmw/error_handling.h"
 
@@ -128,7 +129,8 @@ void CustomDataReaderListener::fill_topic_endpoint_infos(
 {
   std::lock_guard<std::mutex> lock(mutex_);
   for (const auto & key_val : topic_cache.get_topic_endpoint_guid_to_info()) {
-    auto fqdn = no_mangle ? key_val.second.topic_name : _demangle_if_ros_topic(key_val.second.topic_name);
+    auto fqdn = no_mangle ? key_val.second.topic_name : _demangle_if_ros_topic(
+      key_val.second.topic_name);
     if (fqdn == topic_name) {
       topic_endpoint_infos.push_back(&key_val.second);
     }

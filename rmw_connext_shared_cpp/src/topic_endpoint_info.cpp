@@ -23,7 +23,8 @@
 #include "rmw_connext_shared_cpp/topic_endpoint_info.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
-struct ParticipantNameInfo {
+struct ParticipantNameInfo
+{
   std::string name;
   std::string namespace_;
 };
@@ -122,32 +123,49 @@ _set_rmw_topic_endpoint_info(
     return ret;
   }
   // set qos profile
-  ret = rmw_topic_endpoint_info_set_qos_profile(topic_endpoint_info, &dds_topic_endpoint_info->qos_profile);
+  ret = rmw_topic_endpoint_info_set_qos_profile(
+    topic_endpoint_info,
+    &dds_topic_endpoint_info->qos_profile);
   if (ret != RMW_RET_OK) {
     return ret;
   }
   // set topic type
-  ret = rmw_topic_endpoint_info_set_topic_type(topic_endpoint_info, dds_topic_endpoint_info->topic_type.c_str(), allocator);
+  ret = rmw_topic_endpoint_info_set_topic_type(
+    topic_endpoint_info,
+    dds_topic_endpoint_info->topic_type.c_str(),
+    allocator);
   if (ret != RMW_RET_OK) {
     return ret;
   }
   // Check if this participant is the same as the node that is passed
   auto guid_iter = participant_guid_to_name.find(dds_topic_endpoint_info->participant_guid);
   if (guid_iter == participant_guid_to_name.end()) {
-    ret = rmw_topic_endpoint_info_set_node_name(topic_endpoint_info, "_NODE_NAME_UNKNOWN_", allocator);
+    ret = rmw_topic_endpoint_info_set_node_name(
+      topic_endpoint_info,
+      "_NODE_NAME_UNKNOWN_",
+      allocator);
     if (ret != RMW_RET_OK) {
       return ret;
     }
-    ret = rmw_topic_endpoint_info_set_node_namespace(topic_endpoint_info, "_NODE_NAMESPACE_UNKNOWN_", allocator);
+    ret = rmw_topic_endpoint_info_set_node_namespace(
+      topic_endpoint_info,
+      "_NODE_NAMESPACE_UNKNOWN_",
+      allocator);
     if (ret != RMW_RET_OK) {
       return ret;
     }
   } else {
-    ret = rmw_topic_endpoint_info_set_node_name(topic_endpoint_info, guid_iter->second.name.c_str(), allocator);
+    ret = rmw_topic_endpoint_info_set_node_name(
+      topic_endpoint_info,
+      guid_iter->second.name.c_str(),
+      allocator);
     if (ret != RMW_RET_OK) {
       return ret;
     }
-    ret = rmw_topic_endpoint_info_set_node_namespace(topic_endpoint_info, guid_iter->second.namespace_.c_str(), allocator);
+    ret = rmw_topic_endpoint_info_set_node_namespace(
+      topic_endpoint_info,
+      guid_iter->second.namespace_.c_str(),
+      allocator);
     if (ret != RMW_RET_OK) {
       return ret;
     }
@@ -212,8 +230,12 @@ _get_info_by_topic(
         if (name_found != map.end() && ns_found != map.end()) {
           DDS::GUID_t guid;
           DDS_BuiltinTopicKey_to_GUID(&guid, pbtd.key);
-          participant_guid_to_name[guid].name = std::string(name_found->second.begin(), name_found->second.end());
-          participant_guid_to_name[guid].namespace_ = std::string(ns_found->second.begin(), ns_found->second.end());
+          participant_guid_to_name[guid].name = std::string(
+            name_found->second.begin(),
+            name_found->second.end());
+          participant_guid_to_name[guid].namespace_ = std::string(
+            ns_found->second.begin(),
+            ns_found->second.end());
         }
       }
     } else {
@@ -222,9 +244,9 @@ _get_info_by_topic(
     }
   }
 
-  CustomDataReaderListener * slave_target = is_publisher
-    ? static_cast<CustomDataReaderListener *>(node_info->publisher_listener)
-    : static_cast<CustomDataReaderListener *>(node_info->subscriber_listener);
+  CustomDataReaderListener * slave_target = is_publisher ?
+    static_cast<CustomDataReaderListener *>(node_info->publisher_listener) :
+    static_cast<CustomDataReaderListener *>(node_info->subscriber_listener);
 
   std::vector<const DDSTopicEndpointInfo *> dds_topic_endpoint_infos;
   for (const auto & topic_fqdn : topic_fqdns) {
