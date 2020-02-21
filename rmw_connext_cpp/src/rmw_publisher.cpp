@@ -129,6 +129,7 @@ rmw_create_publisher(
   ConnextStaticPublisherInfo * publisher_info = nullptr;
   rmw_publisher_t * publisher = nullptr;
   std::string mangled_name = "";
+  rmw_qos_profile_t actual_qos_profile;
 
   char * topic_str = nullptr;
 
@@ -269,16 +270,22 @@ rmw_create_publisher(
   publisher->options = *publisher_options;
 
   if (!qos_profile->avoid_ros_namespace_conventions) {
-    mangled_name =
-      topic_writer->get_topic()->get_name();
+    mangled_name = topic_writer->get_topic()->get_name();
   } else {
     mangled_name = topic_name;
   }
+  status = topic_writer->get_qos(datawriter_qos);
+  if (DDS::RETCODE_OK != status) {
+    RMW_SET_ERROR_MSG("topic_writer can't get data reader qos policies");
+    goto fail;
+  }
+  dds_qos_to_rmw_qos(datawriter_qos, &actual_qos_profile);
   node_info->publisher_listener->add_information(
     node_info->participant->get_instance_handle(),
     dds_publisher->get_instance_handle(),
     mangled_name,
     type_name,
+    actual_qos_profile,
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 

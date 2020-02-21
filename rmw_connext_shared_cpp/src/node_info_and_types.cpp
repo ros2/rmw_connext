@@ -52,11 +52,11 @@
  */
 bool
 __is_node_match(
-  DDS::UserDataQosPolicy & user_data_qos,
+  const DDS::UserDataQosPolicy & user_data_qos,
   const char * node_name,
   const char * node_namespace)
 {
-  uint8_t * buf = user_data_qos.value.get_contiguous_buffer();
+  const uint8_t * buf = user_data_qos.value.get_contiguous_buffer();
   if (buf) {
     std::vector<uint8_t> kv(buf, buf + user_data_qos.value.length());
     auto map = rmw::impl::cpp::parse_key_value(kv);
@@ -110,21 +110,9 @@ __get_key(
     DDS::ParticipantBuiltinTopicData pbtd;
     auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i]);
     if (dds_ret == DDS::RETCODE_OK) {
-      uint8_t * buf = pbtd.user_data.value.get_contiguous_buffer();
-      if (buf) {
-        std::vector<uint8_t> kv(buf, buf + pbtd.user_data.value.length());
-        auto map = rmw::impl::cpp::parse_key_value(kv);
-        auto name_found = map.find("name");
-        auto ns_found = map.find("namespace");
-
-        if (name_found != map.end() && ns_found != map.end()) {
-          std::string name(name_found->second.begin(), name_found->second.end());
-          std::string ns(ns_found->second.begin(), ns_found->second.end());
-          if ((name == node_name) && (ns == node_namespace)) {
-            DDS_BuiltinTopicKey_to_GUID(&key, pbtd.key);
-            return RMW_RET_OK;
-          }
-        }
+      if (__is_node_match(pbtd.user_data, node_name, node_namespace)) {
+        DDS_BuiltinTopicKey_to_GUID(&key, pbtd.key);
+        return RMW_RET_OK;
       }
     } else {
       RMW_SET_ERROR_MSG("unable to fetch discovered participants data.");

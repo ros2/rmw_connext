@@ -90,6 +90,7 @@ rmw_create_service(
   ConnextStaticServiceInfo * service_info = nullptr;
   rmw_service_t * service = nullptr;
   std::string mangled_name = "";
+  rmw_qos_profile_t actual_qos_profile;
 
   // memory allocations for namespacing
   char * request_topic_str = nullptr;
@@ -164,7 +165,7 @@ rmw_create_service(
   dds_publisher = response_datawriter->get_publisher();
   status = participant->get_default_publisher_qos(publisher_qos);
   if (status != DDS::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("failed to get default subscriber qos");
+    RMW_SET_ERROR_MSG("failed to get default publisher qos");
     goto fail;
   }
 
@@ -197,23 +198,35 @@ rmw_create_service(
   }
   memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
 
-  mangled_name =
-    request_datareader->get_topicdescription()->get_name();
+  mangled_name = request_datareader->get_topicdescription()->get_name();
+  status = request_datareader->get_qos(datareader_qos);
+  if (DDS::RETCODE_OK != status) {
+    RMW_SET_ERROR_MSG("request_datareader can't get data reader qos policies");
+    goto fail;
+  }
+  dds_qos_to_rmw_qos(datareader_qos, &actual_qos_profile);
   node_info->subscriber_listener->add_information(
     node_info->participant->get_instance_handle(),
     request_datareader->get_instance_handle(),
     mangled_name,
     request_datareader->get_topicdescription()->get_type_name(),
+    actual_qos_profile,
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 
-  mangled_name =
-    response_datawriter->get_topic()->get_name();
+  mangled_name = response_datawriter->get_topic()->get_name();
+  status = response_datawriter->get_qos(datawriter_qos);
+  if (DDS::RETCODE_OK != status) {
+    RMW_SET_ERROR_MSG("response_datawriter can't get data writer qos policies");
+    goto fail;
+  }
+  dds_qos_to_rmw_qos(datawriter_qos, &actual_qos_profile);
   node_info->publisher_listener->add_information(
     node_info->participant->get_instance_handle(),
     response_datawriter->get_instance_handle(),
     mangled_name,
     response_datawriter->get_topic()->get_type_name(),
+    actual_qos_profile,
     EntityType::Publisher);
   node_info->publisher_listener->trigger_graph_guard_condition();
 

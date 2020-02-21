@@ -57,4 +57,22 @@ dds_qos_to_rmw_qos<DDS::DataReaderQos>(
   const DDS::DataReaderQos & dds_qos,
   rmw_qos_profile_t * qos);
 
+template<typename AttributeT>
+void
+dds_remote_qos_to_rmw_qos(
+  const AttributeT & dds_qos,
+  rmw_qos_profile_t * qos);
+
+extern template RMW_CONNEXT_SHARED_CPP_PUBLIC
+void
+dds_remote_qos_to_rmw_qos<DDS::PublicationBuiltinTopicData>(
+  const DDS::PublicationBuiltinTopicData & dds_qos,
+  rmw_qos_profile_t * qos);
+
+extern template RMW_CONNEXT_SHARED_CPP_PUBLIC
+void
+dds_remote_qos_to_rmw_qos<DDS::SubscriptionBuiltinTopicData>(
+  const DDS::SubscriptionBuiltinTopicData & dds_qos,
+  rmw_qos_profile_t * qos);
+
 #endif  // RMW_CONNEXT_SHARED_CPP__QOS_HPP_

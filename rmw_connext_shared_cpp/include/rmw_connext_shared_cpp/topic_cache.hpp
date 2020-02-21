@@ -40,66 +40,36 @@ typedef std::map<std::string, std::set<std::string>> TopicsTypes;
 template<typename GUID_t>
 class TopicCache
 {
-private:
+public:
   /**
    * Relevant Topic information for building relationship cache.
    */
   struct TopicInfo
   {
+    std::string topic_name;
+    std::string topic_type;
     GUID_t participant_guid;
-    GUID_t topic_guid;
-    std::string name;
-    std::string type;
+    GUID_t endpoint_guid;
+    rmw_qos_profile_t qos_profile;
   };
 
-  typedef std::map<GUID_t, std::multiset<GUID_t>> ParticipantToTopicGuidMap;
-  typedef std::map<GUID_t, TopicInfo> TopicGuidToInfo;
+  typedef std::map<GUID_t, std::multiset<GUID_t>> ParticipantToTopicEndpointGuids;
+  typedef std::map<GUID_t, TopicInfo> TopicEndpointGuidToInfo;
 
-  /**
-   * Map of topic guid to topic info.
-   * Topics here are represented as one to many, DDS XTypes 1.2
-   * specifies application code 'generally' uses a 1-1 relationship.
-   * However, generic services such as logger and monitor, can discover
-   * multiple types on the same topic.
-   *
-   */
-  TopicGuidToInfo topic_guid_to_info_;
-
-  /**
-   * Map of participant GUIDS to a set of topic-type.
-   */
-  ParticipantToTopicGuidMap participant_to_topic_guids_;
-
-  /**
-   * Helper function to initialize the set inside a participant map.
-   *
-   * \param map
-   * \param participant_guid
-   */
-  void initialize_participant_map(
-    ParticipantToTopicGuidMap & map,
-    const GUID_t & participant_guid)
-  {
-    if (map.find(participant_guid) == map.end()) {
-      map[participant_guid] = std::multiset<GUID_t>();
-    }
-  }
-
-public:
   /**
    * \return a map of topic name to the vector of topic types used.
    */
-  const TopicGuidToInfo & get_topic_guid_to_info() const
+  const TopicEndpointGuidToInfo & get_topic_endpoint_guid_to_info() const
   {
-    return topic_guid_to_info_;
+    return endpoint_guid_to_info_;
   }
 
   /**
    * \return a map of participant guid to the vector of topic names used.
    */
-  const ParticipantToTopicGuidMap & get_participant_to_topic_guid_map() const
+  const ParticipantToTopicEndpointGuids & get_participant_to_topic_endpoint_guids_map() const
   {
-    return participant_to_topic_guids_;
+    return participant_to_endpoint_guids_;
   }
 
   /**
@@ -112,11 +82,12 @@ public:
    */
   bool add_topic(
     const GUID_t & participant_guid,
-    const GUID_t & topic_guid,
+    const GUID_t & endpoint_guid,
     const std::string & topic_name,
-    const std::string & type_name)
+    const std::string & type_name,
+    const rmw_qos_profile_t & qos_profile)
   {
-    initialize_participant_map(participant_to_topic_guids_, participant_guid);
+    initialize_participant_map(participant_to_endpoint_guids_, participant_guid);
     if (
       rcutils_logging_logger_is_enabled_for(
         "rmw_connext_shared_cpp", RCUTILS_LOG_SEVERITY_DEBUG))
@@ -128,16 +99,16 @@ public:
         "Adding topic '%s' with type '%s' for node '%s'",
         topic_name.c_str(), type_name.c_str(), guid_stream.str().c_str());
     }
-    auto topic_endpoint_info_it = topic_guid_to_info_.find(topic_guid);
-    if (topic_endpoint_info_it != topic_guid_to_info_.end()) {
+    auto topic_endpoint_info_it = endpoint_guid_to_info_.find(endpoint_guid);
+    if (topic_endpoint_info_it != endpoint_guid_to_info_.end()) {
       RCUTILS_LOG_WARN_NAMED(
         "rmw_connext_shared_cpp",
         "unique topic attempted to be added twice, ignoring");
       return false;
     }
-    topic_guid_to_info_[topic_guid] =
-      TopicInfo {participant_guid, topic_guid, topic_name, type_name};
-    participant_to_topic_guids_[participant_guid].insert(topic_guid);
+    endpoint_guid_to_info_[endpoint_guid] =
+      TopicInfo {topic_name, type_name, participant_guid, endpoint_guid, qos_profile};
+    participant_to_endpoint_guids_[participant_guid].insert(endpoint_guid);
     return true;
   }
 
@@ -147,22 +118,22 @@ public:
    * \param guid
    * \return true if a change has been recorded
    */
-  bool remove_topic(const GUID_t & topic_guid)
+  bool remove_topic(const GUID_t & endpoint_guid)
   {
-    auto topic_endpoint_info_it = topic_guid_to_info_.find(topic_guid);
-    if (topic_endpoint_info_it == topic_guid_to_info_.end()) {
+    auto topic_endpoint_info_it = endpoint_guid_to_info_.find(endpoint_guid);
+    if (topic_endpoint_info_it == endpoint_guid_to_info_.end()) {
       RCUTILS_LOG_WARN_NAMED(
         "rmw_connext_shared_cpp",
         "unexpected topic removal.");
       return false;
     }
 
-    std::string topic_name = topic_endpoint_info_it->second.name;
-    std::string type_name = topic_endpoint_info_it->second.type;
+    const std::string & topic_name = topic_endpoint_info_it->second.topic_name;
+    const std::string & type_name = topic_endpoint_info_it->second.topic_type;
 
     auto participant_guid = topic_endpoint_info_it->second.participant_guid;
-    auto participant_to_topic_guid = participant_to_topic_guids_.find(participant_guid);
-    if (participant_to_topic_guid == participant_to_topic_guids_.end()) {
+    auto participant_to_topic_guid = participant_to_endpoint_guids_.find(participant_guid);
+    if (participant_to_topic_guid == participant_to_endpoint_guids_.end()) {
       RCUTILS_LOG_WARN_NAMED(
         "rmw_connext_shared_cpp",
         "Unable to remove topic,"
@@ -170,7 +141,7 @@ public:
         topic_name.c_str(), type_name.c_str());
       return false;
     }
-    auto topic_guid_to_remove = participant_to_topic_guid->second.find(topic_guid);
+    auto topic_guid_to_remove = participant_to_topic_guid->second.find(endpoint_guid);
     if (topic_guid_to_remove == participant_to_topic_guid->second.end()) {
       RCUTILS_LOG_WARN_NAMED(
         "rmw_connext_shared_cpp",
@@ -180,10 +151,10 @@ public:
       return false;
     }
 
-    topic_guid_to_info_.erase(topic_endpoint_info_it);
+    endpoint_guid_to_info_.erase(topic_endpoint_info_it);
     participant_to_topic_guid->second.erase(topic_guid_to_remove);
-    if (participant_to_topic_guids_.empty()) {
-      participant_to_topic_guids_.erase(participant_to_topic_guid);
+    if (participant_to_endpoint_guids_.empty()) {
+      participant_to_endpoint_guids_.erase(participant_to_topic_guid);
     }
     return true;
   }
@@ -198,25 +169,56 @@ public:
   {
     TopicsTypes topics_types;
     const auto participant_to_topic_guids =
-      participant_to_topic_guids_.find(participant_guid);
-    if (participant_to_topic_guids == participant_to_topic_guids_.end()) {
+      participant_to_endpoint_guids_.find(participant_guid);
+    if (participant_to_topic_guids == participant_to_endpoint_guids_.end()) {
       return topics_types;
     }
 
-    for (auto & topic_guid : participant_to_topic_guids->second) {
-      auto topic_endpoint_info = topic_guid_to_info_.find(topic_guid);
-      if (topic_endpoint_info == topic_guid_to_info_.end()) {
+    for (auto & endpoint_guid : participant_to_topic_guids->second) {
+      auto topic_endpoint_info = endpoint_guid_to_info_.find(endpoint_guid);
+      if (topic_endpoint_info == endpoint_guid_to_info_.end()) {
         continue;
       }
-      auto topic_name = topic_endpoint_info->second.name;
+      const std::string & topic_name = topic_endpoint_info->second.topic_name;
       auto topic_entry = topics_types.find(topic_name);
       if (topic_entry == topics_types.end()) {
         topics_types[topic_name] = std::set<std::string>();
       }
-      topics_types[topic_name].insert(topic_endpoint_info->second.type);
+      topics_types[topic_name].insert(topic_endpoint_info->second.topic_type);
     }
     return topics_types;
   }
+
+private:
+  /**
+   * Helper function to initialize the set inside a participant map.
+   *
+   * \param map
+   * \param participant_guid
+   */
+  void initialize_participant_map(
+    ParticipantToTopicEndpointGuids & map,
+    const GUID_t & participant_guid)
+  {
+    if (map.find(participant_guid) == map.end()) {
+      map[participant_guid] = std::multiset<GUID_t>();
+    }
+  }
+
+  /**
+   * Map of topic guid to topic info.
+   * Topics here are represented as one to many, DDS XTypes 1.2
+   * specifies application code 'generally' uses a 1-1 relationship.
+   * However, generic services such as logger and monitor, can discover
+   * multiple types on the same topic.
+   *
+   */
+  TopicEndpointGuidToInfo endpoint_guid_to_info_;
+
+  /**
+   * Map of participant GUIDS to a set of topic-type.
+   */
+  ParticipantToTopicEndpointGuids participant_to_endpoint_guids_;
 };
 
 #endif  // RMW_CONNEXT_SHARED_CPP__TOPIC_CACHE_HPP_

@@ -26,6 +26,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "rmw/rmw.h"
 #include "topic_cache.hpp"
@@ -34,6 +35,8 @@
 
 
 enum EntityType {Publisher, Subscriber};
+
+using DDSTopicEndpointInfo = TopicCache<DDS::GUID_t>::TopicInfo;
 
 class CustomDataReaderListener
   : public DDS::DataReaderListener
@@ -52,6 +55,7 @@ public:
     const DDS::GUID_t & guid,
     const std::string & topic_name,
     const std::string & type_name,
+    const rmw_qos_profile_t & qos_profile,
     EntityType entity_type);
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
@@ -64,6 +68,7 @@ public:
     const DDS::InstanceHandle_t & instance_handle,
     const std::string & topic_name,
     const std::string & type_name,
+    const rmw_qos_profile_t & qos_profile,
     EntityType entity_type);
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
@@ -74,7 +79,12 @@ public:
   RMW_CONNEXT_SHARED_CPP_PUBLIC
   virtual void trigger_graph_guard_condition();
 
-  size_t count_topic(const char * topic_name);
+  size_t count_topic(const std::string & topic_name);
+
+  void fill_topic_endpoint_infos(
+    const std::string & topic_name,
+    bool no_mangle,
+    std::vector<const DDSTopicEndpointInfo *> & fill_topic_endpoint_infos);
 
   void fill_topic_names_and_types(
     bool no_demangle,
