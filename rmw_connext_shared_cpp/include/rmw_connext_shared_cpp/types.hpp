@@ -50,7 +50,7 @@ public:
   {}
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
-  virtual void add_information(
+  bool add_information(
     const DDS::GUID_t & participant_guid,
     const DDS::GUID_t & guid,
     const std::string & topic_name,
@@ -59,11 +59,11 @@ public:
     EntityType entity_type);
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
-  virtual void remove_information(
+  bool remove_information(
     const DDS::GUID_t & guid,
     EntityType entity_type);
 
-  virtual void add_information(
+  bool add_information(
     const DDS::InstanceHandle_t & participant_instance_handle,
     const DDS::InstanceHandle_t & instance_handle,
     const std::string & topic_name,
@@ -72,12 +72,12 @@ public:
     EntityType entity_type);
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
-  virtual void remove_information(
+  bool remove_information(
     const DDS::InstanceHandle_t & instance_handle,
     EntityType entity_type);
 
   RMW_CONNEXT_SHARED_CPP_PUBLIC
-  virtual void trigger_graph_guard_condition();
+  bool trigger_graph_guard_condition();
 
   size_t count_topic(const std::string & topic_name);
 

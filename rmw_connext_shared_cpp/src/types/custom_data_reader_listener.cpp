@@ -30,7 +30,7 @@
 // Uncomment this to get extra console output about discovery.
 // #define DISCOVERY_DEBUG_LOGGING 1
 
-void CustomDataReaderListener::add_information(
+bool CustomDataReaderListener::add_information(
   const DDS::GUID_t & participant_guid,
   const DDS::GUID_t & guid,
   const std::string & topic_name,
@@ -42,7 +42,7 @@ void CustomDataReaderListener::add_information(
   std::lock_guard<std::mutex> lock(mutex_);
 
   // store topic name and type name
-  topic_cache.add_topic(participant_guid, guid, topic_name, type_name, qos_profile);
+  bool success = topic_cache.add_topic(participant_guid, guid, topic_name, type_name, qos_profile);
 
 #ifdef DISCOVERY_DEBUG_LOGGING
   std::stringstream ss;
@@ -54,9 +54,11 @@ void CustomDataReaderListener::add_information(
     topic_name.c_str(),
     type_name.c_str());
 #endif
+
+  return success;
 }
 
-void CustomDataReaderListener::remove_information(
+bool CustomDataReaderListener::remove_information(
   const DDS::GUID_t & guid,
   EntityType entity_type)
 {
@@ -64,7 +66,8 @@ void CustomDataReaderListener::remove_information(
   std::lock_guard<std::mutex> lock(mutex_);
 
   // remove entries
-  topic_cache.remove_topic(guid);
+  bool success = topic_cache.remove_topic(guid);
+
 #ifdef DISCOVERY_DEBUG_LOGGING
   std::stringstream ss;
   ss << guid;
@@ -73,9 +76,11 @@ void CustomDataReaderListener::remove_information(
     entity_type == EntityType::Publisher ? "P" : "S",
     ss.str().c_str());
 #endif
+
+  return success;
 }
 
-void CustomDataReaderListener::add_information(
+bool CustomDataReaderListener::add_information(
   const DDS::InstanceHandle_t & participant_instance_handle,
   const DDS::InstanceHandle_t & instance_handle,
   const std::string & topic_name,
@@ -86,19 +91,19 @@ void CustomDataReaderListener::add_information(
   DDS::GUID_t guid, participant_guid;
   DDS_InstanceHandle_to_GUID(&guid, instance_handle);
   DDS_InstanceHandle_to_GUID(&participant_guid, participant_instance_handle);
-  add_information(participant_guid, guid, topic_name, type_name, qos_profile, entity_type);
+  return add_information(participant_guid, guid, topic_name, type_name, qos_profile, entity_type);
 }
 
-void CustomDataReaderListener::remove_information(
+bool CustomDataReaderListener::remove_information(
   const DDS::InstanceHandle_t & instance_handle,
   EntityType entity_type)
 {
   DDS::GUID_t guid;
   DDS_InstanceHandle_to_GUID(&guid, instance_handle);
-  remove_information(guid, entity_type);
+  return remove_information(guid, entity_type);
 }
 
-void CustomDataReaderListener::trigger_graph_guard_condition()
+bool CustomDataReaderListener::trigger_graph_guard_condition()
 {
 #ifdef DISCOVERY_DEBUG_LOGGING
   printf("graph guard condition triggered...\n");
@@ -106,7 +111,9 @@ void CustomDataReaderListener::trigger_graph_guard_condition()
   rmw_ret_t ret = trigger_guard_condition(implementation_identifier_, graph_guard_condition_);
   if (ret != RMW_RET_OK) {
     fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string().str);
+    return false;
   }
+  return true;
 }
 
 size_t CustomDataReaderListener::count_topic(const std::string & topic_name)
