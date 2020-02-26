@@ -31,7 +31,7 @@
 /**
  * Topics to types.
  */
-typedef std::map<std::string, std::set<std::string>> TopicsTypes;
+using TopicsTypes = std::map<std::string, std::set<std::string>>;
 
 /**
  * Topic cache data structure.
@@ -53,8 +53,8 @@ public:
     rmw_qos_profile_t qos_profile;
   };
 
-  typedef std::map<GUID_t, std::multiset<GUID_t>> ParticipantToTopicEndpointGuids;
-  typedef std::map<GUID_t, TopicInfo> TopicEndpointGuidToInfo;
+  using ParticipantToTopicEndpointGuids = std::map<GUID_t, std::multiset<GUID_t>>;
+  using TopicEndpointGuidToInfo = std::map<GUID_t, TopicInfo>;
 
   /**
    * \return a map of topic name to the vector of topic types used.

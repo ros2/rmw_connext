@@ -38,37 +38,16 @@ _validate_params(
   const char * topic_name,
   rmw_topic_endpoint_info_array_t * participants_info)
 {
-  if (nullptr == identifier) {
-    RMW_SET_ERROR_MSG("null implementation identifier provided");
-    return RMW_RET_ERROR;
-  }
-
-  if (nullptr == topic_name) {
-    RMW_SET_ERROR_MSG("null topic_name provided");
-    return RMW_RET_ERROR;
-  }
-
-  if (nullptr == allocator) {
-    RMW_SET_ERROR_MSG("null allocator provided");
-    return RMW_RET_ERROR;
-  }
-
-  if (nullptr == node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_ERROR;
-  }
-
+  RMW_CHECK_ARGUMENT_FOR_NULL(identifier, RMW_RET_ERROR);
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_ERROR);
   // Get participant pointer from node
   if (node->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("node handle not from this rmw implementation");
     return RMW_RET_ERROR;
   }
-
-  if (nullptr == participants_info) {
-    RMW_SET_ERROR_MSG("null participants_info provided");
-    return RMW_RET_ERROR;
-  }
-
+  RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, RMW_RET_ERROR);
+  RMW_CHECK_ARGUMENT_FOR_NULL(allocator, RMW_RET_ERROR);
+  RMW_CHECK_ARGUMENT_FOR_NULL(participants_info, RMW_RET_ERROR);
   rmw_ret_t rmw_ret = rmw_topic_endpoint_info_array_check_zero(participants_info);
 
   return rmw_ret;
@@ -198,12 +177,9 @@ _get_info_by_topic(
 
   const char * node_name = node->name;
   const char * node_namespace = node->namespace_;
-  const ConnextNodeInfo * node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (nullptr == node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
-  DDS::DomainParticipant * participant = node_info->participant;
+  const ConnextNodeInfo * connext_node_info = static_cast<ConnextNodeInfo *>(node->data);
+  RMW_CHECK_ARGUMENT_FOR_NULL(connext_node_info, RMW_RET_ERROR);
+  DDS::DomainParticipant * participant = connext_node_info->participant;
   const std::vector<std::string> topic_fqdns = _get_topic_fqdns(topic_name, no_mangle);
 
   DDS::GUID_t participant_guid;
@@ -246,8 +222,8 @@ _get_info_by_topic(
   }
 
   CustomDataReaderListener * slave_target = is_publisher ?
-    static_cast<CustomDataReaderListener *>(node_info->publisher_listener) :
-    static_cast<CustomDataReaderListener *>(node_info->subscriber_listener);
+    static_cast<CustomDataReaderListener *>(connext_node_info->publisher_listener) :
+    static_cast<CustomDataReaderListener *>(connext_node_info->subscriber_listener);
 
   std::vector<const DDSTopicEndpointInfo *> dds_topic_endpoint_infos;
   for (const auto & topic_fqdn : topic_fqdns) {
