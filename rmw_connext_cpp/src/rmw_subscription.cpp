@@ -124,6 +124,7 @@ rmw_create_subscription(
   ConnextStaticSubscriberInfo * subscriber_info = nullptr;
   rmw_subscription_t * subscription = nullptr;
   std::string mangled_name;
+  rmw_qos_profile_t actual_qos_profile;
 
   char * topic_str = nullptr;
 
@@ -262,16 +263,22 @@ rmw_create_subscription(
   subscription->options = *subscription_options;
 
   if (!qos_profile->avoid_ros_namespace_conventions) {
-    mangled_name =
-      topic_reader->get_topicdescription()->get_name();
+    mangled_name = topic_reader->get_topicdescription()->get_name();
   } else {
     mangled_name = topic_name;
   }
+  status = topic_reader->get_qos(datareader_qos);
+  if (DDS::RETCODE_OK != status) {
+    RMW_SET_ERROR_MSG("topic_reader can't get data reader qos policies");
+    goto fail;
+  }
+  dds_qos_to_rmw_qos(datareader_qos, &actual_qos_profile);
   node_info->subscriber_listener->add_information(
     node_info->participant->get_instance_handle(),
     dds_subscriber->get_instance_handle(),
     mangled_name,
     type_name,
+    actual_qos_profile,
     EntityType::Subscriber);
   node_info->subscriber_listener->trigger_graph_guard_condition();
 

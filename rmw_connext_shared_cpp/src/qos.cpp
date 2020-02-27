@@ -223,18 +223,29 @@ get_datawriter_qos(
   return true;
 }
 
+template<typename AttributeT>
 void
 dds_qos_lifespan_to_rmw_qos_lifespan(
-  const DDS::DataWriterQos & dds_qos,
+  const AttributeT & dds_qos,
   rmw_qos_profile_t * qos)
 {
   qos->lifespan.sec = dds_qos.lifespan.duration.sec;
   qos->lifespan.nsec = dds_qos.lifespan.duration.nanosec;
 }
 
+template<>
 void
-dds_qos_lifespan_to_rmw_qos_lifespan(
+dds_qos_lifespan_to_rmw_qos_lifespan<DDS::DataReaderQos>(
   const DDS::DataReaderQos & /*dds_qos*/,
+  rmw_qos_profile_t * /*qos*/)
+{
+  // lifespan does does not exist in DataReader, so no-op here
+}
+
+template<>
+void
+dds_qos_lifespan_to_rmw_qos_lifespan<DDS::SubscriptionBuiltinTopicData>(
+  const DDS::SubscriptionBuiltinTopicData & /*dds_qos*/,
   rmw_qos_profile_t * /*qos*/)
 {
   // lifespan does does not exist in DataReader, so no-op here
@@ -246,6 +257,8 @@ dds_qos_to_rmw_qos(
   const AttributeT & dds_qos,
   rmw_qos_profile_t * qos)
 {
+  dds_remote_qos_to_rmw_qos(dds_qos, qos);
+
   switch (dds_qos.history.kind) {
     case DDS_KEEP_LAST_HISTORY_QOS:
       qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
@@ -258,6 +271,26 @@ dds_qos_to_rmw_qos(
       break;
   }
   qos->depth = static_cast<size_t>(dds_qos.history.depth);
+}
+
+template
+void dds_qos_to_rmw_qos<DDS::DataWriterQos>(
+  const DDS::DataWriterQos & dds_qos,
+  rmw_qos_profile_t * qos);
+
+template
+void dds_qos_to_rmw_qos<DDS::DataReaderQos>(
+  const DDS::DataReaderQos & dds_qos,
+  rmw_qos_profile_t * qos);
+
+template<typename AttributeT>
+void
+dds_remote_qos_to_rmw_qos(
+  const AttributeT & dds_qos,
+  rmw_qos_profile_t * qos)
+{
+  qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
+  qos->depth = RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT;
 
   switch (dds_qos.reliability.kind) {
     case DDS_BEST_EFFORT_RELIABILITY_QOS:
@@ -307,11 +340,11 @@ dds_qos_to_rmw_qos(
 }
 
 template
-void dds_qos_to_rmw_qos<DDS::DataWriterQos>(
-  const DDS::DataWriterQos & dds_qos,
+void dds_remote_qos_to_rmw_qos<DDS::PublicationBuiltinTopicData>(
+  const DDS::PublicationBuiltinTopicData & dds_qos,
   rmw_qos_profile_t * qos);
 
 template
-void dds_qos_to_rmw_qos<DDS::DataReaderQos>(
-  const DDS::DataReaderQos & dds_qos,
+void dds_remote_qos_to_rmw_qos<DDS::SubscriptionBuiltinTopicData>(
+  const DDS::SubscriptionBuiltinTopicData & dds_qos,
   rmw_qos_profile_t * qos);

@@ -15,6 +15,7 @@
 #include <string>
 
 #include "rmw_connext_shared_cpp/guid_helper.hpp"
+#include "rmw_connext_shared_cpp/qos.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
 void CustomSubscriberListener::on_data_available(DDS::DataReader * reader)
@@ -50,11 +51,16 @@ void CustomSubscriberListener::on_data_available(DDS::DataReader * reader)
     {
       DDS::GUID_t participant_guid;
       DDS_BuiltinTopicKey_to_GUID(&participant_guid, data_seq[i].participant_key);
+
+      rmw_qos_profile_t qos_profile;
+      dds_remote_qos_to_rmw_qos(data_seq[i], &qos_profile);
+
       add_information(
         participant_guid,
         guid,
         data_seq[i].topic_name,
         data_seq[i].type_name,
+        qos_profile,
         EntityType::Subscriber);
     } else {
       remove_information(
