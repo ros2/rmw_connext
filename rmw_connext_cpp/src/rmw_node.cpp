@@ -28,7 +28,7 @@ rmw_create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * security_options,
+  const rmw_security_options_t * security_options,
   bool localhost_only)
 {
   return create_node(

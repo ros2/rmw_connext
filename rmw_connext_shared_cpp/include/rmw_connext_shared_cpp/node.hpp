@@ -27,7 +27,7 @@ create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * options,
+  const rmw_security_options_t * options,
   bool localhost_only);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
