@@ -127,13 +127,6 @@ get_node_names(
       if (ns_found != map.end()) {
         namespace_ = std::string(ns_found->second.begin(), ns_found->second.end());
       }
-
-      if (name.empty()) {
-        // use participant name if no name was found in the user data
-        if (pbtd.participant_name.name) {
-          name = pbtd.participant_name.name;
-        }
-      }
     }
 
     // ignore discovered participants without a name
