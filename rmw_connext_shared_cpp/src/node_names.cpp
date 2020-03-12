@@ -178,10 +178,7 @@ get_node_names(
 
   for (auto i = 0; i < named_nodes_num; ++i) {
     node_names->data[i] = rcutils_strdup(tmp_names_list.data[i], allocator);
-    tmp_names_list.data[i] = nullptr;
-
     node_namespaces->data[i] = rcutils_strdup(tmp_namespaces_list.data[i], allocator);
-    tmp_namespaces_list.data[i] = nullptr;
   }
 
   rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
