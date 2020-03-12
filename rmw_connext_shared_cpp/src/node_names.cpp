@@ -28,11 +28,12 @@
 #include "rmw_connext_shared_cpp/types.hpp"
 
 rmw_ret_t
-get_node_names(
+get_node_names_impl(
   const char * implementation_identifier,
   const rmw_node_t * node,
   rcutils_string_array_t * node_names,
-  rcutils_string_array_t * node_namespaces)
+  rcutils_string_array_t * node_namespaces,
+  rcutils_string_array_t * context_names)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -43,6 +44,9 @@ get_node_names(
     return RMW_RET_ERROR;
   }
   if (rmw_check_zero_rmw_string_array(node_names) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+  if (rmw_check_zero_rmw_string_array(node_namespaces) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
@@ -73,6 +77,7 @@ get_node_names(
   // Such names should not be returned
   rcutils_string_array_t tmp_names_list = rcutils_get_zero_initialized_string_array();
   rcutils_string_array_t tmp_namespaces_list = rcutils_get_zero_initialized_string_array();
+  rcutils_string_array_t tmp_context_names_list = rcutils_get_zero_initialized_string_array();
 
   int named_nodes_num = 1;
 
@@ -92,6 +97,16 @@ get_node_names(
     goto cleanup;
   }
 
+  if (context_names) {
+    rcutils_ret = rcutils_string_array_init(&tmp_context_names_list, length, &allocator);
+
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
+      final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+      goto cleanup;
+    }
+  }
+
   // add yourself
   tmp_names_list.data[0] = rcutils_strdup(participant_qos.participant_name.name, allocator);
   if (!tmp_names_list.data[0]) {
@@ -105,12 +120,21 @@ get_node_names(
     final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
     goto cleanup;
   }
+  if (context_names) {
+    tmp_context_names_list.data[0] = rcutils_strdup(node->context->options.name, allocator);
+    if (!tmp_namespaces_list.data[0]) {
+      RMW_SET_ERROR_MSG("could not allocate memory for a context name");
+      final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+      goto cleanup;
+    }
+  }
 
   for (auto i = 1; i < length; ++i) {
     DDS::ParticipantBuiltinTopicData pbtd;
     auto dds_ret = participant->get_discovered_participant_data(pbtd, handles[i - 1]);
     std::string name;
     std::string namespace_;
+    std::string context_name;
     if (DDS::RETCODE_OK == dds_ret) {
       auto data = static_cast<unsigned char *>(pbtd.user_data.value.get_contiguous_buffer());
       std::vector<uint8_t> kv(data, data + pbtd.user_data.value.length());
@@ -119,6 +143,7 @@ get_node_names(
 
       auto name_found = map.find("name");
       auto ns_found = map.find("namespace");
+      auto context_name_found = map.find("contextname");
 
       if (name_found != map.end()) {
         name = std::string(name_found->second.begin(), name_found->second.end());
@@ -126,6 +151,11 @@ get_node_names(
 
       if (ns_found != map.end()) {
         namespace_ = std::string(ns_found->second.begin(), ns_found->second.end());
+      }
+
+      if (context_name_found != map.end()) {
+        context_name = std::string(
+          context_name_found->second.begin(), context_name_found->second.end());
       }
     }
 
@@ -150,6 +180,15 @@ get_node_names(
       goto cleanup;
     }
 
+    if (context_names) {
+      tmp_context_names_list.data[named_nodes_num] = rcutils_strdup(context_name.c_str(), allocator);
+      if (!tmp_context_names_list.data[named_nodes_num]) {
+        RMW_SET_ERROR_MSG("could not allocate memory for a node's namespace");
+        final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+        goto cleanup;
+      }
+    }
+
     ++named_nodes_num;
   }
 
@@ -169,9 +208,22 @@ get_node_names(
     goto cleanup;
   }
 
+  if (context_names) {
+    rcutils_ret = rcutils_string_array_init(context_names, named_nodes_num, &allocator);
+
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RMW_SET_ERROR_MSG("could not allocate memory for node_namespaces output");
+      final_ret = rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+      goto cleanup;
+    }
+  }
+
   for (auto i = 0; i < named_nodes_num; ++i) {
     node_names->data[i] = rcutils_strdup(tmp_names_list.data[i], allocator);
     node_namespaces->data[i] = rcutils_strdup(tmp_namespaces_list.data[i], allocator);
+    if (context_names) {
+      context_names->data[i] = rcutils_strdup(tmp_context_names_list.data[i], allocator);
+    }
   }
 
   rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
@@ -212,6 +264,17 @@ cleanup:
     }
   }
 
+  if (context_names) {
+    rcutils_ret = rcutils_string_array_fini(context_names);
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_connext_cpp",
+        "failed to cleanup during error handling: %s", rcutils_get_error_string().str
+      );
+      rcutils_reset_error();
+    }
+  }
+
   rcutils_ret = rcutils_string_array_fini(&tmp_names_list);
   if (rcutils_ret != RCUTILS_RET_OK) {
     RCUTILS_LOG_ERROR_NAMED(
@@ -230,5 +293,38 @@ cleanup:
     rcutils_reset_error();
   }
 
+  rcutils_ret = rcutils_string_array_fini(&tmp_context_names_list);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rmw_connext_cpp",
+      "failed to cleanup during error handling: %s", rcutils_get_error_string().str
+    );
+    rcutils_reset_error();
+  }
+
   return final_ret;
+}
+
+rmw_ret_t
+get_node_names(
+  const char * implementation_identifier,
+  const rmw_node_t * node,
+  rcutils_string_array_t * node_names,
+  rcutils_string_array_t * node_namespaces)
+{
+  return get_node_names_impl(implementation_identifier, node, node_names, node_namespaces, nullptr);
+}
+
+rmw_ret_t
+get_node_names_with_context_names(
+  const char * implementation_identifier,
+  const rmw_node_t * node,
+  rcutils_string_array_t * node_names,
+  rcutils_string_array_t * node_namespaces,
+  rcutils_string_array_t * context_names)
+{
+  if (rmw_check_zero_rmw_string_array(context_names) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+  return get_node_names_impl(implementation_identifier, node, node_names, node_namespaces, context_names);
 }

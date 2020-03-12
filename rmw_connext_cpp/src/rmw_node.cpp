@@ -28,12 +28,10 @@ rmw_create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_security_options_t * security_options,
   bool localhost_only)
 {
   return create_node(
-    rti_connext_identifier, context, name, namespace_, domain_id, security_options,
-    localhost_only);
+    rti_connext_identifier, context, name, namespace_, domain_id, localhost_only);
 }
 
 rmw_ret_t
