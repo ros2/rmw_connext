@@ -170,7 +170,6 @@ add_library(
   src/rmw_publisher.cpp
   src/rmw_request.cpp
   src/rmw_response.cpp
-  src/rmw_security.cpp
   src/rmw_serialize.cpp
   src/rmw_service.cpp
   src/rmw_service_names_and_types.cpp
