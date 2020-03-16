@@ -20,6 +20,21 @@
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
+/// Mapping of RMW_EVENT to the corresponding DDS_StatusKind.
+const
+std::unordered_map<rmw_event_type_t, DDS::StatusKind> __rmw_event_type_to_dds_status_mask_map{
+  {RMW_EVENT_LIVELINESS_CHANGED, DDS_LIVELINESS_CHANGED_STATUS},
+  {RMW_EVENT_REQUESTED_DEADLINE_MISSED, DDS_REQUESTED_DEADLINE_MISSED_STATUS},
+  {RMW_EVENT_LIVELINESS_LOST, DDS_LIVELINESS_LOST_STATUS},
+  {RMW_EVENT_OFFERED_DEADLINE_MISSED, DDS_OFFERED_DEADLINE_MISSED_STATUS},
+};
+
+bool
+__rmw_event_type_is_supported(rmw_event_type_t event_type)
+{
+  return __rmw_event_type_to_dds_status_mask_map.count(event_type) > 0;
+}
+
 rmw_ret_t
 __rmw_take_event(
   const char * implementation_identifier,
@@ -41,7 +56,7 @@ __rmw_take_event(
   rmw_ret_t ret_code = RMW_RET_UNSUPPORTED;
 
   // check if we support the input event type
-  if (is_event_supported(event_handle->event_type)) {
+  if (__rmw_event_type_is_supported(event_handle->event_type)) {
     // lookup status mask from rmw_event_type
     DDS_StatusKind status_kind = get_status_kind_from_rmw(event_handle->event_type);
 

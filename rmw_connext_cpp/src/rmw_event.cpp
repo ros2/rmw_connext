@@ -20,6 +20,18 @@
 
 extern "C"
 {
+/// Determine if the rmw event type is supported by the underlying rmw implementation or not.
+/**
+ * \param event_type to test if supported by underlying rmw_implementation
+ * \return `true` if the event_type is supported, or
+ * \return `false` if the event_type is not supported.
+ */
+bool
+rmw_event_type_is_supported(rmw_event_type_t event_type)
+{
+  return __rmw_event_type_is_supported(event_type);
+}
+
 /// Take an event from the event handle.
 /**
  * \param event_handle event object to take from

@@ -15,12 +15,27 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
 #define RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
 
+#include <unordered_map>
+
 #include "ndds_include.hpp"
 
 #include "rmw/types.h"
 #include "rmw/event.h"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
+
+extern const
+std::unordered_map<rmw_event_type_t, DDS::StatusKind> __rmw_event_type_to_dds_status_mask_map;
+
+/// Determine if the rmw event type is supported by the underlying rmw implementation or not.
+/**
+ * \param event_type to test if supported by underlying rmw_implementation
+ * \return `true` if the event_type is supported, or
+ * \return `false` if the event_type is not supported.
+ */
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+bool
+__rmw_event_type_is_supported(rmw_event_type_t event_type);
 
 /// Take an event from the event handle.
 /**

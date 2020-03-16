@@ -26,6 +26,7 @@
 #include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/condition_error.hpp"
+#include "rmw_connext_shared_cpp/event.hpp"
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 #include "rmw_connext_shared_cpp/visibility_control.h"
@@ -53,7 +54,7 @@ __gather_event_conditions(
       RMW_SET_ERROR_MSG("status condition handle is null");
       return RMW_RET_ERROR;
     }
-    if (is_event_supported(current_event->event_type)) {
+    if (__rmw_event_type_is_supported(current_event->event_type)) {
       auto map_pair = status_mask_map.insert(
         std::pair<DDS::StatusCondition *, DDS::StatusMask>(
           status_condition, DDS::STATUS_MASK_NONE));
@@ -90,7 +91,7 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
       DDS::StatusMask status_mask = dds_entity->get_status_changes();
       bool is_active = false;
 
-      if (is_event_supported(current_event->event_type)) {
+      if (__rmw_event_type_is_supported(current_event->event_type)) {
         is_active = static_cast<bool>(status_mask &
           get_status_kind_from_rmw(current_event->event_type));
       }
