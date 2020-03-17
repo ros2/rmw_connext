@@ -20,17 +20,6 @@
 
 extern "C"
 {
-
-/// Initialize a rmw publisher event.
-/**
- * \param[in|out] rmw_event to initialize
- * \param publisher to initialize with
- * \param event_type for the event to handle
- * \return `RMW_RET_OK` if successful, or
- * \return `RMW_RET_INVALID_ARGUMENT` if invalid argument, or
- * \return `RMW_RET_UNSUPPORTED` if event_type is not supported, or
- * \return `RMW_RET_ERROR` if an unexpected error occurs.
- */
 rmw_ret_t
 rmw_publisher_event_init(
   rmw_event_t * rmw_event,
@@ -45,16 +34,6 @@ rmw_publisher_event_init(
     event_type);
 }
 
-/// Initialize a rmw subscription event.
-/**
- * \param[in|out] rmw_event to initialize
- * \param subscription to initialize with
- * \param event_type for the event to handle
- * \return `RMW_RET_OK` if successful, or
- * \return `RMW_RET_INVALID_ARGUMENT` if invalid argument, or
- * \return `RMW_RET_UNSUPPORTED` if event_type is not supported, or
- * \return `RMW_RET_ERROR` if an unexpected error occurs.
- */
 rmw_ret_t
 rmw_subscription_event_init(
   rmw_event_t * rmw_event,
@@ -69,15 +48,6 @@ rmw_subscription_event_init(
     event_type);
 }
 
-/// Take an event from the event handle.
-/**
- * \param event_handle event object to take from
- * \param event_info event info object to write taken data into
- * \param taken boolean flag indicating if an event was taken or not
- * \return `RMW_RET_OK` if successful, or
- * \return `RMW_RET_BAD_ALLOC` if memory allocation failed, or
- * \return `RMW_RET_ERROR` if an unexpected error occurs.
- */
 rmw_ret_t
 rmw_take_event(
   const rmw_event_t * event_handle,
@@ -90,5 +60,4 @@ rmw_take_event(
     event_info,
     taken);
 }
-
 }  // extern "C"
