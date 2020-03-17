@@ -74,7 +74,7 @@ create_node(
   // the node name is also set in the user_data
   size_t length = strlen(name) + strlen("name=;") +
     strlen(namespace_) + strlen("namespace=;") +
-    strlen(context->options.name) + strlen("contextname=;") + 1;
+    strlen(context->options.security_context) + strlen("securitycontext=;") + 1;
   bool success = participant_qos.user_data.value.length(static_cast<DDS::Long>(length));
   if (!success) {
     RMW_SET_ERROR_MSG("failed to resize participant user_data");
@@ -83,7 +83,9 @@ create_node(
 
   int written = snprintf(
     reinterpret_cast<char *>(participant_qos.user_data.value.get_contiguous_buffer()),
-    length, "name=%s;namespace=%s;contextname=%s;", name, namespace_, context->options.name);
+    length,
+    "name=%s;namespace=%s;securitycontext=%s;",
+    name, namespace_, context->options.security_context);
   if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return NULL;
