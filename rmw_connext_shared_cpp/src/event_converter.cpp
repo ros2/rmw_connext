@@ -14,15 +14,27 @@
 
 #include <unordered_map>
 
-#include "rmw_connext_shared_cpp/event.hpp"
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 
-DDS::StatusKind get_status_kind_from_rmw(rmw_event_type_t event_t)
+/// Mapping of RMW_EVENT to the corresponding DDS_StatusKind.
+static const std::unordered_map<rmw_event_type_t, DDS::StatusKind> mask_map{
+  {RMW_EVENT_LIVELINESS_CHANGED, DDS_LIVELINESS_CHANGED_STATUS},
+  {RMW_EVENT_REQUESTED_DEADLINE_MISSED, DDS_REQUESTED_DEADLINE_MISSED_STATUS},
+  {RMW_EVENT_LIVELINESS_LOST, DDS_LIVELINESS_LOST_STATUS},
+  {RMW_EVENT_OFFERED_DEADLINE_MISSED, DDS_OFFERED_DEADLINE_MISSED_STATUS},
+};
+
+DDS::StatusKind get_status_kind_from_rmw(const rmw_event_type_t event_t)
 {
-  return __rmw_event_type_to_dds_status_mask_map.at(event_t);
+  return mask_map.at(event_t);
 }
 
-rmw_ret_t check_dds_ret_code(DDS::ReturnCode_t dds_return_code)
+bool is_event_supported(const rmw_event_type_t event_t)
+{
+  return mask_map.count(event_t) > 0;
+}
+
+rmw_ret_t check_dds_ret_code(const DDS::ReturnCode_t dds_return_code)
 {
   switch (dds_return_code) {
     case DDS_RETCODE_OK:

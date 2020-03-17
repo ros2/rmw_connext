@@ -15,8 +15,6 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
 #define RMW_CONNEXT_SHARED_CPP__EVENT_HPP_
 
-#include <unordered_map>
-
 #include "ndds_include.hpp"
 
 #include "rmw/types.h"
@@ -24,18 +22,25 @@
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
-extern const
-std::unordered_map<rmw_event_type_t, DDS::StatusKind> __rmw_event_type_to_dds_status_mask_map;
-
-/// Determine if the rmw event type is supported by the underlying rmw implementation or not.
+/// Initialize a rmw_event_t.
 /**
- * \param event_type to test if supported by underlying rmw_implementation
- * \return `true` if the event_type is supported, or
- * \return `false` if the event_type is not supported.
+ * \param[in|out] rmw_event to initialize
+ * \param topic_endpoint_impl_identifier implementation identifier of event's parent topic endpoint
+ * \param data to initialize with
+ * \param event_type for the event to handle
+ * \return `RMW_RET_OK` if successful, or
+ * \return `RMW_RET_INVALID_ARGUMENT` if invalid argument, or
+ * \return `RMW_RET_UNSUPPORTED` if event_type is not supported, or
+ * \return `RMW_RET_ERROR` if an unexpected error occurs.
  */
 RMW_CONNEXT_SHARED_CPP_PUBLIC
-bool
-__rmw_event_type_is_supported(rmw_event_type_t event_type);
+rmw_ret_t
+__rmw_init_event(
+  const char * identifier,
+  rmw_event_t * rmw_event,
+  const char * topic_endpoint_impl_identifier,
+  void * data,
+  rmw_event_type_t event_type);
 
 /// Take an event from the event handle.
 /**

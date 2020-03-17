@@ -20,16 +20,53 @@
 
 extern "C"
 {
-/// Determine if the rmw event type is supported by the underlying rmw implementation or not.
+
+/// Initialize a rmw publisher event.
 /**
- * \param event_type to test if supported by underlying rmw_implementation
- * \return `true` if the event_type is supported, or
- * \return `false` if the event_type is not supported.
+ * \param[in|out] rmw_event to initialize
+ * \param publisher to initialize with
+ * \param event_type for the event to handle
+ * \return `RMW_RET_OK` if successful, or
+ * \return `RMW_RET_INVALID_ARGUMENT` if invalid argument, or
+ * \return `RMW_RET_UNSUPPORTED` if event_type is not supported, or
+ * \return `RMW_RET_ERROR` if an unexpected error occurs.
  */
-bool
-rmw_event_type_is_supported(rmw_event_type_t event_type)
+rmw_ret_t
+rmw_publisher_event_init(
+  rmw_event_t * rmw_event,
+  const rmw_publisher_t * publisher,
+  rmw_event_type_t event_type)
 {
-  return __rmw_event_type_is_supported(event_type);
+  return __rmw_init_event(
+    rti_connext_identifier,
+    rmw_event,
+    publisher->implementation_identifier,
+    publisher->data,
+    event_type);
+}
+
+/// Initialize a rmw subscription event.
+/**
+ * \param[in|out] rmw_event to initialize
+ * \param subscription to initialize with
+ * \param event_type for the event to handle
+ * \return `RMW_RET_OK` if successful, or
+ * \return `RMW_RET_INVALID_ARGUMENT` if invalid argument, or
+ * \return `RMW_RET_UNSUPPORTED` if event_type is not supported, or
+ * \return `RMW_RET_ERROR` if an unexpected error occurs.
+ */
+rmw_ret_t
+rmw_subscription_event_init(
+  rmw_event_t * rmw_event,
+  const rmw_subscription_t * subscription,
+  rmw_event_type_t event_type)
+{
+  return __rmw_init_event(
+    rti_connext_identifier,
+    rmw_event,
+    subscription->implementation_identifier,
+    subscription->data,
+    event_type);
 }
 
 /// Take an event from the event handle.
@@ -53,4 +90,5 @@ rmw_take_event(
     event_info,
     taken);
 }
+
 }  // extern "C"

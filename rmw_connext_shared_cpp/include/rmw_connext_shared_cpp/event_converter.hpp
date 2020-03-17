@@ -33,6 +33,14 @@
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 DDS::StatusKind get_status_kind_from_rmw(rmw_event_type_t event_t);
 
+/// Return true if the input RMW event has a corresponding DDS_StatusKind.
+/**
+ * \param event_t input rmw event to check
+ * \return true if there is an RMW to DDS_StatusKind mapping, false otherwise
+ */
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+bool is_event_supported(rmw_event_type_t event_t);
+
 /// Assign the input DDS return code to its corresponding RMW return code.
 /**
   * \param dds_return_code input DDS return code
