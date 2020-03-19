@@ -118,7 +118,7 @@ set_entity_qos_from_profile_generic(
     entity_qos.history.kind == DDS::KEEP_LAST_HISTORY_QOS &&
     static_cast<size_t>(entity_qos.history.depth) < qos_profile.depth)
   {
-    if (qos_profile.depth > (std::numeric_limits<DDS::Long>::max)()) {
+    if (qos_profile.depth > static_cast<size_t>((std::numeric_limits<DDS::Long>::max)())) {
       RMW_SET_ERROR_MSG(
         "failed to set history depth since the requested queue size exceeds the DDS type");
       return false;
