@@ -22,6 +22,26 @@
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
+/// Initialize a rmw_event_t.
+/**
+ * \param[in|out] rmw_event to initialize
+ * \param topic_endpoint_impl_identifier implementation identifier of event's parent topic endpoint
+ * \param data to initialize with
+ * \param event_type for the event to handle
+ * \return `RMW_RET_OK` if successful, or
+ * \return `RMW_RET_INVALID_ARGUMENT` if invalid argument, or
+ * \return `RMW_RET_UNSUPPORTED` if event_type is not supported, or
+ * \return `RMW_RET_ERROR` if an unexpected error occurs.
+ */
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_init_event(
+  const char * identifier,
+  rmw_event_t * rmw_event,
+  const char * topic_endpoint_impl_identifier,
+  void * data,
+  rmw_event_type_t event_type);
+
 /// Take an event from the event handle.
 /**
  *
