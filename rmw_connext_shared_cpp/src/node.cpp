@@ -372,6 +372,7 @@ create_node(
 
   node_handle->implementation_identifier = implementation_identifier;
   node_handle->data = node_info;
+  node_handle->context = context;
   return node_handle;
 fail:
   status = dpf_->delete_participant(participant);
