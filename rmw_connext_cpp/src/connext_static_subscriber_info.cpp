@@ -14,6 +14,7 @@
 
 #include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 #include "rmw_connext_shared_cpp/event_converter.hpp"
+#include "rmw_connext_shared_cpp/qos.hpp"
 
 rmw_ret_t ConnextStaticSubscriberInfo::get_status(
   DDS::StatusMask mask,
@@ -57,6 +58,28 @@ rmw_ret_t ConnextStaticSubscriberInfo::get_status(
         rmw_requested_deadline_missed_status->total_count = requested_deadline_missed.total_count;
         rmw_requested_deadline_missed_status->total_count_change =
           requested_deadline_missed.total_count_change;
+
+        break;
+      }
+    case DDS::StatusKind::DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS:
+      {
+        DDS::RequestedIncompatibleQosStatus requested_incompatible_qos;
+        DDS::ReturnCode_t dds_return_code =
+          topic_reader_->get_requested_incompatible_qos_status(requested_incompatible_qos);
+
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        std::cout << "from_dds: " << from_dds << std::endl;
+        if (from_dds != RMW_RET_OK) {
+          return from_dds;
+        }
+
+        rmw_requested_qos_incompatible_event_status_t * rmw_requested_qos_incompatible =
+          static_cast<rmw_requested_qos_incompatible_event_status_t *>(event);
+        rmw_requested_qos_incompatible->total_count = requested_incompatible_qos.total_count;
+        rmw_requested_qos_incompatible->total_count_change =
+          requested_incompatible_qos.total_count_change;
+        rmw_requested_qos_incompatible->last_policy_kind = dds_qos_policy_to_rmw_qos_policy(
+          requested_incompatible_qos.last_policy_id);
 
         break;
       }
