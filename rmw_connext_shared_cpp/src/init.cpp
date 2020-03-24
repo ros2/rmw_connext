@@ -25,5 +25,10 @@ init()
     RMW_SET_ERROR_MSG("failed to get participant factory");
     return RMW_RET_ERROR;
   }
+
+  DDS::DomainParticipantFactoryQos factory_qos;
+  dpf_->get_qos(factory_qos);
+  factory_qos.resource_limits.max_objects_per_thread = 8192;
+  dpf_->set_qos(factory_qos);
   return RMW_RET_OK;
 }
