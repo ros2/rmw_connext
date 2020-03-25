@@ -226,7 +226,7 @@ get_datawriter_qos(
 rmw_qos_policy_kind_t
 dds_qos_policy_to_rmw_qos_policy(DDS::QosPolicyId_t policy_id)
 {
-  switch(policy_id) {
+  switch (policy_id) {
     case DDS_DURABILITY_QOS_POLICY_ID:
       return RMW_QOS_POLICY_DURABILITY;
     case DDS_DEADLINE_QOS_POLICY_ID:

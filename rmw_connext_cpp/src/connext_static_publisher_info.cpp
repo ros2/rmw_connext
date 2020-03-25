@@ -66,8 +66,7 @@ rmw_ret_t ConnextStaticPublisherInfo::get_status(
           topic_writer_->get_offered_incompatible_qos_status(offered_incompatible_qos);
 
         rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
-        std::cout << "from_dds: " << from_dds << std::endl;
-        if (from_dds != RMW_RET_OK) {
+        if (RMW_RET_OK != from_dds) {
           return from_dds;
         }
 
