@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstring>
 #include <string>
 
 #include "rcutils/filesystem.h"
@@ -72,16 +73,18 @@ create_node(
   participant_qos.participant_name.name = DDS::String_dup(name);
   // since the participant name is not part of the DDS spec
   // the node name is also set in the user_data
-  size_t length = strlen(name) + strlen("name=;") +
-    strlen(namespace_) + strlen("namespace=;") +
-    strlen(context->options.security_context) + strlen("securitycontext=;") + 1;
+  size_t length = std::snprintf(
+    nullptr,
+    0,
+    "name=%s;namespace=%s;securitycontext=%s;",
+    name, namespace_, context->options.security_context) + 1;
   bool success = participant_qos.user_data.value.length(static_cast<DDS::Long>(length));
   if (!success) {
     RMW_SET_ERROR_MSG("failed to resize participant user_data");
     return NULL;
   }
 
-  int written = snprintf(
+  int written = std::snprintf(
     reinterpret_cast<char *>(participant_qos.user_data.value.get_contiguous_buffer()),
     length,
     "name=%s;namespace=%s;securitycontext=%s;",
