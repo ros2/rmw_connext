@@ -223,6 +223,27 @@ get_datawriter_qos(
   return true;
 }
 
+rmw_qos_policy_kind_t
+dds_qos_policy_to_rmw_qos_policy(DDS::QosPolicyId_t policy_id)
+{
+  switch (policy_id) {
+    case DDS_DURABILITY_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_DURABILITY;
+    case DDS_DEADLINE_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_DEADLINE;
+    case DDS_LIVELINESS_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_LIVELINESS;
+    case DDS_RELIABILITY_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_RELIABILITY;
+    case DDS_HISTORY_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_HISTORY;
+    case DDS_LIFESPAN_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_LIFESPAN;
+    default:
+      return RMW_QOS_POLICY_INVALID;
+  }
+}
+
 template<typename AttributeT>
 void
 dds_qos_lifespan_to_rmw_qos_lifespan(
