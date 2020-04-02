@@ -16,6 +16,7 @@
   <build_depend>rcpputils</build_depend>
   <build_depend>rcutils</build_depend>
   <build_depend>rmw</build_depend>
+  <build_depend>tinyxml2_vendor</build_depend>
   <build_depend>rti-connext-dds-5.3.1</build_depend>
 
   <build_export_depend>connext_cmake_module</build_export_depend>

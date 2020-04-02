@@ -25,12 +25,13 @@ endif()
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
-
+find_package(tinyxml2_vendor REQUIRED)
+find_package(TinyXML2 REQUIRED)  # provided by tinyxml2 upstream, or tinyxml2_vendor
 include_directories(include)
 
 ament_export_include_directories(include)
 
-ament_export_dependencies(rmw)
+ament_export_dependencies(rmw tinyxml2_vendor TinyXML2)
 
 link_directories(${Connext_LIBRARY_DIRS})
 add_library(
@@ -49,6 +50,7 @@ add_library(
   src/qos.cpp
   src/names_and_types_helpers.cpp
   src/node_info_and_types.cpp
+  src/security_logging.cpp
   src/service_names_and_types.cpp
   src/topic_names_and_types.cpp
   src/trigger_guard_condition.cpp
@@ -61,7 +63,8 @@ ament_target_dependencies(rmw_connext_shared_cpp
   "rcpputils"
   "rcutils"
   "rmw"
-  "Connext")
+  "Connext"
+  "TinyXML2")
 ament_export_libraries(rmw_connext_shared_cpp)
 
 if(WIN32)

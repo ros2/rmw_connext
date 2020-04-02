@@ -21,6 +21,7 @@
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/node.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
+#include "rmw_connext_shared_cpp/security_logging.hpp"
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -153,6 +154,7 @@ create_node(
   char * key_fn = nullptr;
   char * gov_fn = nullptr;
   char * perm_fn = nullptr;
+  char * logging_fn = nullptr;
 
   if (context->options.security_options.security_root_path) {
     // enable some security stuff
@@ -215,6 +217,11 @@ create_node(
       RMW_SET_ERROR_MSG("failed to allocate memory for 'perm_fn'");
       goto fail;
     }
+    logging_fn = rcutils_join_path(srp, "logging.xml", allocator);
+    if (!logging_fn) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for 'logging_fn'");
+      goto fail;
+    }
 
     // now try to pass these filenames to the Authentication plugin
     status = DDS::PropertyQosPolicyHelper::add_property(
@@ -274,6 +281,16 @@ create_node(
     if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
       goto fail;
+    }
+
+    // Configure security logging
+    if (rcutils_is_readable(logging_fn)) {
+      if (apply_logging_configuration_from_file(
+          logging_fn,
+          participant_qos.property) != RMW_RET_OK)
+      {
+        goto fail;
+      }
     }
   }
 
@@ -428,6 +445,7 @@ fail:
   allocator.deallocate(key_fn, allocator.state);
   allocator.deallocate(gov_fn, allocator.state);
   allocator.deallocate(perm_fn, allocator.state);
+  allocator.deallocate(logging_fn, allocator.state);
   return NULL;
 }
 
