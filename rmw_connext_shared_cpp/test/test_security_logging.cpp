@@ -126,9 +126,9 @@ TEST_F(SecurityLoggingTest, test_log_verbosity_invalid)
       "INVALID_VERBOSITY is not a supported verbosity"));
 }
 
-TEST_F(SecurityLoggingTest, test_log_distribute)
+TEST_F(SecurityLoggingTest, test_log_publish)
 {
-  std::string xml_file_path = write_logging_xml("<distribute>true</distribute>");
+  std::string xml_file_path = write_logging_xml("<publish />");
   DDS::PropertyQosPolicy policy;
   EXPECT_EQ(apply_logging_configuration_from_file(xml_file_path.c_str(), policy), RMW_RET_OK);
   EXPECT_FALSE(rmw_error_is_set());
@@ -141,50 +141,54 @@ TEST_F(SecurityLoggingTest, test_log_distribute)
 
 TEST_F(SecurityLoggingTest, test_log_depth)
 {
-  std::string xml_file_path = write_logging_xml("<qos><depth>10</depth></qos>");
+  std::string xml_file_path = write_logging_xml("<publish><qos><depth>10</depth></qos></publish>");
   DDS::PropertyQosPolicy policy;
   EXPECT_EQ(apply_logging_configuration_from_file(xml_file_path.c_str(), policy), RMW_RET_OK);
   EXPECT_FALSE(rmw_error_is_set());
 
   EXPECT_EQ(log_file_property(policy), nullptr);
   EXPECT_EQ(verbosity_property(policy), nullptr);
-  EXPECT_EQ(logging_distribute_enable_property(policy), nullptr);
+  EXPECT_STREQ(logging_distribute_enable_property(policy), "true");
   EXPECT_STREQ(logging_distribute_depth_property(policy), "10");
 }
 
 TEST_F(SecurityLoggingTest, test_profile)
 {
-  std::string xml_file_path = write_logging_xml("<qos><profile>DEFAULT</profile></qos>");
+  std::string xml_file_path = write_logging_xml(
+    "<publish><qos><profile>DEFAULT</profile></qos></publish>");
   DDS::PropertyQosPolicy policy;
   EXPECT_EQ(apply_logging_configuration_from_file(xml_file_path.c_str(), policy), RMW_RET_OK);
   EXPECT_FALSE(rmw_error_is_set());
 
   EXPECT_EQ(log_file_property(policy), nullptr);
   EXPECT_EQ(verbosity_property(policy), nullptr);
-  EXPECT_EQ(logging_distribute_enable_property(policy), nullptr);
+  EXPECT_STREQ(logging_distribute_enable_property(policy), "true");
   EXPECT_STREQ(logging_distribute_depth_property(policy), "10");
 }
 
 TEST_F(SecurityLoggingTest, test_profile_overwrite)
 {
   std::string xml_file_path = write_logging_xml(
-    "<qos>\n"
-    "  <profile>DEFAULT</profile>\n"
-    "  <depth>42</depth>\n"
-    "</qos>");
+    "<publish>\n"
+    "  <qos>\n"
+    "    <profile>DEFAULT</profile>\n"
+    "    <depth>42</depth>\n"
+    "  </qos>\n"
+    "</publish>");
   DDS::PropertyQosPolicy policy;
   EXPECT_EQ(apply_logging_configuration_from_file(xml_file_path.c_str(), policy), RMW_RET_OK);
   EXPECT_FALSE(rmw_error_is_set());
 
   EXPECT_EQ(log_file_property(policy), nullptr);
   EXPECT_EQ(verbosity_property(policy), nullptr);
-  EXPECT_EQ(logging_distribute_enable_property(policy), nullptr);
+  EXPECT_STREQ(logging_distribute_enable_property(policy), "true");
   EXPECT_STREQ(logging_distribute_depth_property(policy), "42");
 }
 
 TEST_F(SecurityLoggingTest, test_profile_invalid)
 {
-  std::string xml_file_path = write_logging_xml("<qos><profile>INVALID_PROFILE</profile></qos>");
+  std::string xml_file_path = write_logging_xml(
+    "<publish><qos><profile>INVALID_PROFILE</profile></qos></publish>");
   DDS::PropertyQosPolicy policy;
   EXPECT_EQ(apply_logging_configuration_from_file(xml_file_path.c_str(), policy), RMW_RET_ERROR);
   EXPECT_TRUE(rmw_error_is_set());
@@ -196,10 +200,11 @@ TEST_F(SecurityLoggingTest, test_all)
   std::string xml_file_path = write_logging_xml(
     "<file>foo</file>\n"
     "<verbosity>ERROR</verbosity>\n"
-    "<distribute>true</distribute>\n"
-    "<qos>\n"
-    "  <depth>10</depth>\n"
-    "</qos>");
+    "<publish>\n"
+    "  <qos>\n"
+    "    <depth>10</depth>\n"
+    "  </qos>\n"
+    "</publish>");
   DDS::PropertyQosPolicy policy;
   EXPECT_EQ(apply_logging_configuration_from_file(xml_file_path.c_str(), policy), RMW_RET_OK);
   EXPECT_FALSE(rmw_error_is_set());

@@ -187,15 +187,6 @@ rmw_ret_t apply_logging_configuration_from_file(
     return RMW_RET_ERROR;
   }
 
-  status = apply_property_from_element(
-    policy,
-    distribute_enable_property_name,
-    *log_element,
-    "distribute");
-  if (!status) {
-    return RMW_RET_ERROR;
-  }
-
   auto verbosity_element = log_element->FirstChildElement("verbosity");
   if (verbosity_element != nullptr) {
     const char * verbosity_str;
@@ -216,38 +207,46 @@ rmw_ret_t apply_logging_configuration_from_file(
     }
   }
 
-  auto qos_element = log_element->FirstChildElement("qos");
-  if (qos_element != nullptr) {
-    // First thing we need to do is apply any QoS profile that was specified.
-    // Once that has happened, further settings can be applied to customize.
-    auto profile_element = qos_element->FirstChildElement("profile");
-    if (profile_element != nullptr) {
-      const char * profile_str;
-      if (!get_element_text(*profile_element, "profile", &profile_str)) {
-        return RMW_RET_ERROR;
+  auto publish_element = log_element->FirstChildElement("publish");
+  if (publish_element != nullptr) {
+    // The presence of this element indicates that the log should be distributed
+    if (!apply_property(policy, distribute_enable_property_name, "distribute", "true")) {
+      return RMW_RET_ERROR;
+    }
+
+    auto qos_element = publish_element->FirstChildElement("qos");
+    if (qos_element != nullptr) {
+      // First thing we need to do is apply any QoS profile that was specified.
+      // Once that has happened, further settings can be applied to customize.
+      auto profile_element = qos_element->FirstChildElement("profile");
+      if (profile_element != nullptr) {
+        const char * profile_str;
+        if (!get_element_text(*profile_element, "profile", &profile_str)) {
+          return RMW_RET_ERROR;
+        }
+
+        rmw_qos_profile_t profile;
+        if (!string_to_rmw_qos_profile(profile_str, profile)) {
+          RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+            "failed to set security logging profile: %s is not a supported profile",
+            profile_str);
+          return RMW_RET_ERROR;
+        }
+
+        status = apply_qos_profile(policy, profile);
+        if (!status) {
+          return RMW_RET_ERROR;
+        }
       }
 
-      rmw_qos_profile_t profile;
-      if (!string_to_rmw_qos_profile(profile_str, profile)) {
-        RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-          "failed to set security logging profile: %s is not a supported profile",
-          profile_str);
-        return RMW_RET_ERROR;
-      }
-
-      status = apply_qos_profile(policy, profile);
+      status = apply_property_from_element(
+        policy,
+        distribute_depth_property_name,
+        *qos_element,
+        "depth");
       if (!status) {
         return RMW_RET_ERROR;
       }
-    }
-
-    status = apply_property_from_element(
-      policy,
-      distribute_depth_property_name,
-      *qos_element,
-      "depth");
-    if (!status) {
-      return RMW_RET_ERROR;
     }
   }
 
