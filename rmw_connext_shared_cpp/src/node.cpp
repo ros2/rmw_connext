@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstring>
 #include <string>
 
 #include "rcutils/filesystem.h"
@@ -32,7 +33,6 @@ create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * security_options,
   bool localhost_only)
 {
   RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
@@ -42,10 +42,6 @@ create_node(
     implementation_identifier,
     // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
     return NULL);
-  if (!security_options) {
-    RMW_SET_ERROR_MSG("security_options is null");
-    return nullptr;
-  }
   DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
   if (!dpf_) {
     RMW_SET_ERROR_MSG("failed to get participant factory");
@@ -77,17 +73,22 @@ create_node(
   participant_qos.participant_name.name = DDS::String_dup(name);
   // since the participant name is not part of the DDS spec
   // the node name is also set in the user_data
-  size_t length = strlen(name) + strlen("name=;") +
-    strlen(namespace_) + strlen("namespace=;") + 1;
+  size_t length = std::snprintf(
+    nullptr,
+    0,
+    "name=%s;namespace=%s;securitycontext=%s;",
+    name, namespace_, context->options.security_context) + 1;
   bool success = participant_qos.user_data.value.length(static_cast<DDS::Long>(length));
   if (!success) {
     RMW_SET_ERROR_MSG("failed to resize participant user_data");
     return NULL;
   }
 
-  int written = snprintf(
+  int written = std::snprintf(
     reinterpret_cast<char *>(participant_qos.user_data.value.get_contiguous_buffer()),
-    length, "name=%s;namespace=%s;", name, namespace_);
+    length,
+    "name=%s;namespace=%s;securitycontext=%s;",
+    name, namespace_, context->options.security_context);
   if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return NULL;
@@ -153,7 +154,7 @@ create_node(
   char * gov_fn = nullptr;
   char * perm_fn = nullptr;
 
-  if (security_options->security_root_path) {
+  if (context->options.security_options.security_root_path) {
     // enable some security stuff
     status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
@@ -183,7 +184,7 @@ create_node(
       return NULL;
     }
 
-    srp = security_options->security_root_path;  // save some typing
+    srp = context->options.security_options.security_root_path;  // save some typing
     identity_ca_cert_fn = rcutils_join_path(srp, "identity_ca.cert.pem", allocator);
     if (!identity_ca_cert_fn) {
       RMW_SET_ERROR_MSG("failed to allocate memory for 'identity_ca_cert_fn'");
@@ -374,6 +375,7 @@ create_node(
 
   node_handle->implementation_identifier = implementation_identifier;
   node_handle->data = node_info;
+  node_handle->context = context;
   return node_handle;
 fail:
   status = dpf_->delete_participant(participant);

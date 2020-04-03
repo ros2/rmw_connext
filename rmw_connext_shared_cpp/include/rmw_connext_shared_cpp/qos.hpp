@@ -22,6 +22,7 @@
 
 #include "rmw/error_handling.h"
 #include "rmw/types.h"
+#include "rmw/incompatible_qos_events_statuses.h"
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
@@ -38,6 +39,10 @@ get_datawriter_qos(
   DDS::DomainParticipant * participant,
   const rmw_qos_profile_t & qos_profile,
   DDS::DataWriterQos & datawriter_qos);
+
+RMW_CONNEXT_SHARED_CPP_PUBLIC
+rmw_qos_policy_kind_t
+dds_qos_policy_to_rmw_qos_policy(DDS::QosPolicyId_t policy_id);
 
 template<typename AttributeT>
 void

@@ -15,6 +15,7 @@
 
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_shared_cpp/event_converter.hpp"
+#include "rmw_connext_shared_cpp/qos.hpp"
 
 rmw_ret_t ConnextStaticPublisherInfo::get_status(
   DDS::StatusMask mask,
@@ -55,6 +56,27 @@ rmw_ret_t ConnextStaticPublisherInfo::get_status(
         rmw_offered_deadline_missed->total_count = offered_deadline_missed.total_count;
         rmw_offered_deadline_missed->total_count_change =
           offered_deadline_missed.total_count_change;
+
+        break;
+      }
+    case DDS::StatusKind::DDS_OFFERED_INCOMPATIBLE_QOS_STATUS:
+      {
+        DDS::OfferedIncompatibleQosStatus offered_incompatible_qos;
+        DDS::ReturnCode_t dds_return_code =
+          topic_writer_->get_offered_incompatible_qos_status(offered_incompatible_qos);
+
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (RMW_RET_OK != from_dds) {
+          return from_dds;
+        }
+
+        rmw_offered_qos_incompatible_event_status_t * rmw_offered_qos_incompatible =
+          static_cast<rmw_offered_qos_incompatible_event_status_t *>(event);
+        rmw_offered_qos_incompatible->total_count = offered_incompatible_qos.total_count;
+        rmw_offered_qos_incompatible->total_count_change =
+          offered_incompatible_qos.total_count_change;
+        rmw_offered_qos_incompatible->last_policy_kind = dds_qos_policy_to_rmw_qos_policy(
+          offered_incompatible_qos.last_policy_id);
 
         break;
       }
