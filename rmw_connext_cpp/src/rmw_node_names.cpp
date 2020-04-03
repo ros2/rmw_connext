@@ -30,4 +30,15 @@ rmw_get_node_names(
 {
   return get_node_names(rti_connext_identifier, node, node_names, node_namespaces);
 }
+
+rmw_ret_t
+rmw_get_node_names_with_security_contexts(
+  const rmw_node_t * node,
+  rcutils_string_array_t * node_names,
+  rcutils_string_array_t * node_namespaces,
+  rcutils_string_array_t * security_contexts)
+{
+  return get_node_names_with_security_contexts(
+    rti_connext_identifier, node, node_names, node_namespaces, security_contexts);
+}
 }  // extern "C"
