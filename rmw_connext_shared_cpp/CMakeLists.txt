@@ -51,6 +51,7 @@ add_library(
   src/node_info_and_types.cpp
   src/service_names_and_types.cpp
   src/topic_names_and_types.cpp
+  src/security_logging.cpp
   src/trigger_guard_condition.cpp
   src/wait_set.cpp
   src/types/custom_data_reader_listener.cpp
