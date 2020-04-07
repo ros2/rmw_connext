@@ -116,15 +116,6 @@ create_node(
     RMW_SET_ERROR_MSG("failed to add qos property");
     return NULL;
   }
-  status = DDS::PropertyQosPolicyHelper::add_property(
-    participant_qos.property,
-    "dds.transport.use_510_compatible_locator_kinds",
-    "1",
-    DDS::BOOLEAN_FALSE);
-  if (status != DDS::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("failed to add qos property");
-    return NULL;
-  }
 
   // Disable TypeCode since it increases discovery message size and is replaced by TypeObject
   // https://community.rti.com/kb/types-matching
