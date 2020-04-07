@@ -13,12 +13,14 @@
   <build_depend>rcutils</build_depend>
   <build_depend>rmw</build_depend>
   <build_depend>rmw_connext_shared_cpp</build_depend>
+  <build_depend>rosidl_runtime_c</build_depend>
   <build_depend>rosidl_runtime_cpp</build_depend>
   <build_depend>rosidl_typesupport_introspection_c</build_depend>
   <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
   <build_depend>rti-connext-dds-5.3.1</build_depend>
 
   <build_export_depend>connext_cmake_module</build_export_depend>
+  <build_export_depend>rosidl_runtime_c</build_export_depend>
   <build_export_depend>rosidl_runtime_cpp</build_export_depend>
   <build_export_depend>rosidl_typesupport_introspection_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_introspection_cpp</build_export_depend>
@@ -27,8 +29,6 @@
   <exec_depend>rcutils</exec_depend>
   <exec_depend>rmw</exec_depend>
   <exec_depend>rmw_connext_shared_cpp</exec_depend>
-
-  <depend>rosidl_runtime_c</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
