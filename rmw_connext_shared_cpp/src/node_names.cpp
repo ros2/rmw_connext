@@ -144,7 +144,7 @@ get_node_names_impl(
 
       auto name_found = map.find("name");
       auto ns_found = map.find("namespace");
-      auto enclave_found = map.find("securitycontext");
+      auto enclave_found = map.find("enclave");
 
       if (name_found != map.end()) {
         name = std::string(name_found->second.begin(), name_found->second.end());
