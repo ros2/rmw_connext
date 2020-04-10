@@ -43,14 +43,14 @@ endif()
 
 find_package(rmw REQUIRED)
 find_package(rmw_connext_shared_cpp REQUIRED)
-find_package(rosidl_generator_c REQUIRED)
-find_package(rosidl_generator_cpp REQUIRED)
+find_package(rosidl_runtime_c REQUIRED)
+find_package(rosidl_runtime_cpp REQUIRED)
 
 ament_export_dependencies(
   rcutils
   rmw rmw_connext_shared_cpp
-  rosidl_generator_c
-  rosidl_generator_cpp
+  rosidl_runtime_c
+  rosidl_runtime_cpp
   rosidl_typesupport_introspection_c
   rosidl_typesupport_introspection_cpp
 )
@@ -67,8 +67,8 @@ ament_target_dependencies(rmw_connext_dynamic_cpp
   "rosidl_typesupport_introspection_cpp"
   "rmw"
   "rmw_connext_shared_cpp"
-  "rosidl_generator_c"
-  "rosidl_generator_cpp"
+  "rosidl_runtime_c"
+  "rosidl_runtime_cpp"
   "Connext")
 if(Connext_GLIBCXX_USE_CXX11_ABI_ZERO)
   target_compile_definitions(rmw_connext_dynamic_cpp
