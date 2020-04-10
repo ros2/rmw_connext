@@ -129,14 +129,14 @@
   template<> \
   struct GenericCSequence<rosidl_typesupport_introspection_c__ROS_TYPE_ ## ROS_TYPE_ID> \
   { \
-    using type = rosidl_generator_c__ ## C_NAME ## __Sequence; \
+    using type = rosidl_runtime_c__ ## C_NAME ## __Sequence; \
  \
     static void fini(type * sequence) { \
-      rosidl_generator_c__ ## C_NAME ## __Sequence__fini(sequence); \
+      rosidl_runtime_c__ ## C_NAME ## __Sequence__fini(sequence); \
     } \
  \
     static bool init(type * sequence, size_t size) { \
-      return rosidl_generator_c__ ## C_NAME ## __Sequence__init(sequence, size); \
+      return rosidl_runtime_c__ ## C_NAME ## __Sequence__init(sequence, size); \
     } \
   }; \
   template<> \
