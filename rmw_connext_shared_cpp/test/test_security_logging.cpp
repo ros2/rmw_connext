@@ -141,6 +141,18 @@ TEST_F(SecurityLoggingTest, test_log_publish_false)
   EXPECT_EQ(verbosity_property(policy), nullptr);
 }
 
+TEST_F(SecurityLoggingTest, test_log_publish_invalid)
+{
+  custom_setenv(log_publish_variable_name, "invalid");
+
+  DDS::PropertyQosPolicy policy;
+  EXPECT_EQ(apply_security_logging_configuration(policy), RMW_RET_ERROR);
+  EXPECT_TRUE(rmw_error_is_set());
+  EXPECT_THAT(
+    rmw_get_error_string().str, HasSubstr(
+      "unsupported value for ROS_SECURITY_LOG_FILE: 'invalid' (use 'true' or 'false')"));
+}
+
 TEST_F(SecurityLoggingTest, test_log_verbosity)
 {
   custom_setenv(log_verbosity_variable_name, "CRITICAL");

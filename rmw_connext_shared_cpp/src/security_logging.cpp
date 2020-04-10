@@ -60,6 +60,11 @@ bool string_to_verbosity_level(const char * str, const char ** level)
   return false;
 }
 
+bool validate_boolean(const char * str)
+{
+  return (strcmp(str, "true") == 0) || (strcmp(str, "false") == 0);
+}
+
 bool apply_property(
   DDS::PropertyQosPolicy & policy, const char * const property_name,
   const char * const value)
@@ -111,6 +116,13 @@ rmw_ret_t apply_security_logging_configuration(DDS::PropertyQosPolicy & policy)
     return RMW_RET_ERROR;
   }
   if (strlen(env_value) > 0) {
+    if (!validate_boolean(env_value)) {
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "unsupported value for ROS_SECURITY_LOG_FILE: '%s' (use 'true' or 'false')",
+        env_value);
+      return RMW_RET_ERROR;
+    }
+
     if (!apply_property(policy, distribute_enable_property_name, env_value)) {
       RMW_SET_ERROR_MSG("failed to set security logging distribute");
       return RMW_RET_ERROR;
