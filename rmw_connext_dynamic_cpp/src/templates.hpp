@@ -19,9 +19,9 @@
 #include <string>
 #include <vector>
 
-#include "rosidl_generator_c/primitives_sequence_functions.h"
-#include "rosidl_generator_c/string.h"
-#include "rosidl_generator_c/string_functions.h"
+#include "rosidl_runtime_c/primitives_sequence_functions.h"
+#include "rosidl_runtime_c/string.h"
+#include "rosidl_runtime_c/string_functions.h"
 
 #include "rmw/allocators.h"
 #include "rmw/impl/cpp/macros.hpp"
@@ -67,7 +67,7 @@ template<uint8_t Id>
 struct IdTypeMap;
 
 // multiple definitions of ambiguous primitive types
-SPECIALIZE_GENERIC_C_SEQUENCE(STRING, String, rosidl_generator_c__String)
+SPECIALIZE_GENERIC_C_SEQUENCE(STRING, String, rosidl_runtime_c__String)
 SPECIALIZE_GENERIC_C_SEQUENCE(BOOL, bool, bool)
 SPECIALIZE_GENERIC_C_SEQUENCE(BYTE, byte, uint8_t)
 SPECIALIZE_GENERIC_C_SEQUENCE(CHAR, char, signed char)
@@ -444,7 +444,7 @@ bool set_value<rosidl_typesupport_introspection_c__ROS_TYPE_STRING>(
     RMW_SET_ERROR_MSG("DDS_DynamicData pointer was NULL!");
     return false;
   }
-  rosidl_generator_c__String * ros_values = nullptr;
+  rosidl_runtime_c__String * ros_values = nullptr;
   if (member->is_array_) {
     DDS_DynamicData dynamic_data_member(NULL, DDS_DYNAMIC_DATA_PROPERTY_DEFAULT);
     DDS_ReturnCode_t status = dynamic_data->bind_complex_member(
@@ -481,8 +481,8 @@ bool set_value<rosidl_typesupport_introspection_c__ROS_TYPE_STRING>(
       return false;
     }
   } else {
-    const rosidl_generator_c__String * value =
-      reinterpret_cast<const rosidl_generator_c__String *>(
+    const rosidl_runtime_c__String * value =
+      reinterpret_cast<const rosidl_runtime_c__String *>(
       static_cast<const char *>(ros_message) + member->offset_);
     if (!value) {
       RMW_SET_ERROR_MSG("failed to cast string");
@@ -509,7 +509,7 @@ template<
   typename MembersType,
   typename StringType = typename std::conditional<
     std::is_same<MembersType, rosidl_typesupport_introspection_c__MessageMembers>::value,
-    rosidl_generator_c__String, std::string
+    rosidl_runtime_c__String, std::string
   >::type>
 bool publish(
   DDS_DynamicData * dynamic_data, const void * ros_message,
@@ -1029,9 +1029,9 @@ template<typename T, typename U>
 bool string_assign(T dst, U src);
 
 template<>
-bool string_assign(rosidl_generator_c__String * dst, char * src)
+bool string_assign(rosidl_runtime_c__String * dst, char * src)
 {
-  return rosidl_generator_c__String__assign(dst, src);
+  return rosidl_runtime_c__String__assign(dst, src);
 }
 
 template<>
@@ -1140,7 +1140,7 @@ template<
   typename MembersType,
   typename StringType = typename std::conditional<
     std::is_same<MembersType, rosidl_typesupport_introspection_c__MessageMembers>::value,
-    rosidl_generator_c__String, std::string
+    rosidl_runtime_c__String, std::string
   >::type>
 bool take(DDS_DynamicData * dynamic_data, void * ros_message,
   const void * untyped_members)

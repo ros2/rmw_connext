@@ -58,9 +58,9 @@
 #include "rmw/topic_endpoint_info_array.h"
 #include "rmw/types.h"
 
-#include "rosidl_generator_c/primitives_sequence_functions.h"
-#include "rosidl_generator_c/string.h"
-#include "rosidl_generator_c/string_functions.h"
+#include "rosidl_runtime_c/primitives_sequence_functions.h"
+#include "rosidl_runtime_c/string.h"
+#include "rosidl_runtime_c/string_functions.h"
 
 #include "rmw/impl/cpp/macros.hpp"
 
