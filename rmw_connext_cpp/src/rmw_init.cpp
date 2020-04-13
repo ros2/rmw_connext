@@ -39,7 +39,7 @@ rmw_init_options_init(rmw_init_options_t * init_options, rcutils_allocator_t all
   init_options->security_options = rmw_get_zero_initialized_security_options();
   init_options->domain_id = RMW_DEFAULT_DOMAIN_ID;
   init_options->localhost_only = RMW_LOCALHOST_ONLY_DEFAULT;
-  init_options->security_context = NULL;
+  init_options->enclave = NULL;
   return RMW_RET_OK;
 }
 
@@ -60,19 +60,19 @@ rmw_init_options_copy(const rmw_init_options_t * src, rmw_init_options_t * dst)
   const rcutils_allocator_t * allocator = &src->allocator;
   rmw_ret_t ret = RMW_RET_OK;
 
-  allocator->deallocate(dst->security_context, allocator->state);
+  allocator->deallocate(dst->enclave, allocator->state);
   *dst = *src;
-  dst->security_context = NULL;
+  dst->enclave = NULL;
   dst->security_options = rmw_get_zero_initialized_security_options();
 
-  dst->security_context = rcutils_strdup(src->security_context, *allocator);
-  if (src->security_context && !dst->security_context) {
+  dst->enclave = rcutils_strdup(src->enclave, *allocator);
+  if (src->enclave && !dst->enclave) {
     ret = RMW_RET_BAD_ALLOC;
     goto fail;
   }
   return rmw_security_options_copy(&src->security_options, allocator, &dst->security_options);
 fail:
-  allocator->deallocate(dst->security_context, allocator->state);
+  allocator->deallocate(dst->enclave, allocator->state);
   return ret;
 }
 
@@ -87,7 +87,7 @@ rmw_init_options_fini(rmw_init_options_t * init_options)
     init_options->implementation_identifier,
     rti_connext_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  allocator.deallocate(init_options->security_context, allocator.state);
+  allocator.deallocate(init_options->enclave, allocator.state);
   rmw_security_options_fini(&init_options->security_options, &allocator);
   *init_options = rmw_get_zero_initialized_init_options();
   return RMW_RET_OK;

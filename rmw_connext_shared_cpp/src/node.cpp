@@ -76,8 +76,8 @@ create_node(
   size_t length = std::snprintf(
     nullptr,
     0,
-    "name=%s;namespace=%s;securitycontext=%s;",
-    name, namespace_, context->options.security_context) + 1;
+    "name=%s;namespace=%s;enclave=%s;",
+    name, namespace_, context->options.enclave) + 1;
   bool success = participant_qos.user_data.value.length(static_cast<DDS::Long>(length));
   if (!success) {
     RMW_SET_ERROR_MSG("failed to resize participant user_data");
@@ -87,8 +87,8 @@ create_node(
   int written = std::snprintf(
     reinterpret_cast<char *>(participant_qos.user_data.value.get_contiguous_buffer()),
     length,
-    "name=%s;namespace=%s;securitycontext=%s;",
-    name, namespace_, context->options.security_context);
+    "name=%s;namespace=%s;enclave=%s;",
+    name, namespace_, context->options.enclave);
   if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return NULL;
