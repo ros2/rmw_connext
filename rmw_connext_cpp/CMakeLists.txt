@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.5)
 project(rmw_connext_cpp)
 
 if(DEFINED ENV{CONNEXT_STATIC_DISABLE})
-  set(disable $ENV{CONNEXT_STATIC_DISABLE})
+  set(disable_static_connext $ENV{CONNEXT_STATIC_DISABLE})
 else()
-  set(disable FALSE)
+  set(disable_static_connext FALSE)
 endif()
-set(CONNEXT_STATIC_DISABLE ${disable}
+set(CONNEXT_STATIC_DISABLE ${disable_static_connext}
   CACHE BOOL "If Connext Static should be disabled.")
 
 # Default to C++14
