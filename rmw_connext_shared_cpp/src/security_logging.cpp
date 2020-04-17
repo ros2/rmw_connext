@@ -22,6 +22,8 @@
 namespace
 {
 // Environment variable names
+// TODO(security-wg): These are intended to be temporary, and need to be refactored into a proper
+// abstraction.
 const char log_file_variable_name[] = "ROS_SECURITY_LOG_FILE";
 const char log_publish_variable_name[] = "ROS_SECURITY_LOG_PUBLISH";
 const char log_verbosity_variable_name[] = "ROS_SECURITY_LOG_VERBOSITY";
