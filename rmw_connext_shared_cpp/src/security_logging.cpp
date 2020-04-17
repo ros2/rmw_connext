@@ -80,7 +80,7 @@ bool apply_property(
     value,
     DDS::BOOLEAN_FALSE);
 
-  return status == DDS::RETCODE_OK;
+  return DDS::RETCODE_OK == status;
 }
 
 bool get_env(const char * variable_name, const char ** variable_value)
