@@ -20,8 +20,8 @@
 #include "rmw_connext_shared_cpp/guard_condition.hpp"
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/node.hpp"
-#include "rmw_connext_shared_cpp/types.hpp"
 #include "rmw_connext_shared_cpp/security_logging.hpp"
+#include "rmw_connext_shared_cpp/types.hpp"
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
