@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <rcutils/get_env.h>
+#include <rcutils/logging.h>
 #include <rmw/error_handling.h>
 #include <rmw/qos_profiles.h>
 #include <rmw/types.h>
@@ -34,28 +35,65 @@ const char log_file_property_name[] = "com.rti.serv.secure.logging.log_file";
 const char distribute_enable_property_name[] = "com.rti.serv.secure.logging.distribute.enable";
 const char verbosity_property_name[] = "com.rti.serv.secure.logging.log_level";
 
+// Connext 5.3.1 uses numeric levels (although note that v6 moved to using strings). These levels
+// are:
+// EMERGENCY: 0
+// ALERT: 1
+// CRITICAL: 2
+// ERROR: 3
+// WARNING: 4
+// NOTICE: 5
+// INFORMATIONAL: 6
+// DEBUG: 7
+//
+// ROS has less logging levels, but it makes sense to use them here for consistency, so we have
+// the following mapping.
 const struct
 {
-  const char * const name;
-  const char * const level;
-} supported_verbosities[] =
+  RCUTILS_LOG_SEVERITY ros_severity;
+  const char * const dds_level;
+} verbosity_mapping[] =
 {
-  {"EMERGENCY", "0"},
-  {"ALERT", "1"},
-  {"CRITICAL", "2"},
-  {"ERROR", "3"},
-  {"WARNING", "4"},
-  {"NOTICE", "5"},
-  {"INFORMATIONAL", "6"},
-  {"DEBUG", "7"},
+  {RCUTILS_LOG_SEVERITY_FATAL, "0"},
+  {RCUTILS_LOG_SEVERITY_ERROR, "3"},
+  {RCUTILS_LOG_SEVERITY_WARN, "4"},
+  {RCUTILS_LOG_SEVERITY_INFO, "6"},
+  {RCUTILS_LOG_SEVERITY_DEBUG, "7"},
 };
+
+bool severity_names_str(char buffer[], size_t buffer_size)
+{
+  size_t offset = 0;
+
+  size_t severity_count = sizeof(verbosity_mapping) / sizeof(verbosity_mapping[0]);
+  for (size_t i = 0; i < (severity_count - 1); ++i) {
+    RCUTILS_LOG_SEVERITY severity = verbosity_mapping[i].ros_severity;
+    offset += rcutils_snprintf(
+      buffer + offset, buffer_size - offset, "%s, ",
+      g_rcutils_log_severity_names[severity]);
+    if (offset >= buffer_size) {
+      return false;
+    }
+  }
+
+  offset += rcutils_snprintf(
+    buffer + offset, buffer_size - offset, "or %s",
+    g_rcutils_log_severity_names[verbosity_mapping[severity_count - 1].ros_severity]);
+  return offset <= buffer_size;
+}
 
 bool string_to_verbosity_level(const char * str, const char ** level)
 {
-  for (const auto & item : supported_verbosities) {
-    if (strcmp(str, item.name) == 0) {
-      *level = item.level;
-      return true;
+  int ros_severity;
+  if (rcutils_logging_severity_level_from_string(
+      str,
+      rcutils_get_default_allocator(), &ros_severity) == RCUTILS_RET_OK)
+  {
+    for (const auto & item : verbosity_mapping) {
+      if (ros_severity == item.ros_severity) {
+        *level = item.dds_level;
+        return true;
+      }
     }
   }
 
@@ -120,7 +158,8 @@ rmw_ret_t apply_security_logging_configuration(DDS::PropertyQosPolicy & policy)
   if (strlen(env_value) > 0) {
     if (!validate_boolean(env_value)) {
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "unsupported value for ROS_SECURITY_LOG_FILE: '%s' (use 'true' or 'false')",
+        "%s is not valid: '%s' is not a supported value (use 'true' or 'false')",
+        log_publish_variable_name,
         env_value);
       return RMW_RET_ERROR;
     }
@@ -138,9 +177,17 @@ rmw_ret_t apply_security_logging_configuration(DDS::PropertyQosPolicy & policy)
   if (strlen(env_value) > 0) {
     const char * level;
     if (!string_to_verbosity_level(env_value, &level)) {
-      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "failed to set security logging verbosity: %s is not a supported verbosity",
-        env_value);
+      char humanized_severity_list[RCUTILS_ERROR_MESSAGE_MAX_LENGTH];
+      if (severity_names_str(humanized_severity_list, RCUTILS_ERROR_MESSAGE_MAX_LENGTH)) {
+        RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+          "%s is not valid: %s is not a supported verbosity (use %s)",
+          log_verbosity_variable_name,
+          env_value,
+          humanized_severity_list);
+      } else {
+        RMW_SET_ERROR_MSG("unable to create severity string");
+      }
+
       return RMW_RET_ERROR;
     }
 

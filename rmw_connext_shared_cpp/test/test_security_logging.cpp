@@ -150,12 +150,13 @@ TEST_F(SecurityLoggingTest, test_log_publish_invalid)
   EXPECT_TRUE(rmw_error_is_set());
   EXPECT_THAT(
     rmw_get_error_string().str, HasSubstr(
-      "unsupported value for ROS_SECURITY_LOG_FILE: 'invalid' (use 'true' or 'false')"));
+      "ROS_SECURITY_LOG_PUBLISH is not valid: 'invalid' is not a supported value (use 'true' or "
+      "'false')"));
 }
 
 TEST_F(SecurityLoggingTest, test_log_verbosity)
 {
-  custom_setenv(log_verbosity_variable_name, "CRITICAL");
+  custom_setenv(log_verbosity_variable_name, "FATAL");
 
   DDS::PropertyQosPolicy policy;
   EXPECT_EQ(apply_security_logging_configuration(policy), RMW_RET_OK);
@@ -163,7 +164,7 @@ TEST_F(SecurityLoggingTest, test_log_verbosity)
 
   EXPECT_EQ(log_file_property(policy), nullptr);
   EXPECT_EQ(logging_distribute_enable_property(policy), nullptr);
-  EXPECT_STREQ(verbosity_property(policy), "2");
+  EXPECT_STREQ(verbosity_property(policy), "0");
 }
 
 TEST_F(SecurityLoggingTest, test_log_verbosity_invalid)
@@ -175,7 +176,8 @@ TEST_F(SecurityLoggingTest, test_log_verbosity_invalid)
   EXPECT_TRUE(rmw_error_is_set());
   EXPECT_THAT(
     rmw_get_error_string().str, HasSubstr(
-      "INVALID_VERBOSITY is not a supported verbosity"));
+      "ROS_SECURITY_LOG_VERBOSITY is not valid: INVALID_VERBOSITY is not a supported verbosity "
+      "(use FATAL, ERROR, WARN, INFO, or DEBUG)"));
 }
 
 TEST_F(SecurityLoggingTest, test_all)
