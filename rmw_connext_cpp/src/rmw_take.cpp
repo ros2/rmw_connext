@@ -33,6 +33,8 @@ is_local_publication(
   DDS::DataReader * dds_data_reader)
 {
   bool is_local = true;
+  // compare the lower 12 octets of the guids from the sender and this receiver
+  // if they are equal the sample has been sent from this process and should be ignored
   DDS::GUID_t sender_guid = sample_info.original_publication_virtual_guid;
   DDS::InstanceHandle_t receiver_instance_handle = dds_data_reader->get_instance_handle();
   for (size_t i = 0; i < 12; ++i) {
