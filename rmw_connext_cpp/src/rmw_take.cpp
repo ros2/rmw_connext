@@ -152,7 +152,7 @@ _take(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription handle,
     subscription->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
   if (!ros_message) {
     RMW_SET_ERROR_MSG("ros message handle is null");
@@ -214,16 +214,26 @@ _take_sequence(
   (void) allocation;
   if (!subscription) {
     RMW_SET_ERROR_MSG("subscription handle is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription handle,
     subscription->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
   if (!message_sequence) {
     RMW_SET_ERROR_MSG("message sequence handle is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  if (!message_info_sequence) {
+    RMW_SET_ERROR_MSG("message info sequence handle is null");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  if (!taken) {
+    RMW_SET_ERROR_MSG("taken handle is null");
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   if (count > message_sequence->capacity) {
@@ -233,16 +243,6 @@ _take_sequence(
 
   if (count > message_info_sequence->capacity) {
     RMW_SET_ERROR_MSG("insufficient capacity in message info sequence");
-    return RMW_RET_ERROR;
-  }
-
-  if (!message_info_sequence) {
-    RMW_SET_ERROR_MSG("message info sequence handle is null");
-    return RMW_RET_ERROR;
-  }
-
-  if (!taken) {
-    RMW_SET_ERROR_MSG("taken handle is null");
     return RMW_RET_ERROR;
   }
 
@@ -312,10 +312,7 @@ _take_sequence(
       cdr_stream.buffer_capacity = dds_messages[ii].serialized_data.length();
       cdr_stream.buffer = reinterpret_cast<uint8_t *>(&dds_messages[ii].serialized_data[0]);
 
-      if (callbacks->to_message(
-          &cdr_stream,
-          message_sequence->data[*taken]))
-      {
+      if (callbacks->to_message(&cdr_stream, message_sequence->data[*taken])) {
         rmw_gid_t * sender_gid = &message_info_sequence->data[*taken].publisher_gid;
         sender_gid->implementation_identifier = rti_connext_identifier;
         memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
@@ -383,7 +380,7 @@ rmw_take_sequence(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription handle,
     subscription->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR);
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     subscription, "subscription pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
@@ -413,7 +410,7 @@ _take_serialized_message(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription handle,
     subscription->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
   if (!serialized_message) {
     RMW_SET_ERROR_MSG("ros message handle is null");
