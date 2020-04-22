@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <rcutils/get_env.h>
-#include <rcutils/logging.h>
-#include <rmw/error_handling.h>
-#include <rmw/qos_profiles.h>
-#include <rmw/types.h>
+#include <stdexcept>
+#include <string>
+
+#include "rcpputils/get_env.hpp"
+#include "rcutils/logging.h"
+#include "rmw/error_handling.h"
+#include "rmw/qos_profiles.h"
+#include "rmw/types.h"
 
 #include "rmw_connext_shared_cpp/security_logging.hpp"
 
@@ -82,11 +85,11 @@ bool severity_names_str(char buffer[], size_t buffer_size)
   return offset <= buffer_size;
 }
 
-bool string_to_verbosity_level(const char * str, const char ** level)
+bool string_to_verbosity_level(const std::string & str, const char ** level)
 {
   int ros_severity;
   if (rcutils_logging_severity_level_from_string(
-      str,
+      str.c_str(),
       rcutils_get_default_allocator(), &ros_severity) == RCUTILS_RET_OK)
   {
     for (const auto & item : verbosity_mapping) {
@@ -100,14 +103,14 @@ bool string_to_verbosity_level(const char * str, const char ** level)
   return false;
 }
 
-bool validate_boolean(const char * str)
+bool validate_boolean(const std::string & str)
 {
-  return (strcmp(str, "true") == 0) || (strcmp(str, "false") == 0);
+  return str == "true" || str == "false";
 }
 
 bool apply_property(
   DDS::PropertyQosPolicy & policy, const char * const property_name,
-  const char * const value)
+  const std::string & value)
 {
   // Overwrite existing properties, so remove it if it already exists
   DDS::PropertyQosPolicyHelper::remove_property(policy, property_name);
@@ -115,20 +118,21 @@ bool apply_property(
   auto status = DDS::PropertyQosPolicyHelper::add_property(
     policy,
     property_name,
-    value,
+    value.c_str(),
     DDS::BOOLEAN_FALSE);
 
   return DDS::RETCODE_OK == status;
 }
 
-bool get_env(const char * variable_name, const char ** variable_value)
+bool get_env(const char * variable_name, std::string & variable_value)
 {
-  const char * error_message = rcutils_get_env(variable_name, variable_value);
-  if (error_message != NULL) {
+  try {
+    variable_value = rcpputils::get_env_var(variable_name);
+  } catch (std::runtime_error & exception) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "unable to get %s environment variable: %s",
       variable_name,
-      error_message);
+      exception.what());
     return false;
   }
 
@@ -138,13 +142,13 @@ bool get_env(const char * variable_name, const char ** variable_value)
 
 rmw_ret_t apply_security_logging_configuration(DDS::PropertyQosPolicy & policy)
 {
-  const char * env_value;
+  std::string env_value;
 
   // Handle logging to file
-  if (!get_env(log_file_variable_name, &env_value)) {
+  if (!get_env(log_file_variable_name, env_value)) {
     return RMW_RET_ERROR;
   }
-  if (strlen(env_value) > 0) {
+  if (!env_value.empty()) {
     if (!apply_property(policy, log_file_property_name, env_value)) {
       RMW_SET_ERROR_MSG("failed to set security logging file");
       return RMW_RET_ERROR;
@@ -152,15 +156,15 @@ rmw_ret_t apply_security_logging_configuration(DDS::PropertyQosPolicy & policy)
   }
 
   // Handle log distribution over DDS
-  if (!get_env(log_publish_variable_name, &env_value)) {
+  if (!get_env(log_publish_variable_name, env_value)) {
     return RMW_RET_ERROR;
   }
-  if (strlen(env_value) > 0) {
+  if (!env_value.empty()) {
     if (!validate_boolean(env_value)) {
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
         "%s is not valid: '%s' is not a supported value (use 'true' or 'false')",
         log_publish_variable_name,
-        env_value);
+        env_value.c_str());
       return RMW_RET_ERROR;
     }
 
@@ -171,10 +175,10 @@ rmw_ret_t apply_security_logging_configuration(DDS::PropertyQosPolicy & policy)
   }
 
   // Handle log verbosity
-  if (!get_env(log_verbosity_variable_name, &env_value)) {
+  if (!get_env(log_verbosity_variable_name, env_value)) {
     return RMW_RET_ERROR;
   }
-  if (strlen(env_value) > 0) {
+  if (!env_value.empty()) {
     const char * level;
     if (!string_to_verbosity_level(env_value, &level)) {
       char humanized_severity_list[RCUTILS_ERROR_MESSAGE_MAX_LENGTH];
@@ -182,7 +186,7 @@ rmw_ret_t apply_security_logging_configuration(DDS::PropertyQosPolicy & policy)
         RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
           "%s is not valid: %s is not a supported verbosity (use %s)",
           log_verbosity_variable_name,
-          env_value,
+          env_value.c_str(),
           humanized_severity_list);
       } else {
         RMW_SET_ERROR_MSG("unable to create severity string");
