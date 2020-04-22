@@ -18,6 +18,7 @@
 #include <rmw/ret_types.h>
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
+#include "rmw_connext_shared_cpp/visibility_control.h"
 
 /// Apply any requested security logging configuration to the policy.
 /**
@@ -25,6 +26,7 @@
  * \returns RMW_RET_ERROR if the requested configuration could not be applied (rmw error will be set).
  * \returns RMW_RET_OK if the requested configuration was applied (or no configuration was requested).
  */
+RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t apply_security_logging_configuration(DDS::PropertyQosPolicy & policy);
 
 #endif  // RMW_CONNEXT_SHARED_CPP__SECURITY_LOGGING_HPP_
