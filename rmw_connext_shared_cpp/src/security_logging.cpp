@@ -71,18 +71,30 @@ bool severity_names_str(char buffer[], size_t buffer_size)
   size_t severity_count = sizeof(verbosity_mapping) / sizeof(verbosity_mapping[0]);
   for (size_t i = 0; i < (severity_count - 1); ++i) {
     RCUTILS_LOG_SEVERITY severity = verbosity_mapping[i].ros_severity;
-    offset += rcutils_snprintf(
+
+    int length = rcutils_snprintf(
       buffer + offset, buffer_size - offset, "%s, ",
       g_rcutils_log_severity_names[severity]);
+
+    if (length < 0) {
+      return false;
+    }
+
+    offset += length;
     if (offset >= buffer_size) {
       return false;
     }
   }
 
-  offset += rcutils_snprintf(
+  int length = rcutils_snprintf(
     buffer + offset, buffer_size - offset, "or %s",
     g_rcutils_log_severity_names[verbosity_mapping[severity_count - 1].ros_severity]);
-  return offset <= buffer_size;
+
+  if (length < 0) {
+    return false;
+  }
+
+  return (offset + length) <= buffer_size;
 }
 
 bool string_to_verbosity_level(const std::string & str, const char ** level)
