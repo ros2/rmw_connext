@@ -20,6 +20,7 @@
 #include "rmw_connext_shared_cpp/guard_condition.hpp"
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/node.hpp"
+#include "rmw_connext_shared_cpp/security_logging.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
 #include "rmw/allocators.h"
@@ -264,6 +265,11 @@ create_node(
       DDS::BOOLEAN_FALSE);
     if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to add security property");
+      goto fail;
+    }
+
+    // Configure security logging
+    if (apply_security_logging_configuration(participant_qos.property) != RMW_RET_OK) {
       goto fail;
     }
   }
