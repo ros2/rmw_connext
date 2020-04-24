@@ -81,7 +81,7 @@ for i, p, o in zip(args.input, args.patch, args.out):
         content_out = apply_patch(content_in, content_patch)
     except Exception:
         print(
-            f'input file path: "{i}", patch file path: "{p}", output file path: "{o}"',
+            f'Failed to generate "{o}" using input "{i}" and patch "{p}"',
             file=sys.stderr,
         )
         print('---------input file---------' , file=sys.stderr)
