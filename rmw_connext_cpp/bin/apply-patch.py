@@ -80,7 +80,10 @@ for i, p, o in zip(args.input, args.patch, args.out):
     try:
         content_out = apply_patch(content_in, content_patch)
     except Exception:
-        print(i, p, o, file=sys.stderr)
+        print(
+            f'input file path: "{i}", patch file path: "{p}", output file path: "{o}"',
+            file=sys.stderr,
+        )
         print('---------input file---------' , file=sys.stderr)
         print(content_in, file=sys.stderr)
         print('----------------------------' , file=sys.stderr)
