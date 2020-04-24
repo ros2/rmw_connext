@@ -18,6 +18,7 @@
 
 import argparse
 import re
+import sys
 
 # regular expression / pattern for patch header
 _hdr_pat = re.compile(r'^@@ -(\d+),?(\d+)? \+(\d+),?(\d+)? @@.*$')
@@ -79,7 +80,7 @@ for i, p, o in zip(args.input, args.patch, args.out):
     try:
         content_out = apply_patch(content_in, content_patch)
     except Exception:
-        print(i, p, o)
+        print(i, p, o, file=sys.stderr)
         raise
     with open(o, 'w') as h:
         h.write(content_out)
