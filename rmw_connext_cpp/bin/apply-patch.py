@@ -84,12 +84,12 @@ for i, p, o in zip(args.input, args.patch, args.out):
             f'Failed to generate "{o}" using input "{i}" and patch "{p}"',
             file=sys.stderr,
         )
-        print('---------input file---------' , file=sys.stderr)
+        print('---------input file---------', file=sys.stderr)
         print(content_in, file=sys.stderr)
-        print('----------------------------' , file=sys.stderr)
-        print('---------patch file---------' , file=sys.stderr)
+        print('----------------------------', file=sys.stderr)
+        print('---------patch file---------', file=sys.stderr)
         print(content_patch, file=sys.stderr)
-        print('----------------------------' , file=sys.stderr)
+        print('----------------------------', file=sys.stderr)
         raise
     with open(o, 'w') as h:
         h.write(content_out)
