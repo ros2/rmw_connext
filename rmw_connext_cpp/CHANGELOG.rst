@@ -2,6 +2,26 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.0 (2020-04-25)
+------------------
+* Rename rosidl_message_bounds_t (`#413 <https://github.com/ros2/rmw_connext/issues/413>`_)
+* More verbose error output when apply_patch.py fails (`#414 <https://github.com/ros2/rmw_connext/issues/414>`_)
+* Switch take_response and take_request to rmw_service_info_t (`#412 <https://github.com/ros2/rmw_connext/issues/412>`_)
+* Add support for taking a sequence of messages (`#408 <https://github.com/ros2/rmw_connext/issues/408>`_)
+* Fix CMake warning about using uninitialized variables (`#411 <https://github.com/ros2/rmw_connext/issues/411>`_)
+* security-context -> enclave (`#407 <https://github.com/ros2/rmw_connext/issues/407>`_)
+* Replace rosidl_generator_x for rosidl_runtime_x (`#399 <https://github.com/ros2/rmw_connext/issues/399>`_)
+* API changes to sync with one Participant per Context change in rmw_fastrtps (`#392 <https://github.com/ros2/rmw_connext/issues/392>`_)
+* Support for ON_REQUESTED_INCOMPATIBLE_QOS and ON_OFFERED_INCOMPATIBLE_QOS events (`#398 <https://github.com/ros2/rmw_connext/issues/398>`_)
+* Add rmw\_*_event_init() functions (`#397 <https://github.com/ros2/rmw_connext/issues/397>`_)
+* Fix build warnings due to -Wsign-compare with GCC 9 (`#396 <https://github.com/ros2/rmw_connext/issues/396>`_)
+* Implement the rmw_get_publishers/subscriptions_info_by_topic() methods (`#391 <https://github.com/ros2/rmw_connext/issues/391>`_)
+* Finding rmw_connext_shared_cpp must succeed, only rmw_connext_cpp can signal not-found when Connext is not available (`#389 <https://github.com/ros2/rmw_connext/issues/389>`_)
+* Code style only: wrap after open parenthesis if not in one line (`#387 <https://github.com/ros2/rmw_connext/issues/387>`_)
+* Avoid using build time Connext library paths, determine them when downstream packages are built (`#385 <https://github.com/ros2/rmw_connext/issues/385>`_)
+* Stubs for rmw_get_publishers_info_by_topic and rmw_get_subscriptions_info_by_topic  (`#377 <https://github.com/ros2/rmw_connext/issues/377>`_)
+* Contributors: Alejandro Hernández Cordero, Dirk Thomas, Ingo Lütkebohle, Ivan Santiago Paunovic, Jacob Perron, Jaison Titus, Miaofei Mei, Michael Carroll, Mikael Arguedas
+
 0.8.1 (2019-10-23)
 ------------------
 * CMAKE_SOURCE_DIR -> CMAKE_CURRENT_SOURCE_DIR (`#378 <https://github.com/ros2/rmw_connext/issues/378>`_)

@@ -2,6 +2,27 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.0 (2020-04-25)
+------------------
+* Add basic support for security logging plugin (`#404 <https://github.com/ros2/rmw_connext/issues/404>`_)
+* security-context -> enclave (`#407 <https://github.com/ros2/rmw_connext/issues/407>`_)
+* Do not force 510 locators compatibility mode (`#406 <https://github.com/ros2/rmw_connext/issues/406>`_)
+* API changes to sync with one Participant per Context change in rmw_fastrtps (`#392 <https://github.com/ros2/rmw_connext/issues/392>`_)
+* Correct error message when using a non supported event (`#400 <https://github.com/ros2/rmw_connext/issues/400>`_)
+* Support for ON_REQUESTED_INCOMPATIBLE_QOS and ON_OFFERED_INCOMPATIBLE_QOS events (`#398 <https://github.com/ros2/rmw_connext/issues/398>`_)
+* Increase the max_objects_per_thread (`#394 <https://github.com/ros2/rmw_connext/issues/394>`_)
+  Increased to 8192, which should allow something like 60 - 70 participants.
+* Add rmw\_*_event_init() functions (`#397 <https://github.com/ros2/rmw_connext/issues/397>`_)
+* Fix build warnings due to -Wsign-compare with GCC 9 (`#396 <https://github.com/ros2/rmw_connext/issues/396>`_)
+* Don't use RTPS Participant name as node name (`#393 <https://github.com/ros2/rmw_connext/issues/393>`_)
+* Implement the rmw_get_publishers/subscriptions_info_by_topic() methods (`#391 <https://github.com/ros2/rmw_connext/issues/391>`_)
+* Finding rmw_connext_shared_cpp must succeed, only rmw_connext_cpp can signal not-found when Connext is not available (`#389 <https://github.com/ros2/rmw_connext/issues/389>`_)
+* Code style only: wrap after open parenthesis if not in one line (`#387 <https://github.com/ros2/rmw_connext/issues/387>`_)
+* Avoid using build time Connext library paths, determine them when downstream packages are built (`#385 <https://github.com/ros2/rmw_connext/issues/385>`_)
+* Stubs for rmw_get_publishers_info_by_topic and rmw_get_subscriptions_info_by_topic  (`#377 <https://github.com/ros2/rmw_connext/issues/377>`_)
+* Filtering empty node names and namespaces (`#362 <https://github.com/ros2/rmw_connext/issues/362>`_)
+* Contributors: CaptainTrunky, Chris Lalancette, Dirk Thomas, Ivan Santiago Paunovic, Jacob Perron, Jaison Titus, Kyle Fazzari, Miaofei Mei, Mikael Arguedas
+
 0.8.1 (2019-10-23)
 ------------------
 * Support localhost only communication (`#373 <https://github.com/ros2/rmw_connext/issues/373>`_)
