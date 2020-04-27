@@ -283,7 +283,7 @@ _take_sequence(
   DDS::ReturnCode_t status = data_reader->take(
     dds_messages,
     sample_infos,
-    count,
+    static_cast<DDS_Long>(count),
     DDS::ANY_SAMPLE_STATE,
     DDS::ANY_VIEW_STATE,
     DDS::ANY_INSTANCE_STATE);
