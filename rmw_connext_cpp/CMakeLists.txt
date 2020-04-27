@@ -93,7 +93,7 @@ set(generated_files
 )
 add_custom_command(
   OUTPUT ${generated_files}
-  COMMAND "${_idl_pp}" -language C++ -unboundedSupport "connext_static_serialized_data.idl" -d ${generated_directory}
+  COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/bin/call-idl-pp.py" --idl-pp ${_idl_pp} --idl-file "connext_static_serialized_data.idl" -d ${generated_directory}
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
   COMMENT "Generating serialized type support for RTI Connext (using '${_idl_pp}')"
   VERBATIM
