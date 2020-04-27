@@ -50,7 +50,7 @@ def main():
             with open(os.path.join(args.d, args.idl_file[:-4] + 'Plugin.h'), 'r') as infp:
                 for line in infp:
                     if line.startswith('extern "C" {'):
-                        return ret.returncode
+                        return 0
 
         print(f'Try {count} of {args.max_tries} failed to generate header with \'extern "C"\'',
               end='')
