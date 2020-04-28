@@ -248,6 +248,13 @@ _take_sequence(
     return RMW_RET_ERROR;
   }
 
+  if (count > std::numeric_limits<DDS_Long>::max()) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "cannot take %ld samples at once, limit is %d",
+      count, std::numeric_limits<DDS_Long>::max());
+    return RMW_RET_ERROR;
+  }
+
   ConnextStaticSubscriberInfo * subscriber_info =
     static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
   if (!subscriber_info) {
