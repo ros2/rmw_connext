@@ -115,6 +115,7 @@ take(
 
   if (!ignore_sample) {
     cdr_stream->buffer_length = dds_messages[0].serialized_data.length();
+    cdr_stream->buffer_capacity = cdr_stream->buffer_length;
     // TODO(karsten1987): This malloc has to go!
     cdr_stream->buffer =
       reinterpret_cast<uint8_t *>(malloc(cdr_stream->buffer_length * sizeof(uint8_t)));
