@@ -249,6 +249,13 @@ _take_sequence(
     return RMW_RET_ERROR;
   }
 
+  if (count > (std::numeric_limits<DDS_Long>::max)()) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "cannot take %ld samples at once, limit is %d",
+      count, (std::numeric_limits<DDS_Long>::max)());
+    return RMW_RET_ERROR;
+  }
+
   ConnextStaticSubscriberInfo * subscriber_info =
     static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
   if (!subscriber_info) {
@@ -284,7 +291,7 @@ _take_sequence(
   DDS::ReturnCode_t status = data_reader->take(
     dds_messages,
     sample_infos,
-    count,
+    static_cast<DDS_Long>(count),
     DDS::ANY_SAMPLE_STATE,
     DDS::ANY_VIEW_STATE,
     DDS::ANY_INSTANCE_STATE);
