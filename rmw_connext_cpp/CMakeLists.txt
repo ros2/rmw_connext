@@ -87,9 +87,10 @@ set(generated_files
 )
 add_custom_command(
   OUTPUT ${generated_files}
-  # We *explicitly* do not use Connext_DDSGEN_SERVER here.  That's so that we don't
-  # accidentally connect to another version of the server that might still be running
-  # from previous runs in rosidl_typesupport_connext_cpp.
+  # We *explicitly* do not use Connext_DDSGEN_SERVER here.  The other time we invoke the
+  # server is in rosidl_typesupport_connext_cpp, and that uses a different set of arguments.
+  # We don't want to accidentally connect to that other version of the server that might
+  # still be running.
   COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/bin/call-idl-pp.py" --idl-pp "${Connext_DDSGEN}" --idl-file "connext_static_serialized_data.idl" -d ${generated_directory}
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
   COMMENT "Generating serialized type support for RTI Connext (using '${Connext_DDSGEN}')"

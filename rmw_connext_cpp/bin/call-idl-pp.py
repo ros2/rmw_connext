@@ -44,8 +44,9 @@ def main():
             pass
         os.mkdir(args.d)
 
-        cmdline = [args.idl_pp, '-language', 'C++', '-unboundedSupport', args.idl_file, '-d',
-                   args.d]
+        cmdline = [
+            args.idl_pp, '-language', 'C++', '-unboundedSupport', args.idl_file, '-d', args.d
+        ]
         print('Running command: %s' % (' '.join(cmdline)))
         ret = subprocess.run(args=cmdline)
         if ret.returncode == 0:
