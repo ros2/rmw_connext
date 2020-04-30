@@ -75,12 +75,6 @@ register_rmw_implementation(
 )
 
 # generate code for raw data
-set(_idl_pp "${Connext_DDSGEN}")
-if(NOT "${Connext_DDSGEN_SERVER}" STREQUAL "")
-  # use the code generator in server mode when available
-  # because it speeds up the code generation step significantly
-  set(_idl_pp "${Connext_DDSGEN_SERVER}")
-endif()
 set(generated_directory "${CMAKE_CURRENT_BINARY_DIR}/resources/generated")
 file(MAKE_DIRECTORY ${generated_directory})
 set(generated_files
@@ -93,9 +87,12 @@ set(generated_files
 )
 add_custom_command(
   OUTPUT ${generated_files}
-  COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/bin/call-idl-pp.py" --idl-pp ${_idl_pp} --idl-file "connext_static_serialized_data.idl" -d ${generated_directory}
+  # We *explicitly* do not use Connext_DDSGEN_SERVER here.  That's so that we don't
+  # accidentally connect to another version of the server that might still be running
+  # from previous runs in rosidl_typesupport_connext_cpp.
+  COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/bin/call-idl-pp.py" --idl-pp "${Connext_DDSGEN}" --idl-file "connext_static_serialized_data.idl" -d ${generated_directory}
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
-  COMMENT "Generating serialized type support for RTI Connext (using '${_idl_pp}')"
+  COMMENT "Generating serialized type support for RTI Connext (using '${Connext_DDSGEN}')"
   VERBATIM
 )
 
