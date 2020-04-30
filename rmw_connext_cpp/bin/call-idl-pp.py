@@ -44,8 +44,11 @@ def main():
             pass
         os.mkdir(args.d)
 
-        ret = subprocess.run(args=[args.idl_pp, '-language', 'C++', '-unboundedSupport',
-                                   args.idl_file, '-d', args.d])
+        cmdline = [
+            args.idl_pp, '-language', 'C++', '-unboundedSupport', args.idl_file, '-d', args.d
+        ]
+        print('Running command: %s' % (' '.join(cmdline)))
+        ret = subprocess.run(args=cmdline)
         if ret.returncode == 0:
             with open(os.path.join(args.d, args.idl_file[:-4] + 'Plugin.h'), 'r') as infp:
                 for line in infp:
