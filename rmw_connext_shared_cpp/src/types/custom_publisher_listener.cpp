@@ -54,7 +54,7 @@ void CustomPublisherListener::on_data_available(DDS::DataReader * reader)
       DDS::GUID_t participant_guid;
       DDS_BuiltinTopicKey_to_GUID(&participant_guid, data_seq[i].participant_key);
 
-      rmw_qos_profile_t qos_profile;
+      rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
       dds_remote_qos_to_rmw_qos(data_seq[i], &qos_profile);
 
       add_information(
