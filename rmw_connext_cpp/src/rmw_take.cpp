@@ -280,7 +280,7 @@ _take_sequence(
     ConnextStaticSerializedDataDataReader::narrow(topic_reader);
   if (!data_reader) {
     RMW_SET_ERROR_MSG("failed to narrow data reader");
-    return false;
+    return RMW_RET_ERROR;
   }
 
   ConnextStaticSerializedDataSeq dds_messages;
