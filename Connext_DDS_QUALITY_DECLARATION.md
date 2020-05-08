@@ -99,7 +99,7 @@ There is a public [blog entry](https://www.rti.com/blog/software-testing-at-rti)
 
 ### Coverage [4.iii]
 
-There is no public information regardless this software has coverage report tracking/testing.
+There is no public information available regarding the software's code coverage analysis or results.
 
 ### Performance [4.iv]
 
