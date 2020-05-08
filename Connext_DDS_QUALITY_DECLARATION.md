@@ -103,7 +103,7 @@ There is no public information available regarding the software's code coverage 
 
 ### Performance [4.iv]
 
-RTI provides a performance testing software [here](https://community.rti.com/downloads/rti-connext-dds-performance-test). With this tool is possible to test latency and throughput of the `rti-connext-dds-5.3.1` and according to the [blog entry](https://www.rti.com/blog/software-testing-at-rti) explaining how RTI manages testing, this tool is used so the software does not drops below a certain percentage established. 
+RTI provides performance testing software [here](https://community.rti.com/downloads/rti-connext-dds-performance-test). With this tool, it is possible to test latency and throughput of `rti-connext-dds`. According to this [blog entry](https://www.rti.com/blog/software-testing-at-rti) explaining how RTI manages testing, this tool is used to ensure the software does not regress below a certain percentage when new features are added. 
 
 ### Linters and Static Analysis [4.v]
 
