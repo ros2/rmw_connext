@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.9.1 (2020-05-08)
+------------------
 * Correct rmw_take() return value. (`#419 <https://github.com/ros2/rmw_connext/issues/419>`_)
 * Switch to always using rtiddsgen (not the server). (`#421 <https://github.com/ros2/rmw_connext/issues/421>`_)
 * Cast to size_t before doing comparison (`#420 <https://github.com/ros2/rmw_connext/issues/420>`_)
