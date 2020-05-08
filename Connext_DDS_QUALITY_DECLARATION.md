@@ -85,7 +85,7 @@ The [documentation page](https://community.rti.com/documentation/rti-connext-dds
 
 ### Copyright Statements [3.iv]
 
-A check to the header files provided when downloading the library shows that the source files include copyright statements to *“Real-Time Innovations, Inc.”*. It is not stated if this is enforced with any kind of linter analysis.
+The header files provided in the library indicate they are copyrighted by *“Real-Time Innovations, Inc.”*. It is not stated if this is enforced with any kind of linter analysis.
 
 ## Testing [4]
 
