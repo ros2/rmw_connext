@@ -1,15 +1,15 @@
-# **External Dependency Quality declaration** `rti-connext-dds-5.3.1` 
+# **External Dependency Quality declaration** `RTI-Connext-DDS`
 
-This document is a declaration of software quality for the `RTI-Connect-DDS` external dependency, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/master/rep-2004.rst).
+This document is a declaration of software quality for the `RTI-Connext-DDS` external dependency, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/master/rep-2004.rst).
 
 As stated in their core documentation, *RTI® Connext® DDS solutions provide a flexible connectivity software framework for integrating data sources of all types (...) It connects data within applications as well as across devices, systems and networks. _Connext DDS_ also delivers large data sets with microsecond performance and granular quality-of-service control.* 
 
-This Quality Declaration claims that the external dependency `RTI-Connect-DDS` is in the Quality Level 4 category.
+This Quality Declaration claims that the external dependency `RTI-Connext-DDS` is in the Quality Level 4 category.
 
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 4 in REP-2004](https://www.ros.org/reps/rep-2004.html).
 
 ## Summary
-The `rti-connext-dds-5.3.1` software meets most of the standards defined for Quality Level 1 defined for ROS2 packages, this includes, but not limited to, broad documentation related to the API of the software and testing of the main features of the software.
+The `RTI-Connext-DDS` software meets most of the standards defined for Quality Level 1 defined for ROS2 packages, this includes, but not limited to, broad documentation related to the API of the software and testing of the main features of the software.
 
 As this package is not open-source, many policies related to quality control are not openly documented. For example, it is difficult to find information relating to its versioning policy. For ROS 2 distributions, packages may need to rely on strict versions, like `5.3.1`, to ensure API/ABI stability. 
 
@@ -25,7 +25,7 @@ In terms of ROS2 package metrics this library is considered to be Quality Level 
 
 ### Version Scheme [1.i]
 
-There is no public information related how the RTI manages the versioning of `rti-connext-dds-5.3.1`
+There is no public information related how the RTI manages the versioning of `RTI-Connext-DDS`
 
 ### Version Stability [1.ii]
 
@@ -37,15 +37,15 @@ The public API is declared in their [documentation page](https://community.rti.c
 
 ### API Stability Policy [1.iv]
 
-There is no explicit policy related to API stability. This package should be pinned to a particular RTI-Connect-DDS version to be considered high quality.
+There is no explicit policy related to API stability. This package should be pinned to a particular `RTI-Connext-DDS` version to be considered high quality.
 
 ### ABI Stability Policy [1.v]
 
-There is no explicit policy related to ABI stability. This package should be pinned to a particular RTI-Connect-DDS version to be considered high quality.
+There is no explicit policy related to ABI stability. This package should be pinned to a particular `RTI-Connext-DDS` version to be considered high quality.
 
 ### ABI and ABI Stability Within a Released ROS Distribution [1.vi]
 
-Without a clear versioning policy for `rti-connext-dds`, ROS distributions may need declare specific versions of `rti-connext-dds` that they support to ensure API and ABI stability within a ROS distribution.
+Without a clear versioning policy for `RTI-Connext-DDS`, ROS distributions may need declare specific versions of `RTI-Connext-DDS` that they support to ensure API and ABI stability within a ROS distribution.
 
 ## Change Control Process [2]
 
@@ -81,7 +81,7 @@ The [documentation page](https://community.rti.com/documentation/rti-connext-dds
 
 ### License [3.iii]
 
-`rti-connext-dds` is governed by the [*Real Time Innovations Software License Agreement*](https://community.rti.com/content/page/rti-software-license-agreement).
+`RTI-Connext-DDS` is governed by the [*Real Time Innovations Software License Agreement*](https://community.rti.com/content/page/rti-software-license-agreement).
 
 ### Copyright Statements [3.iv]
 
@@ -103,7 +103,7 @@ There is no public information available regarding the software's code coverage 
 
 ### Performance [4.iv]
 
-RTI provides performance testing software [here](https://community.rti.com/downloads/rti-connext-dds-performance-test). With this tool, it is possible to test latency and throughput of `rti-connext-dds`. According to this [blog entry](https://www.rti.com/blog/software-testing-at-rti) explaining how RTI manages testing, this tool is used to ensure the software does not regress below a certain percentage when new features are added. 
+RTI provides performance testing software [here](https://community.rti.com/downloads/rti-connext-dds-performance-test). With this tool, it is possible to test latency and throughput of `RTI-Connext-DDS`. According to this [blog entry](https://www.rti.com/blog/software-testing-at-rti) explaining how RTI manages testing, this tool is used to ensure the software does not regress below a certain percentage when new features are added.
 
 ### Linters and Static Analysis [4.v]
 
@@ -113,18 +113,18 @@ There is no public information available about this software's linting or static
 
 ### Direct/Optional Runtime ROS Dependencies [5.i]/[5.ii]
 
-`RTI-Connect-DDS` has no direct/optional runtime ROS dependencies.
+`RTI-Connext-DDS` has no direct/optional runtime ROS dependencies.
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
-`rti-connext-dds-5.3.1` depends on the external library `openssl1.1.1`. This library comes compiled and bundled with the RTI software, and as it is tied to a fixed version is expected this library is tested with the whole `rti-connext-dds-5.3.1` testing tools environment.
+`RTI-Connext-DDS` depends on the external library `openssl1.1.1`. This library comes compiled and bundled with the RTI software, and as it is tied to a fixed version is expected this library is tested with the whole `RTI-Connext-DDS` testing tools environment.
 
 ## Platform Support [6]
 
-The `rti-connext-dds-5.3.1` provides support for Linux, MacOs and Windows platforms, as it can be seen in their [supported platforms](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_ReleaseNotes/index.htm#ReleaseNotes/System_Requirements.htm#Table_SupportedPlatforms) landing page.  However, there is no declared support for Ubuntu Focal nor MacOs 10.14.
+The `RTI-Connext-DDS` provides support for Linux, MacOs and Windows platforms, as it can be seen in their [supported platforms](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_ReleaseNotes/index.htm#ReleaseNotes/System_Requirements.htm#Table_SupportedPlatforms) landing page.  However, there is no declared support for Ubuntu Focal nor MacOs 10.14.
 
 ## Security [7]
 
 ###  Vulnerability Disclosure Policy [7.i]
 
-`RTI-Connect-DDS` does not have a Vulnerability Disclosure Policy.
+`RTI-Connext-DDS` does not have a Vulnerability Disclosure Policy.
