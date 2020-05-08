@@ -11,7 +11,7 @@ Below are the rationales, notes, and caveats for this claim, organized by each r
 ## Summary
 The `rti-connext-dds-5.3.1` software meets most of the standards defined for Quality Level 1 defined for ROS2 packages, this includes, but not limited to, broad documentation related to the API of the software and testing of the main features of the software.
 
-The main concerns related to this software are related to the fact that the development of it is not complete in an open-source fashion, so it is unknown the policies they have to develop their code and if they have any policies related to versioning. For the case of ROS2, as the libraries are fixed to the `5.3.1` there should not be any considering versioning and API/ABI stability. 
+As this package is not open-source, many policies related to quality control are not openly documented. For example, it is difficult to find information relating to its versioning policy. For ROS 2 distributions, packages may need to rely on strict versions, like `5.3.1`, to ensure API/ABI stability. 
 
 Without reports of coverage, it is not clear if the software is completely tested. However, according to a [blog entry](https://www.rti.com/blog/software-testing-at-rti)  from RTI, the company takes testing very seriously. 
 
