@@ -13,7 +13,7 @@ The `rti-connext-dds-5.3.1` software meets most of the standards defined for Qua
 
 As this package is not open-source, many policies related to quality control are not openly documented. For example, it is difficult to find information relating to its versioning policy. For ROS 2 distributions, packages may need to rely on strict versions, like `5.3.1`, to ensure API/ABI stability. 
 
-Without reports of coverage, it is not clear if the software is completely tested. However, according to a [blog entry](https://www.rti.com/blog/software-testing-at-rti)  from RTI, the company takes testing very seriously. 
+There are no clear public reports of code coverage, so it is not clear how much of their code is tested. However, they do describe their approach to testing in a [blog entry](https://www.rti.com/blog/software-testing-at-rti). 
 
 There is a list of [known academic projects](https://community.rti.com/projects) using RTI Connext DDS and also they have published a [white paper](https://www.rti.com/whitepapers/how-to-achieve-production-grade-deployment-with-ros-2-and-rti-connext-dds) with rationale about how to implement production-grade deployments using their software in conjunction with ROS2.
 
