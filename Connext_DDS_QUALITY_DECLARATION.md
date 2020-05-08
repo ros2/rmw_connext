@@ -121,7 +121,7 @@ There is no public information regardless this software has linters or static an
 
 ## Platform Support [6]
 
-The `rti-connext-dds-5.3.1` provides support for Linux, MacOs and Windows platforms, as it can be seen in their [supported platforms](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_ReleaseNotes/index.htm#ReleaseNotes/System_Requirements.htm#Table_SupportedPlatforms) landing page.  However, there is no support for Ubuntu Focal nor MacOs 10.14.
+The `rti-connext-dds-5.3.1` provides support for Linux, MacOs and Windows platforms, as it can be seen in their [supported platforms](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_ReleaseNotes/index.htm#ReleaseNotes/System_Requirements.htm#Table_SupportedPlatforms) landing page.  However, there is no declared support for Ubuntu Focal nor MacOs 10.14.
 
 ## Security [7]
 
