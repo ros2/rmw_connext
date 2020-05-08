@@ -9,23 +9,21 @@ This Quality Declaration claims that the external dependency `RTI-Connext-DDS` i
 Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 4 in REP-2004](https://www.ros.org/reps/rep-2004.html).
 
 ## Summary
-The `RTI-Connext-DDS` software meets most of the standards defined for Quality Level 1 defined for ROS2 packages, this includes, but not limited to, broad documentation related to the API of the software and testing of the main features of the software.
+`RTI-Connext-DDS` meets most of the standards defined for Quality Level 1, including broad documentation and testing of its features and API.
 
 As this package is not open-source, many policies related to quality control are not openly documented. For example, it is difficult to find information relating to its versioning policy. For ROS 2 distributions, packages may need to rely on strict versions, like `5.3.1`, to ensure API/ABI stability. 
 
 There are no clear public reports of code coverage, so it is not clear how much of their code is tested. However, they do describe their approach to testing in a [blog entry](https://www.rti.com/blog/software-testing-at-rti). 
 
-There is a list of [known academic projects](https://community.rti.com/projects) using RTI Connext DDS and also they have published a [white paper](https://www.rti.com/whitepapers/how-to-achieve-production-grade-deployment-with-ros-2-and-rti-connext-dds) with rationale about how to implement production-grade deployments using their software in conjunction with ROS2.
+There is a list of [known academic projects](https://community.rti.com/projects) using RTI Connext DDS and also they have published a [white paper](https://www.rti.com/whitepapers/how-to-achieve-production-grade-deployment-with-ros-2-and-rti-connext-dds) with rationale about how to implement production-grade deployments using their software in conjunction with ROS 2.
 
-In terms of ROS2 package metrics this library is considered to be Quality Level 4. Adding unit testing for the functions used in ROS2 packages, coverage statistics and version pinning will be needed to achieve Quality Level 1.
-
-# Comparison with ROS packages quality standards
+In terms of ROS 2 package metrics this library is considered to be Quality Level 4. Adding unit testing for the functions used in ROS 2 packages, coverage statistics and version pinning will be needed to achieve Quality Level 1.
 
 ## Version Policy [1]
 
 ### Version Scheme [1.i]
 
-There is no public information related how the RTI manages the versioning of `RTI-Connext-DDS`
+`RTI-Connext-DDS` does not have a declared versioning scheme. However, each new release of the software comes with detailed [What's new](https://community.rti.com/static/documentation/connext-dds/5.3.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_WhatsNew/index.htm#WhatsNew/WhatsNew530/WhatsNew530.htm) and [Release notes](https://community.rti.com/static/documentation/connext-dds/5.3.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_ReleaseNotes/index.htm) documentation that provides users with information that includes new features, supported platforms and known issues.
 
 ### Version Stability [1.ii]
 
@@ -35,45 +33,25 @@ The library has a version >= 1.0.0.
 
 The public API is declared in their [documentation page](https://community.rti.com/documentation/rti-connext-dds-531) with sections for [C API](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/api/connext_dds/api_c/index.html), [C++ Modern API](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/api/connext_dds/api_cpp2/index.html), [C ++ Traditional API](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/api/connext_dds/api_cpp/index.html) and other programming languages.
 
-### API Stability Policy [1.iv]
+### API Stability Policy [1.iv]/[1.vi]
 
-There is no explicit policy related to API stability. This package should be pinned to a particular `RTI-Connext-DDS` version to be considered high quality.
+There is no declared policy for API stability and it's unclear if breaking changes may be introduced during minor or patch versions. Packages that depend on `RTI-Connext-DDS` may need to limit the versions they rely on to ensure API stability.
 
-### ABI Stability Policy [1.v]
+### ABI Stability Policy [1.v]/[1.vi]
 
-There is no explicit policy related to ABI stability. This package should be pinned to a particular `RTI-Connext-DDS` version to be considered high quality.
-
-### ABI and ABI Stability Within a Released ROS Distribution [1.vi]
-
-Without a clear versioning policy for `RTI-Connext-DDS`, ROS distributions may need declare specific versions of `RTI-Connext-DDS` that they support to ensure API and ABI stability within a ROS distribution.
+There is no declared policy for ABI stability and it's unclear if breaking changes may be introduced during minor or patch versions. Packages that depend on `RTI-Connext-DDS` may need to limit the versions they rely on to ensure API stability.
 
 ## Change Control Process [2]
 
-### Change Requests [2.i]
-
-It is not available to the public how the software is modified.
-
-### Contributor Origin [2.ii]
-
-It is not available to the public how the software is modified.
-
-### Peer Review Policy [2.iii]
-
-It is not available to the public how the software is modified.
-
-### Continuous Integration [2.iv]
-
-It is not available to the public how the software is modified.
-
-###  Documentation Policy [2.v]
-
-It is not available to the public how the software is modified.
+Change control process is not publicly documented (sections [2.i - 2.v]).
 
 ## Documentation [3]
 
 ### Feature Documentation [3.i]
 
-The complete software is documented in its [main documentation page](https://community.rti.com/documentation/rti-connext-dds-531). The suggested reading for the features of the libraries is the user manual, which covers documentation for the basic concepts and library features implementations.
+The complete software provides extensive and high quality documentation hosted at [main documentation page](https://community.rti.com/documentation/rti-connext-dds-531).
+
+The documentation includes a [Getting Started Guide](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_GettingStarted/index.htm), [Core Libraries User Manual](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/index.htm), [Core Libraries What's New](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_WhatsNew/index.htm), [Core Library Release Notes](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_ReleaseNotes/index.htm), several references for their different APIs and different topics related to the software usage.
 
 ### Public API Documentation [3.ii]
 
@@ -117,7 +95,7 @@ There is no public information available about this software's linting or static
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
-`RTI-Connext-DDS` depends on the external library `openssl1.1.1`. This library comes compiled and bundled with the RTI software, and as it is tied to a fixed version is expected this library is tested with the whole `RTI-Connext-DDS` testing tools environment.
+`RTI-Connext-DDS` depends on the external library `openssl1.1.1`. This library comes compiled and bundled with the RTI software. It is expected that this library is tested as a part of the `RTI-Connext-DDS` testing tools environment.
 
 ## Platform Support [6]
 
