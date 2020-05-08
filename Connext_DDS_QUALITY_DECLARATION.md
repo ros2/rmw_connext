@@ -29,7 +29,7 @@ There is no public information related how the RTI manages the versioning of `rt
 
 ### Version Stability [1.ii]
 
-The library has version >= 1.0.0.
+The library has a version >= 1.0.0.
 
 ### Public API Declaration [1.iii]
 
