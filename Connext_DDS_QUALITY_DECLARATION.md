@@ -4,7 +4,9 @@ This document is a declaration of software quality for the `RTI-Connect-DDS` ext
 
 As stated in their core documentation, *RTI® Connext® DDS solutions provide a flexible connectivity software framework for integrating data sources of all types (...) It connects data within applications as well as across devices, systems and networks. _Connext DDS_ also delivers large data sets with microsecond performance and granular quality-of-service control.* 
 
-This QD claims that the external dependency `RTI-Connect-DDS` qualifies to Quality Level 4 category for its use within ROS2 core.
+This Quality Declaration claims that the external dependency `RTI-Connect-DDS` is in the Quality Level 4 category.
+
+Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 4 in REP-2004](https://www.ros.org/reps/rep-2004.html).
 
 ## Summary
 The `rti-connext-dds-5.3.1` software meets most of the standards defined for Quality Level 1 defined for ROS2 packages, this includes, but not limited to, broad documentation related to the API of the software and testing of the main features of the software.
