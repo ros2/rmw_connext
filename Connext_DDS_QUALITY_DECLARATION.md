@@ -113,7 +113,7 @@ There is no public information available about this software's linting or static
 
 ### Direct/Optional Runtime ROS Dependencies [5.i]/[5.ii]
 
-`RTI-Connect-DDS` has not direct/optional runtime ROS dependencies.
+`RTI-Connect-DDS` has no direct/optional runtime ROS dependencies.
 
 ### Direct Runtime non-ROS Dependency [5.iii]
 
