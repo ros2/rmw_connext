@@ -81,7 +81,7 @@ The [documentation page](https://community.rti.com/documentation/rti-connext-dds
 
 ### License [3.iii]
 
-The license provided to use is the software is the *Real Time Innovations Software License Agreement*, available in their content page [here](https://community.rti.com/content/page/rti-software-license-agreement).
+`rti-connext-dds` is governed by the [*Real Time Innovations Software License Agreement*](https://community.rti.com/content/page/rti-software-license-agreement).
 
 ### Copyright Statements [3.iv]
 
