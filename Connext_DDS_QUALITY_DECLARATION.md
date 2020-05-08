@@ -107,7 +107,7 @@ RTI provides performance testing software [here](https://community.rti.com/downl
 
 ### Linters and Static Analysis [4.v]
 
-There is no public information regardless this software has linters or static analysis.
+There is no public information available about this software's linting or static analysis.
 
 ## Dependencies [5]
 
