@@ -45,7 +45,7 @@ There is no explicit policy related to ABI stability. This package should be pin
 
 ### ABI and ABI Stability Within a Released ROS Distribution [1.vi]
 
-There is no direct correlation between API and ABI stability of the library within ROS distributions. This package should be pinned to a particular RTI-Connect-DDS version to be considered high quality.
+Without a clear versioning policy for `rti-connext-dds`, ROS distributions may need declare specific versions of `rti-connext-dds` that they support to ensure API and ABI stability within a ROS distribution.
 
 ## Change Control Process [2]
 
