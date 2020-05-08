@@ -2,6 +2,16 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Correct rmw_take() return value. (`#419 <https://github.com/ros2/rmw_connext/issues/419>`_)
+* Switch to always using rtiddsgen (not the server). (`#421 <https://github.com/ros2/rmw_connext/issues/421>`_)
+* Cast to size_t before doing comparison (`#420 <https://github.com/ros2/rmw_connext/issues/420>`_)
+* Cast size_t to DDS_Long explicitly. (`#416 <https://github.com/ros2/rmw_connext/issues/416>`_)
+* set connext buffer capacity (`#417 <https://github.com/ros2/rmw_connext/issues/417>`_)
+* Retry calling the idl_pp up to 10 times. (`#415 <https://github.com/ros2/rmw_connext/issues/415>`_)
+* Contributors: Chris Lalancette, Karsten Knese, Michel Hidalgo, Shane Loretz
+
 0.9.0 (2020-04-25)
 ------------------
 * Rename rosidl_message_bounds_t (`#413 <https://github.com/ros2/rmw_connext/issues/413>`_)

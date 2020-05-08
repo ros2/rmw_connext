@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Initialize RMW qos profiles to rmw_qos_profile_unknown. (`#422 <https://github.com/ros2/rmw_connext/issues/422>`_)
+* Contributors: Michel Hidalgo
+
 0.9.0 (2020-04-25)
 ------------------
 * Add basic support for security logging plugin (`#404 <https://github.com/ros2/rmw_connext/issues/404>`_)
