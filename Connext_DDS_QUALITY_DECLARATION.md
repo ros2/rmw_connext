@@ -49,7 +49,7 @@ Change control process is not publicly documented (sections [2.i - 2.v]).
 
 ### Feature Documentation [3.i]
 
-The complete software provides extensive and high quality documentation hosted at [main documentation page](https://community.rti.com/documentation/rti-connext-dds-531).
+`RTI-Connext-DDS` provides extensive and high quality documentation hosted on their [main documentation page](https://community.rti.com/documentation/rti-connext-dds-531).
 
 The documentation includes a [Getting Started Guide](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_GettingStarted/index.htm), [Core Libraries User Manual](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/index.htm), [Core Libraries What's New](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_WhatsNew/index.htm), [Core Library Release Notes](https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_ReleaseNotes/index.htm), several references for their different APIs and different topics related to the software usage.
 
