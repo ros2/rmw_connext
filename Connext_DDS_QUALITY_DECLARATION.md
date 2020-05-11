@@ -11,13 +11,15 @@ Below are the rationales, notes, and caveats for this claim, organized by each r
 ## Summary
 `RTI-Connext-DDS` meets most of the standards defined for Quality Level 1, including broad documentation and testing of its features and API.
 
-As this package is not open-source, many policies related to quality control are not openly documented. For example, it is difficult to find information relating to its versioning policy. For ROS 2 distributions, packages may need to rely on strict versions, like `5.3.1`, to ensure API/ABI stability. 
+As this package is not open-source, many policies related to quality control are not openly documented. For example, it is difficult to find information relating to its versioning policy. For ROS 2 distributions, packages may need to rely on strict versions, like `5.3.1`, to ensure API/ABI stability.
 
-There are no clear public reports of code coverage, so it is not clear how much of their code is tested. However, they do describe their approach to testing in a [blog entry](https://www.rti.com/blog/software-testing-at-rti). 
+There are no clear public reports of code coverage, so it is not clear how much of their code is tested. However, they do describe their approach to testing in a [blog entry](https://www.rti.com/blog/software-testing-at-rti).
 
-There is a list of [known academic projects](https://community.rti.com/projects) using RTI Connext DDS and also they have published a [white paper](https://www.rti.com/whitepapers/how-to-achieve-production-grade-deployment-with-ros-2-and-rti-connext-dds) with rationale about how to implement production-grade deployments using their software in conjunction with ROS 2.
+This software is used in several markets as the automotive, energy, aerospace and oil markets. [Here](https://www.mocana.com/rti) we can see a statement of a partnership with Mocana to provide Critical Industrial IoT systems. We can also see [here](https://www.ddci.com/pr2001/) an annoucement of its integration within the DCC-I's Deos avionics real-time operating system.
 
-In terms of ROS 2 package metrics this library is considered to be Quality Level 4. Adding unit testing for the functions used in ROS 2 packages, coverage statistics and version pinning will be needed to achieve Quality Level 1.
+There is a [white paper](https://www.rti.com/whitepapers/how-to-achieve-production-grade-deployment-with-ros-2-and-rti-connext-dds) with rationale about how to implement production-grade deployments using their software in conjunction with ROS 2.
+
+In terms of ROS 2 package metrics this library is considered to be Quality Level 4. There should more information about how `RTI-Connext-DDS` deals with the issues listed in the [REP-2004](https://github.com/ros-infrastructure/rep/blob/master/rep-2004.rst) so consumers of the package have a better understanding about how to depend on it. This could achieved with some transparency on their internal policies or with a public statement similar to this [blog entry](https://www.rti.com/blog/software-testing-at-rti).
 
 ## Version Policy [1]
 
