@@ -43,7 +43,7 @@ There is no declared policy for ABI stability and it's unclear if breaking chang
 
 ## Change Control Process [2]
 
-Change control process is not publicly documented (sections [2.i - 2.v]).
+The change control process of `RTI-Connext-DDS` is not publicly documented (sections [2.i - 2.v]).
 
 ## Documentation [3]
 
