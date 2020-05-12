@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.0 (2020-05-12)
+------------------
+* Remove MANUAL_BY_NODE liveliness API (`#423 <https://github.com/ros2/rmw_connext/issues/423>`_)
+* Contributors: Ivan Santiago Paunovic
+
 0.9.1 (2020-05-08)
 ------------------
 * Initialize RMW qos profiles to rmw_qos_profile_unknown. (`#422 <https://github.com/ros2/rmw_connext/issues/422>`_)
