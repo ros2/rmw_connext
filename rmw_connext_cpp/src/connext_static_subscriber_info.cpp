@@ -17,11 +17,11 @@
 #include "rmw_connext_shared_cpp/qos.hpp"
 
 rmw_ret_t ConnextStaticSubscriberInfo::get_status(
-  DDS::StatusMask mask,
+  rmw_event_type_t event_type,
   void * event)
 {
-  switch (mask) {
-    case DDS::StatusKind::DDS_LIVELINESS_CHANGED_STATUS:
+  switch (event_type) {
+    case RMW_EVENT_LIVELINESS_CHANGED:
       {
         DDS::LivelinessChangedStatus liveliness_changed;
         DDS::ReturnCode_t dds_return_code =
@@ -42,7 +42,7 @@ rmw_ret_t ConnextStaticSubscriberInfo::get_status(
 
         break;
       }
-    case DDS::StatusKind::DDS_REQUESTED_DEADLINE_MISSED_STATUS:
+    case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
       {
         DDS::RequestedDeadlineMissedStatus requested_deadline_missed;
         DDS::ReturnCode_t dds_return_code =
@@ -61,7 +61,7 @@ rmw_ret_t ConnextStaticSubscriberInfo::get_status(
 
         break;
       }
-    case DDS::StatusKind::DDS_REQUESTED_INCOMPATIBLE_QOS_STATUS:
+    case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
       {
         DDS::RequestedIncompatibleQosStatus requested_incompatible_qos;
         DDS::ReturnCode_t dds_return_code =

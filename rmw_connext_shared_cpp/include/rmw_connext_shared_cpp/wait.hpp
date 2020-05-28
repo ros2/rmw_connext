@@ -58,9 +58,8 @@ __gather_event_conditions(
         std::pair<DDS::StatusCondition *, DDS::StatusMask>(
           status_condition, DDS::STATUS_MASK_NONE));
       auto iterator = map_pair.first;
-      status_mask_map[status_condition] = get_status_kind_from_rmw(current_event->event_type) |
+      status_mask_map[status_condition] = get_status_mask_from_rmw(current_event->event_type) |
         (*iterator).second;
-
     } else {
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("event %d not supported", current_event->event_type);
     }
@@ -92,7 +91,7 @@ rmw_ret_t __handle_active_event_conditions(rmw_events_t * events)
 
       if (is_event_supported(current_event->event_type)) {
         is_active = static_cast<bool>(status_mask &
-          get_status_kind_from_rmw(current_event->event_type));
+          get_status_mask_from_rmw(current_event->event_type));
       }
       // if status condition is not found in the active set
       // reset the subscriber handle
