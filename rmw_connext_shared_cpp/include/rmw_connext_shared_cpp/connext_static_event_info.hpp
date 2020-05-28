@@ -15,6 +15,7 @@
 #ifndef RMW_CONNEXT_SHARED_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
 #define RMW_CONNEXT_SHARED_CPP__CONNEXT_STATIC_EVENT_INFO_HPP_
 
+#include "rmw/event.h"
 #include "rmw/ret_types.h"
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
@@ -31,7 +32,7 @@ typedef struct ConnextCustomEventInfo
    * \return `RMW_RET_OK` if the event was filled or
    * \return `RMW_RET_UNSUPPORTED` if the status mask is unsupported
    */
-  virtual rmw_ret_t get_status(const DDS::StatusMask mask, void * event) = 0;
+  virtual rmw_ret_t get_status(rmw_event_type_t event_type, void * event) = 0;
   virtual DDS::Entity * get_entity() = 0;
 } ConnextCustomEventInfo;
 

@@ -28,10 +28,11 @@
 /// Return the corresponding DDS_StatusKind to the input RMW_EVENT.
 /**
  * \param event_t to translate to status kind
- * \return the StatusKind corresponding to the rmw_event_type_t
+ * \return a vector of the status kinds corresponding to the rmw_event_type_t
  */
 RMW_CONNEXT_SHARED_CPP_PUBLIC
-DDS::StatusKind get_status_kind_from_rmw(rmw_event_type_t event_t);
+DDS::StatusMask
+get_status_mask_from_rmw(rmw_event_type_t event_t);
 
 /// Return true if the input RMW event has a corresponding DDS_StatusKind.
 /**
