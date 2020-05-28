@@ -82,6 +82,23 @@ rmw_ret_t ConnextStaticSubscriberInfo::get_status(
 
         break;
       }
+    case RMW_EVENT_MESSAGE_LOST:
+      {
+        DDS::SampleLostStatus sample_lost_status;
+
+        DDS::ReturnCode_t dds_return_code =
+          topic_reader_->get_sample_lost_status(sample_lost_status);
+        rmw_ret_t from_dds = check_dds_ret_code(dds_return_code);
+        if (RMW_RET_OK != from_dds) {
+          return from_dds;
+        }
+
+        rmw_message_lost_status_t * rmw_message_lost =
+          static_cast<rmw_message_lost_status_t *>(event);
+        rmw_message_lost->total_count = sample_lost_status.total_count;
+        rmw_message_lost->total_count_change = sample_lost_status.total_count_change;
+        break;
+      }
     default:
       return RMW_RET_UNSUPPORTED;
   }
