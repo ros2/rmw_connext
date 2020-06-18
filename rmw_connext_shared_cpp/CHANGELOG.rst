@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add support to RMW_EVENT_MESSAGE_LOST (`#424 <https://github.com/ros2/rmw_connext/issues/424>`_)
+* Allow RMW events to map to more than one DDS event (`#424 <https://github.com/ros2/rmw_connext/issues/424>`_)
+* Contributors: Ivan Santiago Paunovic
+
 1.0.0 (2020-05-12)
 ------------------
 * Remove MANUAL_BY_NODE liveliness API (`#423 <https://github.com/ros2/rmw_connext/issues/423>`_)
