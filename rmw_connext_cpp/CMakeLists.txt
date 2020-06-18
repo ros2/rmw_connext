@@ -101,7 +101,8 @@ add_custom_command(
 find_file(connext_version_header "ndds_version.h"
   PATHS ${Connext_INCLUDE_DIRS}
   PATH_SUFFIXES "ndds"
-  NO_DEFAULT_PATH)
+  NO_DEFAULT_PATH
+  CMAKE_FIND_ROOT_PATH_BOTH)
 if(NOT connext_version_header)
   message(FATAL_ERROR "Failed to find 'ndds/ndds_version.h' in '${Connext_INCLUDE_DIRS}'")
 endif()
