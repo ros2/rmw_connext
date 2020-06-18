@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.1.0 (2020-06-18)
+------------------
 * Add support to RMW_EVENT_MESSAGE_LOST (`#424 <https://github.com/ros2/rmw_connext/issues/424>`_)
 * Allow RMW events to map to more than one DDS event (`#424 <https://github.com/ros2/rmw_connext/issues/424>`_)
 * Revert the idl_pp code to try up to 10 times. (`#425 <https://github.com/ros2/rmw_connext/issues/425>`_)
