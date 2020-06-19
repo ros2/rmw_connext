@@ -21,6 +21,11 @@
 
 #include "rmw_connext_cpp/identifier.hpp"
 
+struct rmw_context_impl_t {
+  // Shutdown flag
+  bool is_shutdown{false};
+};
+
 extern "C"
 {
 rmw_ret_t
@@ -105,12 +110,27 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   context->instance_id = options->instance_id;
   context->implementation_identifier = rti_connext_identifier;
-  context->impl = nullptr;
+  context->impl = new (std::nothrow) rmw_context_impl_t();
+  if (!context->impl) {
+    RMW_SET_ERROR_MSG("failed to allocate context impl");
+    return RMW_RET_BAD_ALLOC;
+  }
+  context->impl->is_shutdown = false;
   rmw_ret_t ret = rmw_init_options_copy(options, &context->options);
   if (RMW_RET_OK != ret) {
+    delete context->impl;
     return ret;
   }
-  return init();
+  ret = init();
+  if (RMW_RET_OK != ret) {
+    if (RMW_RET_OK != rmw_init_options_fini(&context->options)) {
+      RMW_SAFE_FWRITE_TO_STDERR(
+        "'rmw_init_options_fini' failed while being executed due to '"
+        RCUTILS_STRINGIFY(__function__) "' failing.\n");
+    }
+    delete context->impl;
+  }
+  return ret;
 }
 
 rmw_ret_t
@@ -122,8 +142,8 @@ rmw_shutdown(rmw_context_t * context)
     context->implementation_identifier,
     rti_connext_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  // Nothing to do here for now.
-  // This is just the middleware's notification that shutdown was called.
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
+  context->impl->is_shutdown = true;
   return RMW_RET_OK;
 }
 
@@ -136,8 +156,12 @@ rmw_context_fini(rmw_context_t * context)
     context->implementation_identifier,
     rti_connext_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  // context impl is explicitly supposed to be nullptr for now, see rmw_init's code
-  // RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
+  if (!context->impl->is_shutdown) {
+    RCUTILS_SET_ERROR_MSG("context has not been shutdown");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  delete context->impl;
   *context = rmw_get_zero_initialized_context();
   return RMW_RET_OK;
 }
