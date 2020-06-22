@@ -116,7 +116,7 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     goto fail;
   }
   return ret;
- fail:
+fail:
   if (RMW_RET_OK != rmw_init_options_fini(&context->options)) {
     RMW_SAFE_FWRITE_TO_STDERR(
       "'rmw_init_options_fini' failed while being executed due to '"
