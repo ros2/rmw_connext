@@ -106,11 +106,23 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
   context->instance_id = options->instance_id;
   context->implementation_identifier = rti_connext_identifier;
   context->impl = nullptr;
+
   rmw_ret_t ret = rmw_init_options_copy(options, &context->options);
   if (RMW_RET_OK != ret) {
-    return ret;
+    goto fail;
   }
-  return init();
+  ret = init();
+  if (RMW_RET_OK != ret) {
+    goto fail;
+  }
+  return ret;
+ fail:
+  if (RMW_RET_OK != rmw_init_options_fini(&context->options)) {
+    RMW_SAFE_FWRITE_TO_STDERR(
+      "'rmw_init_options_fini' failed while being executed due to '"
+      RCUTILS_STRINGIFY(__function__) "' failing.\n");
+  }
+  return ret;
 }
 
 rmw_ret_t
@@ -138,7 +150,10 @@ rmw_context_fini(rmw_context_t * context)
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   // context impl is explicitly supposed to be nullptr for now, see rmw_init's code
   // RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
-  *context = rmw_get_zero_initialized_context();
-  return RMW_RET_OK;
+  rmw_ret_t ret = rmw_init_options_fini(&context->options);
+  if (RMW_RET_OK == ret) {
+    *context = rmw_get_zero_initialized_context();
+  }
+  return ret;
 }
 }  // extern "C"
