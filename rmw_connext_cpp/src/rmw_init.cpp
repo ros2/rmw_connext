@@ -102,11 +102,9 @@ rmw_init_options_fini(rmw_init_options_t * init_options)
   const rcutils_allocator_t * allocator = &init_options->allocator;
   RCUTILS_CHECK_ALLOCATOR(allocator, return RMW_RET_INVALID_ARGUMENT);
 
+  allocator->deallocate(init_options->enclave, allocator->state);
   rmw_ret_t ret = rmw_security_options_fini(&init_options->security_options, allocator);
-  if (RMW_RET_OK == ret) {
-    allocator->deallocate(init_options->enclave, allocator->state);
-    *init_options = rmw_get_zero_initialized_init_options();
-  }
+  *init_options = rmw_get_zero_initialized_init_options();
   return ret;
 }
 
