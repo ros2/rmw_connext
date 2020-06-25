@@ -19,9 +19,10 @@
 #include "rcutils/strdup.h"
 
 #include "rmw/error_handling.h"
-#include "rmw/impl/cpp/atexit.hpp"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw_connext_shared_cpp/init.hpp"
+
+#include "rcpputils/scope_exit.hpp"
 
 #include "rmw_connext_cpp/identifier.hpp"
 
@@ -131,10 +132,10 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     return RMW_RET_INVALID_ARGUMENT;
   }
 
-  rmw::impl::cpp::atexit cleanup{[context]() {
+  auto cleanup = rcpputils::make_scope_exit([context]() {
       delete context->impl;
       *context = rmw_get_zero_initialized_context();
-    }};
+    });
 
   context->instance_id = options->instance_id;
   context->implementation_identifier = rti_connext_identifier;
