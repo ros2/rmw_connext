@@ -36,6 +36,7 @@ if(NOT Connext_FOUND OR CONNEXT_STATIC_DISABLE)
   return()
 endif()
 
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 
 find_package(rosidl_typesupport_connext_c)
@@ -61,6 +62,7 @@ include_directories(include)
 
 ament_export_include_directories(include)
 ament_export_dependencies(
+  rcpputils
   rcutils
   rmw
   rmw_connext_shared_cpp
@@ -186,6 +188,7 @@ add_library(
   src/serialization_format.cpp
   src/rmw_get_topic_endpoint_info.cpp)
 ament_target_dependencies(rmw_connext_cpp
+  "rcpputils"
   "rcutils"
   "rmw"
   "rmw_connext_shared_cpp"
