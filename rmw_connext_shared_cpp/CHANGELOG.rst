@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.0 (2020-06-29)
+------------------
 * Handle RMW_DEFAULT_DOMAIN_ID. (`#427 <https://github.com/ros2/rmw_connext/issues/427>`_)
 * Contributors: Michel Hidalgo
 
