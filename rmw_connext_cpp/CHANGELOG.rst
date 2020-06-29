@@ -2,6 +2,13 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ensure compliant init/shutdown API implementation. (`#432 <https://github.com/ros2/rmw_connext/issues/432>`_)
+* Ensure compliant init options API implementations. (`#431 <https://github.com/ros2/rmw_connext/issues/431>`_)
+* Finalize context if and only if it's shutdown (`#428 <https://github.com/ros2/rmw_connext/issues/428>`_)
+* Contributors: Michel Hidalgo
+
 1.1.0 (2020-06-18)
 ------------------
 * Add support to RMW_EVENT_MESSAGE_LOST (`#424 <https://github.com/ros2/rmw_connext/issues/424>`_)

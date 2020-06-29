@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Handle RMW_DEFAULT_DOMAIN_ID. (`#427 <https://github.com/ros2/rmw_connext/issues/427>`_)
+* Contributors: Michel Hidalgo
+
 1.1.0 (2020-06-18)
 ------------------
 * Add support to RMW_EVENT_MESSAGE_LOST (`#424 <https://github.com/ros2/rmw_connext/issues/424>`_)
