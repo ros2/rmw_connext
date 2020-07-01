@@ -291,6 +291,7 @@ rmw_create_subscription(
 #endif
 
   subscription->can_loan_messages = false;
+  subscription->is_cft_supported = true;
   return subscription;
 fail:
   if (topic_str) {
