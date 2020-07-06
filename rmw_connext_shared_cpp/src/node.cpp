@@ -32,9 +32,7 @@ create_node(
   const char * implementation_identifier,
   rmw_context_t * context,
   const char * name,
-  const char * namespace_,
-  size_t domain_id,
-  bool localhost_only)
+  const char * namespace_)
 {
   RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -57,7 +55,7 @@ create_node(
     return NULL;
   }
 
-  if (localhost_only) {
+  if (context->options.localhost_only == RMW_LOCALHOST_ONLY_ENABLED) {
     status = DDS::PropertyQosPolicyHelper::add_property(
       participant_qos.property,
       "dds.transport.UDPv4.builtin.parent.allow_interfaces",
@@ -275,12 +273,15 @@ create_node(
   }
 
   // No custom handling of RMW_DEFAULT_DOMAIN_ID. Simply use a reasonable domain id.
-  participant = dpf_->create_participant(
-    static_cast<DDS::DomainId_t>(
-      domain_id != RMW_DEFAULT_DOMAIN_ID ? domain_id : 0u),
-    participant_qos,
-    NULL,
-    DDS::STATUS_MASK_NONE);
+  {
+    size_t domain_id = context->options.domain_id;
+    participant = dpf_->create_participant(
+      static_cast<DDS::DomainId_t>(
+        domain_id != RMW_DEFAULT_DOMAIN_ID ? domain_id : 0u),
+      participant_qos,
+      NULL,
+      DDS::STATUS_MASK_NONE);
+  }
   if (!participant) {
     RMW_SET_ERROR_MSG("failed to create participant");
     goto fail;
