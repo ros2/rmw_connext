@@ -28,12 +28,6 @@
 
 #include "rmw_connext_cpp/identifier.hpp"
 
-struct rmw_context_impl_t
-{
-  // Shutdown flag
-  bool is_shutdown{false};
-};
-
 extern "C"
 {
 rmw_ret_t

@@ -18,6 +18,7 @@
 #include "rcutils/filesystem.h"
 
 #include "rmw_connext_shared_cpp/guard_condition.hpp"
+#include "rmw_connext_shared_cpp/init.hpp"
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/node.hpp"
 #include "rmw_connext_shared_cpp/security_logging.hpp"
@@ -26,6 +27,8 @@
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/validate_namespace.h"
+#include "rmw/validate_node_name.h"
 
 rmw_node_t *
 create_node(
@@ -34,13 +37,42 @@ create_node(
   const char * name,
   const char * namespace_)
 {
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  assert(implementation_identifier != NULL);
+  RMW_CHECK_ARGUMENT_FOR_NULL(context, NULL);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     init context,
     context->implementation_identifier,
     implementation_identifier,
     // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
     return NULL);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    context->impl,
+    "expected initialized context",
+    return NULL);
+  if (context->impl->is_shutdown) {
+    RCUTILS_SET_ERROR_MSG("context has been shutdown");
+    return NULL;
+  }
+
+  int validation_result = -1;
+  rmw_ret_t ret = rmw_validate_node_name(name, &validation_result, nullptr);
+  if (RMW_RET_OK != ret || RMW_NODE_NAME_VALID != validation_result) {
+    const char * reason = RMW_RET_OK == ret ?
+      rmw_node_name_validation_result_string(validation_result) :
+      rmw_get_error_string().str;
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid node name: %s", reason);
+    return NULL;
+  }
+  validation_result = -1;
+  ret = rmw_validate_namespace(namespace_, &validation_result, nullptr);
+  if (RMW_RET_OK != ret || RMW_NAMESPACE_VALID != validation_result) {
+    const char * reason = RMW_RET_OK == ret ?
+      rmw_node_name_validation_result_string(validation_result) :
+      rmw_get_error_string().str;
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid node namespace: %s", reason);
+    return NULL;
+  }
+
   DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
   if (!dpf_) {
     RMW_SET_ERROR_MSG("failed to get participant factory");
@@ -436,14 +468,17 @@ fail:
 rmw_ret_t
 destroy_node(const char * implementation_identifier, rmw_node_t * node)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
-  }
+  assert(implementation_identifier != NULL);
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node handle,
-    node->implementation_identifier, implementation_identifier,
-    return RMW_RET_ERROR)
+    node->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    node->data,
+    "expected initialized node",
+    return RMW_RET_INVALID_ARGUMENT);
 
   DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
   if (!dpf_) {
@@ -452,14 +487,10 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (!node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
+  assert(node_info != nullptr);
   auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
-  if (!participant) {
-    RMW_SET_ERROR_MSG("participant handle is null");
-  }
+  assert(participant != nullptr);
+
   // This unregisters types and destroys topics which were shared between
   // publishers and subscribers and could not be cleaned up in the delete functions.
   if (participant->delete_contained_entities() != DDS::RETCODE_OK) {
