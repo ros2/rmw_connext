@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2020-07-07)
+------------------
+* Handle RMW_DEFAULT_DOMAIN_ID (`#427 <https://github.com/ros2/rmw_connext/issues/427>`_) (`#430 <https://github.com/ros2/rmw_connext/issues/430>`_)
+* Contributors: Michel Hidalgo
+
 1.0.0 (2020-05-12)
 ------------------
 * Remove MANUAL_BY_NODE liveliness API (`#423 <https://github.com/ros2/rmw_connext/issues/423>`_)
