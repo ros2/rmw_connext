@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove domain_id and localhost_only from node API (`#438 <https://github.com/ros2/rmw_connext/issues/438>`_)
+* Amend rmw_init() implementation: require enclave. (`#437 <https://github.com/ros2/rmw_connext/issues/437>`_)
+* Contributors: Ivan Santiago Paunovic, Michel Hidalgo
+
 1.2.0 (2020-06-29)
 ------------------
 * Ensure compliant init/shutdown API implementation. (`#432 <https://github.com/ros2/rmw_connext/issues/432>`_)
