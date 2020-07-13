@@ -476,12 +476,10 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
     implementation_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  assert(node_info != nullptr);
-  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
-  assert(participant != nullptr);
-
   rmw_ret_t ret = RMW_RET_OK;
+  auto node_info = static_cast<ConnextNodeInfo *>(node->data);
+  auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
+
   // This unregisters types and destroys topics which were shared between
   // publishers and subscribers and could not be cleaned up in the delete functions.
   if (participant->delete_contained_entities() == DDS::RETCODE_OK) {
