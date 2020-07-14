@@ -37,7 +37,6 @@ create_node(
   const char * name,
   const char * namespace_)
 {
-  assert(implementation_identifier != NULL);
   RMW_CHECK_ARGUMENT_FOR_NULL(context, NULL);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     init context,
@@ -470,7 +469,6 @@ fail:
 rmw_ret_t
 destroy_node(const char * implementation_identifier, rmw_node_t * node)
 {
-  assert(implementation_identifier != NULL);
   RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node handle,
