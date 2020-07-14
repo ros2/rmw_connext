@@ -199,14 +199,18 @@ rmw_create_subscription(
       topic_str, type_name.c_str(),
       default_topic_qos, NULL, DDS::STATUS_MASK_NONE);
     if (!topic) {
-      RMW_SET_ERROR_MSG("failed to create topic");
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "failed to create topic '%s' for node namespace='%s' name='%s'",
+        topic_name, node->namespace_, node->name);
       goto fail;
     }
   } else {
     DDS::Duration_t timeout = DDS::Duration_t::from_seconds(0);
     topic = participant->find_topic(topic_str, timeout);
     if (!topic) {
-      RMW_SET_ERROR_MSG("failed to find topic");
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "failed to find topic '%s' for node namespace='%s' name='%s'",
+        topic_name, node->namespace_, node->name);
       goto fail;
     }
   }
