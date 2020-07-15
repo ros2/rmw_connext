@@ -30,6 +30,6 @@ create_topic(
   const char * dds_topic_name,
   const char * dds_topic_type);
 
-}  // rmw_connext_shared_cpp
+}  // namespace rmw_connext_shared_cpp
 
 #endif  // RMW_CONNEXT_SHARED_CPP__CREATE_TOPIC_HPP_
