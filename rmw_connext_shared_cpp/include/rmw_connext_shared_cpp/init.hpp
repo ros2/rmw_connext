@@ -19,6 +19,12 @@
 
 #include "rmw_connext_shared_cpp/visibility_control.h"
 
+struct rmw_context_impl_t
+{
+  // Shutdown flag
+  bool is_shutdown{false};
+};
+
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 rmw_ret_t init();
 
