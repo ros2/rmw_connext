@@ -18,6 +18,7 @@
 #include "rcutils/filesystem.h"
 
 #include "rmw_connext_shared_cpp/guard_condition.hpp"
+#include "rmw_connext_shared_cpp/init.hpp"
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 #include "rmw_connext_shared_cpp/node.hpp"
 #include "rmw_connext_shared_cpp/security_logging.hpp"
@@ -26,6 +27,8 @@
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/validate_namespace.h"
+#include "rmw/validate_node_name.h"
 
 rmw_node_t *
 create_node(
@@ -36,13 +39,43 @@ create_node(
   size_t domain_id,
   bool localhost_only)
 {
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_ARGUMENT_FOR_NULL(context, NULL);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     init context,
     context->implementation_identifier,
     implementation_identifier,
     // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
     return NULL);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    context->impl,
+    "expected initialized context",
+    return NULL);
+  if (context->impl->is_shutdown) {
+    RCUTILS_SET_ERROR_MSG("context has been shutdown");
+    return NULL;
+  }
+
+  int validation_result = RMW_NODE_NAME_VALID;
+  rmw_ret_t ret = rmw_validate_node_name(name, &validation_result, nullptr);
+  if (RMW_RET_OK != ret) {
+    return NULL;
+  }
+  if (RMW_NODE_NAME_VALID != validation_result) {
+    const char * reason = rmw_node_name_validation_result_string(validation_result);
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid node name: %s", reason);
+    return NULL;
+  }
+  validation_result = RMW_NAMESPACE_VALID;
+  ret = rmw_validate_namespace(namespace_, &validation_result, nullptr);
+  if (RMW_RET_OK != ret) {
+    return NULL;
+  }
+  if (RMW_NAMESPACE_VALID != validation_result) {
+    const char * reason = rmw_node_name_validation_result_string(validation_result);
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid node namespace: %s", reason);
+    return NULL;
+  }
+
   DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
   if (!dpf_) {
     RMW_SET_ERROR_MSG("failed to get participant factory");
@@ -435,74 +468,63 @@ fail:
 rmw_ret_t
 destroy_node(const char * implementation_identifier, rmw_node_t * node)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node handle,
-    node->implementation_identifier, implementation_identifier,
-    return RMW_RET_ERROR)
+    node->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
-  if (!dpf_) {
-    RMW_SET_ERROR_MSG("failed to get participant factory");
-    return RMW_RET_ERROR;
-  }
-
+  rmw_ret_t ret = RMW_RET_OK;
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (!node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
   auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
-  if (!participant) {
-    RMW_SET_ERROR_MSG("participant handle is null");
-  }
+
   // This unregisters types and destroys topics which were shared between
   // publishers and subscribers and could not be cleaned up in the delete functions.
-  if (participant->delete_contained_entities() != DDS::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("failed to delete contained entities of participant");
-    return RMW_RET_ERROR;
-  }
-
-  DDS::ReturnCode_t ret = dpf_->delete_participant(participant);
-  if (ret != DDS::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("failed to delete participant");
-    return RMW_RET_ERROR;
-  }
-
-  if (node_info->publisher_listener) {
-    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-      node_info->publisher_listener->~CustomPublisherListener(), CustomPublisherListener)
-    rmw_free(node_info->publisher_listener);
-    node_info->publisher_listener = nullptr;
-  }
-  if (node_info->subscriber_listener) {
-    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-      node_info->subscriber_listener->~CustomSubscriberListener(), CustomSubscriberListener)
-    rmw_free(node_info->subscriber_listener);
-    node_info->subscriber_listener = nullptr;
-  }
-  if (node_info->graph_guard_condition) {
-    rmw_ret_t rmw_ret =
-      destroy_guard_condition(implementation_identifier, node_info->graph_guard_condition);
-    if (rmw_ret != RMW_RET_OK) {
-      RMW_SET_ERROR_MSG("failed to delete graph guard condition");
-      return RMW_RET_ERROR;
+  if (participant->delete_contained_entities() == DDS::RETCODE_OK) {
+    DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();
+    if (dpf_) {
+      // To delete a participant, all domain entities must have been already deleted.
+      DDS::ReturnCode_t local_ret = dpf_->delete_participant(participant);
+      if (DDS::RETCODE_OK != local_ret) {
+        RMW_SET_ERROR_MSG("failed to delete participant");
+        ret = RMW_RET_ERROR;
+      }
+    } else {
+      RMW_SET_ERROR_MSG("failed to get participant factory");
+      ret = RMW_RET_ERROR;
     }
-    node_info->graph_guard_condition = nullptr;
+  } else {
+    RMW_SET_ERROR_MSG("failed to delete contained entities of participant");
+    ret = RMW_RET_ERROR;
+  }
+
+  RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+    node_info->publisher_listener->~CustomPublisherListener(), CustomPublisherListener);
+  rmw_free(node_info->publisher_listener);
+
+  RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+    node_info->subscriber_listener->~CustomSubscriberListener(), CustomSubscriberListener);
+  rmw_free(node_info->subscriber_listener);
+
+  rmw_ret_t local_ret =
+    destroy_guard_condition(implementation_identifier, node_info->graph_guard_condition);
+  if (local_ret != RMW_RET_OK) {
+    if (ret != RMW_RET_OK) {
+      RMW_SAFE_FWRITE_TO_STDERR(
+        "Failed to delete graph guard condition after function: '"
+        RCUTILS_STRINGIFY(__function__) "' failed.\n");
+    } else {
+      RMW_SET_ERROR_MSG("failed to delete graph guard condition");
+      ret = RMW_RET_ERROR;
+    }
   }
 
   rmw_free(node_info);
-  node->data = nullptr;
   rmw_free(const_cast<char *>(node->name));
-  node->name = nullptr;
   rmw_free(const_cast<char *>(node->namespace_));
-  node->namespace_ = nullptr;
   rmw_node_free(node);
-
-  return RMW_RET_OK;
+  return ret;
 }
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC
