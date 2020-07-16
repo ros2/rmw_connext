@@ -193,6 +193,10 @@ rmw_create_publisher(
   }
 
   topic = rmw_connext_shared_cpp::create_topic(node, topic_name, topic_str, type_name.c_str());
+  if (!topic) {
+    // error already set
+    goto fail;
+  }
   DDS::String_free(topic_str);
   topic_str = nullptr;
 
