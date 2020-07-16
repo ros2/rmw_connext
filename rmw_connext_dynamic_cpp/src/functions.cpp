@@ -76,6 +76,7 @@
 #include "rosidl_typesupport_introspection_c/service_introspection.h"
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 
+#include "rmw_connext_shared_cpp/create_topic.hpp"
 #include "rmw_connext_shared_cpp/shared_functions.hpp"
 #include "rmw_connext_shared_cpp/topic_endpoint_info.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
@@ -401,7 +402,6 @@ rmw_create_publisher(
   DDS_PublisherQos publisher_qos;
   DDSPublisher * dds_publisher = nullptr;
   DDSTopic * topic = nullptr;
-  DDSTopicDescription * topic_description = nullptr;
   DDS_DataWriterQos datawriter_qos;
   DDSDataWriter * topic_writer = nullptr;
   DDSDynamicDataWriter * dynamic_writer = nullptr;
@@ -494,28 +494,10 @@ rmw_create_publisher(
     goto fail;
   }
 
-  topic_description = participant->lookup_topicdescription(topic_str);
-  if (!topic_description) {
-    DDS_TopicQos default_topic_qos;
-    status = participant->get_default_topic_qos(default_topic_qos);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to get default topic qos");
-      goto fail;
-    }
-
-    topic = participant->create_topic(
-      topic_str, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
-    if (!topic) {
-      RMW_SET_ERROR_MSG("failed to create topic");
-      goto fail;
-    }
-  } else {
-    DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
-    topic = participant->find_topic(topic_str, timeout);
-    if (!topic) {
-      RMW_SET_ERROR_MSG("failed to find topic");
-      goto fail;
-    }
+  topic = rmw_connext_shared_cpp::create_topic(node, topic_name, topic_str, type_name.c_str());
+  if (!topic) {
+    // error already set
+    goto fail;
   }
 
   if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
@@ -1068,7 +1050,6 @@ rmw_create_subscription(
   DDS_SubscriberQos subscriber_qos;
   DDSSubscriber * dds_subscriber = nullptr;
   DDSTopic * topic;
-  DDSTopicDescription * topic_description = nullptr;
   DDSDataReader * topic_reader = nullptr;
   DDSReadCondition * read_condition = nullptr;
   DDSDynamicDataReader * dynamic_reader = nullptr;
@@ -1125,28 +1106,10 @@ rmw_create_subscription(
     goto fail;
   }
 
-  topic_description = participant->lookup_topicdescription(topic_name);
-  if (!topic_description) {
-    DDS_TopicQos default_topic_qos;
-    status = participant->get_default_topic_qos(default_topic_qos);
-    if (status != DDS_RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to get default topic qos");
-      goto fail;
-    }
-
-    topic = participant->create_topic(
-      topic_name, type_name.c_str(), default_topic_qos, NULL, DDS_STATUS_MASK_NONE);
-    if (!topic) {
-      RMW_SET_ERROR_MSG("failed to create topic");
-      goto fail;
-    }
-  } else {
-    DDS_Duration_t timeout = DDS_Duration_t::from_seconds(0);
-    topic = participant->find_topic(topic_name, timeout);
-    if (!topic) {
-      RMW_SET_ERROR_MSG("failed to find topic");
-      goto fail;
-    }
+  topic = rmw_connext_shared_cpp::create_topic(node, topic_name, topic_str, type_name.c_str());
+  if (!topic) {
+    // error already set
+    goto fail;
   }
 
   if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
