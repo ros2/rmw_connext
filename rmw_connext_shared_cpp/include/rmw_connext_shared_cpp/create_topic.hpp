@@ -22,6 +22,17 @@
 namespace rmw_connext_shared_cpp
 {
 
+/// Create a DDS::Topic from a node
+/**
+ * \pre node must not be null.
+ * \pre node must be a valid node, i.e. node->data is not nullptr.
+ *
+ * \param[in] node rmw node structure.
+ * \param[in] topic_name ros topic name.
+ * \param[in] dds_topic_name demangled topic name.
+ * \param[in] dds_topic_type demangled topic type name.
+ * \return created DDS::Topic, nullptr on failure.
+ */
 RMW_CONNEXT_SHARED_CPP_PUBLIC
 DDS::Topic *
 create_topic(
