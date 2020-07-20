@@ -38,6 +38,7 @@ add_library(
   SHARED
   src/condition_error.cpp
   src/count.cpp
+  src/create_topic.cpp
   src/demangle.cpp
   src/event.cpp
   src/event_converter.cpp

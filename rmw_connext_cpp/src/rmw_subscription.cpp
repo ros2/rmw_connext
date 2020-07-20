@@ -19,6 +19,7 @@
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
+#include "rmw_connext_shared_cpp/create_topic.hpp"
 #include "rmw_connext_shared_cpp/qos.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
 
@@ -115,7 +116,6 @@ rmw_create_subscription(
   DDS::ReturnCode_t status;
   DDS::Subscriber * dds_subscriber = nullptr;
   DDS::Topic * topic = nullptr;
-  DDS::TopicDescription * topic_description = nullptr;
   DDS::DataReader * topic_reader = nullptr;
   DDS::ReadCondition * read_condition = nullptr;
   void * info_buf = nullptr;
@@ -186,33 +186,10 @@ rmw_create_subscription(
     goto fail;
   }
 
-  topic_description = participant->lookup_topicdescription(topic_str);
-  if (!topic_description) {
-    DDS::TopicQos default_topic_qos;
-    status = participant->get_default_topic_qos(default_topic_qos);
-    if (status != DDS::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("failed to get default topic qos");
-      goto fail;
-    }
-
-    topic = participant->create_topic(
-      topic_str, type_name.c_str(),
-      default_topic_qos, NULL, DDS::STATUS_MASK_NONE);
-    if (!topic) {
-      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "failed to create topic '%s' for node namespace='%s' name='%s'",
-        topic_name, node->namespace_, node->name);
-      goto fail;
-    }
-  } else {
-    DDS::Duration_t timeout = DDS::Duration_t::from_seconds(0);
-    topic = participant->find_topic(topic_str, timeout);
-    if (!topic) {
-      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "failed to find topic '%s' for node namespace='%s' name='%s'",
-        topic_name, node->namespace_, node->name);
-      goto fail;
-    }
+  topic = rmw_connext_shared_cpp::create_topic(node, topic_name, topic_str, type_name.c_str());
+  if (!topic) {
+    // error already set
+    goto fail;
   }
   DDS::String_free(topic_str);
   topic_str = nullptr;
