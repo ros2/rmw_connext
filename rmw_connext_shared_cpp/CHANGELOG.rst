@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.0 (2020-07-20)
+------------------
 * Fix topic creation race condition (`#442 <https://github.com/ros2/rmw_connext/issues/442>`_)
 * Ensure compliant node construction/destruction API (`#439 <https://github.com/ros2/rmw_connext/issues/439>`_)
 * Contributors: Ivan Santiago Paunovic, Michel Hidalgo
