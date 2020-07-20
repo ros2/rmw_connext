@@ -2,6 +2,13 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix topic creation race condition (`#442 <https://github.com/ros2/rmw_connext/issues/442>`_)
+* Ensure compliant node construction/destruction API (`#439 <https://github.com/ros2/rmw_connext/issues/439>`_)
+* Improve error message when failing to create topic (`#441 <https://github.com/ros2/rmw_connext/issues/441>`_)
+* Contributors: Ivan Santiago Paunovic, Michel Hidalgo
+
 2.0.0 (2020-07-08)
 ------------------
 * Remove domain_id and localhost_only from node API (`#438 <https://github.com/ros2/rmw_connext/issues/438>`_)
