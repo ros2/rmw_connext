@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.0 (2020-07-22)
+------------------
 * Set context actual domain id (`#443 <https://github.com/ros2/rmw_connext/issues/443>`_)
 * Contributors: Ivan Santiago Paunovic
 
