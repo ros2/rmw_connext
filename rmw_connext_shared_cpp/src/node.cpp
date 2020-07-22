@@ -305,12 +305,9 @@ create_node(
     }
   }
 
-  // No custom handling of RMW_DEFAULT_DOMAIN_ID. Simply use a reasonable domain id.
   {
-    size_t domain_id = context->options.domain_id;
     participant = dpf_->create_participant(
-      static_cast<DDS::DomainId_t>(
-        domain_id != RMW_DEFAULT_DOMAIN_ID ? domain_id : 0u),
+      static_cast<DDS::DomainId_t>(context->actual_domain_id),
       participant_qos,
       NULL,
       DDS::STATUS_MASK_NONE);
