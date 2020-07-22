@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Set context actual domain id (`#443 <https://github.com/ros2/rmw_connext/issues/443>`_)
+* Contributors: Ivan Santiago Paunovic
+
 2.1.0 (2020-07-20)
 ------------------
 * Fix topic creation race condition (`#442 <https://github.com/ros2/rmw_connext/issues/442>`_)
