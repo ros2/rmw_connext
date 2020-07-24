@@ -221,6 +221,7 @@ rmw_create_publisher(
   // Use a placement new to construct the ConnextStaticPublisherInfo in the preallocated buffer.
   RMW_TRY_PLACEMENT_NEW(publisher_info, info_buf, goto fail, ConnextStaticPublisherInfo, )
   info_buf = nullptr;  // Only free the publisher_info pointer; don't need the buf pointer anymore.
+  publisher_info->topic_ = topic;
   publisher_info->dds_publisher_ = dds_publisher;
   publisher_info->topic_writer_ = topic_writer;
   publisher_info->callbacks_ = callbacks;
@@ -299,6 +300,14 @@ fail:
     if (participant->delete_publisher(dds_publisher) != DDS::RETCODE_OK) {
       std::stringstream ss;
       ss << "leaking publisher while handling failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (topic) {
+    if (participant->delete_topic(topic) != DDS::RETCODE_OK) {
+      std::stringstream ss;
+      ss << "leaking topic while handling failure at " <<
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
     }
@@ -494,6 +503,14 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     } else if (publisher_info->topic_writer_) {
       RMW_SET_ERROR_MSG("cannot delete datawriter because the publisher is null");
       return RMW_RET_ERROR;
+    }
+
+    if (publisher_info->topic_) {
+      if (participant->delete_topic(publisher_info->topic_) != DDS::RETCODE_OK) {
+        RMW_SET_ERROR_MSG("failed to delete topic");
+        return RMW_RET_ERROR;
+      }
+      publisher_info->topic_ = nullptr;
     }
 
     ConnextPublisherListener * pub_listener = publisher_info->listener_;
