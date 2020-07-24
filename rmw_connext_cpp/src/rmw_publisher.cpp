@@ -16,9 +16,11 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
-#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
+#include "rmw/validate_full_topic_name.h"
+
+#include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_connext_shared_cpp/create_topic.hpp"
 #include "rmw_connext_shared_cpp/qos.hpp"
@@ -71,49 +73,34 @@ rmw_create_publisher(
   const rmw_qos_profile_t * qos_profile,
   const rmw_publisher_options_t * publisher_options)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return NULL;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, nullptr);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node handle,
-    node->implementation_identifier, rti_connext_identifier,
-    return NULL)
-
-  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, NULL)
-
-  if (!topic_name || strlen(topic_name) == 0) {
-    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
-    return NULL;
+    node->implementation_identifier,
+    rti_connext_identifier,
+    return nullptr);
+  RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, nullptr);
+  RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos_profile, nullptr);
+  if (!qos_profile->avoid_ros_namespace_conventions) {
+    int validation_result = RMW_TOPIC_VALID;
+    rmw_ret_t ret = rmw_validate_full_topic_name(topic_name, &validation_result, nullptr);
+    if (RMW_RET_OK != ret) {
+      return nullptr;
+    }
+    if (RMW_TOPIC_VALID != validation_result) {
+      const char * reason = rmw_full_topic_name_validation_result_string(validation_result);
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid topic name: %s", reason);
+      return nullptr;
+    }
   }
-
-  if (!qos_profile) {
-    RMW_SET_ERROR_MSG("qos_profile is null");
-    return NULL;
-  }
-
-  if (!publisher_options) {
-    RMW_SET_ERROR_MSG("publisher_options is null");
-    return NULL;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher_options, nullptr);
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (!node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return NULL;
-  }
   auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
-  if (!participant) {
-    RMW_SET_ERROR_MSG("participant handle is null");
-    return NULL;
-  }
-
   const message_type_support_callbacks_t * callbacks =
     static_cast<const message_type_support_callbacks_t *>(type_support->data);
-  if (!callbacks) {
-    RMW_SET_ERROR_MSG("callbacks handle is null");
-    return NULL;
-  }
+
   std::string type_name = _create_type_name(callbacks);
   // Past this point, a failure results in unrolling code in the goto fail block.
   DDS::TypeCode * type_code = nullptr;
@@ -334,7 +321,7 @@ fail:
     rmw_free(listener_buf);
   }
 
-  return NULL;
+  return nullptr;
 }
 
 rmw_ret_t
@@ -450,88 +437,78 @@ rmw_return_loaned_message_from_publisher(
 rmw_ret_t
 rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node handle,
-    node->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
-
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher handle is null");
-    return RMW_RET_ERROR;
-  }
+    node->implementation_identifier,
+    rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     publisher handle,
-    publisher->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
+    publisher->implementation_identifier,
+    rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
+  rmw_ret_t ret = RMW_RET_OK;
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (!node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
   auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
-  if (!participant) {
-    RMW_SET_ERROR_MSG("participant handle is null");
-    return RMW_RET_ERROR;
-  }
   // TODO(wjwwood): need to figure out when to unregister types with the participant.
   ConnextStaticPublisherInfo * publisher_info =
     static_cast<ConnextStaticPublisherInfo *>(publisher->data);
-  if (publisher_info) {
-    node_info->publisher_listener->remove_information(
-      publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
-    node_info->publisher_listener->trigger_graph_guard_condition();
-    DDS::Publisher * dds_publisher = publisher_info->dds_publisher_;
+  node_info->publisher_listener->remove_information(
+    publisher_info->dds_publisher_->get_instance_handle(), EntityType::Publisher);
+  node_info->publisher_listener->trigger_graph_guard_condition();
+  DDS::Publisher * dds_publisher = publisher_info->dds_publisher_;
 
-    if (dds_publisher) {
-      if (publisher_info->topic_writer_) {
-        if (dds_publisher->delete_datawriter(publisher_info->topic_writer_) != DDS::RETCODE_OK) {
-          RMW_SET_ERROR_MSG("failed to delete datawriter");
-          return RMW_RET_ERROR;
-        }
-        publisher_info->topic_writer_ = nullptr;
-      }
-      if (participant->delete_publisher(dds_publisher) != DDS::RETCODE_OK) {
-        RMW_SET_ERROR_MSG("failed to delete publisher");
-        return RMW_RET_ERROR;
-      }
-      publisher_info->dds_publisher_ = nullptr;
-    } else if (publisher_info->topic_writer_) {
-      RMW_SET_ERROR_MSG("cannot delete datawriter because the publisher is null");
-      return RMW_RET_ERROR;
+  if (dds_publisher->delete_datawriter(publisher_info->topic_writer_) != DDS::RETCODE_OK) {
+    RMW_SET_ERROR_MSG("failed to delete datawriter");
+    ret = RMW_RET_ERROR;
+  }
+  if (participant->delete_publisher(dds_publisher) != DDS::RETCODE_OK) {
+    if (!rmw_error_is_set()) {
+      RMW_SET_ERROR_MSG("failed to delete publisher");
+      ret = RMW_RET_ERROR;
+    } else {
+      RMW_SAFE_FWRITE_TO_STDERR("failed to delete publisher\n");
     }
+  }
 
-    if (publisher_info->topic_) {
-      if (participant->delete_topic(publisher_info->topic_) != DDS::RETCODE_OK) {
-        RMW_SET_ERROR_MSG("failed to delete topic");
-        return RMW_RET_ERROR;
-      }
-      publisher_info->topic_ = nullptr;
+  if (participant->delete_topic(publisher_info->topic_) != DDS::RETCODE_OK) {
+    if (!rmw_error_is_set()) {
+      RMW_SET_ERROR_MSG("failed to delete topic");
+      ret = RMW_RET_ERROR;
+    } else {
+      RMW_SAFE_FWRITE_TO_STDERR("failed to delete topic\n");
     }
+  }
 
-    ConnextPublisherListener * pub_listener = publisher_info->listener_;
-    if (pub_listener) {
-      RMW_TRY_DESTRUCTOR(
-        pub_listener->~ConnextPublisherListener(),
-        ConnextPublisherListener, return RMW_RET_ERROR)
-      rmw_free(pub_listener);
-    }
+  if (!rmw_error_is_set()) {
+    RMW_TRY_DESTRUCTOR(
+      pub_listener->~ConnextPublisherListener(),
+      ConnextPublisherListener, ret = RMW_RET_ERROR);
+  } else {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      pub_listener->~ConnextPublisherListener(),
+      ConnextPublisherListener);
+    ret = RMW_RET_ERROR;
+  }
+  rmw_free(pub_listener);
 
+  if (!rmw_error_is_set()) {
     RMW_TRY_DESTRUCTOR(
       publisher_info->~ConnextStaticPublisherInfo(),
-      ConnextStaticPublisherInfo, return RMW_RET_ERROR)
-    rmw_free(publisher_info);
-    publisher->data = nullptr;
+      ConnextStaticPublisherInfo, ret = RMW_RET_ERROR);
+  } else {
+    RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+      publisher_info->~ConnextStaticPublisherInfo(),
+      ConnextStaticPublisherInfo);
+    ret = RMW_RET_ERROR;
   }
-  if (publisher->topic_name) {
-    rmw_free(const_cast<char *>(publisher->topic_name));
-  }
+  rmw_free(publisher_info);
+  rmw_free(const_cast<char *>(publisher->topic_name));
   rmw_publisher_free(publisher);
 
-  return RMW_RET_OK;
+  return ret;
 }
 }  // extern "C"
