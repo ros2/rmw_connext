@@ -40,8 +40,7 @@ rmw_connext_shared_cpp::create_topic(
 
   std::lock_guard<std::mutex> guard(node_info->topic_creation_mutex);
 
-  DDS::Duration_t timeout = DDS::Duration_t::from_seconds(0);
-  DDS::Topic * topic = participant->find_topic(dds_topic_name, timeout);
+  DDS::Topic * topic = participant->find_topic(dds_topic_name, DDS::Duration_t::from_seconds(0));
   if (!topic) {
     DDS::TopicQos default_topic_qos;
     DDS::ReturnCode_t status = participant->get_default_topic_qos(default_topic_qos);
