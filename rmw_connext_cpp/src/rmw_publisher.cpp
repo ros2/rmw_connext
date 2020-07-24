@@ -360,18 +360,17 @@ rmw_publisher_get_actual_qos(
   rmw_qos_profile_t * qos)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher handle,
+    publisher->implementation_identifier,
+    rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
   RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<ConnextStaticPublisherInfo *>(publisher->data);
-  if (!info) {
-    RMW_SET_ERROR_MSG("publisher internal data is invalid");
-    return RMW_RET_ERROR;
-  }
   DDS::DataWriter * data_writer = info->topic_writer_;
-  if (!data_writer) {
-    RMW_SET_ERROR_MSG("publisher internal data writer is invalid");
-    return RMW_RET_ERROR;
-  }
+
   DDS::DataWriterQos dds_qos;
   DDS::ReturnCode_t status = data_writer->get_qos(dds_qos);
   if (DDS::RETCODE_OK != status) {
