@@ -40,6 +40,7 @@ rmw_connext_shared_cpp::create_topic(
 
   std::lock_guard<std::mutex> guard(node_info->topic_creation_mutex);
 
+  // This functions returns a copy, that has to be destroyed independently.
   DDS::Topic * topic = participant->find_topic(dds_topic_name, DDS::Duration_t::from_seconds(0));
   if (!topic) {
     DDS::TopicQos default_topic_qos;
