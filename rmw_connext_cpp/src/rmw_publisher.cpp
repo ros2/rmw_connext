@@ -81,6 +81,10 @@ rmw_create_publisher(
     return nullptr);
   RMW_CONNEXT_EXTRACT_MESSAGE_TYPESUPPORT(type_supports, type_support, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
+  if (0 == strlen(topic_name)) {
+    RMW_SET_ERROR_MSG("topic_name argument is an empty string");
+    return nullptr;
+  }
   RMW_CHECK_ARGUMENT_FOR_NULL(qos_profile, nullptr);
   if (!qos_profile->avoid_ros_namespace_conventions) {
     int validation_result = RMW_TOPIC_VALID;
@@ -482,6 +486,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     }
   }
 
+  ConnextPublisherListener * pub_listener = publisher_info->listener_;
   if (!rmw_error_is_set()) {
     RMW_TRY_DESTRUCTOR(
       pub_listener->~ConnextPublisherListener(),
