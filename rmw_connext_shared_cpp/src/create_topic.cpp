@@ -40,14 +40,11 @@ rmw_connext_shared_cpp::create_topic(
 
   std::lock_guard<std::mutex> guard(node_info->topic_creation_mutex);
 
-  DDS::TopicDescription * topic_description =
-    participant->lookup_topicdescription(dds_topic_name);
-
-  DDS::Topic * topic = nullptr;
-  DDS::ReturnCode_t status = DDS::RETCODE_ERROR;
-  if (!topic_description) {
+  // This function returns a copy that has to be destroyed independently.
+  DDS::Topic * topic = participant->find_topic(dds_topic_name, DDS::Duration_t::from_seconds(0));
+  if (!topic) {
     DDS::TopicQos default_topic_qos;
-    status = participant->get_default_topic_qos(default_topic_qos);
+    DDS::ReturnCode_t status = participant->get_default_topic_qos(default_topic_qos);
     if (status != DDS::RETCODE_OK) {
       RMW_SET_ERROR_MSG("failed to get default topic qos");
       return nullptr;
@@ -59,15 +56,6 @@ rmw_connext_shared_cpp::create_topic(
     if (!topic) {
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
         "failed to create topic '%s' for node namespace='%s' name='%s'",
-        topic_name, node->namespace_, node->name);
-      return nullptr;
-    }
-  } else {
-    DDS::Duration_t timeout = DDS::Duration_t::from_seconds(0);
-    topic = participant->find_topic(dds_topic_name, timeout);
-    if (!topic) {
-      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "failed to find topic '%s' for node namespace='%s' name='%s'",
         topic_name, node->namespace_, node->name);
       return nullptr;
     }

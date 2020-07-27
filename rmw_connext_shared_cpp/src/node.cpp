@@ -477,7 +477,7 @@ destroy_node(const char * implementation_identifier, rmw_node_t * node)
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
 
-  // This unregisters types and destroys topics which were shared between
+  // This unregisters types which were shared between
   // publishers and subscribers and could not be cleaned up in the delete functions.
   if (participant->delete_contained_entities() == DDS::RETCODE_OK) {
     DDS::DomainParticipantFactory * dpf_ = DDS::DomainParticipantFactory::get_instance();

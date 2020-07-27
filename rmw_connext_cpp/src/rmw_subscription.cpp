@@ -223,6 +223,7 @@ rmw_create_subscription(
   // Use a placement new to construct the ConnextStaticSubscriberInfo in the preallocated buffer.
   RMW_TRY_PLACEMENT_NEW(subscriber_info, info_buf, goto fail, ConnextStaticSubscriberInfo, )
   info_buf = nullptr;  // Only free the subscriber_info pointer; don't need the buf pointer anymore.
+  subscriber_info->topic_ = topic;
   subscriber_info->dds_subscriber_ = dds_subscriber;
   subscriber_info->topic_reader_ = topic_reader;
   subscriber_info->read_condition_ = read_condition;
@@ -302,6 +303,14 @@ fail:
     if (participant->delete_subscriber(dds_subscriber) != DDS::RETCODE_OK) {
       std::stringstream ss;
       std::cerr << "leaking subscriber while handling failure at " <<
+        __FILE__ << ":" << __LINE__ << '\n';
+      (std::cerr << ss.str()).flush();
+    }
+  }
+  if (topic) {
+    if (participant->delete_topic(topic) != DDS::RETCODE_OK) {
+      std::stringstream ss;
+      std::cerr << "leaking topic while handling failure at " <<
         __FILE__ << ":" << __LINE__ << '\n';
       (std::cerr << ss.str()).flush();
     }
@@ -459,6 +468,13 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     } else if (subscriber_info->topic_reader_) {
       RMW_SET_ERROR_MSG("cannot delete datareader because the subscriber is null");
       result = RMW_RET_ERROR;
+    }
+    if (subscriber_info->topic_) {
+      if (participant->delete_topic(subscriber_info->topic_) != DDS::RETCODE_OK) {
+        RMW_SET_ERROR_MSG("failed to delete topic");
+        result = RMW_RET_ERROR;
+      }
+      subscriber_info->topic_ = nullptr;
     }
     RMW_TRY_DESTRUCTOR(
       subscriber_info->~ConnextStaticSubscriberInfo(),
