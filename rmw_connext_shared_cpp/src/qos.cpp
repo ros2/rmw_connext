@@ -49,7 +49,6 @@ set_entity_qos_from_profile_generic(
       break;
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
       break;
-    case RMW_QOS_POLICY_HISTORY_UNKNOWN:
     default:
       RMW_SET_ERROR_MSG("Unknown QoS history policy");
       return false;
@@ -64,7 +63,6 @@ set_entity_qos_from_profile_generic(
       break;
     case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
       break;
-    case RMW_QOS_POLICY_RELIABILITY_UNKNOWN:
     default:
       RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
       return false;
@@ -79,7 +77,6 @@ set_entity_qos_from_profile_generic(
       break;
     case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
       break;
-    case RMW_QOS_POLICY_DURABILITY_UNKNOWN:
     default:
       RMW_SET_ERROR_MSG("Unknown QoS durability policy");
       return false;
@@ -104,7 +101,6 @@ set_entity_qos_from_profile_generic(
       break;
     case RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT:
       break;
-    case RMW_QOS_POLICY_LIVELINESS_UNKNOWN:
     default:
       RMW_SET_ERROR_MSG("Unknown QoS liveliness policy");
       return false;
