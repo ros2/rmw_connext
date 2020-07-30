@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ensure compliant publisher API (`#445 <https://github.com/ros2/rmw_connext/issues/445>`_)
+* Avoid leaking DDS::Topic objects (`#444 <https://github.com/ros2/rmw_connext/issues/444>`_)
+* Contributors: Ivan Santiago Paunovic, Michel Hidalgo
+
 2.2.0 (2020-07-22)
 ------------------
 * Set context actual domain id (`#443 <https://github.com/ros2/rmw_connext/issues/443>`_)
