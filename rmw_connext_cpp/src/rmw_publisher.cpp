@@ -479,7 +479,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     ret = RMW_RET_ERROR;
   }
   if (participant->delete_publisher(dds_publisher) != DDS::RETCODE_OK) {
-    if (!rmw_error_is_set()) {
+    if (RMW_RET_OK == ret) {
       RMW_SET_ERROR_MSG("failed to delete publisher");
       ret = RMW_RET_ERROR;
     } else {
@@ -488,7 +488,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   }
 
   ConnextPublisherListener * pub_listener = publisher_info->listener_;
-  if (!rmw_error_is_set()) {
+  if (RMW_RET_OK == ret) {
     RMW_TRY_DESTRUCTOR(
       pub_listener->~ConnextPublisherListener(),
       ConnextPublisherListener, ret = RMW_RET_ERROR);
@@ -496,11 +496,10 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
       pub_listener->~ConnextPublisherListener(),
       ConnextPublisherListener);
-    ret = RMW_RET_ERROR;
   }
   rmw_free(pub_listener);
 
-  if (!rmw_error_is_set()) {
+  if (RMW_RET_OK == ret) {
     RMW_TRY_DESTRUCTOR(
       publisher_info->~ConnextStaticPublisherInfo(),
       ConnextStaticPublisherInfo, ret = RMW_RET_ERROR);
@@ -508,7 +507,6 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
       publisher_info->~ConnextStaticPublisherInfo(),
       ConnextStaticPublisherInfo);
-    ret = RMW_RET_ERROR;
   }
   rmw_free(publisher_info);
   rmw_free(const_cast<char *>(publisher->topic_name));
