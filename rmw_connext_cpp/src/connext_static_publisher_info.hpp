@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_
-#define RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_
+#ifndef CONNEXT_STATIC_PUBLISHER_INFO_HPP_
+#define CONNEXT_STATIC_PUBLISHER_INFO_HPP_
 
 #include <atomic>
 
@@ -74,4 +74,4 @@ private:
   std::atomic<std::size_t> current_count_;
 };
 
-#endif  // RMW_CONNEXT_CPP__CONNEXT_STATIC_PUBLISHER_INFO_HPP_
+#endif  // CONNEXT_STATIC_PUBLISHER_INFO_HPP_

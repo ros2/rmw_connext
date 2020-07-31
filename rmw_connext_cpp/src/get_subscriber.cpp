@@ -14,8 +14,8 @@
 
 #include "rmw_connext_cpp/get_subscriber.hpp"
 
-#include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
+#include "connext_static_subscriber_info.hpp"
 
 namespace rmw_connext_cpp
 {

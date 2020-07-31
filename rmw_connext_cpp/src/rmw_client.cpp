@@ -22,8 +22,8 @@
 #include "rmw_connext_shared_cpp/types.hpp"
 #include "rmw_connext_shared_cpp/qos.hpp"
 
-#include "rmw_connext_cpp/connext_static_client_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
+#include "connext_static_client_info.hpp"
 #include "process_topic_and_service_names.hpp"
 #include "type_support_common.hpp"
 

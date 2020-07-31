@@ -18,8 +18,8 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
+#include "connext_static_publisher_info.hpp"
 
 // include patched generated code from the build folder
 #include "connext_static_serialized_dataSupport.h"

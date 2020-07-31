@@ -21,7 +21,7 @@
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 
 #include "rmw_connext_cpp/identifier.hpp"
-#include "rmw_connext_cpp/connext_static_client_info.hpp"
+#include "connext_static_client_info.hpp"
 
 // Uncomment this to get extra console output about discovery.
 // This affects code in this file, but there is a similar variable in:
