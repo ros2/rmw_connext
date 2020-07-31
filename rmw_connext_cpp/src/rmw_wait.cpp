@@ -17,9 +17,9 @@
 #include "rmw_connext_shared_cpp/wait.hpp"
 
 #include "rmw_connext_cpp/identifier.hpp"
-#include "rmw_connext_cpp/connext_static_client_info.hpp"
-#include "rmw_connext_cpp/connext_static_service_info.hpp"
-#include "rmw_connext_cpp/connext_static_subscriber_info.hpp"
+#include "connext_static_client_info.hpp"
+#include "connext_static_service_info.hpp"
+#include "connext_static_subscriber_info.hpp"
 
 extern "C"
 {

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "connext_static_publisher_info.hpp"
 
-#include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_shared_cpp/event_converter.hpp"
 #include "rmw_connext_shared_cpp/qos.hpp"
 

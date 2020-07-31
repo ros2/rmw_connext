@@ -14,8 +14,8 @@
 
 #include "rmw_connext_cpp/get_publisher.hpp"
 
-#include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
+#include "connext_static_publisher_info.hpp"
 
 namespace rmw_connext_cpp
 {
