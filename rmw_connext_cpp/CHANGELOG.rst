@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2020-08-03)
+------------------
 * Remove internal rmw_connext_cpp headers from public API. (`#447 <https://github.com/ros2/rmw_connext/issues/447>`_)
   * Update rmw_connext_cpp after internal headers relocation.
   * Relocate internal rmw_connext_cpp headers.
