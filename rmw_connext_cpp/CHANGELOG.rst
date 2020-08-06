@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.1.0 (2020-08-06)
+------------------
 * Ensure compliant subscription API. (`#450 <https://github.com/ros2/rmw_connext/issues/450>`_)
 * Contributors: Michel Hidalgo
 
