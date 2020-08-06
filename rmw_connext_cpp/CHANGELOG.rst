@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Ensure compliant subscription API. (`#450 <https://github.com/ros2/rmw_connext/issues/450>`_)
+* Contributors: Michel Hidalgo
+
 3.0.0 (2020-08-03)
 ------------------
 * Remove internal rmw_connext_cpp headers from public API. (`#447 <https://github.com/ros2/rmw_connext/issues/447>`_)

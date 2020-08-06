@@ -2,6 +2,9 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 3.0.0 (2020-08-03)
 ------------------
 * Ensure compliant publisher API. (`#445 <https://github.com/ros2/rmw_connext/issues/445>`_)
