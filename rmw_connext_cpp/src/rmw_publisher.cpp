@@ -343,25 +343,15 @@ rmw_publisher_count_matched_subscriptions(
   const rmw_publisher_t * publisher,
   size_t * subscription_count)
 {
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher handle is null");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-
-  if (!subscription_count) {
-    RMW_SET_ERROR_MSG("subscription_count is null");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher,
+    publisher->implementation_identifier,
+    rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscription_count, RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<ConnextStaticPublisherInfo *>(publisher->data);
-  if (!info) {
-    RMW_SET_ERROR_MSG("publisher internal data is invalid");
-    return RMW_RET_ERROR;
-  }
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("publisher internal listener is invalid");
-    return RMW_RET_ERROR;
-  }
 
   *subscription_count = info->listener_->current_count();
 
@@ -379,7 +369,6 @@ rmw_publisher_get_actual_qos(
     publisher->implementation_identifier,
     rti_connext_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-
   RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<ConnextStaticPublisherInfo *>(publisher->data);
