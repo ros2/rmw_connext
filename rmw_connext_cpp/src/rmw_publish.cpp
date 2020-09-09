@@ -81,15 +81,15 @@ rmw_publish(
   (void) allocation;
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher handle is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
   if (publisher->implementation_identifier != rti_connext_identifier) {
     RMW_SET_ERROR_MSG("publisher handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION;
   }
   if (!ros_message) {
     RMW_SET_ERROR_MSG("ros message handle is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   ConnextStaticPublisherInfo * publisher_info =
