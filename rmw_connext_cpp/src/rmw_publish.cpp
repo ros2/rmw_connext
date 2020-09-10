@@ -17,6 +17,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
+#include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_connext_cpp/identifier.hpp"
 #include "connext_static_publisher_info.hpp"
@@ -79,18 +80,15 @@ rmw_publish(
   rmw_publisher_allocation_t * allocation)
 {
   (void) allocation;
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher handle is null");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-  if (publisher->implementation_identifier != rti_connext_identifier) {
-    RMW_SET_ERROR_MSG("publisher handle is not from this rmw implementation");
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION;
-  }
-  if (!ros_message) {
-    RMW_SET_ERROR_MSG("ros message handle is null");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    publisher, "publisher handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher, publisher->implementation_identifier, rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    ros_message, "ros message handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
 
   ConnextStaticPublisherInfo * publisher_info =
     static_cast<ConnextStaticPublisherInfo *>(publisher->data);
