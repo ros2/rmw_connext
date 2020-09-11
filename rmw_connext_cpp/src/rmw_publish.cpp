@@ -17,6 +17,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
+#include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_connext_cpp/connext_static_publisher_info.hpp"
 #include "rmw_connext_cpp/identifier.hpp"
@@ -146,18 +147,15 @@ rmw_publish_serialized_message(
   rmw_publisher_allocation_t * allocation)
 {
   (void) allocation;
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (publisher->implementation_identifier != rti_connext_identifier) {
-    RMW_SET_ERROR_MSG("publisher handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
-  if (!serialized_message) {
-    RMW_SET_ERROR_MSG("serialized message handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    publisher, "publisher handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher, publisher->implementation_identifier, rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    serialized_message, "serialized message handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
 
   ConnextStaticPublisherInfo * publisher_info =
     static_cast<ConnextStaticPublisherInfo *>(publisher->data);
