@@ -358,10 +358,18 @@ rmw_take_with_info(
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation)
 {
-  if (!message_info) {
-    RMW_SET_ERROR_MSG("message info is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    subscription, "subscription info is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    message_info, "ros message info is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    taken, "taken is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription, subscription->implementation_identifier, rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   DDS::InstanceHandle_t sending_publication_handle;
   auto ret = _take(subscription, ros_message, taken, &sending_publication_handle, allocation);
   if (ret != RMW_RET_OK) {
