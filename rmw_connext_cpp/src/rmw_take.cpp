@@ -413,23 +413,19 @@ _take_serialized_message(
   DDS::InstanceHandle_t * sending_publication_handle,
   rmw_subscription_allocation_t * allocation)
 {
-  if (!subscription) {
-    RMW_SET_ERROR_MSG("subscription handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription handle,
     subscription->implementation_identifier, rti_connext_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
-  if (!serialized_message) {
-    RMW_SET_ERROR_MSG("ros message handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (!taken) {
-    RMW_SET_ERROR_MSG("taken handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    serialized_message, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
 
   ConnextStaticSubscriberInfo * subscriber_info =
     static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
