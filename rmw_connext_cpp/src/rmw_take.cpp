@@ -155,7 +155,7 @@ _take(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription handle,
     subscription->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   RMW_CHECK_FOR_NULL_WITH_MSG(
     ros_message, "ros message handle is null",
@@ -214,38 +214,37 @@ _take_sequence(
   rmw_subscription_allocation_t * allocation)
 {
   (void) allocation;
-  if (!subscription) {
-    RMW_SET_ERROR_MSG("subscription handle is null");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription handle,
     subscription->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  if (!message_sequence) {
-    RMW_SET_ERROR_MSG("message sequence handle is null");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_sequence, RMW_RET_INVALID_ARGUMENT);
 
-  if (!message_info_sequence) {
-    RMW_SET_ERROR_MSG("message info sequence handle is null");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_info_sequence, RMW_RET_INVALID_ARGUMENT);
 
-  if (!taken) {
-    RMW_SET_ERROR_MSG("taken handle is null");
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
+
+  if (count == 0u) {
+    RMW_SET_ERROR_MSG("count cant be 0");
     return RMW_RET_INVALID_ARGUMENT;
   }
 
   if (count > message_sequence->capacity) {
     RMW_SET_ERROR_MSG("insufficient capacity in message sequence");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   if (count > message_info_sequence->capacity) {
     RMW_SET_ERROR_MSG("insufficient capacity in message info sequence");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   if (count > static_cast<size_t>((std::numeric_limits<DDS_Long>::max)())) {
@@ -364,7 +363,7 @@ rmw_take_with_info(
   auto ret = _take(subscription, ros_message, taken, &sending_publication_handle, allocation);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
-    return RMW_RET_ERROR;
+    return ret;
   }
 
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
@@ -385,19 +384,6 @@ rmw_take_sequence(
   size_t * taken,
   rmw_subscription_allocation_t * allocation)
 {
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    subscription handle,
-    subscription->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    message_sequence, "message_sequence pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    message_info_sequence, "message_info_sequence pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    taken, "taken pointer is null", return RMW_RET_ERROR);
-
   return _take_sequence(
     subscription, count, message_sequence, message_info_sequence, taken,
     allocation);
