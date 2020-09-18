@@ -21,8 +21,10 @@
  *
  * In this case, the ros provided qos profile is completely ignored.
  *
- * Uses the one in the profile with name matches the node name, or the one in the default profile.
- * Topic filters are used, see:
+ * The profile matching the fully qualified node name will be used if `does_node_profile_override()` is true.
+ * If not the default profile will be used.
+ *
+ * Topic filters are used both for the profile matching the node name and the default profile, see:
  * \ref https://community.rti.com/static/documentation/connext-dds/5.2.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/Content/UsersManual/Topic_Filters.htm
  *
  * Prefer using `RMW_CONNEXT_NODE_QOS_PROFILE_OVERRIDE` instead of this, which is less error prone.
@@ -38,8 +40,7 @@ is_ros_qos_ignored();
 /**
  * Return `true` if `RMW_CONNEXT_NODE_QOS_PROFILE_OVERRIDE` was set to 1.
  *
- * In this case, the ros provided qos profile is ignored when the provided DDS QoS profile file has a
- * profile name matching the fully qualified node name.
+ * The profile matching the fully qualified node name will be used if found.
  *
  * Topic filters are used, see:
  * \ref https://community.rti.com/static/documentation/connext-dds/5.2.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/Content/UsersManual/Topic_Filters.htm

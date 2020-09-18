@@ -103,7 +103,9 @@ rmw_create_service(
     goto fail;
   }
 
-  if (!get_datareader_qos(participant, *qos_profile, datareader_qos)) {
+  if (!get_datareader_qos(
+      participant, *qos_profile, node->namespace_, node->name, request_topic_str, datareader_qos))
+  {
     // error string was set within the function
     goto fail;
   }

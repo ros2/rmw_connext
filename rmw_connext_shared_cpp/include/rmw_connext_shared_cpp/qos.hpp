@@ -31,6 +31,9 @@ bool
 get_datareader_qos(
   DDS::DomainParticipant * participant,
   const rmw_qos_profile_t & qos_profile,
+  const char * namespace_,
+  const char * node_name,
+  const char * dds_topic_name,
   DDS::DataReaderQos & datareader_qos);
 
 RMW_CONNEXT_SHARED_CPP_PUBLIC

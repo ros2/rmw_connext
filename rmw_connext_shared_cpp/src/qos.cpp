@@ -12,8 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <limits>
 #include "rmw_connext_shared_cpp/qos.hpp"
+
+#include <limits>
+
+#include "rmw/validate_namespace.h"
+#include "rmw/validate_node_name.h"
+
+#include "./qos_impl.hpp"
 
 namespace
 {
@@ -156,14 +162,42 @@ bool
 get_datareader_qos(
   DDS::DomainParticipant * participant,
   const rmw_qos_profile_t & qos_profile,
+  const char * namespace_,
+  const char * node_name,
+  const char * dds_topic_name,
   DDS::DataReaderQos & datareader_qos)
 {
-  DDS::ReturnCode_t status = participant->get_default_datareader_qos(datareader_qos);
+  if (does_node_profile_override()) {
+    DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
+    if (!dpf) {
+      RMW_SET_ERROR_MSG("failed to get participant factory");
+      return false;
+    }
+    char fqnn[RMW_NAMESPACE_MAX_LENGTH + RMW_NODE_NAME_MAX_NAME_LENGTH];
+    std::snprintf(fqnn, size_t(fqnn), "%s/%s", namespace_, node_name);
+    if (DDS::RETCODE_OK == dpf->get_datareader_qos_from_profile_w_topic_name(
+        datareader_qos,
+        NULL,  // Use the default library set in `init()`
+        fqnn,
+        dds_topic_name))
+    {
+      return true;
+    }
+  }
+
+  // This is an UNDOCUMMENTED rti Connext function.
+  // What does it does?
+  // It allows getting the profile marked as `is_default_profile="true"` in the externally
+  // provided qos profile file, using topic filters.
+  DDS::ReturnCode_t status = participant->get_default_datareader_qos_w_topic_name(
+    datareader_qos, dds_topic_name);
   if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to get default datareader qos");
     return false;
   }
 
+  // TODO(ivanpauno): Modify this add_property, so they don't override what's provided in the
+  // external QoS file.
   status = DDS::PropertyQosPolicyHelper::add_property(
     datareader_qos.property,
     "dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size",
@@ -182,6 +216,10 @@ get_datareader_qos(
   if (status != DDS::RETCODE_OK) {
     RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
+  }
+
+  if (is_ros_qos_ignored()) {
+    return true;
   }
 
   if (!set_entity_qos_from_profile(qos_profile, datareader_qos)) {
