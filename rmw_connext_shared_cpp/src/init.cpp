@@ -94,41 +94,14 @@ set_default_qos_library(DDS::DomainParticipantFactory * dpf)
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("rcutils_get_env() failed: '%s'", error);
     return SetDefaultLibraryRet::FAILED;
   }
-  if (qos_profile_library_name && 0 == strcmp("", qos_profile_library_name)) {
-    qos_profile_library_name = NULL;
-  }
 
-  DDS_StringSeq qos_libraries;
-  if (!qos_profile_library_name) {
-    // environment variable is empty
-    if (DDS::RETCODE_OK != dpf->get_qos_profile_libraries(qos_libraries)) {
-      RMW_SET_ERROR_MSG("failed to get qos profile libraries");
-      return SetDefaultLibraryRet::FAILED;
-    }
-    // If only one non-builtin qos profile library was loaded, use that one.
-    if (qos_libraries.length() > 3) {
-      return SetDefaultLibraryRet::NOT_SET;
-    }
-    for (int i = 0; i < qos_libraries.length(); i++) {
-      if (
-        strcmp("BuiltinQosLib", qos_libraries[i]) != 0 &&
-        strcmp("BuiltinQosLibExp", qos_libraries[i]) != 0)
-      {
-        if (!qos_profile_library_name) {
-          qos_profile_library_name = qos_libraries[i];
-        } else {
-          qos_profile_library_name = NULL;
-          break;
-        }
-      }
-    }
+  if (qos_profile_library_name && 0 == strcmp("", qos_profile_library_name)) {
+    return SetDefaultLibraryRet::NOT_SET;
   }
-  if (qos_profile_library_name) {
-    if (DDS::RETCODE_OK != dpf->set_default_library(qos_profile_library_name)) {
-      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "failed to set default library \"%s\"", qos_profile_library_name);
-      return SetDefaultLibraryRet::FAILED;
-    }
+  if (DDS::RETCODE_OK != dpf->set_default_library(qos_profile_library_name)) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "failed to set default library \"%s\"", qos_profile_library_name);
+    return SetDefaultLibraryRet::FAILED;
   }
   return SetDefaultLibraryRet::SET;
 }
