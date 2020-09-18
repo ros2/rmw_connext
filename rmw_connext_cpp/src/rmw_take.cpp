@@ -148,22 +148,19 @@ _take(
   DDS::InstanceHandle_t * sending_publication_handle,
   rmw_subscription_allocation_t * allocation)
 {
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
 
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription handle,
     subscription->implementation_identifier, rti_connext_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    ros_message, "ros message handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    ros_message, RMW_RET_INVALID_ARGUMENT);
 
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    taken, "taken handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
 
   ConnextStaticSubscriberInfo * subscriber_info =
     static_cast<ConnextStaticSubscriberInfo *>(subscription->data);
