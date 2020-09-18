@@ -21,9 +21,13 @@
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
 
-static std::once_flag g_run_once_flag;
+#include "./qos_impl.hpp"
 
+/// Flag used to make sure \ref init() only runs once.
+static std::once_flag g_run_once_flag;
+/// Return value of \ref is_ros_qos_ignored().
 static bool g_is_ros_qos_ignored = false;
+/// Return value of \ref does_node_profile_override().
 static bool g_does_node_profile_override = false;
 
 /// Tri-state retcode used in `set_default_qos_library` and `is_env_variable_set`.
