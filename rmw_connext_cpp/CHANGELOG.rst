@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.3.0 (2020-09-18)
+------------------
 * Fix wrong error messages (`#458 <https://github.com/ros2/rmw_connext/issues/458>`_)
 * Update rmw_take_serialized() and rmw_take_with_error_info() error returns (`#456 <https://github.com/ros2/rmw_connext/issues/456>`_)
 * Update rmw_take() error returns  (`#454 <https://github.com/ros2/rmw_connext/issues/454>`_)
