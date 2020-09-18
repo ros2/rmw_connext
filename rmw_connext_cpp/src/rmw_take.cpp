@@ -474,17 +474,16 @@ rmw_take_serialized_message_with_info(
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation)
 {
-  if (!message_info) {
-    RMW_SET_ERROR_MSG("message info is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_info, RMW_RET_INVALID_ARGUMENT);
+
   DDS::InstanceHandle_t sending_publication_handle;
   auto ret = _take_serialized_message(
     subscription, serialized_message, taken,
     &sending_publication_handle, allocation);
   if (ret != RMW_RET_OK) {
     // Error string is already set.
-    return RMW_RET_ERROR;
+    return ret;
   }
 
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
