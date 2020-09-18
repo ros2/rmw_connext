@@ -2,6 +2,15 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix wrong error messages (`#458 <https://github.com/ros2/rmw_connext/issues/458>`_)
+* Update rmw_take_serialized() and rmw_take_with_error_info() error returns (`#456 <https://github.com/ros2/rmw_connext/issues/456>`_)
+* Update rmw_take() error returns  (`#454 <https://github.com/ros2/rmw_connext/issues/454>`_)
+* Update rmw_publish() error returns (`#452 <https://github.com/ros2/rmw_connext/issues/452>`_)
+* Update rmw_publish_serialized_message() error returns (`#453 <https://github.com/ros2/rmw_connext/issues/453>`_)
+* Contributors: Ivan Santiago Paunovic, Jose Tomas Lorente, Lobotuerk
+
 3.2.0 (2020-08-28)
 ------------------
 * Ensure compliant matched pub/sub count API. (`#451 <https://github.com/ros2/rmw_connext/issues/451>`_)
