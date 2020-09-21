@@ -104,18 +104,6 @@ rmw_create_client(
     goto fail;
   }
 
-  if (!get_datareader_qos(
-      participant, *qos_profile, node->namespace_, node->name, response_topic_str, datareader_qos))
-  {
-    // error string was set within the function
-    goto fail;
-  }
-
-  if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
-    // error string was set within the function
-    goto fail;
-  }
-
   // allocating memory for request topic and response topic strings
   if (!_process_service_name(
       service_name,
@@ -123,6 +111,20 @@ rmw_create_client(
       &request_topic_str,
       &response_topic_str))
   {
+    goto fail;
+  }
+
+  if (!get_datareader_qos(
+      participant, *qos_profile, node->namespace_, node->name, response_topic_str, datareader_qos))
+  {
+    // error string was set within the function
+    goto fail;
+  }
+
+  if (!get_datawriter_qos(
+      participant, *qos_profile, node->namespace_, node->name, request_topic_str, datawriter_qos))
+  {
+    // error string was set within the function
     goto fail;
   }
 

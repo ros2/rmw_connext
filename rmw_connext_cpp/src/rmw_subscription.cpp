@@ -186,8 +186,6 @@ rmw_create_subscription(
     // error already set
     goto fail;
   }
-  DDS::String_free(topic_str);
-  topic_str = nullptr;
 
   if (!get_datareader_qos(
       participant, *qos_profile, node->namespace_, node->name, topic_str, datareader_qos))
@@ -195,6 +193,9 @@ rmw_create_subscription(
     // error string was set within the function
     goto fail;
   }
+
+  DDS::String_free(topic_str);
+  topic_str = nullptr;
 
   topic_reader = dds_subscriber->create_datareader(
     topic, datareader_qos,

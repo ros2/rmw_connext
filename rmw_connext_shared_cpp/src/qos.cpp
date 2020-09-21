@@ -167,43 +167,52 @@ get_datareader_qos(
   const char * dds_topic_name,
   DDS::DataReaderQos & datareader_qos)
 {
-  if (does_node_profile_override()) {
+  bool profile_found = false;
+  if (are_node_profiles_allowed()) {
     DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
     if (!dpf) {
       RMW_SET_ERROR_MSG("failed to get participant factory");
       return false;
     }
     char fqnn[RMW_NAMESPACE_MAX_LENGTH + RMW_NODE_NAME_MAX_NAME_LENGTH];
-    std::snprintf(fqnn, size_t(fqnn), "%s/%s", namespace_, node_name);
+    if ('/' == namespace_[0] && '\0' == namespace_[1]) {
+      // root namespace
+      std::snprintf(fqnn, size_t(fqnn), "/%s", node_name);
+    } else {
+      // non-root namespace
+      std::snprintf(fqnn, size_t(fqnn), "%s/%s", namespace_, node_name);
+    }
     if (DDS::RETCODE_OK == dpf->get_datareader_qos_from_profile_w_topic_name(
         datareader_qos,
-        NULL,  // Use the default library set in `init()`
+        dpf->get_default_library(),
         fqnn,
         dds_topic_name))
     {
-      return true;
+      profile_found = true;
     }
     // no profile matching node name found -> look for the default profile
   }
 
-  // This is an UNDOCUMMENTED rti Connext function.
-  // What does it does?
-  // It allows getting the profile marked as `is_default_profile="true"` in the externally
-  // provided qos profile file while using topic filters.
-  //
-  // There are a few DomainParticipant and DomainParticipantFactory documented methods that sound
-  // that can solve this: get_default_library, get_default_profile, get_default_profile_library.
-  // They cannot. Those are only usefully if you programatically set the default profile/library,
-  // but they don't allow you to detect the profile marked as default in the XML file.
-  DDS::ReturnCode_t status = participant->get_default_datareader_qos_w_topic_name(
-    datareader_qos, dds_topic_name);
-  if (status != DDS::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("failed to get default datareader qos");
-    return false;
+  if (!profile_found) {
+    // This is an UNDOCUMMENTED rti Connext function.
+    // What does it do?
+    // It allows getting the profile marked as `is_default_profile="true"` in the externally
+    // provided qos profile file while using topic filters.
+    //
+    // There are a few DomainParticipant and DomainParticipantFactory documented methods that sound
+    // that can solve this: get_default_library, get_default_profile, get_default_profile_library.
+    // They cannot. Those are only usefully if you programatically set the default profile/library,
+    // but they don't allow you to detect the profile marked as default in the XML file.
+    DDS::ReturnCode_t status = participant->get_default_datareader_qos_w_topic_name(
+      datareader_qos, dds_topic_name);
+    if (DDS::RETCODE_OK != status) {
+      RMW_SET_ERROR_MSG("failed to get default datareader qos");
+      return false;
+    }
   }
 
   // This property will be added only if it wasn't specified in the external QoS profile file.
-  status = DDS::PropertyQosPolicyHelper::add_property(
+  DDS::ReturnCode_t status = DDS::PropertyQosPolicyHelper::add_property(
     datareader_qos.property,
     "dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size",
     "4096",
@@ -239,31 +248,71 @@ bool
 get_datawriter_qos(
   DDS::DomainParticipant * participant,
   const rmw_qos_profile_t & qos_profile,
+  const char * namespace_,
+  const char * node_name,
+  const char * dds_topic_name,
   DDS::DataWriterQos & datawriter_qos)
 {
-  DDS::ReturnCode_t status = participant->get_default_datawriter_qos(datawriter_qos);
-  if (status != DDS::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("failed to get default datawriter qos");
-    return false;
+  bool profile_found = false;
+  if (are_node_profiles_allowed()) {
+    DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
+    if (!dpf) {
+      RMW_SET_ERROR_MSG("failed to get participant factory");
+      return false;
+    }
+
+    char fqnn[RMW_NAMESPACE_MAX_LENGTH + RMW_NODE_NAME_MAX_NAME_LENGTH];
+    if ('/' == namespace_[0] && '\0' == namespace_[1]) {
+      // root namespace
+      std::snprintf(fqnn, size_t(fqnn), "/%s", node_name);
+    } else {
+      // non-root namespace
+      std::snprintf(fqnn, size_t(fqnn), "%s/%s", namespace_, node_name);
+    }
+    if (DDS::RETCODE_OK == dpf->get_datawriter_qos_from_profile_w_topic_name(
+        datawriter_qos,
+        dpf->get_default_library(),
+        fqnn,
+        dds_topic_name))
+    {
+      profile_found = true;
+    }
+  }
+  if (!profile_found) {
+    // This is an UNDOCUMMENTED rti Connext function.
+    // See comment in `get_datareader_qos()` for more details.
+    DDS::ReturnCode_t status = participant->get_default_datawriter_qos_w_topic_name(
+      datawriter_qos, dds_topic_name);
+    if (DDS::RETCODE_OK != status) {
+      RMW_SET_ERROR_MSG("failed to get default datawriter qos");
+      return false;
+    }
   }
 
-  status = DDS::PropertyQosPolicyHelper::add_property(
+  // This property will be added only if it wasn't specified in the external QoS profile file.
+  DDS::ReturnCode_t status = DDS::PropertyQosPolicyHelper::add_property(
     datawriter_qos.property,
     "dds.data_writer.history.memory_manager.fast_pool.pool_buffer_max_size",
     "4096",
     DDS::BOOLEAN_FALSE);
-  if (status != DDS::RETCODE_OK) {
+  if (DDS::RETCODE_OK != status && DDS::RETCODE_PRECONDITION_NOT_MET != status) {
     RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
+  }
+
+  if (is_publish_mode_overriden()) {
+    // TODO(wjwwood): conditionally use the async publish mode using a heuristic:
+    //  https://github.com/ros2/rmw_connext/issues/190
+    datawriter_qos.publish_mode.kind = DDS::ASYNCHRONOUS_PUBLISH_MODE_QOS;
+  }
+
+  if (is_ros_qos_ignored()) {
+    return true;
   }
 
   if (!set_entity_qos_from_profile(qos_profile, datawriter_qos)) {
     return false;
   }
-
-  // TODO(wjwwood): conditionally use the async publish mode using a heuristic:
-  //  https://github.com/ros2/rmw_connext/issues/190
-  datawriter_qos.publish_mode.kind = DDS::ASYNCHRONOUS_PUBLISH_MODE_QOS;
 
   return true;
 }

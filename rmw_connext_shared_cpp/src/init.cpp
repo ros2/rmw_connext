@@ -28,7 +28,9 @@ static std::once_flag g_run_once_flag;
 /// Return value of \ref is_ros_qos_ignored().
 static bool g_is_ros_qos_ignored = false;
 /// Return value of \ref does_node_profile_override().
-static bool g_does_node_profile_override = false;
+static bool g_are_node_profiles_allowed = false;
+/// Return value of \ref is_publish_mode_overriden().
+static bool g_is_publish_mode_overriden = true;
 
 /// Tri-state retcode used in `set_default_qos_library` and `is_env_variable_set`.
 enum class TristateRetCode {SET, NOT_SET, FAILED};
@@ -115,9 +117,20 @@ init()
           return;
       }
 
-      switch (is_env_variable_set("RMW_CONNEXT_NODE_QOS_PROFILE_OVERRIDE")) {
+      switch (is_env_variable_set("RMW_CONNEXT_ALLOW_NODE_QOS_PROFILES")) {
         case TristateRetCode::SET:
-          g_does_node_profile_override = true;
+          g_are_node_profiles_allowed = true;
+          break;
+        case TristateRetCode::NOT_SET:
+          break;
+        default:  // fallthrough
+        case TristateRetCode::FAILED:
+          ret = RMW_RET_ERROR;
+          return;
+      }
+      switch (is_env_variable_set("RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE")) {
+        case TristateRetCode::SET:
+          g_is_publish_mode_overriden = false;
           break;
         case TristateRetCode::NOT_SET:
           break;
@@ -228,7 +241,13 @@ is_ros_qos_ignored()
 }
 
 bool
-does_node_profile_override()
+are_node_profiles_allowed()
 {
-  return g_does_node_profile_override;
+  return g_are_node_profiles_allowed;
+}
+
+bool
+is_publish_mode_overriden()
+{
+  return g_is_publish_mode_overriden;
 }
