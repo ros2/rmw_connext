@@ -183,12 +183,18 @@ get_datareader_qos(
     {
       return true;
     }
+    // no profile matching node name found -> look for the default profile
   }
 
   // This is an UNDOCUMMENTED rti Connext function.
   // What does it does?
   // It allows getting the profile marked as `is_default_profile="true"` in the externally
-  // provided qos profile file, using topic filters.
+  // provided qos profile file while using topic filters.
+  //
+  // There are a few DomainParticipant and DomainParticipantFactory documented methods that sound
+  // that can solve this: get_default_library, get_default_profile, get_default_profile_library.
+  // They cannot. Those are only usefully if you programatically set the default profile/library,
+  // but they don't allow you to detect the profile marked as default in the XML file.
   DDS::ReturnCode_t status = participant->get_default_datareader_qos_w_topic_name(
     datareader_qos, dds_topic_name);
   if (status != DDS::RETCODE_OK) {
@@ -196,24 +202,24 @@ get_datareader_qos(
     return false;
   }
 
-  // TODO(ivanpauno): Modify this add_property, so they don't override what's provided in the
-  // external QoS file.
+  // This property will be added only if it wasn't specified in the external QoS profile file.
   status = DDS::PropertyQosPolicyHelper::add_property(
     datareader_qos.property,
     "dds.data_reader.history.memory_manager.fast_pool.pool_buffer_max_size",
     "4096",
     DDS::BOOLEAN_FALSE);
-  if (status != DDS::RETCODE_OK) {
+  if (DDS::RETCODE_OK != status && DDS::RETCODE_PRECONDITION_NOT_MET != status) {
     RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
   }
 
+  // This property will be added only if it wasn't specified in the external QoS profile file.
   status = DDS::PropertyQosPolicyHelper::add_property(
     datareader_qos.property,
     "reader_resource_limits.dynamically_allocate_fragmented_samples",
     "1",
     DDS::BOOLEAN_FALSE);
-  if (status != DDS::RETCODE_OK) {
+  if (DDS::RETCODE_OK != status && DDS::RETCODE_PRECONDITION_NOT_MET != status) {
     RMW_SET_ERROR_MSG("failed to add qos property");
     return false;
   }
