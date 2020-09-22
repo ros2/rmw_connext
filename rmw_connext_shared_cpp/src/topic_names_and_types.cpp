@@ -21,6 +21,7 @@
 
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_connext_shared_cpp/demangle.hpp"
 #include "rmw_connext_shared_cpp/namespace_prefix.hpp"
@@ -37,32 +38,19 @@ get_topic_names_and_types(
   bool no_demangle,
   rmw_names_and_types_t * topic_names_and_types)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (node->implementation_identifier != implementation_identifier) {
-    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
-  rmw_ret_t rmw_ret = rmw_names_and_types_check_zero(topic_names_and_types);
-  if (rmw_ret != RMW_RET_OK) {
-    return rmw_ret;
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
+    allocator, "allocator argument is invalid", return RMW_RET_INVALID_ARGUMENT);
+  if (RMW_RET_OK != rmw_names_and_types_check_zero(topic_names_and_types)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (!node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (!node_info->publisher_listener) {
-    RMW_SET_ERROR_MSG("publisher listener handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (!node_info->subscriber_listener) {
-    RMW_SET_ERROR_MSG("subscriber listener handle is null");
-    return RMW_RET_ERROR;
-  }
 
   // combine publisher and subscriber information
   std::map<std::string, std::set<std::string>> topics;
