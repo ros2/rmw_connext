@@ -25,38 +25,22 @@ extern "C"
 rmw_ret_t
 rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * result)
 {
-  if (!gid1) {
-    RMW_SET_ERROR_MSG("gid1 is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(gid1, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     gid1,
     gid1->implementation_identifier,
     rti_connext_identifier,
-    return RMW_RET_ERROR)
-  if (!gid2) {
-    RMW_SET_ERROR_MSG("gid2 is null");
-    return RMW_RET_ERROR;
-  }
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(gid2, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     gid2,
     gid2->implementation_identifier,
     rti_connext_identifier,
-    return RMW_RET_ERROR)
-  if (!result) {
-    RMW_SET_ERROR_MSG("result is null");
-    return RMW_RET_ERROR;
-  }
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(result, RMW_RET_INVALID_ARGUMENT);
+
   auto detail1 = reinterpret_cast<const ConnextPublisherGID *>(gid1->data);
-  if (!detail1) {
-    RMW_SET_ERROR_MSG("gid1 is invalid");
-    return RMW_RET_ERROR;
-  }
   auto detail2 = reinterpret_cast<const ConnextPublisherGID *>(gid2->data);
-  if (!detail2) {
-    RMW_SET_ERROR_MSG("gid2 is invalid");
-    return RMW_RET_ERROR;
-  }
   auto matches =
     DDS_InstanceHandle_equals(&detail1->publication_handle, &detail2->publication_handle);
   *result = (matches == DDS::BOOLEAN_TRUE);
