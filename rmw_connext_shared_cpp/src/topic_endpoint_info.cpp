@@ -18,6 +18,7 @@
 
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/key_value.hpp"
+#include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_connext_shared_cpp/demangle.hpp"
 #include "rmw_connext_shared_cpp/namespace_prefix.hpp"
@@ -31,26 +32,26 @@ struct ParticipantNameInfo
 };
 
 rmw_ret_t
-_validate_params(
+_validate_arguments(
   const char * identifier,
   const rmw_node_t * node,
   rcutils_allocator_t * allocator,
   const char * topic_name,
   rmw_topic_endpoint_info_array_t * participants_info)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(identifier, RMW_RET_ERROR);
-  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_ERROR);
-  // Get participant pointer from node
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this rmw implementation");
-    return RMW_RET_ERROR;
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
+    allocator, "allocator argument is invalid", return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, RMW_RET_INVALID_ARGUMENT);
+  if (RMW_RET_OK != rmw_topic_endpoint_info_array_check_zero(participants_info)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
-  RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, RMW_RET_ERROR);
-  RMW_CHECK_ARGUMENT_FOR_NULL(allocator, RMW_RET_ERROR);
-  RMW_CHECK_ARGUMENT_FOR_NULL(participants_info, RMW_RET_ERROR);
-  rmw_ret_t rmw_ret = rmw_topic_endpoint_info_array_check_zero(participants_info);
-
-  return rmw_ret;
+  return RMW_RET_OK;
 }
 
 std::vector<std::string>
@@ -165,7 +166,7 @@ _get_info_by_topic(
   bool is_publisher,
   rmw_topic_endpoint_info_array_t * participants_info)
 {
-  rmw_ret_t rmw_ret = _validate_params(
+  rmw_ret_t rmw_ret = _validate_arguments(
     identifier,
     node,
     allocator,

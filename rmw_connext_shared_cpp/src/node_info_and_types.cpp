@@ -34,6 +34,8 @@
 #include "rmw/impl/cpp/key_value.hpp"
 #include "rmw/names_and_types.h"
 #include "rmw/rmw.h"
+#include "rmw/validate_node_name.h"
+#include "rmw/validate_namespace.h"
 
 #include "rmw_connext_shared_cpp/node_info_and_types.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
@@ -132,12 +134,24 @@ validate_names_and_namespace(
   const char * node_name,
   const char * node_namespace)
 {
-  if (!node_name) {
-    RMW_SET_ERROR_MSG("null node name");
+  int validation_result = RMW_NODE_NAME_VALID;
+  rmw_ret_t ret = rmw_validate_node_name(node_name, &validation_result, nullptr);
+  if (RMW_RET_OK != ret) {
+    return ret;
+  }
+  if (RMW_NODE_NAME_VALID != validation_result) {
+    const char * reason = rmw_node_name_validation_result_string(validation_result);
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("node_name argument is invalid: %s", reason);
     return RMW_RET_INVALID_ARGUMENT;
   }
-  if (!node_namespace) {
-    RMW_SET_ERROR_MSG("null node namespace");
+  validation_result = RMW_NAMESPACE_VALID;
+  ret = rmw_validate_namespace(node_namespace, &validation_result, nullptr);
+  if (RMW_RET_OK != ret) {
+    return ret;
+  }
+  if (RMW_NAMESPACE_VALID != validation_result) {
+    const char * reason = rmw_namespace_validation_result_string(validation_result);
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("node_namespace argument is invalid: %s", reason);
     return RMW_RET_INVALID_ARGUMENT;
   }
   return RMW_RET_OK;
@@ -153,29 +167,24 @@ get_subscriber_names_and_types_by_node(
   bool no_demangle,
   rmw_names_and_types_t * topic_names_and_types)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-  if (node->implementation_identifier != implementation_identifier) {
-    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
-
-  rmw_ret_t ret = rmw_names_and_types_check_zero(topic_names_and_types);
-  if (ret != RMW_RET_OK) {
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
+    allocator, "allocator argument is invalid", return RMW_RET_INVALID_ARGUMENT);
+  rmw_ret_t ret = validate_names_and_namespace(node_name, node_namespace);
+  if (RMW_RET_OK != ret) {
     return ret;
   }
-  ret = validate_names_and_namespace(node_name, node_namespace);
-  if (ret != RMW_RET_OK) {
+  ret = rmw_names_and_types_check_zero(topic_names_and_types);
+  if (RMW_RET_OK != ret) {
     return ret;
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (!node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
 
   DDS::GUID_t key;
   auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
@@ -200,29 +209,24 @@ get_publisher_names_and_types_by_node(
   bool no_demangle,
   rmw_names_and_types_t * topic_names_and_types)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-  if (node->implementation_identifier != implementation_identifier) {
-    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
-
-  rmw_ret_t ret = rmw_names_and_types_check_zero(topic_names_and_types);
-  if (ret != RMW_RET_OK) {
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
+    allocator, "allocator argument is invalid", return RMW_RET_INVALID_ARGUMENT);
+  rmw_ret_t ret = validate_names_and_namespace(node_name, node_namespace);
+  if (RMW_RET_OK != ret) {
     return ret;
   }
-  ret = validate_names_and_namespace(node_name, node_namespace);
-  if (ret != RMW_RET_OK) {
+  ret = rmw_names_and_types_check_zero(topic_names_and_types);
+  if (RMW_RET_OK != ret) {
     return ret;
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (!node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
 
   DDS::GUID_t key;
   auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
@@ -248,25 +252,24 @@ __get_service_names_and_types_by_node(
   rmw_names_and_types_t * service_names_and_types,
   const char * suffix)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_INVALID_ARGUMENT;
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
+    allocator, "allocator argument is invalid", return RMW_RET_INVALID_ARGUMENT);
+  rmw_ret_t ret = validate_names_and_namespace(node_name, node_namespace);
+  if (RMW_RET_OK != ret) {
+    return ret;
   }
-  if (node->implementation_identifier != implementation_identifier) {
-    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
-
-  rmw_ret_t ret = rmw_names_and_types_check_zero(service_names_and_types);
-  if (ret != RMW_RET_OK) {
+  ret = rmw_names_and_types_check_zero(service_names_and_types);
+  if (RMW_RET_OK != ret) {
     return ret;
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
-  if (!node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
 
   DDS::GUID_t key;
   auto get_guid_err = __get_key(node_info, node_name, node_namespace, key);
@@ -278,13 +281,7 @@ __get_service_names_and_types_by_node(
   std::map<std::string, std::set<std::string>> services;
   node_info->subscriber_listener->fill_service_names_and_types_by_guid(services, key, suffix);
 
-  rmw_ret_t rmw_ret =
-    copy_services_to_names_and_types(services, allocator, service_names_and_types);
-  if (rmw_ret != RMW_RET_OK) {
-    return rmw_ret;
-  }
-
-  return RMW_RET_OK;
+  return copy_services_to_names_and_types(services, allocator, service_names_and_types);
 }
 
 rmw_ret_t

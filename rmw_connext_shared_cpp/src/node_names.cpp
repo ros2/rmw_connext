@@ -21,6 +21,7 @@
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/key_value.hpp"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/sanity_checks.h"
 
 #include "rmw_connext_shared_cpp/ndds_include.hpp"
@@ -35,19 +36,17 @@ get_node_names_impl(
   rcutils_string_array_t * node_namespaces,
   rcutils_string_array_t * enclaves)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    implementation_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (RMW_RET_OK != rmw_check_zero_rmw_string_array(node_names)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
-  if (node->implementation_identifier != implementation_identifier) {
-    RMW_SET_ERROR_MSG("node handle is not from this rmw implementation");
-    return RMW_RET_ERROR;
-  }
-  if (rmw_check_zero_rmw_string_array(node_names) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
-  }
-  if (rmw_check_zero_rmw_string_array(node_namespaces) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
+  if (RMW_RET_OK != rmw_check_zero_rmw_string_array(node_namespaces)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   DDS::DomainParticipant * participant = static_cast<ConnextNodeInfo *>(node->data)->participant;
@@ -325,8 +324,8 @@ get_node_names_with_enclaves(
   rcutils_string_array_t * node_namespaces,
   rcutils_string_array_t * enclaves)
 {
-  if (rmw_check_zero_rmw_string_array(enclaves) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
+  if (RMW_RET_OK != rmw_check_zero_rmw_string_array(enclaves)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
   return get_node_names_impl(
     implementation_identifier, node, node_names, node_namespaces, enclaves);
