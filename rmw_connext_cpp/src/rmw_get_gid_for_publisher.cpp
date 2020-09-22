@@ -24,27 +24,16 @@ extern "C"
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
 {
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    publisher handle,
+    publisher,
     publisher->implementation_identifier,
     rti_connext_identifier,
-    return RMW_RET_ERROR)
-  if (!gid) {
-    RMW_SET_ERROR_MSG("gid is null");
-    return RMW_RET_ERROR;
-  }
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(gid, RMW_RET_INVALID_ARGUMENT);
 
   const ConnextStaticPublisherInfo * publisher_info =
     static_cast<const ConnextStaticPublisherInfo *>(publisher->data);
-  if (!publisher_info) {
-    RMW_SET_ERROR_MSG("publisher info handle is null");
-    return RMW_RET_ERROR;
-  }
-
   *gid = publisher_info->publisher_gid;
   return RMW_RET_OK;
 }
