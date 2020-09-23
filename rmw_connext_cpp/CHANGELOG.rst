@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated returns on rmw_take_serialized_with_info(). (`#462 <https://github.com/ros2/rmw_connext/issues/462>`_)
+* Update gid API return codes. (`#461 <https://github.com/ros2/rmw_connext/issues/461>`_)
+* Contributors: Jose Tomas Lorente, Michel Hidalgo
+
 3.3.0 (2020-09-18)
 ------------------
 * Fix wrong error messages (`#458 <https://github.com/ros2/rmw_connext/issues/458>`_)
