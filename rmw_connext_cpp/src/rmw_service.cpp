@@ -16,7 +16,9 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
+#include "rmw/validate_full_topic_name.h"
 
 #include "rmw_connext_shared_cpp/qos.hpp"
 #include "rmw_connext_shared_cpp/types.hpp"
@@ -40,20 +42,31 @@ rmw_create_service(
   const char * service_name,
   const rmw_qos_profile_t * qos_profile)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return NULL;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, NULL);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    node handle,
-    node->implementation_identifier, rti_connext_identifier,
-    return NULL)
-
-  RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(type_supports, type_support, NULL)
-
-  if (!qos_profile) {
-    RMW_SET_ERROR_MSG("qos_profile is null");
+    node,
+    node->implementation_identifier,
+    rti_connext_identifier,
+    return NULL);
+  RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
+  RMW_CONNEXT_EXTRACT_SERVICE_TYPESUPPORT(type_supports, type_support, NULL);
+  RMW_CHECK_ARGUMENT_FOR_NULL(service_name, nullptr);
+  if (0 == strlen(service_name)) {
+    RMW_SET_ERROR_MSG("service_name argument is an empty string");
     return nullptr;
+  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos_profile, nullptr);
+  if (!qos_profile->avoid_ros_namespace_conventions) {
+    int validation_result = RMW_TOPIC_VALID;
+    rmw_ret_t ret = rmw_validate_full_topic_name(service_name, &validation_result, nullptr);
+    if (RMW_RET_OK != ret) {
+      return nullptr;
+    }
+    if (RMW_TOPIC_VALID != validation_result) {
+      const char * reason = rmw_full_topic_name_validation_result_string(validation_result);
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("service_name argument is invalid: %s", reason);
+      return nullptr;
+    }
   }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
@@ -288,18 +301,18 @@ fail:
 rmw_ret_t
 rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (!service) {
-    RMW_SET_ERROR_MSG("service handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    service handle,
-    service->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
+    node,
+    node->implementation_identifier,
+    rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    service,
+    service->implementation_identifier,
+    rti_connext_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   auto result = RMW_RET_OK;
   ConnextStaticServiceInfo * service_info = static_cast<ConnextStaticServiceInfo *>(service->data);
