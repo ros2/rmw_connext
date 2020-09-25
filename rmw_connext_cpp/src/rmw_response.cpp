@@ -29,27 +29,14 @@ rmw_take_response(
   void * ros_response,
   bool * taken)
 {
-  if (!client) {
-    RMW_SET_ERROR_MSG("client handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    client handle,
+    client,
     client->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
-
-  if (!request_header) {
-    RMW_SET_ERROR_MSG("ros request header handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (!ros_response) {
-    RMW_SET_ERROR_MSG("ros response handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (!taken) {
-    RMW_SET_ERROR_MSG("taken handle is null");
-    return RMW_RET_ERROR;
-  }
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(request_header, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_response, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
 
   ConnextStaticClientInfo * client_info =
     static_cast<ConnextStaticClientInfo *>(client->data);
