@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated publisher/subscription allocation and wait set API return codes. (`#463 <https://github.com/ros2/rmw_connext/issues/463>`_)
+* Update service/client construction/destruction API return codes. (`#464 <https://github.com/ros2/rmw_connext/issues/464>`_)
+* Contributors: Alejandro Hernández Cordero, Michel Hidalgo
+
 3.4.0 (2020-09-23)
 ------------------
 * Updated returns on rmw_take_serialized_with_info(). (`#462 <https://github.com/ros2/rmw_connext/issues/462>`_)

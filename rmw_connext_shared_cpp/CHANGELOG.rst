@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Updated publisher/subscription allocation and wait set API return codes. (`#463 <https://github.com/ros2/rmw_connext/issues/463>`_)
+* Contributors: Alejandro Hernández Cordero
+
 3.4.0 (2020-09-23)
 ------------------
 * Update graph API return codes. (`#459 <https://github.com/ros2/rmw_connext/issues/459>`_)
