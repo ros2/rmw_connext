@@ -102,7 +102,7 @@ rmw_service_server_is_available(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node handle,
     node->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
   if (!client) {
     RMW_SET_ERROR_MSG("client handle is null");
     return RMW_RET_ERROR;
@@ -110,7 +110,7 @@ rmw_service_server_is_available(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     client handle,
     client->implementation_identifier, rti_connext_identifier,
-    return RMW_RET_ERROR)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
   if (!is_available) {
     RMW_SET_ERROR_MSG("is_available is null");
