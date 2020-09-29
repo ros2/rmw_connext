@@ -2,6 +2,9 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 3.4.1 (2020-09-26)
 ------------------
 * Updated publisher/subscription allocation and wait set API return codes. (`#463 <https://github.com/ros2/rmw_connext/issues/463>`_)
