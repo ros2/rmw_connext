@@ -139,7 +139,7 @@ xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.3.1/rti_dds_qos
 </dds>
 ```
 
-Will use the `slow_flow` flow controller for publishers in the `my_large_data_topic` of the `/my_topic_name` node.
+Will use the `slow_flow` flow controller for publishers in the `my_large_data_topic` of the `/my_node` node.
 All other nodes will use the default profile.
 
 The profiles matching the node name will only be used for `datawriter` and `datareader` qos policies.
