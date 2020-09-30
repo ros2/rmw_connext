@@ -92,7 +92,7 @@ set RMW_CONNEXT_ALLOW_NODE_QOS_PROFILES=1
 export RMW_CONNEXT_ALLOW_NODE_QOS_PROFILES=1
 ```
 
-In that case, if a profile name matches the fully qualified node name (e.g.: `/my/full/namespace/my_node_name`), it will be used instead of the default profile.
+If the environment variable is set, if a profile name matches the fully qualified node name (e.g.: `/my/full/namespace/my_node_name`), it will be used instead of the default profile.
 For example:
 ```xml
 <?xml version="1.0"?>
