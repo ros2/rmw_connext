@@ -177,6 +177,7 @@ set_default_qos_library(DDS::DomainParticipantFactory * dpf)
         if (!qos_profile_library_name) {
           qos_profile_library_name = qos_libraries[i];
         } else {
+          // More than one QoS profile library was loaded, do not set
           qos_profile_library_name = NULL;
           break;
         }
