@@ -174,7 +174,7 @@ get_datareader_qos(
       RMW_SET_ERROR_MSG("failed to get participant factory");
       return false;
     }
-    char fqnn[RMW_NAMESPACE_MAX_LENGTH + RMW_NODE_NAME_MAX_NAME_LENGTH];
+    char fqnn[RMW_NAMESPACE_MAX_LENGTH + RMW_NODE_NAME_MAX_NAME_LENGTH + 1];
     if ('/' == namespace_[0] && '\0' == namespace_[1]) {
       // root namespace
       std::snprintf(fqnn, size_t(fqnn), "/%s", node_name);
