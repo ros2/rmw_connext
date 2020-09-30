@@ -75,9 +75,9 @@ is_env_variable_set(const char * env_var_name);
 rmw_ret_t
 init()
 {
-  rmw_ret_t ret = RMW_RET_OK;
+  static rmw_ret_t ret = RMW_RET_OK;
   std::call_once(
-    g_run_once_flag, [&ret]() {
+    g_run_once_flag, []() {
       DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
       if (!dpf) {
         RMW_SET_ERROR_MSG("failed to get participant factory");
