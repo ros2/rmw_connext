@@ -31,7 +31,7 @@
  * See \ref does_node_profile_override().
  *
  * By modifying QoS profiles provided in code you may be breaking contracts the developer assumed.
- * Use only if you know whay you're doing.
+ * Use only if you know what you're doing.
  */
 bool
 is_ros_qos_ignored();
