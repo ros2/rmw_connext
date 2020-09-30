@@ -40,7 +40,7 @@ enum class TristateRetCode {SET, NOT_SET, FAILED};
  * If `RMW_CONNEXT_QOS_PROFILE_LIBRARY` environment variable is set,
  * the library matching that name is used.
  * If only one user provided library is found, that library is set as the default one.
- * If not, not qos profile library is set.
+ * If not, no qos profile library is set.
  *
  * \return `TristateRetCode::SET` if the default library was set, or
  * \return `TristateRetCode::NOT_SET` if the default library was not set, or
