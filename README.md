@@ -29,7 +29,7 @@ Refer to the [Install DDS Implementations](https://index.ros.org/doc/ros2/Instal
 QoS profiles can be specified in XML according to the load order specified [here](https://community.rti.com/static/documentation/connext-dds/5.2.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/Content/UsersManual/How_to_Load_XML_Specified_QoS_Settings.htm). `url_profile` and `string_profile` cannot be used.
 
 ROS will use the profile with the `is_default_qos="true"` attribute.
-That profile will be used as a base and it will be overriden with the ROS specific policies except when `rmw_qos_profile_system_default` is used.
+That profile will be used as a base and it will be overridden with the ROS specific policies except when `rmw_qos_profile_system_default` is used.
 For example:
 
 ```xml
