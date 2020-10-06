@@ -188,5 +188,12 @@ set RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE=1
 export RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE=1
 ```
 
+## Topic name mangling
+
+ROS uses the following mangled topics when the ROS qos policy `avoid_ros_namespace_conventions` is `false`, which is the default:
+- Topics are prefixed with `rt`. e.g.: `/my/fully/qualified/ros/topic` is converted to `rt/my/fully/qualified/ros/topic`.
+- The service request topics are prefixed with `rq` and suffixed with `Request`. e.g.: `/my/fully/qualified/ros/service` request topic is `rq/my/fully/qualified/ros/serviceRequest`.
+- The service response topics are prefixed with `rr` and suffixed with `Response`. e.g.: `/my/fully/qualified/ros/service` response topic is `rr/my/fully/qualified/ros/serviceResponse`.
+
 ## Quality Declaration (per [REP-2004](https://github.com/ros-infrastructure/rep/blob/master/rep-2004.rst))
 See [RTI Quality Declaration](https://community.rti.com/static/documentation/qa/RTIConnextProQualityDeclaration(REP-2004).pdf) file, hosted on [RTI Community](https://community.rti.com) website. 
