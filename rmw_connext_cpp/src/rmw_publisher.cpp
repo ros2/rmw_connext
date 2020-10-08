@@ -189,8 +189,7 @@ rmw_create_publisher(
     goto fail;
   }
 
-  if (!get_datawriter_qos(participant, *qos_profile, topic_str, datawriter_qos))
-  {
+  if (!get_datawriter_qos(participant, *qos_profile, topic_str, datawriter_qos)) {
     // error string was set within the function
     goto fail;
   }
