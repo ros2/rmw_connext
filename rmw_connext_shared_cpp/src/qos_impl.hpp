@@ -17,40 +17,16 @@
 
 // NOLINT, link in docblock is too long.
 /**
- * Return `true` if `RMW_CONNEXT_IGNORE_ROS_QOS` was set to 1.
+ * Return `true` if `RMW_CONNEXT_ALLOW_TOPIC_QOS_PROFILES` was set to 1 when init was called..
  *
- * In this case, the ros provided qos profile is completely ignored.
- *
- * The profile matching the fully qualified node name will be used if `does_node_profile_override()` is true.
- * If not the default profile will be used.
- *
- * Topic filters are used both for the profile matching the node name and the default profile, see:
- * \ref https://community.rti.com/static/documentation/connext-dds/5.2.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/Content/UsersManual/Topic_Filters.htm
- *
- * Prefer using `RMW_CONNEXT_NODE_QOS_PROFILE_OVERRIDE` instead of this, which is less error prone.
- * See \ref does_node_profile_override().
- *
- * By modifying QoS profiles provided in code you may be breaking contracts the developer assumed.
- * Use only if you know what you're doing.
+ * The profile matching the dds topic name will be used if found, if not the default profile will be used.
+ * This setting is independent from `RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE`.
  */
 bool
-is_ros_qos_ignored();
-
-// NOLINT, link in docblock is too long.
-/**
- * Return `true` if `RMW_CONNEXT_ALLOW_NODE_QOS_PROFILES` was set to 1.
- *
- * The profile matching the fully qualified node name will be used if found, if not the default profile will be used.
- * This setting is independent of `RMW_CONNEXT_IGNORE_ROS_QOS`._
- *
- * Topic filters are used, see:
- * \ref https://community.rti.com/static/documentation/connext-dds/5.2.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/Content/UsersManual/Topic_Filters.htm
- */
-bool
-are_node_profiles_allowed();
+are_topic_profiles_allowed();
 
 /**
- * Return `true` if `RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE` was set to 1.
+ * Return `true` if `RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE` was set to 1 when init was called.
  *
  * If that's the case, ROS will not set the publication mode to asynchronous, and the publication
  * mode specified in the DDS QoS profile file will be used.

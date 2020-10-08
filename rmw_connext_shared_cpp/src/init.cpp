@@ -25,10 +25,8 @@
 
 /// Flag used to make sure \ref init() only runs once.
 static std::once_flag g_run_once_flag;
-/// Return value of \ref is_ros_qos_ignored().
-static bool g_is_ros_qos_ignored = false;
-/// Return value of \ref does_node_profile_override().
-static bool g_are_node_profiles_allowed = false;
+/// Return value of \ref are_topic_profiles_allowed().
+static bool g_are_topic_profiles_allowed = false;
 /// Return value of \ref is_publish_mode_overriden().
 static bool g_is_publish_mode_overriden = true;
 
@@ -105,21 +103,9 @@ init()
           return;
       }
 
-      switch (is_env_variable_set("RMW_CONNEXT_IGNORE_ROS_QOS")) {
+      switch (is_env_variable_set("RMW_CONNEXT_ALLOW_TOPIC_QOS_PROFILES")) {
         case TristateRetCode::SET:
-          g_is_ros_qos_ignored = true;
-          break;
-        case TristateRetCode::NOT_SET:
-          break;
-        default:  // fallthrough
-        case TristateRetCode::FAILED:
-          ret = RMW_RET_ERROR;
-          return;
-      }
-
-      switch (is_env_variable_set("RMW_CONNEXT_ALLOW_NODE_QOS_PROFILES")) {
-        case TristateRetCode::SET:
-          g_are_node_profiles_allowed = true;
+          g_are_topic_profiles_allowed = true;
           break;
         case TristateRetCode::NOT_SET:
           break;
@@ -236,15 +222,9 @@ is_env_variable_set(const char * env_var_name)
 }
 
 bool
-is_ros_qos_ignored()
+are_topic_profiles_allowed()
 {
-  return g_is_ros_qos_ignored;
-}
-
-bool
-are_node_profiles_allowed()
-{
-  return g_are_node_profiles_allowed;
+  return g_are_topic_profiles_allowed;
 }
 
 bool

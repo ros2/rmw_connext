@@ -114,16 +114,12 @@ rmw_create_client(
     goto fail;
   }
 
-  if (!get_datareader_qos(
-      participant, *qos_profile, node->namespace_, node->name, response_topic_str, datareader_qos))
-  {
+  if (!get_datareader_qos(participant, *qos_profile, response_topic_str, datareader_qos)) {
     // error string was set within the function
     goto fail;
   }
 
-  if (!get_datawriter_qos(
-      participant, *qos_profile, node->namespace_, node->name, request_topic_str, datawriter_qos))
-  {
+  if (!get_datawriter_qos(participant, *qos_profile, request_topic_str, datawriter_qos)) {
     // error string was set within the function
     goto fail;
   }

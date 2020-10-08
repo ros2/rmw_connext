@@ -14,6 +14,7 @@
 
 #include "rmw_connext_shared_cpp/qos.hpp"
 
+#include <cassert>
 #include <limits>
 
 #include "rmw/validate_namespace.h"
@@ -162,38 +163,28 @@ bool
 get_datareader_qos(
   DDS::DomainParticipant * participant,
   const rmw_qos_profile_t & qos_profile,
-  const char * namespace_,
-  const char * node_name,
   const char * dds_topic_name,
   DDS::DataReaderQos & datareader_qos)
 {
-  bool profile_found = false;
-  if (are_node_profiles_allowed()) {
+  bool topic_profile_found = false;
+
+  if (are_topic_profiles_allowed()) {
     DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
     if (!dpf) {
       RMW_SET_ERROR_MSG("failed to get participant factory");
       return false;
     }
-    char fqnn[RMW_NAMESPACE_MAX_LENGTH + RMW_NODE_NAME_MAX_NAME_LENGTH + 1];
-    if ('/' == namespace_[0] && '\0' == namespace_[1]) {
-      // root namespace
-      std::snprintf(fqnn, size_t(fqnn), "/%s", node_name);
-    } else {
-      // non-root namespace
-      std::snprintf(fqnn, size_t(fqnn), "%s/%s", namespace_, node_name);
-    }
-    if (DDS::RETCODE_OK == dpf->get_datareader_qos_from_profile_w_topic_name(
+    if (DDS::RETCODE_OK == dpf->get_datareader_qos_from_profile(
         datareader_qos,
         dpf->get_default_library(),
-        fqnn,
         dds_topic_name))
     {
-      profile_found = true;
+      topic_profile_found = true;
     }
-    // no profile matching node name found -> look for the default profile
+    // no profile matching the topic name found -> look for the default profile
   }
 
-  if (!profile_found) {
+  if (!topic_profile_found) {
     // This is an UNDOCUMMENTED rti Connext function.
     // What does it do?
     // It allows getting the profile marked as `is_default_profile="true"` in the externally
@@ -233,7 +224,8 @@ get_datareader_qos(
     return false;
   }
 
-  if (is_ros_qos_ignored()) {
+  if (topic_profile_found) {
+    // ignore ROS QoS when a topic profile was found.
     return true;
   }
 
@@ -248,43 +240,33 @@ bool
 get_datawriter_qos(
   DDS::DomainParticipant * participant,
   const rmw_qos_profile_t & qos_profile,
-  const char * namespace_,
-  const char * node_name,
   const char * dds_topic_name,
   DDS::DataWriterQos & datawriter_qos)
 {
-  bool profile_found = false;
-  if (are_node_profiles_allowed()) {
+  bool topic_profile_found = false;
+  if (are_topic_profiles_allowed()) {
     DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
     if (!dpf) {
       RMW_SET_ERROR_MSG("failed to get participant factory");
       return false;
     }
-
-    char fqnn[RMW_NAMESPACE_MAX_LENGTH + RMW_NODE_NAME_MAX_NAME_LENGTH];
-    if ('/' == namespace_[0] && '\0' == namespace_[1]) {
-      // root namespace
-      std::snprintf(fqnn, size_t(fqnn), "/%s", node_name);
-    } else {
-      // non-root namespace
-      std::snprintf(fqnn, size_t(fqnn), "%s/%s", namespace_, node_name);
-    }
-    if (DDS::RETCODE_OK == dpf->get_datawriter_qos_from_profile_w_topic_name(
+    if (DDS::RETCODE_OK == dpf->get_datawriter_qos_from_profile(
         datawriter_qos,
         dpf->get_default_library(),
-        fqnn,
         dds_topic_name))
     {
-      profile_found = true;
+      topic_profile_found = true;
     }
+    // no profile matching the topic name found -> look for the default profile
   }
-  if (!profile_found) {
+
+  if (!topic_profile_found) {
     // This is an UNDOCUMMENTED rti Connext function.
     // See comment in `get_datareader_qos()` for more details.
     DDS::ReturnCode_t status = participant->get_default_datawriter_qos_w_topic_name(
       datawriter_qos, dds_topic_name);
     if (DDS::RETCODE_OK != status) {
-      RMW_SET_ERROR_MSG("failed to get default datawriter qos");
+      RMW_SET_ERROR_MSG("failed to get default datareader qos");
       return false;
     }
   }
@@ -306,7 +288,8 @@ get_datawriter_qos(
     datawriter_qos.publish_mode.kind = DDS::ASYNCHRONOUS_PUBLISH_MODE_QOS;
   }
 
-  if (is_ros_qos_ignored()) {
+  if (topic_profile_found) {
+    // ignore ROS QoS when a topic profile was found.
     return true;
   }
 

@@ -187,8 +187,7 @@ rmw_create_subscription(
     goto fail;
   }
 
-  if (!get_datareader_qos(
-      participant, *qos_profile, node->namespace_, node->name, topic_str, datareader_qos))
+  if (!get_datareader_qos(participant, *qos_profile, topic_str, datareader_qos))
   {
     // error string was set within the function
     goto fail;

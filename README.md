@@ -29,7 +29,8 @@ Refer to the [Install DDS Implementations](https://index.ros.org/doc/ros2/Instal
 QoS profiles can be specified in XML according to the load order specified [here](https://community.rti.com/static/documentation/connext-dds/5.2.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/Content/UsersManual/How_to_Load_XML_Specified_QoS_Settings.htm). `url_profile` and `string_profile` cannot be used.
 
 ROS will use the profile with the `is_default_qos="true"` attribute.
-That profile will be used as a base and it will be overridden with the ROS specific policies except when `rmw_qos_profile_system_default` is used.
+That profile will be used as a base and it will be policies defined in the ROS qos profile will be overriden, except when `rmw_qos_profile_system_default` is used.
+
 For example:
 
 ```xml
@@ -67,6 +68,9 @@ xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.3.1/rti_dds_qos
       </participant_qos>
 
       <datawriter_qos topic_filter="rt/my_large_data_topic">
+        <reliability>
+          <kind>RELIABLE_RELIABILITY_QOS</kind>
+        </reliability>
         <publish_mode>
           <flow_controller_name>dds.flow_controller.token_bucket.slow_flow</flow_controller_name>
         </publish_mode>
@@ -76,23 +80,26 @@ xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.3.1/rti_dds_qos
 </dds>
 ```
 
-That will force all publishers in the `my_large_data_topic` to use the `slow_flow` flow controller.
+That will force all publishers in the `my_large_data_topic` to use the `slow_flow` flow controller, but the reliability specified in the ROS QoS profile will be used except if its value is `RMW_QOS_RELIABILITY_POLICY_SYSTEM_DEFAULT`. 
 See `Topic Name Mangling` section to understand the `rt/` prefix.
 
-### Using different profiles for different nodes
+See [RTI Connext docs](https://community.rti.com/static/documentation/connext-dds/5.2.0/doc/manuals/connext_dds/html_files/RTI_ConnextDDS_CoreLibraries_UsersManual/Content/UsersManual/Topic_Filters.htm) to understand topic filters.
+
+### Overriding ROS specified QoS policies for a topic
 
 To use this feature, you must first set the following environment variable:
 
 ```bat
 :: Windows
-set RMW_CONNEXT_ALLOW_NODE_QOS_PROFILES=1
+set RMW_CONNEXT_ALLOW_TOPIC_QOS_PROFILES=1
 ```
 ```bash
 # Linux/MacOS
-export RMW_CONNEXT_ALLOW_NODE_QOS_PROFILES=1
+export RMW_CONNEXT_ALLOW_TOPIC_QOS_PROFILES=1
 ```
 
-If the environment variable is set, if a profile name matches the fully qualified node name (e.g.: `/my/full/namespace/my_node_name`), it will be used instead of the default profile.
+If the environment variable is set, when a profile name matches the dds topic name, it will be used and the ROS specified profile will be ignored.
+
 For example:
 ```xml
 <?xml version="1.0"?>
@@ -128,24 +135,29 @@ xsi:noNamespaceSchemaLocation="http://community.rti.com/schema/5.3.1/rti_dds_qos
         </property>
       </participant_qos>
     </qos_profile>
-    <qos_profile name="/my_node" base_name="BuiltinQosLib::Baseline.5.3.0">
-      <datawriter_qos topic_filter="rt/my_large_data_topic">
+    <qos_profile name="rt/my_large_data_topic" base_name="BuiltinQosLib::Baseline.5.3.0">
+      <datawriter_qos>  <!--Don't use topic filters here-->
         <publish_mode>
           <flow_controller_name>dds.flow_controller.token_bucket.slow_flow</flow_controller_name>
         </publish_mode>
+        <reliability>
+          <kind>RELIABLE_RELIABILITY_QOS</kind>
+        </reliability>
       </datawriter_qos>
     </qos_profile>
   </qos_library>
 </dds>
 ```
 
-Will use the `slow_flow` flow controller for publishers in the `my_large_data_topic` of the `/my_node` node.
-All other nodes will use the default profile.
+In this case, all publishers in the topic `/my_large_data_topic` will use the specified slow flow controller and have a reliable reliability (regardless of the reliability specified in ROS code).
 
-The profiles matching the node name will only be used for `datawriter` and `datareader` qos policies.
-Participant/Publisher/Subscription policies will always use the default profile.
+Caveats:
 
-RTI Connext will log an error each time that it tries to find a profile that doesn't exist, if you didn't add a profile for each node those logs will appear.
+- If you want to override the QoS profiles used for all publishers in a topic, the subscription profiles in the same topic will also be overriden. If you don't explicitly provide one, a default will be used.
+- RTI Connext will log an error each time that it tries to find a profile that doesn't exist.
+  Your will see a lot of these logs in your terminal when using `RMW_CONNEXT_ALLOW_TOPIC_QOS_PROFILES` option. 
+
+### Specifying an specific QoS library
 
 If you only provided one QoS library to the process, that one will be used.
 If not, the `RMW_CONNEXT_QOS_PROFILE_LIBRARY` must be used:
@@ -157,22 +169,6 @@ set RMW_CONNEXT_QOS_PROFILE_LIBRARY=Ros2TestQosLibrary
 # Linux/MacOS
 export RMW_CONNEXT_QOS_PROFILE_LIBRARY=Ros2TestQosLibrary
 ```
-
-### Ignoring the ROS specified QoS
-
-If you want to override the QoS profile specified in ROS code, you can do that by setting:
-
-```bat
-:: Windows
-set RMW_CONNEXT_IGNORE_ROS_QOS=1
-```
-```bash
-# Linux/MacOS
-export RMW_CONNEXT_IGNORE_ROS_QOS=1
-```
-
-Modifying the QoS profile a Node specified may break a contract the node's author stipulated, use under your own risk.
-If you use this option, the ROS provided QoS will be completely ignored, either if a profile matching the node name is found or not.
 
 ### Using user provided publish mode
 
@@ -188,7 +184,7 @@ set RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE=1
 export RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE=1
 ```
 
-## Topic name mangling
+## ROS topic name mangling
 
 ROS uses the following mangled topics when the ROS qos policy `avoid_ros_namespace_conventions` is `false`, which is the default:
 - Topics are prefixed with `rt`. e.g.: `/my/fully/qualified/ros/topic` is converted to `rt/my/fully/qualified/ros/topic`.
