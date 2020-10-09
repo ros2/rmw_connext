@@ -170,6 +170,12 @@ set RMW_CONNEXT_QOS_PROFILE_LIBRARY=Ros2TestQosLibrary
 export RMW_CONNEXT_QOS_PROFILE_LIBRARY=Ros2TestQosLibrary
 ```
 
+### Specifying a different default QoS profile
+
+You can use the `RMW_CONNEXT_DEFAULT_QOS_PROFILE` environment variable for this.
+It overrides the profile marked with `is_default_qos="true"` when set.
+The profile is looked up in the qos profile library RMW connext is using.
+
 ### Using user provided publish mode
 
 ROS is always overriding the QoS profile of datawriters to use `ASYNCHRONOUS_PUBLISH_MODE_QOS`.
