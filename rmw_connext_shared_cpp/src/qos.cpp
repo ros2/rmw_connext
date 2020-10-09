@@ -168,7 +168,7 @@ get_datareader_qos(
 {
   bool topic_profile_found = false;
 
-  if (are_topic_profiles_allowed()) {
+  if (rmw_connext_shared_cpp::are_topic_profiles_allowed()) {
     DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
     if (!dpf) {
       RMW_SET_ERROR_MSG("failed to get participant factory");
@@ -244,7 +244,7 @@ get_datawriter_qos(
   DDS::DataWriterQos & datawriter_qos)
 {
   bool topic_profile_found = false;
-  if (are_topic_profiles_allowed()) {
+  if (rmw_connext_shared_cpp::are_topic_profiles_allowed()) {
     DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
     if (!dpf) {
       RMW_SET_ERROR_MSG("failed to get participant factory");
@@ -282,7 +282,7 @@ get_datawriter_qos(
     return false;
   }
 
-  if (is_publish_mode_overriden()) {
+  if (rmw_connext_shared_cpp::is_publish_mode_overriden()) {
     // TODO(wjwwood): conditionally use the async publish mode using a heuristic:
     //  https://github.com/ros2/rmw_connext/issues/190
     datawriter_qos.publish_mode.kind = DDS::ASYNCHRONOUS_PUBLISH_MODE_QOS;

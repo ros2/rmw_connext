@@ -15,6 +15,10 @@
 #ifndef QOS_IMPL_HPP_
 #define QOS_IMPL_HPP_
 
+#include "rmw_connext_shared_cpp/visibility_control.h"
+
+namespace rmw_connext_shared_cpp
+{
 // NOLINT, link in docblock is too long.
 /**
  * Return `true` if `RMW_CONNEXT_ALLOW_TOPIC_QOS_PROFILES` was set to 1 when init was called..
@@ -22,6 +26,7 @@
  * The profile matching the dds topic name will be used if found, if not the default profile will be used.
  * This setting is independent from `RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE`.
  */
+RMW_CONNEXT_SHARED_CPP_PUBLIC
 bool
 are_topic_profiles_allowed();
 
@@ -31,7 +36,10 @@ are_topic_profiles_allowed();
  * If that's the case, ROS will not set the publication mode to asynchronous, and the publication
  * mode specified in the DDS QoS profile file will be used.
  */
+RMW_CONNEXT_SHARED_CPP_PUBLIC
 bool
 is_publish_mode_overriden();
+
+}  // namespace rmw_connext_shared_cpp
 
 #endif  // QOS_IMPL_HPP_

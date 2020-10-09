@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<dds version="5.3.1">
+  <qos_library name="Ros2TestQosLibrary">
+    <qos_profile name="Ros2TestDefaultQos" base_name="BuiltinQosLib::Baseline.5.3.0" is_default_qos="true">
+      <participant_qos>
+        <!--Set a flow controller-->
+        <property>
+          <value>
+            <element>
+              <name>dds.flow_controller.token_bucket.slow_flow.token_bucket.max_tokens</name>
+              <value>8</value>
+            </element>
+            <element>
+              <name>dds.flow_controller.token_bucket.slow_flow.token_bucket.tokens_added_per_period</name>
+              <value>8</value>
+            </element>
+            <element>
+              <name>dds.flow_controller.token_bucket.slow_flow.token_bucket.bytes_per_token</name>
+              <value>8192</value>
+            </element>
+            <element>
+              <name>dds.flow_controller.token_bucket.slow_flow.token_bucket.period.sec</name>
+              <value>0</value>
+            </element>
+            <element>
+              <name>dds.flow_controller.token_bucket.slow_flow.token_bucket.period.nanosec</name>
+              <value>10000000</value>
+            </element>
+          </value>
+        </property>
+      </participant_qos>
+      <!--Default for all topics-->
+      <datawriter_qos>
+      </datawriter_qos>
+      <datareader_qos>
+      </datareader_qos>
+      <!--Default for rt/testing_rti_qos_topic topic-->
+      <datawriter_qos topic_filter="rt/testing_rti_qos_topic">
+        <reliability>
+          <kind>RELIABLE_RELIABILITY_QOS</kind>
+        </reliability>
+        <publish_mode>
+          <flow_controller_name>dds.flow_controller.token_bucket.slow_flow</flow_controller_name>
+        </publish_mode>
+      </datawriter_qos>
+      <datareader_qos topic_filter="rt/testing_rti_qos_topic">
+        <reliability>
+          <kind>RELIABLE_RELIABILITY_QOS</kind>
+        </reliability>
+        <destination_order>
+          <kind>BY_SOURCE_TIMESTAMP_DESTINATIONORDER_QOS</kind>
+        </destination_order>
+      </datareader_qos>
+    </qos_profile>
+    <!--Used for rt/testing_rti_qos_topic topic when topic overrides are allowed-->
+    <qos_profile name="rt/testing_rti_qos_topic" base_name="BuiltinQosLib::Baseline.5.3.0">
+      <datawriter_qos>
+        <reliability>
+          <kind>RELIABLE_RELIABILITY_QOS</kind>
+        </reliability>
+        <publish_mode>
+          <flow_controller_name>dds.flow_controller.token_bucket.slow_flow</flow_controller_name>
+        </publish_mode>
+      </datawriter_qos>
+      <datareader_qos>
+        <reliability>
+          <kind>RELIABLE_RELIABILITY_QOS</kind>
+        </reliability>
+        <destination_order>
+          <kind>BY_SOURCE_TIMESTAMP_DESTINATIONORDER_QOS</kind>
+        </destination_order>
+      </datareader_qos>
+    </qos_profile>
+  </qos_library>
+</dds>

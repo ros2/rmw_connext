@@ -1,4 +1,4 @@
-// Copyright 2015-2017 Open Source Robotics Foundation, Inc.
+// Copyright 2015-2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -222,13 +222,13 @@ is_env_variable_set(const char * env_var_name)
 }
 
 bool
-are_topic_profiles_allowed()
+rmw_connext_shared_cpp::are_topic_profiles_allowed()
 {
   return g_are_topic_profiles_allowed;
 }
 
 bool
-is_publish_mode_overriden()
+rmw_connext_shared_cpp::is_publish_mode_overriden()
 {
   return g_is_publish_mode_overriden;
 }
