@@ -174,7 +174,7 @@ export RMW_CONNEXT_QOS_PROFILE_LIBRARY=Ros2TestQosLibrary
 
 You can use the `RMW_CONNEXT_DEFAULT_QOS_PROFILE` environment variable for this.
 It overrides the profile marked with `is_default_qos="true"` when set.
-The profile is looked up in the qos profile library RMW connext is using.
+The profile is looked up in the QoS profile library RMW connext is using.
 
 ### Using user provided publish mode
 
