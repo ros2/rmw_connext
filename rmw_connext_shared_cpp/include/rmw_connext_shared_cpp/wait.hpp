@@ -58,17 +58,17 @@ __gather_event_conditions(
           std::pair<DDS::StatusCondition *, DDS::StatusMask>(
             status_condition, DDS::STATUS_MASK_NONE));
         auto iterator = map_pair.first;
-        status_mask_map[status_condition] = get_status_mask_from_rmw(current_event->event_type) |
+        status_mask_map[status_condition] = get_status_kind_from_rmw(current_event->event_type) |
           (*iterator).second;
       } else {
         RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("event %d not supported", current_event->event_type);
       }
     }
-  }
-  for (auto & pair : status_mask_map) {
-    // set the status condition's mask with the supported type
-    pair.first->set_enabled_statuses(pair.second);
-    status_conditions.insert(pair.first);
+    for (auto & pair : status_mask_map) {
+      // set the status condition's mask with the supported type
+      pair.first->set_enabled_statuses(pair.second);
+      status_conditions.insert(pair.first);
+    }
   }
   return RMW_RET_OK;
 }
