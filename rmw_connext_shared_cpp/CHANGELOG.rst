@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.2 (2020-10-15)
+------------------
 * Fixed Foxy
 * Updated rmw\_* return codes (`#463 <https://github.com/ros2/rmw_connext/issues/463>`_)
 * Update graph API return codes. (`#459 <https://github.com/ros2/rmw_connext/issues/459>`_)

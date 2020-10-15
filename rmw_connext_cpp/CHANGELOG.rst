@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.2 (2020-10-15)
+------------------
 * Return RMW_RET_UNSUPPORTED in rmw_get_serialized_message_size (`#467 <https://github.com/ros2/rmw_connext/issues/467>`_)
 * returned RMW_RET_INCORRECT_RMW_IMPLEMENTATION in rmw_service_server_is_available (`#466 <https://github.com/ros2/rmw_connext/issues/466>`_)
 * Update service/client request/response API error returns (`#465 <https://github.com/ros2/rmw_connext/issues/465>`_)
