@@ -2,6 +2,30 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Return RMW_RET_UNSUPPORTED in rmw_get_serialized_message_size (`#467 <https://github.com/ros2/rmw_connext/issues/467>`_)
+* returned RMW_RET_INCORRECT_RMW_IMPLEMENTATION in rmw_service_server_is_available (`#466 <https://github.com/ros2/rmw_connext/issues/466>`_)
+* Update service/client request/response API error returns (`#465 <https://github.com/ros2/rmw_connext/issues/465>`_)
+* Updated rmw\_* return codes (`#463 <https://github.com/ros2/rmw_connext/issues/463>`_)
+* Update service/client construction/destruction API return codes. (`#464 <https://github.com/ros2/rmw_connext/issues/464>`_)
+* Updated returns on rmw_take_serialized_with_info (`#462 <https://github.com/ros2/rmw_connext/issues/462>`_)
+* Update gid API return codes. (`#461 <https://github.com/ros2/rmw_connext/issues/461>`_)
+* updated error returns (`#456 <https://github.com/ros2/rmw_connext/issues/456>`_)
+* Updated error returns on rmw_take (`#454 <https://github.com/ros2/rmw_connext/issues/454>`_)
+* Update rmw_publish() error returns (`#452 <https://github.com/ros2/rmw_connext/issues/452>`_)
+* Update rmw_publish_serialized_message() error returns (`#453 <https://github.com/ros2/rmw_connext/issues/453>`_)
+* Ensure compliant matched pub/sub count API. (`#451 <https://github.com/ros2/rmw_connext/issues/451>`_)
+* Ensure compliant subscription API. (`#450 <https://github.com/ros2/rmw_connext/issues/450>`_)
+* Decouple rmw_destroy_publisher() outcome from global RMW error state. (`#449 <https://github.com/ros2/rmw_connext/issues/449>`_)
+* Ensure compliant publisher API (`#445 <https://github.com/ros2/rmw_connext/issues/445>`_)
+* Ensure compliant node construction/destruction API. (`#439 <https://github.com/ros2/rmw_connext/issues/439>`_)
+* Amend rmw_init() implementation: require enclave. (`#437 <https://github.com/ros2/rmw_connext/issues/437>`_)
+* Ensure compliant init/shutdown API implementation. (`#432 <https://github.com/ros2/rmw_connext/issues/432>`_)
+* Ensure compliant init options API implementations. (`#431 <https://github.com/ros2/rmw_connext/issues/431>`_)
+* Finalize context if and only if it's shutdown (`#428 <https://github.com/ros2/rmw_connext/issues/428>`_)
+* Contributors: Alejandro Hernández Cordero, Jose Tomas Lorente, Michel Hidalgo
+
 1.0.1 (2020-07-07)
 ------------------
 

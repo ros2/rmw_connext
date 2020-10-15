@@ -2,6 +2,15 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixed Foxy
+* Updated rmw\_* return codes (`#463 <https://github.com/ros2/rmw_connext/issues/463>`_)
+* Update graph API return codes. (`#459 <https://github.com/ros2/rmw_connext/issues/459>`_)
+* Ensure compliant publisher API (`#445 <https://github.com/ros2/rmw_connext/issues/445>`_)
+* Ensure compliant node construction/destruction API. (`#439 <https://github.com/ros2/rmw_connext/issues/439>`_)
+* Contributors: Alejandro Hernández Cordero, Michel Hidalgo
+
 1.0.1 (2020-07-07)
 ------------------
 * Handle RMW_DEFAULT_DOMAIN_ID (`#427 <https://github.com/ros2/rmw_connext/issues/427>`_) (`#430 <https://github.com/ros2/rmw_connext/issues/430>`_)
