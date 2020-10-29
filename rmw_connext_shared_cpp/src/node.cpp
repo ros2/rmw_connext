@@ -305,6 +305,12 @@ create_node(
     }
   }
 
+  // In order to reduce the time to cleanup a participant (Node), we use the advice from
+  // https://community.rti.com/static/documentation/connext-dds/5.3.1/doc/api/connext_dds/api_cpp/structDDS__DomainParticipantQos.html
+  // and reduce the shutdown_cleanup_period to 50 milliseconds.
+  participant_qos.database.shutdown_cleanup_period.sec = 0;
+  participant_qos.database.shutdown_cleanup_period.nanosec = 50000000;
+
   {
     participant = dpf_->create_participant(
       static_cast<DDS::DomainId_t>(context->actual_domain_id),
