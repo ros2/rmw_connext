@@ -136,11 +136,11 @@ rmw_create_subscription(
     goto fail;
   }
   // This is a non-standard RTI Connext function
-  // It allows to register an external type to a static data writer
-  // In this case, we register the custom message type to a data writer,
-  // which only publishes DDS_Octets
-  // The purpose of this is to send only raw data DDS_Octets over the wire,
-  // advertise the topic however with a type of the message, e.g. std_msgs::msg::dds_::String
+  // It allows to register an external type to a static data reader
+  // In this case, we register the custom message type to a data reader,
+  // which only subscribes DDS_Octets
+  // The purpose of this is to receive only raw data DDS_Octets over the wire,
+  // subscribe the topic however with a type of the message, e.g. std_msgs::msg::dds_::String
   status = ConnextStaticSerializedDataSupport_register_external_type(
     participant, type_name.c_str(), type_code);
   if (status != DDS::RETCODE_OK) {
