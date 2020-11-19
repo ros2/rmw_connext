@@ -19,7 +19,6 @@
 
 #include "rmw/validate_namespace.h"
 #include "rmw/validate_node_name.h"
-#include "rmw_dds_common/time_utils.hpp"
 
 #include "./qos_impl.hpp"
 
@@ -35,10 +34,9 @@ is_time_default(const rmw_time_t & time)
 DDS_Duration_t
 rmw_time_to_dds(const rmw_time_t & time)
 {
-  rmw_time_t clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(time);
   DDS_Duration_t duration;
-  duration.sec = static_cast<DDS_Long>(clamped_time.sec);
-  duration.nanosec = static_cast<DDS_UnsignedLong>(clamped_time.nsec);
+  duration.sec = static_cast<DDS_Long>(time.sec);
+  duration.nanosec = static_cast<DDS_UnsignedLong>(time.nsec);
   return duration;
 }
 
