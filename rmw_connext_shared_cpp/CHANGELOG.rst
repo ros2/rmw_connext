@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.2 (2020-12-04)
+------------------
+* Update maintainers (`#468 <https://github.com/ros2/rmw_connext/issues/468>`_) (`#471 <https://github.com/ros2/rmw_connext/issues/471>`_)
+* avoid using build time Connext library paths, determine them when downstream packages are built (`#385 <https://github.com/ros2/rmw_connext/issues/385>`_) (`#433 <https://github.com/ros2/rmw_connext/issues/433>`_)
+* Contributors: Alejandro Hernández Cordero, Dirk Thomas
+
 0.8.1 (2019-10-23)
 ------------------
 * Support localhost only communication (`#373 <https://github.com/ros2/rmw_connext/issues/373>`_)

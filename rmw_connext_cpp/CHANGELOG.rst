@@ -2,6 +2,13 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.2 (2020-12-04)
+------------------
+* Fix wrong error messages (`#458 <https://github.com/ros2/rmw_connext/issues/458>`_) (`#479 <https://github.com/ros2/rmw_connext/issues/479>`_)
+* Update maintainers (`#468 <https://github.com/ros2/rmw_connext/issues/468>`_) (`#471 <https://github.com/ros2/rmw_connext/issues/471>`_)
+* avoid using build time Connext library paths, determine them when downstream packages are built (`#385 <https://github.com/ros2/rmw_connext/issues/385>`_) (`#433 <https://github.com/ros2/rmw_connext/issues/433>`_)
+* Contributors: Alejandro Hernández Cordero, Dirk Thomas, Ivan Santiago Paunovic
+
 0.8.1 (2019-10-23)
 ------------------
 * CMAKE_SOURCE_DIR -> CMAKE_CURRENT_SOURCE_DIR (`#378 <https://github.com/ros2/rmw_connext/issues/378>`_)
