@@ -2,6 +2,13 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* typo fix for ConnextStaticSerializedDataSupport of subscription. (`#475 <https://github.com/ros2/rmw_connext/issues/475>`_)
+* Allow more flexible usage of XML QoS profiles (`#460 <https://github.com/ros2/rmw_connext/issues/460>`_)
+* Update maintainers (`#468 <https://github.com/ros2/rmw_connext/issues/468>`_)
+* Contributors: Alejandro Hernández Cordero, Ivan Santiago Paunovic, tomoya
+
 3.4.2 (2020-09-29)
 ------------------
 * Return RMW_RET_UNSUPPORTED in rmw_get_serialized_message_size (`#467 <https://github.com/ros2/rmw_connext/issues/467>`_)

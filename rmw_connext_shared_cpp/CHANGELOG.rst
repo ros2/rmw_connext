@@ -2,6 +2,15 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Revert "Use new time_utils function to limit rmw_time_t values to 32-bits (`#477 <https://github.com/ros2/rmw_connext/issues/477>`_)" (`#482 <https://github.com/ros2/rmw_connext/issues/482>`_)
+* Reduce the shutdown_cleanup_period. (`#473 <https://github.com/ros2/rmw_connext/issues/473>`_)
+* Use new time_utils function to limit rmw_time_t values to 32-bits (`#477 <https://github.com/ros2/rmw_connext/issues/477>`_)
+* Allow more flexible usage of XML QoS profiles (`#460 <https://github.com/ros2/rmw_connext/issues/460>`_)
+* Update maintainers (`#468 <https://github.com/ros2/rmw_connext/issues/468>`_)
+* Contributors: Alejandro Hernández Cordero, Chris Lalancette, Ivan Santiago Paunovic, Michael Jeronimo
+
 3.4.2 (2020-09-29)
 ------------------
 
