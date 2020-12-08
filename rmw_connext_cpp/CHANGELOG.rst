@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.5.0 (2020-12-08)
+------------------
 * typo fix for ConnextStaticSerializedDataSupport of subscription. (`#475 <https://github.com/ros2/rmw_connext/issues/475>`_)
 * Allow more flexible usage of XML QoS profiles (`#460 <https://github.com/ros2/rmw_connext/issues/460>`_)
 * Update maintainers (`#468 <https://github.com/ros2/rmw_connext/issues/468>`_)

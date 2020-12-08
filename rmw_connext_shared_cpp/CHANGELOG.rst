@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.5.0 (2020-12-08)
+------------------
 * Revert "Use new time_utils function to limit rmw_time_t values to 32-bits (`#477 <https://github.com/ros2/rmw_connext/issues/477>`_)" (`#482 <https://github.com/ros2/rmw_connext/issues/482>`_)
 * Reduce the shutdown_cleanup_period. (`#473 <https://github.com/ros2/rmw_connext/issues/473>`_)
 * Use new time_utils function to limit rmw_time_t values to 32-bits (`#477 <https://github.com/ros2/rmw_connext/issues/477>`_)
