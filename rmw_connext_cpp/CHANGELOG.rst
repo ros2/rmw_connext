@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.3 (2020-12-08)
+------------------
+* Fix wrong error messages (`#458 <https://github.com/ros2/rmw_connext/issues/458>`_) (`#478 <https://github.com/ros2/rmw_connext/issues/478>`_)
+* Update maintainers (`#468 <https://github.com/ros2/rmw_connext/issues/468>`_) (`#470 <https://github.com/ros2/rmw_connext/issues/470>`_)
+* Contributors: Alejandro Hernández Cordero, Ivan Santiago Paunovic
+
 1.0.2 (2020-10-15)
 ------------------
 * Return RMW_RET_UNSUPPORTED in rmw_get_serialized_message_size (`#467 <https://github.com/ros2/rmw_connext/issues/467>`_)

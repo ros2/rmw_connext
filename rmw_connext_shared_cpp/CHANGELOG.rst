@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.3 (2020-12-08)
+------------------
+* Update maintainers (`#468 <https://github.com/ros2/rmw_connext/issues/468>`_) (`#470 <https://github.com/ros2/rmw_connext/issues/470>`_)
+* Contributors: Alejandro Hernández Cordero
+
 1.0.2 (2020-10-15)
 ------------------
 * Fixed Foxy
