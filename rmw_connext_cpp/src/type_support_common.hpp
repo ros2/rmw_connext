@@ -18,6 +18,8 @@
 #include <string>
 #include <sstream>
 
+#include "rcutils/error_handling.h"
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 
@@ -37,20 +39,29 @@
     get_message_typesupport_handle( \
     TYPE_SUPPORTS, rosidl_typesupport_connext_c__identifier); \
   if (!TYPE_SUPPORT) { \
+    rcutils_error_string_t prev_error_string = rcutils_get_error_string(); \
+    rcutils_reset_error(); \
     TYPE_SUPPORT = get_message_typesupport_handle( \
       TYPE_SUPPORTS, rosidl_typesupport_connext_cpp::typesupport_identifier); \
     if (!TYPE_SUPPORT) { \
+      rcutils_error_string_t error_string = rcutils_get_error_string(); \
+      rcutils_reset_error(); \
       char __msg[1024]; \
       snprintf( \
         __msg, 1024, \
-        "type support handle implementation '%s' (%p) does not match valid type supports " \
-        "('%s' (%p), '%s' (%p))", \
+        "Type support handle implementation '%s' (%p) does not match valid type supports " \
+        "('%s' (%p), '%s' (%p)). Got:\n" \
+        "    %s\n" \
+        "    %s\n" \
+        "while fetching", \
         TYPE_SUPPORTS->typesupport_identifier, \
         static_cast<const void *>(TYPE_SUPPORTS->typesupport_identifier), \
         rosidl_typesupport_connext_cpp::typesupport_identifier, \
         static_cast<const void *>(rosidl_typesupport_connext_cpp::typesupport_identifier), \
         rosidl_typesupport_connext_c__identifier, \
-        static_cast<const void *>(rosidl_typesupport_connext_c__identifier)); \
+        static_cast<const void *>(rosidl_typesupport_connext_c__identifier), \
+        prev_error_string.str, \
+        error_string.str); \
       RMW_SET_ERROR_MSG(__msg); \
       return RET_VAL; \
     } \
@@ -65,20 +76,29 @@
     get_service_typesupport_handle( \
     TYPE_SUPPORTS, rosidl_typesupport_connext_c__identifier); \
   if (!TYPE_SUPPORT) { \
+    rcutils_error_string_t prev_error_string = rcutils_get_error_string(); \
+    rcutils_reset_error(); \
     TYPE_SUPPORT = get_service_typesupport_handle( \
       TYPE_SUPPORTS, rosidl_typesupport_connext_cpp::typesupport_identifier); \
     if (!TYPE_SUPPORT) { \
+      rcutils_error_string_t error_string = rcutils_get_error_string(); \
+      rcutils_reset_error(); \
       char __msg[1024]; \
       snprintf( \
         __msg, 1024, \
         "type support handle implementation '%s' (%p) does not match valid type supports " \
-        "('%s' (%p), '%s' (%p))", \
+        "('%s' (%p), '%s' (%p)). Got:\n" \
+        "    %s\n" \
+        "    %s\n" \
+        "while fetching", \
         TYPE_SUPPORTS->typesupport_identifier, \
         static_cast<const void *>(TYPE_SUPPORTS->typesupport_identifier), \
         rosidl_typesupport_connext_cpp::typesupport_identifier, \
         static_cast<const void *>(rosidl_typesupport_connext_cpp::typesupport_identifier), \
         rosidl_typesupport_connext_c__identifier, \
-        static_cast<const void *>(rosidl_typesupport_connext_c__identifier)); \
+        static_cast<const void *>(rosidl_typesupport_connext_c__identifier), \
+        prev_error_string.str, \
+        error_string.str); \
       RMW_SET_ERROR_MSG(__msg); \
       return RET_VAL; \
     } \
