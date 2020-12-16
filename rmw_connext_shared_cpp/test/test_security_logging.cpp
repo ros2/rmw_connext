@@ -20,8 +20,6 @@
 
 #include "gmock/gmock.h"
 
-#include "./custom_set_env.hpp"
-
 using ::testing::HasSubstr;
 
 namespace
@@ -35,6 +33,18 @@ const char log_verbosity_variable_name[] = "ROS_SECURITY_LOG_VERBOSITY";
 const char log_file_property_name[] = "com.rti.serv.secure.logging.log_file";
 const char verbosity_property_name[] = "com.rti.serv.secure.logging.log_level";
 const char distribute_enable_property_name[] = "com.rti.serv.secure.logging.distribute.enable";
+
+void custom_setenv(const std::string & variable_name, const std::string & value)
+{
+#ifdef _WIN32
+  auto ret = _putenv_s(variable_name.c_str(), value.c_str());
+#else
+  auto ret = setenv(variable_name.c_str(), value.c_str(), 1);
+#endif
+  if (ret != 0) {
+    ADD_FAILURE() << "Unable to set environment variable: expected 0, got " << ret;
+  }
+}
 
 const char * lookup_property_value(DDS::PropertyQosPolicy & policy, const char * property_name)
 {

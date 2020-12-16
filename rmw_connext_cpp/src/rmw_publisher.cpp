@@ -188,14 +188,13 @@ rmw_create_publisher(
     // error already set
     goto fail;
   }
+  DDS::String_free(topic_str);
+  topic_str = nullptr;
 
-  if (!get_datawriter_qos(participant, *qos_profile, topic_str, datawriter_qos)) {
+  if (!get_datawriter_qos(participant, *qos_profile, datawriter_qos)) {
     // error string was set within the function
     goto fail;
   }
-
-  DDS::String_free(topic_str);
-  topic_str = nullptr;
 
   topic_writer = dds_publisher->create_datawriter(
     topic, datawriter_qos, NULL, DDS::STATUS_MASK_NONE);
