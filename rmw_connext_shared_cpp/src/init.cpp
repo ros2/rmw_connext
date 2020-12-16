@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <mutex>
-
 #include "rmw_connext_shared_cpp/init.hpp"
 
 #include "rcutils/get_env.h"
@@ -23,8 +21,6 @@
 
 #include "./qos_impl.hpp"
 
-/// Flag used to make sure \ref init() only runs once.
-static std::once_flag g_run_once_flag;
 /// Return value of \ref are_topic_profiles_allowed().
 static bool g_are_topic_profiles_allowed = false;
 /// Return value of \ref is_publish_mode_overriden().
@@ -73,61 +69,52 @@ is_env_variable_set(const char * env_var_name);
 rmw_ret_t
 init()
 {
-  static rmw_ret_t ret = RMW_RET_OK;
-  std::call_once(
-    g_run_once_flag, []() {
-      DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
-      if (!dpf) {
-        RMW_SET_ERROR_MSG("failed to get participant factory");
-        ret = RMW_RET_ERROR;
-        return;
-      }
-      DDS::DomainParticipantFactoryQos factory_qos;
-      // TODO(ivanpauno): The default is 1024, this should be configurable.
-      // See https://github.com/ros2/rmw_connext/pull/394.
-      dpf->get_qos(factory_qos);
-      factory_qos.resource_limits.max_objects_per_thread = 8192;
-      dpf->set_qos(factory_qos);
+  DDS::DomainParticipantFactory * dpf = DDS::DomainParticipantFactory::get_instance();
+  if (!dpf) {
+    RMW_SET_ERROR_MSG("failed to get participant factory");
+    return RMW_RET_ERROR;
+  }
+  DDS::DomainParticipantFactoryQos factory_qos;
+  // TODO(ivanpauno): The default is 1024, this should be configurable.
+  // See https://github.com/ros2/rmw_connext/pull/394.
+  dpf->get_qos(factory_qos);
+  factory_qos.resource_limits.max_objects_per_thread = 8192;
+  dpf->set_qos(factory_qos);
 
-      switch (set_default_qos_library(dpf)) {
-        case TristateRetCode::SET:
-          if (!set_default_qos_profile(dpf)) {
-            ret = RMW_RET_ERROR;
-          }
-          break;
-        case TristateRetCode::NOT_SET:
-          break;
-        default:  // fallthrough
-        case TristateRetCode::FAILED:
-          ret = RMW_RET_ERROR;
-          return;
+  switch (set_default_qos_library(dpf)) {
+    case TristateRetCode::SET:
+      if (!set_default_qos_profile(dpf)) {
+        return RMW_RET_ERROR;
       }
+      break;
+    case TristateRetCode::NOT_SET:
+      break;
+    default:  // fallthrough
+    case TristateRetCode::FAILED:
+      return RMW_RET_ERROR;
+  }
 
-      switch (is_env_variable_set("RMW_CONNEXT_ALLOW_TOPIC_QOS_PROFILES")) {
-        case TristateRetCode::SET:
-          g_are_topic_profiles_allowed = true;
-          break;
-        case TristateRetCode::NOT_SET:
-          break;
-        default:  // fallthrough
-        case TristateRetCode::FAILED:
-          ret = RMW_RET_ERROR;
-          return;
-      }
-      switch (is_env_variable_set("RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE")) {
-        case TristateRetCode::SET:
-          g_is_publish_mode_overriden = false;
-          break;
-        case TristateRetCode::NOT_SET:
-          break;
-        default:  // fallthrough
-        case TristateRetCode::FAILED:
-          ret = RMW_RET_ERROR;
-          return;
-      }
-    }
-  );
-  return ret;
+  switch (is_env_variable_set("RMW_CONNEXT_ALLOW_TOPIC_QOS_PROFILES")) {
+    case TristateRetCode::SET:
+      g_are_topic_profiles_allowed = true;
+      break;
+    case TristateRetCode::NOT_SET:
+      break;
+    default:  // fallthrough
+    case TristateRetCode::FAILED:
+      return RMW_RET_ERROR;
+  }
+  switch (is_env_variable_set("RMW_CONNEXT_DO_NOT_OVERRIDE_PUBLICATION_MODE")) {
+    case TristateRetCode::SET:
+      g_is_publish_mode_overriden = false;
+      break;
+    case TristateRetCode::NOT_SET:
+      break;
+    default:  // fallthrough
+    case TristateRetCode::FAILED:
+      return RMW_RET_ERROR;
+  }
+  return RMW_RET_OK;
 }
 
 static TristateRetCode

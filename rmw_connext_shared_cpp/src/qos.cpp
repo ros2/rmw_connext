@@ -185,13 +185,13 @@ get_datareader_qos(
   }
 
   if (!topic_profile_found) {
-    // This is an UNDOCUMMENTED rti Connext function.
+    // This is an UNDOCUMENTED RTI Connext function.
     // What does it do?
     // It allows getting the profile marked as `is_default_profile="true"` in the externally
     // provided qos profile file while using topic filters.
     //
     // There are a few DomainParticipant and DomainParticipantFactory documented methods that sound
-    // that can solve this: get_default_library, get_default_profile, get_default_profile_library.
+    // like they can solve this: get_default_library, get_default_profile, get_default_profile_library.
     // They cannot. Those are only usefully if you programatically set the default profile/library,
     // but they don't allow you to detect the profile marked as default in the XML file.
     DDS::ReturnCode_t status = participant->get_default_datareader_qos_w_topic_name(
