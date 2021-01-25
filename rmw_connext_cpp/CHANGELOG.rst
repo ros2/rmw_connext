@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Handle typesupport errors on retrieval. (`#483 <https://github.com/ros2/rmw_connext/issues/483>`_)
+* Contributors: Michel Hidalgo
+
 3.5.0 (2020-12-08)
 ------------------
 * typo fix for ConnextStaticSerializedDataSupport of subscription. (`#475 <https://github.com/ros2/rmw_connext/issues/475>`_)
