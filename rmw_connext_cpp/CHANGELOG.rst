@@ -2,8 +2,8 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.5.1 (2021-01-25)
+------------------
 * Handle typesupport errors on retrieval. (`#483 <https://github.com/ros2/rmw_connext/issues/483>`_)
 * Contributors: Michel Hidalgo
 
