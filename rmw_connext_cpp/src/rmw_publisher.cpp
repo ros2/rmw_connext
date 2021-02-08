@@ -99,6 +99,10 @@ rmw_create_publisher(
     }
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher_options, nullptr);
+  if (publisher_options->require_unique_network_flow == RMW_UNIQUE_NETWORK_FLOW_STRICTLY_REQUIRED) {
+    RMW_SET_ERROR_MSG("Strict requirement on unique network flows for publishers not supported");
+    return nullptr;
+  }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
