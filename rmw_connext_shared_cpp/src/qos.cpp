@@ -26,17 +26,17 @@ namespace
 {
 
 bool
-is_time_default(const rmw_time_t & time)
+is_duration_default(rmw_duration_t duration)
 {
-  return time.sec == 0 && time.nsec == 0;
+  return duration == 0;
 }
 
 DDS_Duration_t
-rmw_time_to_dds(const rmw_time_t & time)
+rmw_duration_to_dds(const rmw_duration_t & nanoseconds)
 {
   DDS_Duration_t duration;
-  duration.sec = static_cast<DDS_Long>(time.sec);
-  duration.nanosec = static_cast<DDS_UnsignedLong>(time.nsec);
+  duration.sec = static_cast<DDS_Long>(nanoseconds / 1000000000LL);
+  duration.nanosec = static_cast<DDS_UnsignedLong>(nanoseconds % 1000000000LL);
   return duration;
 }
 
@@ -98,8 +98,8 @@ set_entity_qos_from_profile_generic(
 
   // DDS_DeadlineQosPolicy has default value of DDS_DURATION_INFINITE
   // don't overwrite if default passed
-  if (!is_time_default(qos_profile.deadline)) {
-    entity_qos.deadline.period = rmw_time_to_dds(qos_profile.deadline);
+  if (!is_duration_default(qos_profile.deadline)) {
+    entity_qos.deadline.period = rmw_duration_to_dds(qos_profile.deadline);
   }
 
   switch (qos_profile.liveliness) {
@@ -116,8 +116,9 @@ set_entity_qos_from_profile_generic(
       RMW_SET_ERROR_MSG("Unknown QoS liveliness policy");
       return false;
   }
-  if (!is_time_default(qos_profile.liveliness_lease_duration)) {
-    entity_qos.liveliness.lease_duration = rmw_time_to_dds(qos_profile.liveliness_lease_duration);
+  if (!is_duration_default(qos_profile.liveliness_lease_duration)) {
+    entity_qos.liveliness.lease_duration =
+      rmw_duration_to_dds(qos_profile.liveliness_lease_duration);
   }
 
   // ensure the history depth is at least the requested queue size
@@ -151,8 +152,8 @@ set_entity_qos_from_profile(
   DDS::DataWriterQos & entity_qos)
 {
   // Set any QoS settings that are specific to DataWriter, then call the shared version
-  if (!is_time_default(qos_profile.lifespan)) {
-    entity_qos.lifespan.duration = rmw_time_to_dds(qos_profile.lifespan);
+  if (!is_duration_default(qos_profile.lifespan)) {
+    entity_qos.lifespan.duration = rmw_duration_to_dds(qos_profile.lifespan);
   }
   return set_entity_qos_from_profile_generic(qos_profile, entity_qos);
 }
@@ -327,8 +328,8 @@ dds_qos_lifespan_to_rmw_qos_lifespan(
   const AttributeT & dds_qos,
   rmw_qos_profile_t * qos)
 {
-  qos->lifespan.sec = dds_qos.lifespan.duration.sec;
-  qos->lifespan.nsec = dds_qos.lifespan.duration.nanosec;
+  qos->lifespan = RCUTILS_S_TO_NS(dds_qos.lifespan.duration.sec) +
+    dds_qos.lifespan.duration.nanosec;
 }
 
 template<>
@@ -414,8 +415,7 @@ dds_remote_qos_to_rmw_qos(
       break;
   }
 
-  qos->deadline.sec = dds_qos.deadline.period.sec;
-  qos->deadline.nsec = dds_qos.deadline.period.nanosec;
+  qos->deadline = RCUTILS_S_TO_NS(dds_qos.deadline.period.sec) + dds_qos.deadline.period.nanosec;
 
   dds_qos_lifespan_to_rmw_qos_lifespan(dds_qos, qos);
 
@@ -430,8 +430,8 @@ dds_remote_qos_to_rmw_qos(
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
       break;
   }
-  qos->liveliness_lease_duration.sec = dds_qos.liveliness.lease_duration.sec;
-  qos->liveliness_lease_duration.nsec = dds_qos.liveliness.lease_duration.nanosec;
+  qos->liveliness_lease_duration = RCUTILS_S_TO_NS(dds_qos.liveliness.lease_duration.sec) +
+    dds_qos.liveliness.lease_duration.nanosec;
 }
 
 template

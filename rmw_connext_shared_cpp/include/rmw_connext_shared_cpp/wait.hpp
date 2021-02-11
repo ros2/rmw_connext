@@ -127,7 +127,7 @@ wait(
   rmw_clients_t * clients,
   rmw_events_t * events,
   rmw_wait_set_t * wait_set,
-  const rmw_time_t * wait_timeout)
+  rmw_duration_t wait_timeout)
 {
   // To ensure that we properly clean up the wait set, we declare an
   // object whose destructor will detach what we attached (this was previously
@@ -322,12 +322,12 @@ wait(
 
   // invoke wait until one of the conditions triggers
   DDS::Duration_t timeout;
-  if (!wait_timeout) {
+  if (wait_timeout < 0) {
     timeout.sec = DDS::DURATION_INFINITE_SEC;
     timeout.nanosec = DDS::DURATION_INFINITE_NSEC;
   } else {
-    timeout.sec = static_cast<DDS::Long>(wait_timeout->sec);
-    timeout.nanosec = static_cast<DDS::Long>(wait_timeout->nsec);
+    timeout.sec = static_cast<DDS::Long>(wait_timeout / 1000000000LL);
+    timeout.nanosec = static_cast<DDS::Long>(wait_timeout % 1000000000ll);
   }
 
   DDS::ReturnCode_t status = dds_wait_set->wait(*active_conditions, timeout);

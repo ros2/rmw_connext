@@ -34,22 +34,13 @@ bool operator!=(const rmw_qos_profile_t & lhs, const rmw_qos_profile_t & rhs)
   if (lhs.liveliness != rhs.liveliness) {
     return true;
   }
-  if (lhs.liveliness_lease_duration.sec != rhs.liveliness_lease_duration.sec) {
+  if (lhs.liveliness_lease_duration != rhs.liveliness_lease_duration) {
     return true;
   }
-  if (lhs.liveliness_lease_duration.nsec != rhs.liveliness_lease_duration.nsec) {
+  if (lhs.deadline != rhs.deadline) {
     return true;
   }
-  if (lhs.deadline.sec != rhs.deadline.sec) {
-    return true;
-  }
-  if (lhs.deadline.nsec != rhs.deadline.nsec) {
-    return true;
-  }
-  if (lhs.lifespan.sec != rhs.lifespan.sec) {
-    return true;
-  }
-  if (lhs.lifespan.nsec != rhs.lifespan.nsec) {
+  if (lhs.lifespan != rhs.lifespan) {
     return true;
   }
 
@@ -112,23 +103,17 @@ public:
     rmw_qos[0].durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
     rmw_qos[0].reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
     rmw_qos[0].liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
-    rmw_qos[0].liveliness_lease_duration.sec = 80u;
-    rmw_qos[0].liveliness_lease_duration.nsec = 5555555u;
-    rmw_qos[0].deadline.sec = 123u;
-    rmw_qos[0].deadline.nsec = 5678u;
-    rmw_qos[0].lifespan.sec = 190u;
-    rmw_qos[0].lifespan.nsec = 1234u;
+    rmw_qos[0].liveliness_lease_duration = RCUTILS_S_TO_NS(80u) + 5555555u;
+    rmw_qos[0].deadline = RCUTILS_S_TO_NS(123u) + 5678u;
+    rmw_qos[0].lifespan = RCUTILS_S_TO_NS(190u) + 1234u;
 
     // rmw qos
     rmw_qos[1].durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
     rmw_qos[1].reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
     rmw_qos[1].liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
-    rmw_qos[1].liveliness_lease_duration.sec = 8u;
-    rmw_qos[1].liveliness_lease_duration.nsec = 78901234u;
-    rmw_qos[1].deadline.sec = 12u;
-    rmw_qos[1].deadline.nsec = 1234u;
-    rmw_qos[1].lifespan.sec = 19u;
-    rmw_qos[1].lifespan.nsec = 5432u;
+    rmw_qos[1].liveliness_lease_duration = RCUTILS_S_TO_NS(8u) + 78901234u;
+    rmw_qos[1].deadline = RCUTILS_S_TO_NS(12u) + 1234u;
+    rmw_qos[1].lifespan = RCUTILS_S_TO_NS(19u) + 5432u;
 
     // Add data to topic_cache
     topic_cache.add_information(

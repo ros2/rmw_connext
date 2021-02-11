@@ -1673,7 +1673,7 @@ rmw_wait(
   rmw_services_t * services,
   rmw_clients_t * clients,
   rmw_wait_set_t * wait_set,
-  const rmw_time_t * wait_timeout)
+  rmw_duration_t wait_timeout)
 {
   return wait<CustomSubscriberInfo, ConnextDynamicServiceInfo, ConnextDynamicClientInfo>
            (rti_connext_dynamic_identifier, subscriptions, guard_conditions, services, clients,
