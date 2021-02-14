@@ -42,14 +42,16 @@ find_package(rcutils REQUIRED)
 find_package(rosidl_typesupport_connext_c)
 if(NOT rosidl_typesupport_connext_c_FOUND)
   ament_package()
-  message(WARNING "Could not find ROSIDL TypeSupport for Connext (rosidl_typesupport_connext_c) - skipping '${PROJECT_NAME}'")
+  message(WARNING
+    "Could not find ROSIDL TypeSupport for Connext (rosidl_typesupport_connext_c) - skipping '${PROJECT_NAME}'")
   return()
 endif()
 
 find_package(rosidl_typesupport_connext_cpp)
 if(NOT rosidl_typesupport_connext_cpp_FOUND)
   ament_package()
-  message(WARNING "Could not find ROSIDL TypeSupport for Connext (rosidl_typesupport_connext_cpp) - skipping '${PROJECT_NAME}'")
+  message(WARNING
+    "Could not find ROSIDL TypeSupport for Connext (rosidl_typesupport_connext_cpp) - skipping '${PROJECT_NAME}'")
   return()
 endif()
 
@@ -93,7 +95,8 @@ add_custom_command(
   # server is in rosidl_typesupport_connext_cpp, and that uses a different set of arguments.
   # We don't want to accidentally connect to that other version of the server that might
   # still be running.
-  COMMAND "${Connext_DDSGEN}" -language C++ -unboundedSupport "connext_static_serialized_data.idl" -d ${generated_directory}
+  COMMAND
+    "${Connext_DDSGEN}" -language C++ -unboundedSupport "connext_static_serialized_data.idl" -d ${generated_directory}
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/resources"
   COMMENT "Generating serialized type support for RTI Connext (using '${Connext_DDSGEN}')"
   VERBATIM
@@ -107,7 +110,9 @@ find_file(connext_version_header "ndds_version.h"
 if(NOT connext_version_header)
   message(FATAL_ERROR "Failed to find 'ndds/ndds_version.h' in '${Connext_INCLUDE_DIRS}'")
 endif()
-file(STRINGS "${connext_version_header}" connext_define_major_version LIMIT_COUNT 1 REGEX "#define RTI_DDS_VERSION_MAJOR  [0-9]+")
+file(STRINGS "${connext_version_header}" connext_define_major_version
+  LIMIT_COUNT 1
+  REGEX "#define RTI_DDS_VERSION_MAJOR  [0-9]+")
 if("${connext_define_major_version}" STREQUAL "")
   message(FATAL_ERROR "Failed to find '#define RTI_DDS_VERSION_MAJOR' in '${connext_version_header}'")
 endif()
@@ -139,7 +144,11 @@ set(patched_files
 )
 add_custom_command(
   OUTPUT ${patched_files}
-  COMMAND ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/bin/apply-patch.py" --input ${generated_files} --patch ${patch_files} --out ${patched_files}
+  COMMAND
+    ${PYTHON_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/bin/apply-patch.py"
+      --input ${generated_files}
+      --patch ${patch_files}
+      --out ${patched_files}
   DEPENDS ${generated_files}
   COMMENT "Patching serialized type support for RTI Connext"
   VERBATIM
