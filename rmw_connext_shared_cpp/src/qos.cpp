@@ -28,16 +28,33 @@ namespace
 bool
 is_duration_default(rmw_duration_t duration)
 {
-  return duration == 0;
+  return duration == RMW_DURATION_INFINITE;
 }
 
 DDS_Duration_t
 rmw_duration_to_dds(const rmw_duration_t & nanoseconds)
 {
   DDS_Duration_t duration;
-  duration.sec = static_cast<DDS_Long>(nanoseconds / 1000000000LL);
-  duration.nanosec = static_cast<DDS_UnsignedLong>(nanoseconds % 1000000000LL);
+  if (nanoseconds == RMW_DURATION_INFINITE) {
+    duration.sec = DDS::DURATION_INFINITE_SEC;
+    duration.nanosec = DDS::DURATION_INFINITE_NSEC;
+  } else {
+    duration.sec = static_cast<DDS_Long>(nanoseconds / 1000000000LL);
+    duration.nanosec = static_cast<DDS_UnsignedLong>(nanoseconds % 1000000000LL);
+  }
   return duration;
+}
+
+rmw_duration_t
+dds_duration_to_rmw(const DDS_Duration_t & duration)
+{
+  if (
+    duration.sec == DDS::DURATION_INFINITE_SEC && duration.nanosec == DDS::DURATION_INFINITE_NSEC
+  ) {
+    return RMW_DURATION_INFINITE;
+  } else {
+    return RCUTILS_S_TO_NS(duration.sec) + duration.nanosec;
+  }
 }
 
 template<typename DDSEntityQos>
@@ -96,7 +113,7 @@ set_entity_qos_from_profile_generic(
     entity_qos.history.depth = static_cast<DDS::Long>(qos_profile.depth);
   }
 
-  // DDS_DeadlineQosPolicy has default value of DDS_DURATION_INFINITE
+  // DDS_DeadlineQosPolicy has default value of  DDS_DURATION_INFINITE
   // don't overwrite if default passed
   if (!is_duration_default(qos_profile.deadline)) {
     entity_qos.deadline.period = rmw_duration_to_dds(qos_profile.deadline);
@@ -328,8 +345,7 @@ dds_qos_lifespan_to_rmw_qos_lifespan(
   const AttributeT & dds_qos,
   rmw_qos_profile_t * qos)
 {
-  qos->lifespan = RCUTILS_S_TO_NS(dds_qos.lifespan.duration.sec) +
-    dds_qos.lifespan.duration.nanosec;
+  qos->lifespan = dds_duration_to_rmw(dds_qos.lifespan.duration);
 }
 
 template<>
@@ -415,7 +431,7 @@ dds_remote_qos_to_rmw_qos(
       break;
   }
 
-  qos->deadline = RCUTILS_S_TO_NS(dds_qos.deadline.period.sec) + dds_qos.deadline.period.nanosec;
+  qos->deadline = dds_duration_to_rmw(dds_qos.deadline.period);
 
   dds_qos_lifespan_to_rmw_qos_lifespan(dds_qos, qos);
 
@@ -430,8 +446,7 @@ dds_remote_qos_to_rmw_qos(
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
       break;
   }
-  qos->liveliness_lease_duration = RCUTILS_S_TO_NS(dds_qos.liveliness.lease_duration.sec) +
-    dds_qos.liveliness.lease_duration.nanosec;
+  qos->liveliness_lease_duration = dds_duration_to_rmw(dds_qos.liveliness.lease_duration);
 }
 
 template
