@@ -25,6 +25,7 @@ endif()
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw REQUIRED)
+find_package(rmw_dds_common REQUIRED)
 
 include_directories(include)
 
@@ -50,6 +51,7 @@ add_library(
   src/qos.cpp
   src/names_and_types_helpers.cpp
   src/node_info_and_types.cpp
+  src/rmw_qos.cpp
   src/security_logging.cpp
   src/service_names_and_types.cpp
   src/topic_names_and_types.cpp
@@ -63,6 +65,7 @@ ament_target_dependencies(rmw_connext_shared_cpp
   "rcpputils"
   "rcutils"
   "rmw"
+  "rmw_dds_common"
   "Connext")
 ament_export_libraries(rmw_connext_shared_cpp)
 
