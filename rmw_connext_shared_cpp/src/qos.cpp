@@ -28,7 +28,9 @@ namespace
 bool
 is_duration_default(rmw_duration_t duration)
 {
-  return duration == RMW_DURATION_INFINITE;
+  // Though the default QoS profiles use RMW_DURATION_INFINITE, historical usage allowed
+  // 0 to mean unspecified, and should not be broken.
+  return duration == 0 || duration == RMW_DURATION_INFINITE;
 }
 
 DDS_Duration_t
@@ -49,8 +51,8 @@ rmw_duration_t
 dds_duration_to_rmw(const DDS_Duration_t & duration)
 {
   if (
-    duration.sec == DDS::DURATION_INFINITE_SEC && duration.nanosec == DDS::DURATION_INFINITE_NSEC
-  ) {
+    duration.sec == DDS::DURATION_INFINITE_SEC && duration.nanosec == DDS::DURATION_INFINITE_NSEC)
+  {
     return RMW_DURATION_INFINITE;
   } else {
     return RCUTILS_S_TO_NS(duration.sec) + duration.nanosec;
