@@ -97,10 +97,10 @@ rmw_create_subscription(
     }
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(subscription_options, nullptr);
-  if (subscription_options->require_unique_network_flow ==
-    RMW_UNIQUE_NETWORK_FLOW_STRICTLY_REQUIRED)
+  if (subscription_options->require_unique_network_flow_endpoint ==
+    RMW_UNIQUE_NETWORK_FLOW_ENDPOINT_STRICTLY_REQUIRED)
   {
-    RMW_SET_ERROR_MSG("Strict requirement on unique network flows for subscriptions not supported");
+    RMW_SET_ERROR_MSG("Strict requirement on unique network flow endpoints for subscriptions not supported");
     return nullptr;
   }
 
