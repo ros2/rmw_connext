@@ -2,6 +2,11 @@
 Changelog for package rmw_connext_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.6.0 (2021-03-01)
+------------------
+* Add RMW function to check QoS compatibility (`#488 <https://github.com/ros2/rmw_connext/issues/488>`_)
+* Contributors: Jacob Perron
+
 3.5.1 (2021-01-25)
 ------------------
 

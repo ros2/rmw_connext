@@ -2,6 +2,12 @@
 Changelog for package rmw_connext_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+3.6.0 (2021-03-01)
+------------------
+* Add RMW function to check QoS compatibility (`#488 <https://github.com/ros2/rmw_connext/issues/488>`_)
+* Shorten some excessively long lines of CMake (`#486 <https://github.com/ros2/rmw_connext/issues/486>`_)
+* Contributors: Jacob Perron, Scott K Logan
+
 3.5.1 (2021-01-25)
 ------------------
 * Handle typesupport errors on retrieval. (`#483 <https://github.com/ros2/rmw_connext/issues/483>`_)
