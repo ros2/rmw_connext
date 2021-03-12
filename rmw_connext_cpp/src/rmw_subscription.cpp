@@ -269,6 +269,7 @@ rmw_create_subscription(
 #endif
 
   subscription->can_loan_messages = false;
+  subscription->is_cft_supported = false;
   return subscription;
 fail:
   if (topic_str) {
@@ -394,7 +395,7 @@ rmw_subscription_get_actual_qos(
 
 rmw_ret_t
 rmw_subscription_set_cft_expression_parameters(
-  const rmw_subscription_t * subscription,
+  rmw_subscription_t * subscription,
   const char * filter_expression,
   const rcutils_string_array_t * expression_parameters)
 {
