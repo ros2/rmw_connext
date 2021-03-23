@@ -29,7 +29,6 @@ bool
 is_time_unspecified(const rmw_time_t & time)
 {
   return rmw_time_equal(time, RMW_DURATION_UNSPECIFIED);
-  return time.sec == 0 && time.nsec == 0;
 }
 
 DDS_Duration_t
