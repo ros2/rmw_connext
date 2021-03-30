@@ -5,7 +5,7 @@ Implementation of the ROS Middleware (rmw) Interface using [RTI's Connext DDS](h
 is a new RMW implementation for RTI Connext DDS, which supersedes the one
 contained in this repository (`rmw_connext_cpp`). This new implementation was
 developed by RTI in collaboration with the ROS 2 community, and it resolves
-several performance issue that were present in the previous implementation.
+several performance issues that are present in this implementation.
 `rmw_connextdds` is already available in Rolling, and it will be included in
 future ROS 2 releases starting with Galactic.
 
