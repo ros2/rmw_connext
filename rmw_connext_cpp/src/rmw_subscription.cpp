@@ -97,6 +97,12 @@ rmw_create_subscription(
     }
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(subscription_options, nullptr);
+  if (subscription_options->require_unique_network_flow_endpoints ==
+    RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED)
+  {
+    RMW_SET_ERROR_MSG("Strict requirement on unique network flow endpoints for subscriptions not supported");
+    return nullptr;
+  }
 
   auto node_info = static_cast<ConnextNodeInfo *>(node->data);
   auto participant = static_cast<DDS::DomainParticipant *>(node_info->participant);
