@@ -20,7 +20,7 @@
 extern "C"
 {
 rmw_ret_t
-rmw_publisher_get_network_flow_endpoint(
+rmw_publisher_get_network_flow_endpoints(
   const rmw_publisher_t * publisher,
   rcutils_allocator_t * allocator,
   rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
@@ -28,12 +28,12 @@ rmw_publisher_get_network_flow_endpoint(
   (void) publisher;
   (void) allocator;
   (void) network_flow_endpoint_array;
-  RMW_SET_ERROR_MSG("rmw_publisher_get_network_flow_endpoint not implemented");
+  RMW_SET_ERROR_MSG("rmw_publisher_get_network_flow_endpoints not implemented");
   return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t
-rmw_subscription_get_network_flow_endpoint(
+rmw_subscription_get_network_flow_endpoints(
   const rmw_subscription_t * subscription,
   rcutils_allocator_t * allocator,
   rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
@@ -41,7 +41,7 @@ rmw_subscription_get_network_flow_endpoint(
   (void) subscription;
   (void) allocator;
   (void) network_flow_endpoint_array;
-  RMW_SET_ERROR_MSG("rmw_subscription_get_network_flow_endpoint not implemented");
+  RMW_SET_ERROR_MSG("rmw_subscription_get_network_flow_endpoints not implemented");
   return RMW_RET_UNSUPPORTED;
 }
 }  // extern "C"
