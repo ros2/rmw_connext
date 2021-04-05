@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #include "rmw/error_handling.h"
-#include "rmw/get_network_flow_endpoint.h"
+#include "rmw/get_network_flow_endpoints.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
