@@ -1,6 +1,14 @@
 # rmw_connext
 Implementation of the ROS Middleware (rmw) Interface using [RTI's Connext DDS](https://www.rti.com). 
 
+**DEPRECATION NOTICE:** [rmw_connextdds](https://github.com/ros2/rmw_connextdds)
+is a new RMW implementation for RTI Connext DDS, which supersedes the one
+contained in this repository (`rmw_connext_cpp`). This new implementation was
+developed by RTI in collaboration with the ROS 2 community, and it resolves
+several performance issues that are present in this implementation.
+`rmw_connextdds` is included in ROS 2 releases starting with Galactic.
+This rmw implementation will be supported until the end-of-life of the ROS distributions it is available in (ROS 2 Dashing and Foxy).
+
 ## Working with rmw_connext
 To use rmw_connext with ROS2 applications, set the environment variable ```RMW_IMPLEMENTATION=rmw_connext_cpp``` and run your ROS2 applications as usual:  
 
