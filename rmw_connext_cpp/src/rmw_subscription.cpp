@@ -275,6 +275,7 @@ rmw_create_subscription(
 #endif
 
   subscription->can_loan_messages = false;
+  subscription->is_cft_supported = false;
   return subscription;
 fail:
   if (topic_str) {
@@ -396,6 +397,34 @@ rmw_subscription_get_actual_qos(
   dds_qos_to_rmw_qos(dds_qos, qos);
 
   return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_subscription_set_cft_expression_parameters(
+  rmw_subscription_t * subscription,
+  const char * filter_expression,
+  const rcutils_string_array_t * expression_parameters)
+{
+  // Unused in current implementation.
+  (void) subscription;
+  (void) filter_expression;
+  (void) expression_parameters;
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_UNSUPPORTED;
+}
+
+rmw_ret_t
+rmw_subscription_get_cft_expression_parameters(
+  const rmw_subscription_t * subscription,
+  char ** filter_expression,
+  rcutils_string_array_t * expression_parameters)
+{
+  // Unused in current implementation.
+  (void) subscription;
+  (void) filter_expression;
+  (void) expression_parameters;
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t
